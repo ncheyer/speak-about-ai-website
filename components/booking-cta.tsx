@@ -58,21 +58,6 @@ export default function BookingCTA() {
             </a>
           </button>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          <div>
-            <div className="text-3xl font-bold text-white mb-2 font-neue-haas">24 Hours</div>
-            <div className="text-white text-opacity-90 font-montserrat">Average Response Time</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold text-white mb-2 font-neue-haas">500+</div>
-            <div className="text-white text-opacity-90 font-montserrat">Successful Events</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold text-white mb-2 font-neue-haas">98%</div>
-            <div className="text-white text-opacity-90 font-montserrat">Client Satisfaction Rate</div>
-          </div>
-        </div>
       </div>
     </section>
   )
