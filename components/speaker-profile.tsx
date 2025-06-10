@@ -3,18 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import {
-  ChevronDown,
-  ChevronUp,
-  ExternalLink,
-  Linkedin,
-  MapPin,
-  DollarSign,
-  Mail,
-  Play,
-  ImageIcon,
-  Award,
-} from "lucide-react"
+import { ChevronDown, ChevronUp, MapPin, DollarSign, Play, ImageIcon, Award } from "lucide-react"
 import Link from "next/link"
 import type { Speaker } from "@/lib/speakers-data"
 
@@ -179,12 +168,6 @@ export default function SpeakerProfile({ speaker }: SpeakerProfileProps) {
                     <DollarSign className="w-5 h-5 mr-3 text-[#1E68C6]" />
                     <span>{speaker.fee || "Please Inquire"}</span>
                   </div>
-                  {speaker.contact && (
-                    <div className="flex items-center text-gray-600">
-                      <Mail className="w-5 h-5 mr-3 text-[#1E68C6]" />
-                      <span>Contact: {speaker.contact}</span>
-                    </div>
-                  )}
                 </div>
 
                 {/* Expertise Tags */}
@@ -229,34 +212,6 @@ export default function SpeakerProfile({ speaker }: SpeakerProfileProps) {
                     Check Availability
                   </Link>
                 </button>
-
-                {/* Social Links */}
-                {(speaker.linkedin || speaker.website) && (
-                  <div className="flex gap-4">
-                    {speaker.linkedin && (
-                      <a
-                        href={speaker.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-[#1E68C6] hover:text-[#5084C6]"
-                      >
-                        <Linkedin className="w-5 h-5 mr-2" />
-                        LinkedIn
-                      </a>
-                    )}
-                    {speaker.website && (
-                      <a
-                        href={speaker.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-[#1E68C6] hover:text-[#5084C6]"
-                      >
-                        <ExternalLink className="w-5 h-5 mr-2" />
-                        Website
-                      </a>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
           </CardContent>

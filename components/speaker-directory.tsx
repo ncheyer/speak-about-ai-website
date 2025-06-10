@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter, MapPin } from "lucide-react"
+import { Search, Filter, MapPin } from 'lucide-react'
 import Link from "next/link"
 import { getAllSpeakers, searchSpeakers, type Speaker } from "@/lib/speakers-data"
 
@@ -250,6 +250,15 @@ export default function SpeakerDirectory() {
 }
 
 function SpeakerCard({ speaker }: { speaker: Speaker }) {
+  const handleViewProfile = () => {
+    // Scroll to top before navigation
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    // Small delay to ensure scroll completes before navigation
+    setTimeout(() => {
+      window.location.href = `/speakers/${speaker.slug}`
+    }, 100)
+  }
+
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg h-full">
       <CardContent className="p-0 h-full flex flex-col">
@@ -297,6 +306,7 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
 
           <div className="flex gap-2 mt-auto">
             <button
+              onClick={handleViewProfile}
               className="btn-primary flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2"
               data-button="primary"
               style={{
@@ -305,9 +315,7 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
                 border: "none",
               }}
             >
-              <Link href={`/speakers/${speaker.slug}`} className="text-white no-underline">
-                View Profile
-              </Link>
+              View Profile
             </button>
             <button
               className="flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
