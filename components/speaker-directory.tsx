@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter, MapPin } from 'lucide-react'
+import { Search, Filter, MapPin } from "lucide-react"
 import Link from "next/link"
 import { getAllSpeakers, searchSpeakers, type Speaker } from "@/lib/speakers-data"
 
@@ -87,11 +87,11 @@ export default function SpeakerDirectory() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-[#EAEAEE] to-white py-16">
+      <section className="bg-gradient-to-br from-[#0F4C8C] via-[#1E68C6] to-[#5084C6] py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-black mb-4">All AI Speakers</h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">All AI Speakers</h1>
+            <p className="text-xl text-white/90 max-w-3xl mx-auto">
               Browse our complete directory of {speakers.length}+ world-class artificial intelligence experts, machine
               learning pioneers, and tech visionaries.
             </p>
@@ -252,7 +252,7 @@ export default function SpeakerDirectory() {
 function SpeakerCard({ speaker }: { speaker: Speaker }) {
   const handleViewProfile = () => {
     // Scroll to top before navigation
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: "smooth" })
     // Small delay to ensure scroll completes before navigation
     setTimeout(() => {
       window.location.href = `/speakers/${speaker.slug}`

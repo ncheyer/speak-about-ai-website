@@ -22,7 +22,7 @@ export const speakers: Speaker[] = [
     slug: "adam-cheyer",
     name: "Adam Cheyer",
     title: "Co-Founder of Siri",
-    image: "/speakers/adam-cheyer-stadium.jpg",
+    image: "/speakers/adam-cheyer-headshot.png",
     bio: "Adam Cheyer is a computer scientist and entrepreneur who co-founded Siri (acquired by Apple for over $200 million) and Viv Labs (acquired by Samsung). He is a pioneer in conversational AI and virtual assistant technology, with over 60 patents in AI and interface design. Cheyer has been at the forefront of making AI accessible to everyday users through natural language interfaces.",
     programs: [
       "The Evolution of Conversational AI",
@@ -67,7 +67,7 @@ export const speakers: Speaker[] = [
     slug: "cassie-kozyrkov",
     name: "Cassie Kozyrkov",
     title: "Former Google Chief Decision Scientist",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/cassie-kozyrkov-headshot.jpg",
     bio: "Cassie Kozyrkov was Google's first Chief Decision Scientist, where she advised executives on AI strategy and decision intelligence. She's an expert in making AI accessible to business leaders and has been instrumental in democratizing data science and machine learning across organizations. Kozyrkov is known for her ability to translate complex AI concepts into actionable business strategies.",
     programs: [
       "AI Strategy for Business Leaders",
@@ -90,7 +90,7 @@ export const speakers: Speaker[] = [
     slug: "rana-el-kaliouby",
     name: "Rana el Kaliouby",
     title: "Co-Founder of Affectiva (Emotion AI)",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/rana-el-kaliouby-headshot.jpg",
     bio: "Dr. Rana el Kaliouby is a pioneer in Emotion AI and co-founder of Affectiva, the leading emotion recognition technology company. She holds a PhD from Cambridge University and has been recognized as one of the most influential women in AI. Her work focuses on humanizing technology through emotion recognition and has applications across automotive, advertising, and healthcare industries.",
     programs: [
       "The Future of Emotion AI",
@@ -136,7 +136,7 @@ export const speakers: Speaker[] = [
     slug: "dag-kittlaus",
     name: "Dag Kittlaus",
     title: "Co-Founder of Siri & AI Entrepreneur",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/dag-kittlaus-headshot.jpg",
     bio: "Dag Kittlaus is the co-founder of Siri and a pioneering AI entrepreneur. He has been instrumental in developing conversational AI technologies and continues to work on advancing AI applications and entrepreneurship.",
     programs: [
       "The Evolution of Conversational AI",
@@ -199,7 +199,7 @@ export const speakers: Speaker[] = [
     slug: "charlene-li",
     name: "Charlene Li",
     title: "Digital Transformation Expert & Former Forrester VP",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/charlene-li-headshot.jpg",
     bio: "Charlene Li is a digital transformation expert, former Forrester VP, and bestselling author on leadership and technology. She is the founder of Altimeter Group and has advised Fortune 500 companies on digital strategy and AI implementation. Li is recognized as one of the most influential voices in digital transformation and future of work.",
     programs: [
       "Digital Transformation Leadership",
@@ -264,7 +264,7 @@ export const speakers: Speaker[] = [
     slug: "joanna-bryson",
     name: "Prof. Joanna Bryson, PhD",
     title: "AI Ethics Researcher & Professor",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/joanna-bryson-headshot.jpg",
     bio: "Professor Joanna Bryson is a leading AI ethics researcher and professor at the Hertie School in Berlin. She has been at the forefront of AI governance and ethics discussions, advising governments and organizations on responsible AI development. Bryson's work focuses on the societal implications of AI and ensuring technology serves humanity.",
     programs: [
       "AI Ethics and Governance",
@@ -286,7 +286,7 @@ export const speakers: Speaker[] = [
     slug: "maya-ackerman",
     name: "Maya Ackerman",
     title: "AI Creativity & Computational Creativity Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/maya-ackerman-headshot.jpg",
     bio: "Maya Ackerman is an AI creativity and computational creativity expert who explores how artificial intelligence can enhance and augment human creativity. She specializes in AI applications in creative industries and computational creativity research.",
     programs: [
       "AI and Computational Creativity",
@@ -307,7 +307,7 @@ export const speakers: Speaker[] = [
     slug: "shafi-ahmed",
     name: "Shafi Ahmed",
     title: "Digital Health & AI in Surgery Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/dr-shafi-ahmed-headshot.jpg",
     bio: "Shafi Ahmed is a pioneering surgeon and digital health expert who specializes in the application of AI and emerging technologies in healthcare and surgery. He is known for his work in virtual reality surgery and AI-assisted medical procedures.",
     programs: [
       "AI in Surgery and Healthcare",
@@ -323,6 +323,27 @@ export const speakers: Speaker[] = [
     expertise: ["AI in Healthcare", "Digital Surgery", "Medical Technology", "Virtual Reality"],
     industries: ["Healthcare", "Medical Devices", "Surgery", "Digital Health"],
     ranking: 70,
+  },
+  {
+    slug: "harvey-castro",
+    name: "Dr. Harvey Castro",
+    title: "AI in Healthcare & Medical Innovation Expert",
+    image: "/speakers/dr-harvey-castro-headshot.jpg",
+    bio: "Dr. Harvey Castro is a leading AI in healthcare expert and medical innovation specialist who focuses on the application of artificial intelligence in medical practice and healthcare delivery. He has extensive experience in medical AI implementation and healthcare technology innovation, helping organizations leverage AI to improve patient outcomes and healthcare efficiency.",
+    programs: [
+      "AI in Healthcare and Medical Practice",
+      "Medical Innovation with AI",
+      "Healthcare AI Implementation",
+      "The Future of AI in Medicine",
+    ],
+    fee: "$40k-$60k",
+    location: "Texas",
+    email: "harvey@healthcareai.com",
+    contact: "Direct",
+    listed: true,
+    expertise: ["Healthcare AI", "Medical Innovation", "Digital Health", "Medical Technology"],
+    industries: ["Healthcare", "Medical Technology", "Digital Health", "Medicine"],
+    ranking: 68,
   },
   {
     slug: "nancy-xu",
@@ -409,6 +430,27 @@ export const speakers: Speaker[] = [
     ranking: 60,
   },
   {
+    slug: "christopher-ategeka",
+    name: "Christopher Ategeka",
+    title: "AI Innovation & Technology Leadership Expert",
+    image: "/speakers/christopher-ategeka-headshot.jpg",
+    bio: "Christopher Ategeka is an AI innovation and technology leadership expert with extensive experience in building and scaling technology companies. He has been involved in various AI initiatives and helps organizations develop innovation strategies and implement cutting-edge AI solutions.",
+    programs: [
+      "AI Innovation and Leadership",
+      "Technology Strategy and Development",
+      "Building Innovation Culture",
+      "AI Technology Implementation",
+    ],
+    fee: "$35k-$50k",
+    location: "Silicon Valley",
+    email: "christopher@aiinnovation.com",
+    contact: "Direct",
+    listed: true,
+    expertise: ["AI Innovation", "Technology Leadership", "Innovation Strategy", "Technology Development"],
+    industries: ["Technology", "Innovation", "Startups", "Leadership"],
+    ranking: 60,
+  },
+  {
     slug: "ryan-pamplin",
     name: "Ryan Pamplin",
     title: "AI Marketing & Customer Experience Expert",
@@ -433,7 +475,7 @@ export const speakers: Speaker[] = [
     slug: "divya-chander",
     name: "Divya Chander",
     title: "Neuroscience & AI in Medicine Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/divya-chander-headshot.png",
     bio: "Divya Chander is a neuroscience and AI in medicine expert who specializes in the application of artificial intelligence in neuroscience and medical practice. She has extensive experience in medical AI research and neurotechnology.",
     programs: [
       "AI in Neuroscience and Medicine",
@@ -517,7 +559,7 @@ export const speakers: Speaker[] = [
     slug: "david-ewing-duncan",
     name: "David Ewing Duncan",
     title: "Biotech & AI Futurist, Author",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/david-ewing-duncan-headshot.jpg",
     bio: "David Ewing Duncan is a renowned author, journalist, and futurist specializing in biotechnology and artificial intelligence. He has written several bestselling books on the intersection of technology and human health, and is a frequent speaker on the future of medicine, longevity, and AI applications in healthcare.",
     programs: [
       "The Future of Human Longevity",
@@ -643,7 +685,7 @@ export const speakers: Speaker[] = [
     slug: "robin-farmanfarmaian",
     name: "Robin Farmanfarmaian",
     title: "Digital Health & AI Innovation Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/robin-farmanfarmaian-headshot.jpg",
     bio: "Robin Farmanfarmaian is a digital health and AI innovation expert who helps healthcare organizations leverage emerging technologies. She is an author, speaker, and consultant specializing in healthcare technology and AI applications in medicine.",
     programs: [
       "Digital Health Innovation and AI",
@@ -685,7 +727,7 @@ export const speakers: Speaker[] = [
     slug: "sonal-gupta",
     name: "Sonal Gupta",
     title: "AI Research Scientist & NLP Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/sonal-gupta-headshot.jpg",
     bio: "Sonal Gupta is a leading AI research scientist specializing in natural language processing and conversational AI. With extensive experience in developing AI systems that understand and generate human language, she has contributed to breakthrough advances in NLP and machine learning applications.",
     programs: [
       "Natural Language Processing and AI",
@@ -769,7 +811,7 @@ export const speakers: Speaker[] = [
     slug: "rafael-grossmann",
     name: "Rafael Grossmann",
     title: "Digital Surgery & AI in Medicine Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/rafael-grossmann-headshot.jpg",
     bio: "Rafael Grossmann is a digital surgery and AI in medicine expert who pioneered the use of emerging technologies in surgical practice. He is known for his innovative work in digital health and AI applications in surgery and medical education.",
     programs: [
       "Digital Surgery and AI in Medicine",
@@ -832,7 +874,7 @@ export const speakers: Speaker[] = [
     slug: "simone-bianco",
     name: "Simone Bianco",
     title: "AI Research Scientist & Computer Vision Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/simone-bianco-headshot.jpg",
     bio: "Simone Bianco is an AI research scientist specializing in computer vision and machine learning. He has made significant contributions to the field of visual AI and has extensive experience in developing computer vision systems for various applications.",
     programs: [
       "Computer Vision and Visual AI",
@@ -874,7 +916,7 @@ export const speakers: Speaker[] = [
     slug: "mike-cassidy",
     name: "Mike Cassidy",
     title: "AI Innovation & Technology Leadership Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/mike-cassidy-headshot.png",
     bio: "Mike Cassidy is an AI innovation and technology leadership expert with extensive experience in building and leading technology companies. He has been involved in various AI initiatives and helps organizations develop innovation strategies.",
     programs: [
       "AI Innovation and Leadership",
@@ -1000,7 +1042,7 @@ export const speakers: Speaker[] = [
     slug: "matthew-blakemore",
     name: "Matthew Blakemore",
     title: "AI Technology & Innovation Consultant",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/matthew-blakemore-headshot.jpg",
     bio: "Matthew Blakemore is an AI technology and innovation consultant who helps organizations navigate the AI landscape and implement innovative AI solutions. He has extensive experience in technology innovation and AI consulting.",
     programs: [
       "AI Technology Innovation",
@@ -1021,7 +1063,7 @@ export const speakers: Speaker[] = [
     slug: "chris-jones",
     name: "Chris Jones",
     title: "AI Technology & Innovation Consultant",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/chris-jones-headshot.jpg",
     bio: "Chris Jones is an AI technology and innovation consultant who helps organizations implement artificial intelligence solutions and develop innovation strategies. He has extensive experience in technology consulting and AI transformation across various industries.",
     programs: [
       "AI Implementation and Strategy",
@@ -1042,7 +1084,7 @@ export const speakers: Speaker[] = [
     slug: "shawn-flynn",
     name: "Shawn Flynn",
     title: "AI Investment & Silicon Valley Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/shawn-flynn-headshot.jpg",
     bio: "Shawn Flynn is an AI investment expert and Silicon Valley insider who provides insights into AI investment trends and startup ecosystems. He helps investors and entrepreneurs navigate the AI landscape and identify promising opportunities.",
     programs: [
       "AI Investment Trends and Opportunities",
@@ -1168,7 +1210,7 @@ export const speakers: Speaker[] = [
     slug: "rene-caissie",
     name: "Rene Caissie",
     title: "AI Accessibility & Inclusive Technology Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/rene-caissie-headshot.jpg",
     bio: "Rene Caissie is an AI accessibility and inclusive technology expert who specializes in making artificial intelligence accessible to people with disabilities. He has extensive experience in accessibility technology and inclusive AI design.",
     programs: [
       "AI Accessibility and Inclusive Design",
@@ -1288,6 +1330,27 @@ export const speakers: Speaker[] = [
     listed: true,
     expertise: ["Business Intelligence", "Data Analytics", "AI Analytics", "Business AI"],
     industries: [],
+  },
+  {
+    slug: "lucien-engelen",
+    name: "Lucien Engelen",
+    title: "Digital Health Innovation & AI in Healthcare Expert",
+    image: "/speakers/lucien-engelen-headshot.jpg",
+    bio: "Lucien Engelen is a digital health innovation expert and AI in healthcare specialist who focuses on transforming healthcare through emerging technologies. He has extensive experience in healthcare innovation and helps organizations implement AI solutions to improve patient outcomes and healthcare delivery.",
+    programs: [
+      "Digital Health Innovation and AI",
+      "Healthcare Technology Transformation",
+      "AI Applications in Patient Care",
+      "The Future of Healthcare Technology",
+    ],
+    fee: "$40k-$60k",
+    location: "Netherlands",
+    email: "lucien@healthcareinnovation.com",
+    contact: "Direct",
+    listed: true,
+    expertise: ["Digital Health", "Healthcare AI", "Medical Innovation", "Healthcare Technology"],
+    industries: ["Healthcare", "Digital Health", "Medical Technology", "Innovation"],
+    ranking: 35,
   },
 ]
 
