@@ -1,3 +1,5 @@
+import { fetchSpeakersFromSheet } from "@/app/actions/google-sheets"
+
 export interface Speaker {
   slug: string
   name: string
@@ -18,7 +20,8 @@ export interface Speaker {
   ranking: number // New ranking field (1-100, higher = more prominent)
 }
 
-export const speakers: Speaker[] = [
+// Local fallback data (existing 'speakers' array)
+const localSpeakers: Speaker[] = [
   {
     slug: "adam-cheyer",
     name: "Adam Cheyer",
@@ -164,7 +167,7 @@ export const speakers: Speaker[] = [
     name: "Charlene Li",
     title: "Author, Advisor, and Executive Coach",
     image: "/speakers/charlene-li-headshot.jpg",
-    bio: "For the past two decades, Charlene Li has been helping people see the future. With a focus on digital transformation, disruption leadership and strategy, customer experience, and the future of work, she has positioned herself as a pivotal figure helping corporations navigate the modern business landscape. She's the author of six books, including the New York Times bestseller Open Leadership and the critically acclaimed Groundswell, co-authored by her. Her most recent publication, The Disruption Mindset, has also achieved bestseller status, and she is currently working on a new book titled Winning with Generative AI.\n\nCharlene Li's career is marked by her entrepreneurial spirit, as she founded Altimeter, a disruptive analyst firm that was later acquired in 2015. Her tenure as the Chief Research Officer for PA Consulting showcased her ability to lead thought leadership programs with acumen. Presently, she heads Quantum Networks Group, leveraging her extensive experience to guide companies through the digital era. Her advisory role spans a wide spectrum of industries, having worked with hundreds of leading companies, including Adobe and Southwest Airlines, and providing insights to 49 of the Fortune 100 companies.\n\nCharlene Li's academic achievements include graduating magna cum laude from Harvard College and earning an MBA from Harvard Business School. Residing in San Francisco, she enjoys the personal challenge of teaching her cat tricks in her time off. The blend of professional achievement, thought leadership, and personal interests highlights Charlene Li's diverse talents and contributions to the business world and beyond.",
+    bio: "For the past two decades, Charlene Li has been helping people see the future. With a focus on digital transformation, disruption leadership and strategy, customer experience, and the future of work, she has positioned herself as a pivotal figure helping corporations navigate the modern business landscape. She's the author of six books, including the New York Times bestseller Open Leadership and the critically acclaimed Groundswell, co-authored by her. Her most recent publication, The Disruption Mindset, has also achieved bestseller status, and she is currently working on a new book titled Winning with Generative AI.\n\nCharlene Li's career is marked by her entrepreneurial spirit, as she founded Altimeter, a disruptive analyst firm that was later acquired in 2015. Her tenure as the Chief Research Officer for PA Consulting showcased her ability to lead thought leadership programs with acumen. Presently, she heads Quantum Networks Group, leveraging her extensive experience to guide companies through the digital era. Her advisory role spans a wide spectrum of industries, having worked with hundreds of leading companies, including Adobe and Southwest Airlines, and providing insights to 49 of the Fortune 100 companies.\n\nCharlene Li's academic achievements include graduating magna cum laude from Harvard College and earning an MBA from Harvard Business Business School. Residing in San Francisco, she enjoys the personal challenge of teaching her cat tricks in her time off. The blend of professional achievement, thought leadership, and personal interests highlights Charlene Li's diverse talents and contributions to the business world and beyond.",
     programs: [
       "Winning With Generative AI: Crafting a Future-Ready Strategy",
       "Creating a Unified Generative AI Strategy: An Executive Roadmap",
@@ -547,7 +550,7 @@ export const speakers: Speaker[] = [
     slug: "lital-marom",
     name: "Lital Marom",
     title: "AI Chatbots & Conversational AI Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/lital-marom-headshot.jpeg",
     bio: "Lital Marom is an AI chatbots and conversational AI expert who specializes in developing intelligent conversational systems. She has extensive experience in chatbot development and conversational AI applications across various industries.",
     programs: [
       "Chatbots and Conversational AI",
@@ -568,7 +571,7 @@ export const speakers: Speaker[] = [
     slug: "katie-mcmahon",
     name: "Katie McMahon",
     title: "AI Strategy & Innovation Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/Katie-McMahon-Headshot.jpeg",
     bio: "Katie McMahon is a leading AI strategy and innovation expert who helps organizations navigate the complexities of artificial intelligence implementation. With extensive experience in technology consulting and AI transformation, she specializes in helping companies develop comprehensive AI strategies that drive business value.",
     programs: [
       "AI Strategy for Business Leaders",
@@ -842,7 +845,7 @@ export const speakers: Speaker[] = [
     slug: "larry-magid",
     name: "Larry Magid",
     title: "Technology Journalist & AI Ethics Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/larry-magid-headshot.jpeg",
     bio: "Larry Magid is a technology journalist and AI ethics expert who has been covering technology trends and their societal implications for decades. He specializes in technology policy, digital safety, and the ethical implications of AI development.",
     programs: [
       "AI Ethics and Digital Safety",
@@ -1053,7 +1056,7 @@ export const speakers: Speaker[] = [
     slug: "tatyana-mamut",
     name: "Tatyana Mamut",
     title: "AI Product Strategy & Technology Leadership Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/tatyana-mamut-expanded-headshot.png",
     bio: "Tatyana Mamut is an AI product strategy and technology leadership expert with extensive experience in building and scaling AI products. She has held senior leadership positions at major technology companies and specializes in AI product development and strategy.",
     programs: [
       "AI Product Strategy and Development",
@@ -1180,7 +1183,7 @@ export const speakers: Speaker[] = [
     slug: "gary-bolles",
     name: "Gary Bolles",
     title: "Chair for the Future of Work at Singularity University, Author, and Future of Work Expert",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/speakers/Bolles_Gary_speaking.jpeg",
     bio: "Gary Bolles is a leading expert on the future of work and the Chair for the Future of Work at Singularity University. He is a renowned speaker, author, and consultant who helps organizations navigate the rapidly changing landscape of work in the age of artificial intelligence and automation.\n\nAs the author of 'The Next Rules of Work: The Mindset, Skillset and Toolset to Lead Your Organization Through Uncertainty,' Gary provides practical insights into how individuals and organizations can thrive in an era of technological disruption. His work focuses on the intersection of technology, human potential, and organizational transformation.\n\nGary has advised Fortune 500 companies, government agencies, and educational institutions on workforce development, digital transformation, and the strategic implications of emerging technologies. His expertise spans across areas including AI's impact on employment, reskilling and upskilling strategies, and building resilient organizations for the future.\n\nWith over two decades of experience in technology and business strategy, Gary brings a unique perspective to understanding how artificial intelligence and automation will reshape the nature of work. He is a frequent keynote speaker at major conferences and has been featured in leading publications for his insights on the future of work.",
     programs: [
       "The Future of Work in the Age of AI",
@@ -1197,58 +1200,122 @@ export const speakers: Speaker[] = [
     industries: ["Technology", "Human Resources", "Education", "Consulting"],
     ranking: 76,
   },
+  {
+    slug: "jamie-metzl",
+    name: "Jamie Metzl",
+    title: "Technology Futurist, Geopolitics Expert, and Author",
+    image: "/speakers/jamie-metzl-headshot.jpeg",
+    bio: "Jamie Metzl is a technology futurist, geopolitical expert, and author specializing in the intersection of artificial intelligence, genetics, and international relations. He is a leading voice on the ethical and societal implications of emerging technologies.",
+    programs: [
+      "AI, Genetics, and the Future of Humanity",
+      "Geopolitics in the Age of AI",
+      "The Ethical Implications of Emerging Technologies",
+      "Human Enhancement and Society",
+    ],
+    fee: "$40k-$60k",
+    location: "New York City, New York",
+    linkedin: "https://www.linkedin.com/in/jamiemetzl/",
+    website: "https://jamiemetzl.com/",
+    email: "jamie@jamiemetzl.com",
+    contact: "Direct",
+    listed: true,
+    expertise: ["AI Ethics", "Biotechnology", "Geopolitics", "Future of Technology"],
+    industries: ["Technology", "Healthcare", "Government", "Consulting"],
+    ranking: 72,
+  },
+  {
+    slug: "andrew-mayne",
+    name: "Andrew Mayne",
+    title: "AI & Creativity Expert, Magician, and Author",
+    image: "/speakers/andrew-mayne-headshot.jpeg",
+    bio: "Andrew Mayne is an AI and creativity expert, renowned magician, and bestselling author. He explores the intersection of artificial intelligence and human creativity, demonstrating how AI can augment and inspire innovative thinking.",
+    programs: [
+      "AI and Human Creativity",
+      "Innovation Through AI",
+      "The Art of AI-Powered Problem Solving",
+      "Future of Creative Industries with AI",
+    ],
+    fee: "$30k-$45k",
+    location: "Los Angeles, CA",
+    linkedin: "https://www.linkedin.com/in/andrewmayne/",
+    website: "https://andrewmayne.com/",
+    email: "andrew@andrewmayne.com",
+    contact: "Direct",
+    listed: true,
+    expertise: ["AI Creativity", "Innovation", "Creative Thinking", "Technology & Art"],
+    industries: ["Entertainment", "Technology", "Creative Industries", "Consulting"],
+    ranking: 68,
+  },
 ]
 
-// Sort speakers by ranking (highest first)
-const sortedSpeakers = speakers.sort((a, b) => b.ranking - a.ranking)
+let _cachedSpeakers: Speaker[] | null = null
 
-export function getAllSpeakers(): Speaker[] {
-  return sortedSpeakers.filter((speaker) => speaker.listed)
+async function loadSpeakers(): Promise<Speaker[]> {
+  if (_cachedSpeakers) {
+    return _cachedSpeakers
+  }
+
+  const sheetSpeakers = await fetchSpeakersFromSheet()
+  if (sheetSpeakers.length > 0) {
+    _cachedSpeakers = sheetSpeakers
+    return sheetSpeakers
+  }
+
+  // Fallback to local data if sheet fetch fails or returns no data
+  console.warn("Failed to load speakers from Google Sheet. Falling back to local data.")
+  _cachedSpeakers = localSpeakers.sort((a, b) => b.ranking - a.ranking)
+  return _cachedSpeakers
 }
 
-export function getSpeakerBySlug(slug: string): Speaker | undefined {
+export async function getAllSpeakers(): Promise<Speaker[]> {
+  const speakers = await loadSpeakers()
+  return speakers.filter((speaker) => speaker.listed)
+}
+
+export async function getSpeakerBySlug(slug: string): Promise<Speaker | undefined> {
+  const speakers = await loadSpeakers()
   return speakers.find((speaker) => speaker.slug === slug)
 }
 
-export function searchSpeakers(query: string): Speaker[] {
+export async function searchSpeakers(query: string): Promise<Speaker[]> {
+  const speakers = await loadSpeakers()
   const lowercaseQuery = query.toLowerCase().trim()
 
   if (!lowercaseQuery) {
-    return getAllSpeakers()
+    return speakers.filter((speaker) => speaker.listed)
   }
 
-  return sortedSpeakers.filter((speaker) => {
+  return speakers.filter((speaker) => {
     if (!speaker.listed) return false
 
-    // Check for exact word matches in name and title
     const nameWords = speaker.name.toLowerCase().split(/\s+/)
     const titleWords = speaker.title.toLowerCase().split(/\s+/)
 
-    // Check if query matches any complete word in name or title
     const nameMatch = nameWords.some((word) => word.includes(lowercaseQuery))
     const titleMatch = titleWords.some((word) => word.includes(lowercaseQuery))
 
-    // Check for exact matches in expertise and industries
     const expertiseMatch = speaker.expertise.some((skill) => skill.toLowerCase().includes(lowercaseQuery))
     const industryMatch = speaker.industries.some((industry) => industry.toLowerCase().includes(lowercaseQuery))
 
-    // Check for matches in bio (only for longer queries to avoid too many results)
     const bioMatch = lowercaseQuery.length >= 4 && speaker.bio.toLowerCase().includes(lowercaseQuery)
 
     return nameMatch || titleMatch || expertiseMatch || industryMatch || bioMatch
   })
 }
 
-export function getSpeakersByIndustry(industry: string): Speaker[] {
-  return sortedSpeakers.filter(
+export async function getSpeakersByIndustry(industry: string): Promise<Speaker[]> {
+  const speakers = await loadSpeakers()
+  return speakers.filter(
     (speaker) => speaker.listed && speaker.industries.some((ind) => ind.toLowerCase().includes(industry.toLowerCase())),
   )
 }
 
-export function getFeaturedSpeakers(count = 8): Speaker[] {
-  return getAllSpeakers().slice(0, count)
+export async function getFeaturedSpeakers(count = 8): Promise<Speaker[]> {
+  const speakers = await getAllSpeakers()
+  return speakers.slice(0, count)
 }
 
-export function getTopSpeakers(count = 6): Speaker[] {
-  return getAllSpeakers().slice(0, count)
+export async function getTopSpeakers(count = 6): Promise<Speaker[]> {
+  const speakers = await getAllSpeakers()
+  return speakers.slice(0, count)
 }

@@ -3,11 +3,36 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { getAllSpeakers, type Speaker } from "@/lib/speakers-data"
+import { useState, useEffect } from "react"
 
 export default function FeaturedSpeakers() {
-  // Get featured speakers from static data
-  const allSpeakers = getAllSpeakers()
-  const featuredSpeakers = allSpeakers.slice(0, 8) // Show first 8 speakers
+  const [allSpeakers, setAllSpeakers] = useState<Speaker[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchSpeakers = async () => {
+      try {
+        const speakersData = await getAllSpeakers()
+        setAllSpeakers(speakersData)
+      } catch (error) {
+        console.error("Failed to fetch speakers:", error)
+        // Optionally handle error state, e.g., set an error message
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchSpeakers()
+  }, []) // Empty dependency array means this runs once on mount
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-white text-center">
+        <p className="text-xl text-gray-600 font-montserrat">Loading featured speakers...</p>
+      </section>
+    )
+  }
+
+  const featuredSpeakers = allSpeakers.slice(0, 8) // Now allSpeakers is guaranteed to be an array
 
   return (
     <section className="py-20 bg-white">

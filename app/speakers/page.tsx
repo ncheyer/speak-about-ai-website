@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import SpeakerDirectory from "@/components/speaker-directory"
+import { getAllSpeakers } from "@/lib/speakers-data" // Import the async function
 
 export const metadata: Metadata = {
   title: "All AI Speakers | Complete Directory of AI Keynote Speakers | Speak About AI",
@@ -9,10 +10,13 @@ export const metadata: Metadata = {
     "AI speakers directory, artificial intelligence speakers, AI keynote speakers, machine learning speakers, tech speakers",
 }
 
-export default function SpeakersPage() {
+export default async function SpeakersPage() {
+  // Make the page component async
+  const allSpeakers = await getAllSpeakers() // Await the data fetch
+
   return (
     <div className="min-h-screen bg-white">
-      <SpeakerDirectory />
+      <SpeakerDirectory initialSpeakers={allSpeakers} /> {/* Pass initial data */}
     </div>
   )
 }

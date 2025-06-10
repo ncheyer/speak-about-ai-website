@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react" // Import useEffect
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,33 +8,42 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Filter } from "lucide-react"
 import Link from "next/link"
-import { getAllSpeakers, searchSpeakers, type Speaker } from "@/lib/speakers-data"
+import { searchSpeakers, type Speaker } from "@/lib/speakers-data"
 
-export default function SpeakerDirectory() {
+interface SpeakerDirectoryProps {
+  initialSpeakers: Speaker[] // New prop for initial data
+}
+
+export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedIndustry, setSelectedIndustry] = useState("all")
+  const [displayedSpeakers, setDisplayedSpeakers] = useState<Speaker[]>(initialSpeakers.slice(0, 12))
+  const [allFilteredSpeakers, setAllFilteredSpeakers] = useState<Speaker[]>(initialSpeakers)
   const [displayCount, setDisplayCount] = useState(12)
 
-  // Get all speakers
-  const allSpeakers = getAllSpeakers()
+  // Effect to re-filter speakers when search query or industry changes
+  useEffect(() => {
+    const filterAndSetSpeakers = async () => {
+      let filtered = await searchSpeakers(searchQuery) // searchSpeakers is now async
+      if (selectedIndustry !== "all") {
+        filtered = filtered.filter((speaker) =>
+          speaker.industries.some((industry) => industry.toLowerCase().includes(selectedIndustry.toLowerCase())),
+        )
+      }
+      setAllFilteredSpeakers(filtered)
+      setDisplayedSpeakers(filtered.slice(0, 12))
+      setDisplayCount(12)
+    }
+    filterAndSetSpeakers()
+  }, [searchQuery, selectedIndustry])
 
-  // Filter speakers based on search and industry
-  let filteredSpeakers = allSpeakers
+  // Get unique industries for filter dropdown (can be derived from initialSpeakers)
+  const industries = Array.from(new Set(initialSpeakers.flatMap((speaker) => speaker.industries))).sort()
 
-  if (searchQuery) {
-    filteredSpeakers = searchSpeakers(searchQuery)
+  const handleLoadMore = () => {
+    setDisplayCount((prevCount) => prevCount + 12)
+    setDisplayedSpeakers(allFilteredSpeakers.slice(0, displayCount + 12))
   }
-
-  if (selectedIndustry !== "all") {
-    filteredSpeakers = filteredSpeakers.filter((speaker) =>
-      speaker.industries.some((industry) => industry.toLowerCase().includes(selectedIndustry.toLowerCase())),
-    )
-  }
-
-  // Get unique industries for filter dropdown
-  const industries = Array.from(new Set(allSpeakers.flatMap((speaker) => speaker.industries))).sort()
-
-  const displayedSpeakers = filteredSpeakers.slice(0, displayCount)
 
   return (
     <div className="min-h-screen bg-white">
@@ -46,7 +55,7 @@ export default function SpeakerDirectory() {
               All AI Keynote Speakers
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat">
-              Browse our complete directory of {allSpeakers.length}+ world-class artificial intelligence experts,
+              Browse our complete directory of {initialSpeakers.length}+ world-class artificial intelligence experts,
               machine learning pioneers, and tech visionaries.
             </p>
           </div>
@@ -83,7 +92,7 @@ export default function SpeakerDirectory() {
                 </div>
               </div>
               <div className="mt-4 text-sm text-gray-600 font-montserrat">
-                Showing {displayedSpeakers.length} of {filteredSpeakers.length} speakers
+                Showing {displayedSpeakers.length} of {allFilteredSpeakers.length} speakers
               </div>
             </div>
           </div>
@@ -93,7 +102,7 @@ export default function SpeakerDirectory() {
       {/* Speakers Grid */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {filteredSpeakers.length === 0 ? (
+          {allFilteredSpeakers.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-600 mb-4 font-montserrat">
                 No speakers found matching your criteria. Try adjusting your search or filters.
@@ -117,14 +126,14 @@ export default function SpeakerDirectory() {
               </div>
 
               {/* Load More Button */}
-              {displayCount < filteredSpeakers.length && (
+              {displayCount < allFilteredSpeakers.length && (
                 <div className="text-center mt-12">
                   <Button
-                    onClick={() => setDisplayCount(displayCount + 12)}
+                    onClick={handleLoadMore}
                     variant="outline"
                     className="border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white font-montserrat"
                   >
-                    Load More Speakers ({filteredSpeakers.length - displayCount} remaining)
+                    Load More Speakers ({allFilteredSpeakers.length - displayCount} remaining)
                   </Button>
                 </div>
               )}
