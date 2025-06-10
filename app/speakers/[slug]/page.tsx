@@ -4,12 +4,12 @@ import SpeakerProfile from "@/components/speaker-profile"
 import { getSpeakerBySlug, getAllSpeakers } from "@/lib/speakers-data"
 
 interface Props {
-  params: Promise<{ slug: string }>
+  params: { slug: string }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params
-  const speaker = getSpeakerBySlug(slug)
+  const { slug } = params
+  const speaker = await getSpeakerBySlug(slug)
 
   if (!speaker) {
     return {
@@ -30,8 +30,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function SpeakerPage({ params }: Props) {
-  const { slug } = await params
-  const speaker = getSpeakerBySlug(slug)
+  const { slug } = params
+  const speaker = await getSpeakerBySlug(slug)
 
   if (!speaker) {
     notFound()
@@ -41,7 +41,7 @@ export default async function SpeakerPage({ params }: Props) {
 }
 
 export async function generateStaticParams() {
-  const speakers = getAllSpeakers()
+  const speakers = await getAllSpeakers()
   return speakers.map((speaker) => ({
     slug: speaker.slug,
   }))
