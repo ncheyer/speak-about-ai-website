@@ -1255,10 +1255,14 @@ async function loadSpeakers(): Promise<Speaker[]> {
     return _cachedSpeakers
   }
 
-  const sheetSpeakers = await fetchSpeakersFromSheet()
-  if (sheetSpeakers.length > 0) {
-    _cachedSpeakers = sheetSpeakers
-    return sheetSpeakers
+  try {
+    const sheetSpeakers = await fetchSpeakersFromSheet()
+    if (sheetSpeakers && Array.isArray(sheetSpeakers) && sheetSpeakers.length > 0) {
+      _cachedSpeakers = sheetSpeakers
+      return sheetSpeakers
+    }
+  } catch (error) {
+    console.error("Error fetching speakers from Google Sheet:", error)
   }
 
   // Fallback to local data if sheet fetch fails or returns no data
@@ -1268,54 +1272,91 @@ async function loadSpeakers(): Promise<Speaker[]> {
 }
 
 export async function getAllSpeakers(): Promise<Speaker[]> {
-  const speakers = await loadSpeakers()
-  return speakers.filter((speaker) => speaker.listed)
+  try {
+    const speakers = await loadSpeakers()
+    return Array.isArray(speakers) ? speakers.filter((speaker) => speaker.listed) : []
+  } catch (error) {
+    console.error("Error in getAllSpeakers:", error)
+    // Return local speakers as fallback
+    return localSpeakers.filter((speaker) => speaker.listed).sort((a, b) => b.ranking - a.ranking)
+  }
 }
 
 export async function getSpeakerBySlug(slug: string): Promise<Speaker | undefined> {
-  const speakers = await loadSpeakers()
-  return speakers.find((speaker) => speaker.slug === slug)
+  try {
+    const speakers = await loadSpeakers()
+    return Array.isArray(speakers) ? speakers.find((speaker) => speaker.slug === slug) : undefined
+  } catch (error) {
+    console.error("Error in getSpeakerBySlug:", error)
+    // Return from local speakers as fallback
+    return localSpeakers.find((speaker) => speaker.slug === slug)
+  }
 }
 
 export async function searchSpeakers(query: string): Promise<Speaker[]> {
-  const speakers = await loadSpeakers()
-  const lowercaseQuery = query.toLowerCase().trim()
+  try {
+    const speakers = await loadSpeakers()
+    if (!Array.isArray(speakers)) return []
 
-  if (!lowercaseQuery) {
-    return speakers.filter((speaker) => speaker.listed)
+    const lowercaseQuery = query.toLowerCase().trim()
+
+    if (!lowercaseQuery) {
+      return speakers.filter((speaker) => speaker.listed)
+    }
+
+    return speakers.filter((speaker) => {
+      if (!speaker.listed) return false
+
+      const nameWords = speaker.name.toLowerCase().split(/\s+/)
+      const titleWords = speaker.title.toLowerCase().split(/\s+/)
+
+      const nameMatch = nameWords.some((word) => word.includes(lowercaseQuery))
+      const titleMatch = titleWords.some((word) => word.includes(lowercaseQuery))
+
+      const expertiseMatch = speaker.expertise.some((skill) => skill.toLowerCase().includes(lowercaseQuery))
+      const industryMatch = speaker.industries.some((industry) => industry.toLowerCase().includes(lowercaseQuery))
+
+      const bioMatch = lowercaseQuery.length >= 4 && speaker.bio.toLowerCase().includes(lowercaseQuery)
+
+      return nameMatch || titleMatch || expertiseMatch || industryMatch || bioMatch
+    })
+  } catch (error) {
+    console.error("Error in searchSpeakers:", error)
+    return []
   }
-
-  return speakers.filter((speaker) => {
-    if (!speaker.listed) return false
-
-    const nameWords = speaker.name.toLowerCase().split(/\s+/)
-    const titleWords = speaker.title.toLowerCase().split(/\s+/)
-
-    const nameMatch = nameWords.some((word) => word.includes(lowercaseQuery))
-    const titleMatch = titleWords.some((word) => word.includes(lowercaseQuery))
-
-    const expertiseMatch = speaker.expertise.some((skill) => skill.toLowerCase().includes(lowercaseQuery))
-    const industryMatch = speaker.industries.some((industry) => industry.toLowerCase().includes(lowercaseQuery))
-
-    const bioMatch = lowercaseQuery.length >= 4 && speaker.bio.toLowerCase().includes(lowercaseQuery)
-
-    return nameMatch || titleMatch || expertiseMatch || industryMatch || bioMatch
-  })
 }
 
 export async function getSpeakersByIndustry(industry: string): Promise<Speaker[]> {
-  const speakers = await loadSpeakers()
-  return speakers.filter(
-    (speaker) => speaker.listed && speaker.industries.some((ind) => ind.toLowerCase().includes(industry.toLowerCase())),
-  )
+  try {
+    const speakers = await loadSpeakers()
+    if (!Array.isArray(speakers)) return []
+
+    return speakers.filter(
+      (speaker) =>
+        speaker.listed && speaker.industries.some((ind) => ind.toLowerCase().includes(industry.toLowerCase())),
+    )
+  } catch (error) {
+    console.error("Error in getSpeakersByIndustry:", error)
+    return []
+  }
 }
 
 export async function getFeaturedSpeakers(count = 8): Promise<Speaker[]> {
-  const speakers = await getAllSpeakers()
-  return speakers.slice(0, count)
+  try {
+    const speakers = await getAllSpeakers()
+    return Array.isArray(speakers) ? speakers.slice(0, count) : []
+  } catch (error) {
+    console.error("Error in getFeaturedSpeakers:", error)
+    return localSpeakers.filter((speaker) => speaker.listed).slice(0, count)
+  }
 }
 
 export async function getTopSpeakers(count = 6): Promise<Speaker[]> {
-  const speakers = await getAllSpeakers()
-  return speakers.slice(0, count)
+  try {
+    const speakers = await getAllSpeakers()
+    return Array.isArray(speakers) ? speakers.slice(0, count) : []
+  } catch (error) {
+    console.error("Error in getTopSpeakers:", error)
+    return localSpeakers.filter((speaker) => speaker.listed).slice(0, count)
+  }
 }

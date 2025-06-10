@@ -41,8 +41,21 @@ export default async function SpeakerPage({ params }: Props) {
 }
 
 export async function generateStaticParams() {
-  const speakers = await getAllSpeakers()
-  return speakers.map((speaker) => ({
-    slug: speaker.slug,
-  }))
+  try {
+    const speakers = await getAllSpeakers()
+
+    // Ensure we always return an array, even if speakers is undefined or null
+    if (!Array.isArray(speakers)) {
+      console.warn("getAllSpeakers did not return an array, returning empty array for generateStaticParams")
+      return []
+    }
+
+    return speakers.map((speaker) => ({
+      slug: speaker.slug,
+    }))
+  } catch (error) {
+    console.error("Error in generateStaticParams:", error)
+    // Return empty array as fallback to prevent build failure
+    return []
+  }
 }
