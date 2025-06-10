@@ -1,3 +1,6 @@
+"use client"
+
+import { useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Calendar, Clock, ArrowLeft } from "lucide-react"
@@ -13,6 +16,11 @@ interface BlogPostProps {
 export function BlogPostComponent({ post, relatedPosts }: BlogPostProps) {
   // Convert markdown to HTML
   const contentHtml = marked(post.content)
+
+  // Scroll to top when post changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [post.slug])
 
   return (
     <article className="container px-4 py-12 md:px-6 md:py-16">

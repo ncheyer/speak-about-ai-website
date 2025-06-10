@@ -16,7 +16,7 @@ export default function TeamMembers() {
     {
       name: "Robert Strong",
       title: "CEO",
-      image: "/placeholder.svg?height=400&width=400",
+      image: "/team/robert-strong-headshot.png",
       bio: "Speak About AI was founded by author, speaker, and entertainer Robert Strong and is a division of Strong Entertainment, LLC. With 30+ years of experience booking speakers and entertainers globally, Robert brings unparalleled expertise to the AI speaking circuit. He's also a world-renowned magician who's performed at the White House twice, on Penn & Teller Fool Us, and for every major tech company in Silicon Valley. His Amazon best-selling book 'Amaze & Delight: Secrets to Creating Magic in Business' showcases his unique approach to business entertainment.",
       linkedin: "https://linkedin.com/in/robertstrong",
       twitter: "https://twitter.com/robertstrong",
@@ -24,7 +24,7 @@ export default function TeamMembers() {
     {
       name: "Noah Cheyer",
       title: "Head of Marketing & Operations",
-      image: "/placeholder.svg?height=400&width=400",
+      image: "/team/noah-cheyer-headshot.png",
       bio: "Noah Cheyer leads marketing and operations at Speak About AI, bringing a unique perspective to the AI speaking industry. With a BA in Communication Studies and Entrepreneurship from Chapman University, Noah has built expertise across multiple industries. He previously served as Marketplace Account Manager for BlendJet and held various marketing roles in sports, technology, and E-Commerce. Having grown up alongside AI as the son of Siri Co-Founder Adam Cheyer, Noah combines practical business acumen with a lifetime of exposure to artificial intelligence innovation.",
       linkedin: "https://linkedin.com/in/noahcheyer",
     },
@@ -43,6 +43,7 @@ export default function TeamMembers() {
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 256px"
+                  priority
                 />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-1 font-neue-haas text-center">{member.name}</h3>

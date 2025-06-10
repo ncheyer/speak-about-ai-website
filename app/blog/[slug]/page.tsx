@@ -35,7 +35,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <main>
-      <BlogPostComponent post={post} relatedPosts={relatedPosts} />
+      <BlogPostComponent key={params.slug} post={post} relatedPosts={relatedPosts} />
     </main>
   )
 }
