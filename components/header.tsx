@@ -3,7 +3,6 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
 import { Menu, X, Phone } from "lucide-react"
 
 export default function Header() {
@@ -50,12 +49,19 @@ export default function Header() {
               <Phone className="w-4 h-4 mr-2" />
               <span className="text-sm font-medium">Call Now</span>
             </a>
-            <Button
-              asChild
-              className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+            <button
+              className="btn-yellow inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium px-4 py-2 shadow-lg hover:shadow-xl transition-all duration-300"
+              data-button="yellow"
+              style={{
+                background: "linear-gradient(to right, #F59E0B, #D97706)",
+                color: "white",
+                border: "none",
+              }}
             >
-              <Link href="/contact">Contact Us</Link>
-            </Button>
+              <Link href="/contact" className="text-white no-underline">
+                Contact Us
+              </Link>
+            </button>
           </div>
 
           {/* Mobile menu button */}
@@ -84,12 +90,19 @@ export default function Header() {
                 Blog
               </Link>
               <div className="pt-4 border-t border-gray-100">
-                <Button
-                  asChild
-                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                <button
+                  className="btn-yellow w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium px-4 py-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                  data-button="yellow"
+                  style={{
+                    background: "linear-gradient(to right, #F59E0B, #D97706)",
+                    color: "white",
+                    border: "none",
+                  }}
                 >
-                  <Link href="/contact">Contact Us</Link>
-                </Button>
+                  <Link href="/contact" className="text-white no-underline">
+                    Contact Us
+                  </Link>
+                </button>
               </div>
             </nav>
           </div>

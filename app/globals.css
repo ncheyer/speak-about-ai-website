@@ -85,3 +85,65 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Force button colors with higher specificity */
+button[class*="bg-[#1E68C6]"],
+a[class*="bg-[#1E68C6]"],
+.btn-primary,
+[data-button="primary"] {
+  background-color: #1e68c6 !important;
+  background-image: none !important;
+  color: white !important;
+}
+
+button[class*="bg-[#1E68C6]"]:hover,
+a[class*="bg-[#1E68C6]"]:hover,
+.btn-primary:hover,
+[data-button="primary"]:hover {
+  background-color: #5084c6 !important;
+  background-image: none !important;
+}
+
+button[class*="from-yellow"],
+a[class*="from-yellow"],
+.btn-yellow,
+[data-button="yellow"] {
+  background: linear-gradient(to right, #f59e0b, #d97706) !important;
+  color: white !important;
+}
+
+button[class*="from-yellow"]:hover,
+a[class*="from-yellow"]:hover,
+.btn-yellow:hover,
+[data-button="yellow"]:hover {
+  background: linear-gradient(to right, #d97706, #b45309) !important;
+}
+
+/* Force all default variant buttons to use brand blue */
+button[class*="bg-primary"],
+a[class*="bg-primary"] {
+  background-color: #1e68c6 !important;
+  color: white !important;
+}
+
+button[class*="bg-primary"]:hover,
+a[class*="bg-primary"]:hover {
+  background-color: #5084c6 !important;
+}
+
+/* Additional utility classes for brand colors */
+.bg-brand-blue {
+  background-color: #1e68c6 !important;
+}
+
+.bg-brand-blue:hover {
+  background-color: #5084c6 !important;
+}
+
+.text-brand-blue {
+  color: #1e68c6 !important;
+}
+
+.border-brand-blue {
+  border-color: #1e68c6 !important;
+}

@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button"
 import { Users, Award, Calendar, MapPin } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -27,21 +26,34 @@ export default function Hero() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Button
-                asChild
-                size="lg"
-                className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-lg px-8 py-4 font-montserrat"
+              <button
+                className="btn-yellow inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-medium px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat"
+                data-button="yellow"
+                style={{
+                  background: "linear-gradient(to right, #F59E0B, #D97706)",
+                  color: "white",
+                  border: "none",
+                  height: "44px",
+                }}
               >
-                <Link href="/contact">Contact Us</Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="text-lg px-8 py-4 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:bg-opacity-10 font-montserrat"
+                <Link href="/contact" className="text-white no-underline">
+                  Contact Us
+                </Link>
+              </button>
+              <button
+                className="btn-primary inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-medium px-8 py-4 border font-montserrat"
+                data-button="primary"
+                style={{
+                  backgroundColor: "#1E68C6",
+                  color: "white",
+                  borderColor: "#1E68C6",
+                  height: "44px",
+                }}
               >
-                <Link href="/speakers">Browse Speakers</Link>
-              </Button>
+                <Link href="/speakers" className="text-white no-underline">
+                  Browse Speakers
+                </Link>
+              </button>
             </div>
 
             {/* Social Proof Stats */}

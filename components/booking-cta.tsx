@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button"
 import { Phone, Mail, Calendar } from "lucide-react"
 import Link from "next/link"
 
@@ -13,38 +12,51 @@ export default function BookingCTA() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
-          <Button
-            asChild
-            size="lg"
-            className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-lg px-8 py-4 font-montserrat"
+          <button
+            className="btn-yellow inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-medium px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat"
+            data-button="yellow"
+            style={{
+              background: "linear-gradient(to right, #F59E0B, #D97706)",
+              color: "white",
+              border: "none",
+              height: "44px",
+            }}
           >
-            <Link href="/contact">
-              <Calendar className="w-5 h-5 mr-2" />
+            <Calendar className="w-5 h-5 mr-2" />
+            <Link href="/contact" className="text-white no-underline">
               Contact Us
             </Link>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            size="lg"
-            className="border-white text-white hover:bg-white hover:text-[#1E68C6] text-lg px-8 py-4 font-montserrat"
+          </button>
+          <button
+            className="btn-primary inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-medium px-8 py-4 border font-montserrat"
+            data-button="primary"
+            style={{
+              backgroundColor: "#1E68C6",
+              color: "white",
+              borderColor: "white",
+              height: "44px",
+            }}
           >
-            <a href="tel:+1-510-435-3947">
-              <Phone className="w-5 h-5 mr-2" />
+            <Phone className="w-5 h-5 mr-2" />
+            <a href="tel:+1-510-435-3947" className="text-white no-underline">
               Call Now: (510) 435-3947
             </a>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            size="lg"
-            className="border-white text-white hover:bg-white hover:text-[#1E68C6] text-lg px-8 py-4 font-montserrat"
+          </button>
+          <button
+            className="btn-primary inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-medium px-8 py-4 border font-montserrat"
+            data-button="primary"
+            style={{
+              backgroundColor: "#1E68C6",
+              color: "white",
+              borderColor: "white",
+              height: "44px",
+            }}
           >
-            <a href="mailto:human@speakabout.ai">
-              <Mail className="w-5 h-5 mr-2" />
+            <Mail className="w-5 h-5 mr-2" />
+            <a href="mailto:human@speakabout.ai" className="text-white no-underline">
               Email Us
             </a>
-          </Button>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
