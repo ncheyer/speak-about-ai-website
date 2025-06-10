@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button"
+"use client"
+
 import { Mail } from "lucide-react"
 
 export default function JoinTeam() {
@@ -10,16 +11,24 @@ export default function JoinTeam() {
           Interested in working with Speak About AI or have questions about our services? We'd love to hear from you.
         </p>
 
-        <Button
-          asChild
-          size="lg"
-          className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-lg px-8 py-4 font-montserrat"
+        <a
+          href="mailto:human@speakabout.ai"
+          className="inline-flex items-center justify-center px-8 py-4 text-lg font-montserrat text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-md"
+          style={{
+            background: "linear-gradient(to right, #f59e0b, #d97706)",
+            color: "white",
+          }}
+          data-button="yellow"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "linear-gradient(to right, #d97706, #b45309)"
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "linear-gradient(to right, #f59e0b, #d97706)"
+          }}
         >
-          <a href="mailto:human@speakabout.ai">
-            <Mail className="w-5 h-5 mr-2" />
-            Email Us
-          </a>
-        </Button>
+          <Mail className="w-5 h-5 mr-2" />
+          Email Us
+        </a>
       </div>
     </section>
   )

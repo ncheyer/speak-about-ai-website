@@ -45,7 +45,11 @@ export default function Header() {
 
           {/* CTA Button */}
           <div className="hidden md:flex items-center space-x-4">
-            <a href="tel:+1-510-435-3947" className="flex items-center text-gray-600 hover:text-[#1E68C6]">
+            <a
+              href="tel:+1-510-435-3947"
+              className="flex items-center text-gray-600 hover:text-[#1E68C6] transition-colors"
+              style={{ textDecoration: "none" }}
+            >
               <Phone className="w-4 h-4 mr-2" />
               <span className="text-sm font-medium">Call Now</span>
             </a>

@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button"
+"use client"
+
 import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
 import { Mic, MessageCircle, Users, BookOpen, Video, Camera, Zap } from "lucide-react"
@@ -134,9 +135,23 @@ export default function ServiceOfferings() {
                     </ul>
                   </div>
 
-                  <Button asChild className="w-full bg-[#1E68C6] hover:bg-[#5084C6] font-montserrat">
-                    <Link href="/contact">Learn More</Link>
-                  </Button>
+                  <Link
+                    href="/contact"
+                    className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 font-montserrat text-center"
+                    style={{
+                      backgroundColor: "#1E68C6",
+                      color: "white",
+                    }}
+                    data-button="primary"
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#5084C6"
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#1E68C6"
+                    }}
+                  >
+                    Learn More
+                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -170,9 +185,23 @@ export default function ServiceOfferings() {
 
               <p className="text-sm text-gray-600 mb-6 font-montserrat">{sprintAI.details}</p>
 
-              <Button asChild className="bg-orange-600 hover:bg-orange-700 font-montserrat">
-                <a href="mailto:human@speakabout.ai">Inquire About SprintAI</a>
-              </Button>
+              <a
+                href="mailto:human@speakabout.ai"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 font-montserrat"
+                style={{
+                  backgroundColor: "#ea580c",
+                  color: "white",
+                }}
+                data-button="orange"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#c2410c"
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#ea580c"
+                }}
+              >
+                Inquire About SprintAI
+              </a>
             </div>
 
             <div className="lg:order-first">

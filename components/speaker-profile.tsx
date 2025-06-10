@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -217,13 +216,19 @@ export default function SpeakerProfile({ speaker }: SpeakerProfileProps) {
                 )}
 
                 {/* CTA Button */}
-                <Button
-                  asChild
-                  size="lg"
-                  className="w-full bg-[#1E68C6] hover:bg-[#5084C6] text-white font-semibold py-4 px-8 rounded-full text-lg mb-6"
+                <button
+                  className="btn-primary w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-semibold py-4 px-8 rounded-full mb-6"
+                  data-button="primary"
+                  style={{
+                    backgroundColor: "#1E68C6",
+                    color: "white",
+                    border: "none",
+                  }}
                 >
-                  <Link href="/contact">Check Availability</Link>
-                </Button>
+                  <Link href="/contact" className="text-white no-underline">
+                    Check Availability
+                  </Link>
+                </button>
 
                 {/* Social Links */}
                 {(speaker.linkedin || speaker.website) && (

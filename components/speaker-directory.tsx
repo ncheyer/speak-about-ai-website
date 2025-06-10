@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -170,18 +169,31 @@ export default function SpeakerDirectory() {
               {/* Clear Filters */}
               {(searchQuery || industryFilter !== "all" || expertiseFilter !== "all" || locationFilter !== "all") && (
                 <div className="mt-4 flex justify-center">
-                  <Button
-                    variant="outline"
+                  <button
                     onClick={() => {
                       setSearchQuery("")
                       setIndustryFilter("all")
                       setExpertiseFilter("all")
                       setLocationFilter("all")
                     }}
-                    className="text-[#1E68C6] border-[#1E68C6] hover:bg-[#1E68C6] hover:text-white"
+                    className="btn-primary inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 border border-[#1E68C6] hover:text-white transition-colors"
+                    data-button="primary"
+                    style={{
+                      borderColor: "#1E68C6",
+                      color: "#1E68C6",
+                      backgroundColor: "transparent",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#1E68C6"
+                      e.currentTarget.style.color = "white"
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent"
+                      e.currentTarget.style.color = "#1E68C6"
+                    }}
                   >
                     Clear All Filters
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
@@ -206,17 +218,23 @@ export default function SpeakerDirectory() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No speakers found</h3>
               <p className="text-gray-600 mb-4">Try adjusting your search criteria or clearing the filters.</p>
-              <Button
+              <button
                 onClick={() => {
                   setSearchQuery("")
                   setIndustryFilter("all")
                   setExpertiseFilter("all")
                   setLocationFilter("all")
                 }}
-                className="bg-[#1E68C6] hover:bg-[#5084C6]"
+                className="btn-primary inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2"
+                data-button="primary"
+                style={{
+                  backgroundColor: "#1E68C6",
+                  color: "white",
+                  border: "none",
+                }}
               >
                 Clear All Filters
-              </Button>
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -278,12 +296,31 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
           </div>
 
           <div className="flex gap-2 mt-auto">
-            <Button asChild className="flex-1 bg-[#1E68C6] hover:bg-[#5084C6] text-sm">
-              <Link href={`/speakers/${speaker.slug}`}>View Profile</Link>
-            </Button>
-            <Button asChild variant="outline" className="flex-1 text-sm">
-              <Link href="/contact">Book Now</Link>
-            </Button>
+            <button
+              className="btn-primary flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2"
+              data-button="primary"
+              style={{
+                backgroundColor: "#1E68C6",
+                color: "white",
+                border: "none",
+              }}
+            >
+              <Link href={`/speakers/${speaker.slug}`} className="text-white no-underline">
+                View Profile
+              </Link>
+            </button>
+            <button
+              className="flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
+              style={{
+                borderColor: "#E5E7EB",
+                color: "#374151",
+                backgroundColor: "white",
+              }}
+            >
+              <Link href="/contact" className="no-underline" style={{ color: "#374151" }}>
+                Book Now
+              </Link>
+            </button>
           </div>
         </div>
       </CardContent>

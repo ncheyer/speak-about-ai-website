@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+"use client"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
@@ -27,14 +27,27 @@ export default function FeaturedSpeakers() {
         </div>
 
         <div className="text-center">
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:bg-opacity-10 font-montserrat"
+          <button
+            className="btn-primary inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-11 px-8 border border-[#1E68C6] hover:bg-[#1E68C6] hover:bg-opacity-10 font-montserrat transition-colors"
+            data-button="primary"
+            style={{
+              borderColor: "#1E68C6",
+              color: "#1E68C6",
+              backgroundColor: "transparent",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#1E68C6"
+              e.currentTarget.style.color = "white"
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent"
+              e.currentTarget.style.color = "#1E68C6"
+            }}
           >
-            <Link href="/speakers">View All {allSpeakers.length}+ AI Speakers</Link>
-          </Button>
+            <Link href="/speakers" className="no-underline">
+              View All {allSpeakers.length}+ AI Speakers
+            </Link>
+          </button>
         </div>
       </div>
     </section>
@@ -77,9 +90,19 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             </div>
           </div>
 
-          <Button asChild className="w-full bg-[#1E68C6] hover:bg-[#5084C6] font-montserrat">
-            <Link href="/contact">Check Availability</Link>
-          </Button>
+          <button
+            className="btn-primary w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 font-montserrat"
+            data-button="primary"
+            style={{
+              backgroundColor: "#1E68C6",
+              color: "white",
+              border: "none",
+            }}
+          >
+            <Link href="/contact" className="text-white no-underline">
+              Check Availability
+            </Link>
+          </button>
         </div>
       </CardContent>
     </Card>
