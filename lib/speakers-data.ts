@@ -3,6 +3,7 @@ export interface Speaker {
   name: string
   title: string
   image: string
+  imagePosition?: string // Add this new optional property
   bio: string
   programs: string[]
   fee: string
@@ -21,17 +22,18 @@ export const speakers: Speaker[] = [
   {
     slug: "adam-cheyer",
     name: "Adam Cheyer",
-    title: "Co-Founder of Siri",
+    title:
+      "VP of AI Experience at Airbnb, Co-Founder of Siri, Gameplanner.ai, Viv Labs, Sentient, and Founding Member of Change.org",
     image: "/speakers/adam-cheyer-headshot.png",
-    bio: "Adam Cheyer is a computer scientist and entrepreneur who co-founded Siri (acquired by Apple for over $200 million) and Viv Labs (acquired by Samsung). He is a pioneer in conversational AI and virtual assistant technology, with over 60 patents in AI and interface design. Cheyer has been at the forefront of making AI accessible to everyday users through natural language interfaces.",
+    imagePosition: "top",
+    bio: "Adam is an expert in entrepreneurship, artificial intelligence, and scaling startups. With over ten years of experience founding and exiting companies, he was a co-founder of Siri, which Apple acquired, co-founded Viv Labs, which was acquired by Samsung, and Gameplanner.AI, which was Airbnb's first acquisition since going public. Through Siri and Bixby (Apple & Samsung's voice assistants), Adam has created key technology in over 1.5 billion devices. A founding developer of Change.org, he's helped unite 500M+ members to create social change across the globe. After his most recent acquisition, he leads all AI efforts at Airbnb as the VP of AI Experience.\n\nAdam is a 30+ year veteran in Artificial Intelligence, initially starting as a researcher at SRI International. With 39 patents and 60+ publications, his technical expertise and visionary approach to entrepreneurship are widely recognized across the globe. Before Siri, he co-founded Sentient Technologies, which applies distributed machine learning algorithms to discover novel solutions to complex problems.\n\nBeyond his success in technology, Adam is also an award-winning magician. He's performed on some of the most prestigious stages in magic, including the Magic Castle in Los Angeles and the hit TV show \"Penn and Teller Fool Us.\" As a bonus, Adam usually includes a magic trick as a way to entertain and delight during his keynotes.",
     programs: [
-      "The Evolution of Conversational AI",
-      "Building Virtual Assistants That Actually Work",
-      "Voice Technology and the Future of Human-Computer Interaction",
-      "AI Product Development: From Research to Market",
+      "ChatGPT and The Rise of Conversational AI",
+      "The Future of AI and Businesses",
+      '"Hey SIRI": A Founding Story',
     ],
-    fee: "$50-$60k",
-    location: "Oakland International Airport",
+    fee: "Please Inquire",
+    location: "San Franscisco, California",
     linkedin: "https://www.linkedin.com/in/adamcheyer/",
     website: "http://adam.cheyer.com/site/home",
     email: "adam.cheyer@gmail.com",
@@ -66,16 +68,17 @@ export const speakers: Speaker[] = [
   {
     slug: "cassie-kozyrkov",
     name: "Cassie Kozyrkov",
-    title: "Former Google Chief Decision Scientist",
+    title: "CEO of Kozyr, AI Luminary, Former Chief Decision Scientist at Google, and Pioneer of Decision Intelligence",
     image: "/speakers/cassie-kozyrkov-headshot.jpg",
-    bio: "Cassie Kozyrkov was Google's first Chief Decision Scientist, where she advised executives on AI strategy and decision intelligence. She's an expert in making AI accessible to business leaders and has been instrumental in democratizing data science and machine learning across organizations. Kozyrkov is known for her ability to translate complex AI concepts into actionable business strategies.",
+    imagePosition: "top",
+    bio: "Cassie Kozyrkov, CEO of Kozyr, is a renowned leader in artificial intelligence. She is best known for founding the field of Decision Intelligence and serving as Google's first Chief Decision Scientist, where she spearheaded Google's transformation into an AI-first company.\n\nToday, Cassie is a sought-after AI advisor and speaker who has transformed how organizations like Gucci, NASA, Spotify, Meta, and GSK approach AI strategy. Passionate about elevating human potential through the responsible adoption of complex technology, she also serves on the Innovation Advisory Council of the Federal Reserve Bank of New York and an investor in emerging product companies.\n\nHer influence on Google's culture is legendary; no matter how big the auditorium, Google had to use lotteries to manage the demand to participate in one of her live workshops. Her work, which included personally training over 20,000 Googlers in AI and data-driven decision-making, impacted more than 500 company initiatives.\n\nCombining deep technical knowledge with theater-trained charisma, Cassie is a captivating keynote speaker with the rare ability to make complex concepts accessible, engaging, and actionable for executive and general audiences alike. Her humor, wit, and vivid analogies ensure that people of all stripes leave her talks inspired and equipped to drive innovation. Cassie has delighted live audiences in more than 40 countries and on all seven continents, including stages at the United Nations, World Economic Forum, Web Summit, and SXSW.\n\nCassie has appeared on the cover of Forbes AI and featured in Harvard Business Review, Fortune, Fast Company, WIRED, Success, Entrepreneur, as well as a recent documentary on the AI revolution. Her online courses and more than 200+ published articles have reached millions and cemented her position as a LinkedIn Top Voice and the #1 Writer in AI on Medium for many years. She is followed by more than 24,000 CxOs.\n\nHailing from South Africa, Cassie began her undergraduate studies at the age of 15 at Nelson Mandela University and earned degrees in economics, mathematical statistics, psychology and neuroscience from the University of Chicago, NCSU, and Duke University, which honored her as a Few-Glasson Distinguished Alumna for her significant contributions to the fields of AI and Decision Intelligence.",
     programs: [
-      "AI Strategy for Business Leaders",
-      "Decision Intelligence in the Age of AI",
-      "Responsible AI Implementation",
-      "Data-Driven Decision Making at Scale",
+      "The Future is AI-First: Are You Ready to Lead?",
+      "AI Won't Steal Your Job, But It Will Steal Your Excuses",
+      "Why Businesses Fail at AI Adoption: From Buzzwords to Business Strategy",
+      "Mind The Gap: Digital Trust Habits For The AI Era",
     ],
-    fee: "$45k-$70k",
+    fee: "Please Inquire",
     location: "Miami, Florida",
     linkedin: "https://www.linkedin.com/in/kozyrkov/",
     website: "https://kozyr.com/",
@@ -89,15 +92,12 @@ export const speakers: Speaker[] = [
   {
     slug: "rana-el-kaliouby",
     name: "Rana el Kaliouby",
-    title: "Co-Founder of Affectiva (Emotion AI)",
+    title:
+      "Co-Founder and General Partner of Blue Tulip Ventures, Former Deputy CEO of Smart Eye, Co-Founder of Affectiva, and Author",
     image: "/speakers/rana-el-kaliouby-headshot.jpg",
-    bio: "Dr. Rana el Kaliouby is a pioneer in Emotion AI and co-founder of Affectiva, the leading emotion recognition technology company. She holds a PhD from Cambridge University and has been recognized as one of the most influential women in AI. Her work focuses on humanizing technology through emotion recognition and has applications across automotive, advertising, and healthcare industries.",
-    programs: [
-      "The Future of Emotion AI",
-      "Humanizing Technology Through Emotional Intelligence",
-      "Computer Vision and Facial Recognition",
-      "Building AI Startups That Matter",
-    ],
+    imagePosition: "top",
+    bio: "Rana el Kaliouby is a distinguished figure in the realm of emotion AI, renowned for her groundbreaking work in bringing emotional intelligence to technology. Born and raised in Cairo, Egypt, she embarked on an academic journey that led her to earn her bachelor's and master's degrees from the American University in Cairo and a Ph.D. from Newnham College, Cambridge. \n\nRana's career began with a pivotal role at the MIT Media Lab's Affective Computing group where she was integral to the team that developed the innovative \"emotional hearing aid,\" a pioneering set of emotion-reading wearable glasses. This invention gained recognition as one of the New York Times' Top 100 Innovations of 2006. \n\nHer vision for humanizing technology led her to co-found Affectiva, a spin-off from the MIT Media Lab. As the CEO of Affectiva, Rana has been at the forefront of leveraging facial and vocal recognition software to bridge the gap between humans and machines. Under her leadership, Affectiva has grown its facial emotion repository to nearly 6 million faces analyzed across 75 countries. \n\nBeyond her role in Affectiva, Rana has made her mark as a World Economic Forum Young Global Leader. She has also co-hosted the PBS NOVA Wonders series, further demonstrating her ability to make complex technological concepts accessible to a wider audience. \n\nRana's journey and insights into the world of AI and emotion recognition are eloquently captured in her memoir, \"Girl Decoded.\" Additionally, she has contributed a chapter to \"Architects of Intelligence: The Truth About AI from the People Building It\" by Martin Ford, solidifying her position as a thought leader in the AI community.",
+    programs: ["The Ethics Behind Smarter AI", "The Future of Emotional AI"],
     fee: "Please Inquire",
     location: "Boston, MA",
     linkedin: "https://www.linkedin.com/in/kaliouby/",
@@ -112,17 +112,12 @@ export const speakers: Speaker[] = [
   {
     slug: "allie-k-miller",
     name: "Allie Miller",
-    title: "Former Head of Machine Learning Business Development at Amazon",
+    title: "Former Global Head of Machine Learning For Startups and Venture Capital at Amazon (AWS)",
     image: "/speakers/allie-k-miller-fireside.jpg",
-    bio: "Allie Miller is a leading AI strategist and former Amazon executive who was the youngest woman to work on IBM Watson. She has been instrumental in scaling AI initiatives across Fortune 500 companies and is a passionate advocate for diversity in AI. Miller combines technical expertise with business acumen to help organizations successfully implement AI strategies.",
-    programs: [
-      "AI Strategy for Enterprise Scale",
-      "Machine Learning Business Applications",
-      "Diversity and Inclusion in AI",
-      "Building AI-First Organizations",
-    ],
-    fee: "$70k",
-    location: "New York City",
+    bio: "Allie K. Miller stands out as a preeminent leader in artificial intelligence, merging her roles as an advisor, investor, and influencer in the AI sphere. Her journey includes a pivotal role as the Global Head of Machine Learning Business Development for Startups and Venture Capital at Amazon (AWS), where she not only advised world-leading ML researchers and founders but also transformed her division into a 100-person, 10-figure organization. Prior to Amazon, Allie was the youngest-ever woman at IBM to spearhead the development of an AI product, impacting thousands of companies across domains like computer vision and data regulation.\n\nBeyond her corporate achievements, Allie is a formidable force in shaping the AI landscape. She has addressed global platforms, including the European Commission, and has authored over 10 guidebooks on AI, focusing on empowering businesses to harness AI successfully. Her contributions to AI have earned her numerous accolades, including AIconic's \"AI Innovator of the Year\" in 2019, LinkedIn Top Voice for Technology and AI for five consecutive years, and recognition by Award Magazine, Chief in Tech, and ReadWrite as a leading woman in tech and a global thought leader.\n\nAllie's commitment extends to promoting diversity and education in AI, as evidenced by her founding The AI Pipeline and co-founding Girls of the Future. She also serves as a national ambassador for AAAS and an ambassador for Advancing Women in Product. Her investment acumen is showcased through her role as an angel investor in machine learning startups and winning the Grand Prize in three national innovation competitions.\n\nHolding a double-major MBA from The Wharton School and a BA in Cognitive Science from Dartmouth College, Allie's academic background is as impressive as her professional journey. Her expertise in cognitive science, encompassing computer science, linguistics, and psychology, complements her extensive practical experience in the field of artificial intelligence. Allie K. Miller represents the epitome of innovation, leadership, and advocacy in the rapidly evolving world of AI.",
+    programs: ["The Future of AI"],
+    fee: "Please Inquire",
+    location: "New York City, New York",
     linkedin: "https://www.linkedin.com/in/alliekmiller/",
     website: "https://alliekmiller.com/",
     email: "hello@alliekmiller.com",
@@ -135,17 +130,12 @@ export const speakers: Speaker[] = [
   {
     slug: "dag-kittlaus",
     name: "Dag Kittlaus",
-    title: "Co-Founder of Siri & AI Entrepreneur",
+    title: "Former Co-Founder of Siri and Viv Labs, Co-founder/CEO of Riva Health",
     image: "/speakers/dag-kittlaus-headshot.jpg",
-    bio: "Dag Kittlaus is the co-founder of Siri and a pioneering AI entrepreneur. He has been instrumental in developing conversational AI technologies and continues to work on advancing AI applications and entrepreneurship.",
-    programs: [
-      "The Evolution of Conversational AI",
-      "AI Entrepreneurship and Innovation",
-      "Building AI Companies",
-      "The Future of Voice Technology",
-    ],
-    fee: "$50-$70k",
-    location: "Silicon Valley",
+    bio: "Dag Kittlaus is a visionary entrepreneur and a leading figure in the AI industry, renowned as the co-founder and CEO of Viv, acquired by Samsung in 2016, and the groundbreaking Siri, which was acquired by Apple in 2010. Now, he's a co-founder and CEO of Riva a med-tech company dedicated to using mobile technology and AI to improve hypertension management drastically. His journey in technology began as an Entrepreneur-in-Residence at SRI, leading to the creation of Siri, the world's first virtual personal assistant. Following the acquisition of Siri by Apple, Dag served as the Director of iPhone Apps, overseeing the Siri and speech recognition teams, before launching Viv in 2012, an ambitious project aiming to democratize AI and enable seamless interaction with technology.\n\nWith over a decade of experience in consumer wireless internet both in Scandinavia and the US, Dag's career is a testament to his innovative spirit and leadership skills. He held key roles at Telenor Mobile as VP of Consumer Internet Services and at Motorola, where he was the General Manager of xProducts and founder and GM of Motorola's Interactive Media Group. His work at Motorola led to the creation and launch of Screen3, a pioneering consumer mobile application widely used and adopted by major telecom companies.",
+    programs: ["Past, Present, and Future of AI", "How To Sell The Vision of AI", "AI in Healthcare"],
+    fee: "Please Inquire",
+    location: "Chicago, Illinois",
     email: "dag@sirifounder.com",
     contact: "Direct",
     listed: true,
@@ -154,40 +144,14 @@ export const speakers: Speaker[] = [
     ranking: 85,
   },
   {
-    slug: "david-eagleman",
-    name: "David Eagleman",
-    title: "Neuroscientist & AI-Brain Interface Expert",
-    image: "/placeholder.svg?height=400&width=400",
-    bio: "David Eagleman is a renowned neuroscientist and AI-brain interface expert who explores the intersection of neuroscience and artificial intelligence. He has extensive experience in brain research and the development of brain-computer interfaces.",
-    programs: [
-      "Neuroscience and AI",
-      "Brain-Computer Interfaces",
-      "The Future of Human-AI Integration",
-      "Neurotechnology and AI",
-    ],
-    fee: "$50k-$75k",
-    location: "Stanford, CA",
-    email: "david@neuroscienceai.com",
-    contact: "Direct",
-    listed: true,
-    expertise: ["Neuroscience", "Brain-Computer Interfaces", "Neurotechnology", "AI-Brain Integration"],
-    industries: ["Neuroscience", "Healthcare", "Technology", "Research"],
-    ranking: 85,
-  },
-  {
     slug: "luc-julia",
     name: "Dr. Luc Julia",
-    title: "Co-Creator of Siri & AI Innovation Expert",
+    title: "Chief Scientific Officer for Renault",
     image: "/placeholder.svg?height=400&width=400",
-    bio: "Dr. Luc Julia is the co-creator of Siri and a leading AI innovation expert. He has been instrumental in developing conversational AI technologies and continues to work on advancing AI applications across various industries.",
-    programs: [
-      "The History and Future of Conversational AI",
-      "AI Innovation and Development",
-      "Voice Technology and Natural Language Processing",
-      "Building AI Systems That Understand Humans",
-    ],
-    fee: "$50-$70k",
-    location: "Paris, France",
+    bio: 'Dr. Luc JULIA, Chief Scientific Officer for Renault, was CTO and Senior Vice President of Innovation for Samsung Electronics, directed Siri at Apple, was Chief Technologist at Hewlett-Packard and cofounded a number of start-ups in the Silicon Valley. While conducting research at SRI International, he was involved in the creation of Nuance Communications, now the world leader in speech recognition.\n\nRecipient of Légion d\'Honneur, the highest order of France, and member of its National Academy of Technologies, he holds degrees in Mathematics and Computer Science from the University Pierre et Marie Curie in Paris and earned a Ph.D. in Computer Science at the Ecole Nationale Supérieure des Télécommunications de Paris.\n\nHe is the bestselling author of the book "There is no such thing as Artificial Intelligence", holds dozens of patents and is recognized as one of the top 100 most influential French developers in the digital world.',
+    programs: ["There is no such thing as Artificial Intelligence", "Generative AI: Myth and Reality"],
+    fee: "Please Inquire",
+    location: "Bay Area, California & Paris, France",
     email: "luc@siricocreator.com",
     contact: "Direct",
     listed: true,
@@ -198,17 +162,16 @@ export const speakers: Speaker[] = [
   {
     slug: "charlene-li",
     name: "Charlene Li",
-    title: "Digital Transformation Expert & Former Forrester VP",
+    title: "Author, Advisor, and Executive Coach",
     image: "/speakers/charlene-li-headshot.jpg",
-    bio: "Charlene Li is a digital transformation expert, former Forrester VP, and bestselling author on leadership and technology. She is the founder of Altimeter Group and has advised Fortune 500 companies on digital strategy and AI implementation. Li is recognized as one of the most influential voices in digital transformation and future of work.",
+    bio: "For the past two decades, Charlene Li has been helping people see the future. With a focus on digital transformation, disruption leadership and strategy, customer experience, and the future of work, she has positioned herself as a pivotal figure helping corporations navigate the modern business landscape. She's the author of six books, including the New York Times bestseller Open Leadership and the critically acclaimed Groundswell, co-authored by her. Her most recent publication, The Disruption Mindset, has also achieved bestseller status, and she is currently working on a new book titled Winning with Generative AI.\n\nCharlene Li's career is marked by her entrepreneurial spirit, as she founded Altimeter, a disruptive analyst firm that was later acquired in 2015. Her tenure as the Chief Research Officer for PA Consulting showcased her ability to lead thought leadership programs with acumen. Presently, she heads Quantum Networks Group, leveraging her extensive experience to guide companies through the digital era. Her advisory role spans a wide spectrum of industries, having worked with hundreds of leading companies, including Adobe and Southwest Airlines, and providing insights to 49 of the Fortune 100 companies.\n\nCharlene Li's academic achievements include graduating magna cum laude from Harvard College and earning an MBA from Harvard Business School. Residing in San Francisco, she enjoys the personal challenge of teaching her cat tricks in her time off. The blend of professional achievement, thought leadership, and personal interests highlights Charlene Li's diverse talents and contributions to the business world and beyond.",
     programs: [
-      "Digital Transformation Leadership",
-      "AI and the Future of Work",
-      "Technology Strategy for Executives",
-      "Leading Change in Digital Organizations",
+      "Winning With Generative AI: Crafting a Future-Ready Strategy",
+      "Creating a Unified Generative AI Strategy: An Executive Roadmap",
+      "Strategizing Generative AI: Vision, Alignment, and Execution",
     ],
-    fee: "$35k US, $52.5k International",
-    location: "San Francisco (SFO)",
+    fee: "$30,000 to $55,000 plus travel.",
+    location: "San Francisco, California",
     linkedin: "https://www.linkedin.com/in/charleneli/",
     website: "https://charleneli.com/",
     email: "charlene@charleneli.com",
@@ -223,7 +186,7 @@ export const speakers: Speaker[] = [
     name: "Ashley Tarver",
     title: "Data & AI Cloud Evangelist at Microsoft",
     image: "/placeholder.svg?height=400&width=400",
-    bio: "Ashley Tarver is a leading AI technology evangelist and entrepreneur who works with Microsoft's largest Silicon Valley customers to shape the future of artificial intelligence implementation. As a trusted advisor to senior executives, he guides Fortune 500 companies in deploying AI and machine learning solutions across diverse industries. Known for his exceptional ability to translate complex AI concepts into actionable business strategies, Ashley brings hands-on experience from the frontlines of the AI revolution.",
+    bio: "Ashley Tarver is a leading AI technology evangelist and entrepreneur who works with Microsoft's largest Silicon Valley customers to shape the future of artificial intelligence implementation. As a trusted advisor to senior executives, he guides Fortune 500 companies in deploying AI and machine learning solutions across diverse industries.\n\nKnown for his exceptional ability to translate complex AI concepts into actionable business strategies, Ashley brings hands-on experience from the frontlines of the AI revolution. He currently serves as Board President for the Association of Corporate Growth – Silicon Valley Chapter (ACGSV.org), where he advises startups, VCs, and PE firms on leveraging AI technologies in M&A activities.\n\nA successful entrepreneur himself, Ashley has founded and exited three startups. His unique combination of technical expertise (BS in Aerospace Engineering) and business acumen makes him a sought-after speaker at prestigious venues including Intel, Cisco, Cloudera, and IEEE National Conference.\n\nAshley's insights have been featured on The Silicon Valley Podcast and in prominent publications like Silicon Valley Business Times and San Francisco Business Times. His talks blend deep technical knowledge with practical business applications, helping organizations understand the \"art of the possible\" with AI technology.\n\nA former combat engineering officer in the US Army and current member of the 82nd Airborne Division Association, Ashley brings discipline and strategic thinking to every engagement. Based in San Francisco, he remains active in the startup ecosystem as a board advisor while pursuing interests in fly fishing, skiing, gaming, and cosplay.",
     programs: [
       "Practical adoption of AI use-cases",
       "Scaling impact Hi-Tech has on businesses",
@@ -280,13 +243,14 @@ export const speakers: Speaker[] = [
     listed: true,
     expertise: ["AI Ethics", "AI Governance", "Technology Policy", "Academic Research"],
     industries: ["Academia", "Government", "Policy", "Research"],
-    ranking: 72,
+    ranking: 20,
   },
   {
     slug: "maya-ackerman",
     name: "Maya Ackerman",
     title: "AI Creativity & Computational Creativity Expert",
     image: "/speakers/maya-ackerman-headshot.jpg",
+    imagePosition: "top",
     bio: "Maya Ackerman is an AI creativity and computational creativity expert who explores how artificial intelligence can enhance and augment human creativity. She specializes in AI applications in creative industries and computational creativity research.",
     programs: [
       "AI and Computational Creativity",
@@ -322,13 +286,14 @@ export const speakers: Speaker[] = [
     listed: true,
     expertise: ["AI in Healthcare", "Digital Surgery", "Medical Technology", "Virtual Reality"],
     industries: ["Healthcare", "Medical Devices", "Surgery", "Digital Health"],
-    ranking: 70,
+    ranking: 24,
   },
   {
     slug: "harvey-castro",
     name: "Dr. Harvey Castro",
     title: "AI in Healthcare & Medical Innovation Expert",
     image: "/speakers/dr-harvey-castro-headshot.jpg",
+    imagePosition: "top",
     bio: "Dr. Harvey Castro is a leading AI in healthcare expert and medical innovation specialist who focuses on the application of artificial intelligence in medical practice and healthcare delivery. He has extensive experience in medical AI implementation and healthcare technology innovation, helping organizations leverage AI to improve patient outcomes and healthcare efficiency.",
     programs: [
       "AI in Healthcare and Medical Practice",
@@ -343,7 +308,7 @@ export const speakers: Speaker[] = [
     listed: true,
     expertise: ["Healthcare AI", "Medical Innovation", "Digital Health", "Medical Technology"],
     industries: ["Healthcare", "Medical Technology", "Digital Health", "Medicine"],
-    ranking: 68,
+    ranking: 22,
   },
   {
     slug: "nancy-xu",
@@ -399,7 +364,7 @@ export const speakers: Speaker[] = [
       "Technology Trends and AI",
       "AI in E-commerce and Marketing",
     ],
-    fee: "$35k-$50k",
+    fee: "35k-$50k",
     location: "San Francisco",
     email: "ben@octaneai.com",
     contact: "Direct",
@@ -434,6 +399,7 @@ export const speakers: Speaker[] = [
     name: "Christopher Ategeka",
     title: "AI Innovation & Technology Leadership Expert",
     image: "/speakers/christopher-ategeka-headshot.jpg",
+    imagePosition: "top",
     bio: "Christopher Ategeka is an AI innovation and technology leadership expert with extensive experience in building and scaling technology companies. He has been involved in various AI initiatives and helps organizations develop innovation strategies and implement cutting-edge AI solutions.",
     programs: [
       "AI Innovation and Leadership",
@@ -448,7 +414,7 @@ export const speakers: Speaker[] = [
     listed: true,
     expertise: ["AI Innovation", "Technology Leadership", "Innovation Strategy", "Technology Development"],
     industries: ["Technology", "Innovation", "Startups", "Leadership"],
-    ranking: 60,
+    ranking: 25,
   },
   {
     slug: "ryan-pamplin",
@@ -560,6 +526,7 @@ export const speakers: Speaker[] = [
     name: "David Ewing Duncan",
     title: "Biotech & AI Futurist, Author",
     image: "/speakers/david-ewing-duncan-headshot.jpg",
+    imagePosition: "top",
     bio: "David Ewing Duncan is a renowned author, journalist, and futurist specializing in biotechnology and artificial intelligence. He has written several bestselling books on the intersection of technology and human health, and is a frequent speaker on the future of medicine, longevity, and AI applications in healthcare.",
     programs: [
       "The Future of Human Longevity",
@@ -742,7 +709,7 @@ export const speakers: Speaker[] = [
     listed: true,
     expertise: ["Natural Language Processing", "Conversational AI", "Machine Learning", "AI Research"],
     industries: ["Technology", "Research", "Software", "AI"],
-    ranking: 45,
+    ranking: 20,
   },
   {
     slug: "brad-templeton",
@@ -812,6 +779,7 @@ export const speakers: Speaker[] = [
     name: "Rafael Grossmann",
     title: "Digital Surgery & AI in Medicine Expert",
     image: "/speakers/rafael-grossmann-headshot.jpg",
+    imagePosition: "top",
     bio: "Rafael Grossmann is a digital surgery and AI in medicine expert who pioneered the use of emerging technologies in surgical practice. He is known for his innovative work in digital health and AI applications in surgery and medical education.",
     programs: [
       "Digital Surgery and AI in Medicine",
@@ -848,27 +816,6 @@ export const speakers: Speaker[] = [
     expertise: ["AI Engineering", "Machine Learning", "AI Infrastructure", "Model Deployment"],
     industries: ["Technology", "Software", "Cloud Computing", "Enterprise"],
     ranking: 30,
-  },
-  {
-    slug: "ben-parr",
-    name: "Ben Parr",
-    title: "AI Entrepreneur & Technology Journalist",
-    image: "/placeholder.svg?height=400&width=400",
-    bio: "Ben Parr is an AI entrepreneur and technology journalist who has been covering the AI industry and building AI companies. He is the co-founder of Octane AI and has extensive experience in AI entrepreneurship and technology journalism.",
-    programs: [
-      "AI Entrepreneurship and Innovation",
-      "Building AI Companies",
-      "Technology Trends and AI",
-      "AI in E-commerce and Marketing",
-    ],
-    fee: "$35k-$50k",
-    location: "San Francisco",
-    email: "ben@octaneai.com",
-    contact: "Direct",
-    listed: true,
-    expertise: ["AI Entrepreneurship", "Technology Journalism", "E-commerce AI", "AI Innovation"],
-    industries: ["Technology", "E-commerce", "Media", "Startups"],
-    ranking: 29,
   },
   {
     slug: "simone-bianco",
@@ -934,27 +881,6 @@ export const speakers: Speaker[] = [
     ranking: 25,
   },
   {
-    slug: "max-sills",
-    name: "Max Sills",
-    title: "AI Startup Advisor & Technology Investor",
-    image: "/placeholder.svg?height=400&width=400",
-    bio: "Max Sills is an AI startup advisor and technology investor who helps early-stage companies navigate the AI landscape. He has extensive experience in AI venture capital and provides strategic guidance to AI startups and entrepreneurs.",
-    programs: [
-      "AI Startup Strategy and Funding",
-      "Venture Capital in AI",
-      "Building Successful AI Companies",
-      "AI Investment Trends and Opportunities",
-    ],
-    fee: "$35k-$50k",
-    location: "Silicon Valley",
-    email: "max@aiventures.com",
-    contact: "Direct",
-    listed: true,
-    expertise: ["AI Startups", "Venture Capital", "Technology Investment", "Entrepreneurship"],
-    industries: ["Venture Capital", "Startups", "Technology", "Investment"],
-    ranking: 25,
-  },
-  {
     slug: "alfred-poor",
     name: "Alfred Poor",
     title: "Health Technology & AI Wearables Expert",
@@ -973,28 +899,7 @@ export const speakers: Speaker[] = [
     listed: true,
     expertise: ["Health Technology", "Wearable AI", "Health Monitoring", "Medical Devices"],
     industries: ["Healthcare", "Wearable Technology", "Medical Devices", "Health Tech"],
-    ranking: 23,
-  },
-  {
-    slug: "ryan-pamplin",
-    name: "Ryan Pamplin",
-    title: "AI Marketing & Customer Experience Expert",
-    image: "/placeholder.svg?height=400&width=400",
-    bio: "Ryan Pamplin is an AI marketing and customer experience expert who helps companies leverage artificial intelligence to enhance customer relationships and drive business growth. He specializes in AI-powered marketing automation and personalization.",
-    programs: [
-      "AI-Powered Marketing and Personalization",
-      "Customer Experience in the AI Era",
-      "Marketing Automation and AI",
-      "Data-Driven Customer Insights",
-    ],
-    fee: "$30k-$45k",
-    location: "Chicago, IL",
-    email: "ryan@aimarketing.com",
-    contact: "Direct",
-    listed: true,
-    expertise: ["AI Marketing", "Customer Experience", "Marketing Automation", "Personalization"],
-    industries: ["Marketing", "Retail", "E-commerce", "Technology"],
-    ranking: 22,
+    ranking: 3,
   },
   {
     slug: "peter-small",
@@ -1043,6 +948,7 @@ export const speakers: Speaker[] = [
     name: "Matthew Blakemore",
     title: "AI Technology & Innovation Consultant",
     image: "/speakers/matthew-blakemore-headshot.jpg",
+    imagePosition: "top",
     bio: "Matthew Blakemore is an AI technology and innovation consultant who helps organizations navigate the AI landscape and implement innovative AI solutions. He has extensive experience in technology innovation and AI consulting.",
     programs: [
       "AI Technology Innovation",
@@ -1102,27 +1008,6 @@ export const speakers: Speaker[] = [
     ranking: 15,
   },
   {
-    slug: "chris-duffey",
-    name: "Chris Duffey",
-    title: "AI Creative & Marketing Innovation Expert",
-    image: "/placeholder.svg?height=400&width=400",
-    bio: "Chris Duffey is an AI creative and marketing innovation expert who explores the intersection of artificial intelligence and creativity. He helps brands and organizations understand how AI can enhance creative processes and marketing effectiveness.",
-    programs: [
-      "AI and Creativity in Marketing",
-      "The Future of Creative AI",
-      "AI-Powered Brand Innovation",
-      "Creative Technology and AI",
-    ],
-    fee: "$35k-$50k",
-    location: "Los Angeles, CA",
-    email: "chris@aicreative.com",
-    contact: "Direct",
-    listed: true,
-    expertise: ["AI Creativity", "Marketing Innovation", "Creative Technology", "Brand Strategy"],
-    industries: ["Marketing", "Advertising", "Creative Industries", "Technology"],
-    ranking: 12,
-  },
-  {
     slug: "david-fajgenbaum",
     name: "David Fajgenbaum",
     title: "AI in Drug Discovery & Medical Research Expert",
@@ -1165,27 +1050,6 @@ export const speakers: Speaker[] = [
     ranking: 10,
   },
   {
-    slug: "oak-felder",
-    name: "Oak Felder",
-    title: "AI Music & Creative Technology Expert",
-    image: "/placeholder.svg?height=400&width=400",
-    bio: "Oak Felder is an AI music and creative technology expert who explores the intersection of artificial intelligence and music production. He has extensive experience in music technology and AI applications in creative industries.",
-    programs: [
-      "AI in Music Production and Creation",
-      "Creative Technology and AI",
-      "The Future of AI in Entertainment",
-      "Music Technology Innovation",
-    ],
-    fee: "$30k-$45k",
-    location: "Los Angeles, CA",
-    email: "oak@aimusictech.com",
-    contact: "Direct",
-    listed: true,
-    expertise: ["AI Music", "Creative Technology", "Music Production", "Entertainment AI"],
-    industries: ["Music", "Entertainment", "Creative Industries", "Technology"],
-    ranking: 9,
-  },
-  {
     slug: "tatyana-mamut",
     name: "Tatyana Mamut",
     title: "AI Product Strategy & Technology Leadership Expert",
@@ -1211,6 +1075,7 @@ export const speakers: Speaker[] = [
     name: "Rene Caissie",
     title: "AI Accessibility & Inclusive Technology Expert",
     image: "/speakers/rene-caissie-headshot.jpg",
+    imagePosition: "top",
     bio: "Rene Caissie is an AI accessibility and inclusive technology expert who specializes in making artificial intelligence accessible to people with disabilities. He has extensive experience in accessibility technology and inclusive AI design.",
     programs: [
       "AI Accessibility and Inclusive Design",
@@ -1226,27 +1091,6 @@ export const speakers: Speaker[] = [
     expertise: ["AI Accessibility", "Inclusive Technology", "Disability Technology", "Accessible Design"],
     industries: ["Technology", "Accessibility", "Non-profit", "Education"],
     ranking: 7,
-  },
-  {
-    slug: "lital-marom",
-    name: "Lital Marom",
-    title: "AI Chatbots & Conversational AI Expert",
-    image: "/placeholder.svg?height=400&width=400",
-    bio: "Lital Marom is an AI chatbots and conversational AI expert who specializes in developing intelligent conversational systems. She has extensive experience in chatbot development and conversational AI applications across various industries.",
-    programs: [
-      "Chatbots and Conversational AI",
-      "Building Intelligent Conversational Systems",
-      "AI Customer Service and Support",
-      "The Future of Conversational Interfaces",
-    ],
-    fee: "$30k-$45k",
-    location: "Tel Aviv, Israel",
-    email: "lital@conversationalai.com",
-    contact: "Direct",
-    listed: true,
-    expertise: ["Conversational AI", "Chatbots", "AI Customer Service", "Natural Language Processing"],
-    industries: ["Technology", "Customer Service", "E-commerce", "Software"],
-    ranking: 5,
   },
   {
     slug: "paolo-privitera",
@@ -1270,48 +1114,6 @@ export const speakers: Speaker[] = [
     ranking: 4,
   },
   {
-    slug: "zach-rattner",
-    name: "Zach Rattner",
-    title: "AI Gaming & Interactive Technology Expert",
-    image: "/placeholder.svg?height=400&width=400",
-    bio: "Zach Rattner is an AI gaming and interactive technology expert who specializes in the application of artificial intelligence in gaming and interactive entertainment. He has extensive experience in game AI and interactive technology development.",
-    programs: [
-      "AI in Gaming and Interactive Entertainment",
-      "Game AI Development",
-      "Interactive Technology Innovation",
-      "The Future of AI in Gaming",
-    ],
-    fee: "$35k-$50k",
-    location: "San Francisco",
-    email: "zach@gamingai.com",
-    contact: "Direct",
-    listed: true,
-    expertise: ["Gaming AI", "Interactive Technology", "Game Development", "Entertainment Technology"],
-    industries: ["Gaming", "Entertainment", "Technology", "Interactive Media"],
-    ranking: 3,
-  },
-  {
-    slug: "dan-russell",
-    name: "Dan Russell",
-    title: "Google Search & AI Research Expert",
-    image: "/placeholder.svg?height=400&width=400",
-    bio: "Dan Russell is a Google search and AI research expert who has been instrumental in developing search technologies and AI applications. He specializes in information retrieval, search algorithms, and AI-powered information systems.",
-    programs: [
-      "Search Technology and AI",
-      "Information Retrieval Systems",
-      "AI-Powered Search and Discovery",
-      "The Future of Information Access",
-    ],
-    fee: "$35k-$50k",
-    location: "Mountain View, CA",
-    email: "dan@googlesearch.com",
-    contact: "Google",
-    listed: true,
-    expertise: ["Search Technology", "Information Retrieval", "AI Research", "Google Technologies"],
-    industries: ["Technology", "Search", "Information Systems", "AI"],
-    ranking: 3,
-  },
-  {
     slug: "lee-sanders",
     name: "Lee Sanders",
     title: "AI Business Intelligence & Data Analytics Expert",
@@ -1329,7 +1131,8 @@ export const speakers: Speaker[] = [
     contact: "Direct",
     listed: true,
     expertise: ["Business Intelligence", "Data Analytics", "AI Analytics", "Business AI"],
-    industries: [],
+    industries: ["Business Intelligence", "Analytics", "Technology", "Consulting"],
+    ranking: 2,
   },
   {
     slug: "lucien-engelen",
@@ -1350,7 +1153,49 @@ export const speakers: Speaker[] = [
     listed: true,
     expertise: ["Digital Health", "Healthcare AI", "Medical Innovation", "Healthcare Technology"],
     industries: ["Healthcare", "Digital Health", "Medical Technology", "Innovation"],
-    ranking: 35,
+    ranking: 93,
+  },
+  {
+    slug: "vishal-sharma",
+    name: "Vishal Sharma",
+    title: "VP of AGI at Amazon",
+    image: "/placeholder.svg?height=400&width=400",
+    bio: "Vishal Sharma is the Vice President of Artificial General Intelligence (AGI) at Amazon, where he leads cutting-edge research and development in advanced AI systems. With extensive experience in machine learning, deep learning, and AI research, Vishal is at the forefront of developing next-generation AI technologies that push the boundaries of what's possible with artificial intelligence.\n\nIn his role at Amazon, Vishal oversees strategic initiatives in AGI development, working on breakthrough technologies that aim to create more general and adaptable AI systems. His work spans multiple domains including natural language processing, computer vision, robotics, and autonomous systems, with a focus on developing AI that can understand, learn, and adapt across diverse tasks and environments.\n\nVishal brings a unique perspective to AI development, combining deep technical expertise with strategic business acumen. His leadership in AGI research positions him as one of the key figures shaping the future of artificial intelligence and its applications across industries.",
+    programs: [
+      "The Future of Artificial General Intelligence",
+      "AGI Development at Scale",
+      "Building Next-Generation AI Systems",
+      "AI Research and Innovation Strategy",
+    ],
+    fee: "Please Inquire",
+    location: "Seattle, Washington",
+    email: "vishal@amazon.com",
+    contact: "Amazon",
+    listed: true,
+    expertise: ["Artificial General Intelligence", "Machine Learning", "AI Research", "Deep Learning"],
+    industries: ["Technology", "AI Research", "Cloud Computing", "Enterprise"],
+    ranking: 95,
+  },
+  {
+    slug: "gary-bolles",
+    name: "Gary Bolles",
+    title: "Chair for the Future of Work at Singularity University, Author, and Future of Work Expert",
+    image: "/placeholder.svg?height=400&width=400",
+    bio: "Gary Bolles is a leading expert on the future of work and the Chair for the Future of Work at Singularity University. He is a renowned speaker, author, and consultant who helps organizations navigate the rapidly changing landscape of work in the age of artificial intelligence and automation.\n\nAs the author of 'The Next Rules of Work: The Mindset, Skillset and Toolset to Lead Your Organization Through Uncertainty,' Gary provides practical insights into how individuals and organizations can thrive in an era of technological disruption. His work focuses on the intersection of technology, human potential, and organizational transformation.\n\nGary has advised Fortune 500 companies, government agencies, and educational institutions on workforce development, digital transformation, and the strategic implications of emerging technologies. His expertise spans across areas including AI's impact on employment, reskilling and upskilling strategies, and building resilient organizations for the future.\n\nWith over two decades of experience in technology and business strategy, Gary brings a unique perspective to understanding how artificial intelligence and automation will reshape the nature of work. He is a frequent keynote speaker at major conferences and has been featured in leading publications for his insights on the future of work.",
+    programs: [
+      "The Future of Work in the Age of AI",
+      "Building Resilient Organizations for Tomorrow",
+      "Reskilling and Upskilling for the AI Era",
+      "Leading Through Technological Disruption",
+    ],
+    fee: "$35k-$50k",
+    location: "San Francisco, California",
+    email: "gary@futureofwork.com",
+    contact: "Direct",
+    listed: true,
+    expertise: ["Future of Work", "AI Impact on Employment", "Workforce Development", "Organizational Transformation"],
+    industries: ["Technology", "Human Resources", "Education", "Consulting"],
+    ranking: 76,
   },
 ]
 
@@ -1366,16 +1211,32 @@ export function getSpeakerBySlug(slug: string): Speaker | undefined {
 }
 
 export function searchSpeakers(query: string): Speaker[] {
-  const lowercaseQuery = query.toLowerCase()
-  return sortedSpeakers.filter(
-    (speaker) =>
-      speaker.listed &&
-      (speaker.name.toLowerCase().includes(lowercaseQuery) ||
-        speaker.title.toLowerCase().includes(lowercaseQuery) ||
-        speaker.expertise.some((skill) => skill.toLowerCase().includes(lowercaseQuery)) ||
-        speaker.industries.some((industry) => industry.toLowerCase().includes(lowercaseQuery)) ||
-        speaker.bio.toLowerCase().includes(lowercaseQuery)),
-  )
+  const lowercaseQuery = query.toLowerCase().trim()
+
+  if (!lowercaseQuery) {
+    return getAllSpeakers()
+  }
+
+  return sortedSpeakers.filter((speaker) => {
+    if (!speaker.listed) return false
+
+    // Check for exact word matches in name and title
+    const nameWords = speaker.name.toLowerCase().split(/\s+/)
+    const titleWords = speaker.title.toLowerCase().split(/\s+/)
+
+    // Check if query matches any complete word in name or title
+    const nameMatch = nameWords.some((word) => word.includes(lowercaseQuery))
+    const titleMatch = titleWords.some((word) => word.includes(lowercaseQuery))
+
+    // Check for exact matches in expertise and industries
+    const expertiseMatch = speaker.expertise.some((skill) => skill.toLowerCase().includes(lowercaseQuery))
+    const industryMatch = speaker.industries.some((industry) => industry.toLowerCase().includes(lowercaseQuery))
+
+    // Check for matches in bio (only for longer queries to avoid too many results)
+    const bioMatch = lowercaseQuery.length >= 4 && speaker.bio.toLowerCase().includes(lowercaseQuery)
+
+    return nameMatch || titleMatch || expertiseMatch || industryMatch || bioMatch
+  })
 }
 
 export function getSpeakersByIndustry(industry: string): Speaker[] {

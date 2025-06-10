@@ -62,7 +62,9 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
           <img
             src={speaker.image || "/placeholder.svg?height=300&width=300"}
             alt={speaker.name}
-            className="w-full h-64 object-cover rounded-t-lg"
+            className={`w-full h-64 rounded-t-lg transition-transform duration-300 group-hover:scale-105 ${
+              speaker.imagePosition === "top" ? "object-top object-cover" : "object-cover object-center"
+            }`}
           />
           <Badge className="absolute top-4 left-4 bg-[#1E68C6] text-white font-montserrat">
             {speaker.industries[0] || "AI Expert"}
