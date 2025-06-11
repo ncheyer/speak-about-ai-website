@@ -1,38 +1,33 @@
-"use client"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import { getAllSpeakers, type Speaker } from "@/lib/speakers-data"
-import { useState, useEffect } from "react"
+import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
 
-export default function FeaturedSpeakers() {
-  const [allSpeakers, setAllSpeakers] = useState<Speaker[]>([])
-  const [loading, setLoading] = useState(true)
+export default async function FeaturedSpeakers() {
+  let featuredSpeakers: Speaker[] = []
 
-  useEffect(() => {
-    const fetchSpeakers = async () => {
-      try {
-        const speakersData = await getAllSpeakers()
-        setAllSpeakers(speakersData)
-      } catch (error) {
-        console.error("Failed to fetch speakers:", error)
-        // Optionally handle error state, e.g., set an error message
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchSpeakers()
-  }, []) // Empty dependency array means this runs once on mount
-
-  if (loading) {
+  try {
+    featuredSpeakers = await getFeaturedSpeakers(8)
+  } catch (error) {
+    console.error("Failed to load featured speakers:", error)
+    // Return a fallback UI
     return (
-      <section className="py-20 bg-white text-center">
-        <p className="text-xl text-gray-600 font-montserrat">Loading featured speakers...</p>
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl font-bold text-black mb-4 font-neue-haas">Featured AI Keynote Speakers</h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat mb-8">
+            Loading our world-class speakers...
+          </p>
+          <Link
+            href="/speakers"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-11 px-8 border border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white transition-colors"
+          >
+            View All Speakers
+          </Link>
+        </div>
       </section>
     )
   }
-
-  const featuredSpeakers = allSpeakers.slice(0, 8) // Now allSpeakers is guaranteed to be an array
 
   return (
     <section className="py-20 bg-white">
@@ -52,27 +47,12 @@ export default function FeaturedSpeakers() {
         </div>
 
         <div className="text-center">
-          <button
-            className="btn-primary inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-11 px-8 border border-[#1E68C6] hover:bg-[#1E68C6] hover:bg-opacity-10 font-montserrat transition-colors"
-            data-button="primary"
-            style={{
-              borderColor: "#1E68C6",
-              color: "#1E68C6",
-              backgroundColor: "transparent",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#1E68C6"
-              e.currentTarget.style.color = "white"
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent"
-              e.currentTarget.style.color = "#1E68C6"
-            }}
+          <Link
+            href="/speakers"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-11 px-8 border border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white transition-colors font-montserrat"
           >
-            <Link href="/speakers" className="no-underline">
-              View All {allSpeakers.length}+ AI Speakers
-            </Link>
-          </button>
+            View All {featuredSpeakers.length > 0 ? `${featuredSpeakers.length}+` : ""} AI Speakers
+          </Link>
         </div>
       </div>
     </section>
@@ -117,19 +97,12 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             </div>
           </div>
 
-          <button
-            className="btn-primary w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 font-montserrat"
-            data-button="primary"
-            style={{
-              backgroundColor: "#1E68C6",
-              color: "white",
-              border: "none",
-            }}
+          <Link
+            href="/contact"
+            className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#1E68C6] text-white hover:bg-[#5084C6] transition-colors font-montserrat"
           >
-            <Link href="/contact" className="text-white no-underline">
-              Check Availability
-            </Link>
-          </button>
+            Check Availability
+          </Link>
         </div>
       </CardContent>
     </Card>
