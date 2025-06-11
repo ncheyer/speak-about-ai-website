@@ -3,8 +3,16 @@ import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // Check if the Blob token is set
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error("BLOB_READ_WRITE_TOKEN is not set")
+      return NextResponse.json({ error: "Server configuration error: Blob token is not set" }, { status: 500 })
+    }
+
+    const body = await request.json()
+
     const jsonResponse = await handleUpload({
-      body: await request.json(),
+      body,
       request,
       onBeforeGenerateToken: async (pathname) => {
         // Generate a client token for the browser to upload the file
@@ -25,6 +33,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(jsonResponse)
   } catch (error) {
     console.error("Upload error:", error)
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Upload failed" }, { status: 400 })
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Upload failed",
+        details: error instanceof Error ? error.stack : undefined,
+      },
+      { status: 400 },
+    )
   }
 }
