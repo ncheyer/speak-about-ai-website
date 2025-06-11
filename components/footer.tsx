@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Phone, Mail, MapPin, Linkedin, Twitter } from "lucide-react"
+import { Phone, Mail, MapPin, Linkedin } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -114,11 +114,13 @@ export default function Footer() {
                 Terms of Service
               </Link>
               <div className="flex space-x-4">
-                <a href="#" className="text-[#EAEAEE] hover:text-white">
+                <a
+                  href="https://www.linkedin.com/company/speakabout-ai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#EAEAEE] hover:text-white"
+                >
                   <Linkedin className="w-5 h-5" />
-                </a>
-                <a href="#" className="text-[#EAEAEE] hover:text-white">
-                  <Twitter className="w-5 h-5" />
                 </a>
               </div>
             </div>

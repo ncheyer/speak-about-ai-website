@@ -21,7 +21,7 @@ export default function Hero() {
             </h1>
 
             <p className="text-xl text-[#5084C6] mb-8 font-montserrat font-semibold">
-              From Siri co-founders to Google AI researchers
+              50+ experts in every industry, from Siri co-founders to Google AI researchers
             </p>
 
             {/* CTA Buttons */}
@@ -66,8 +66,8 @@ export default function Hero() {
                 <p className="text-gray-600 font-montserrat text-xs">AI Experts</p>
               </div>
               <div className="text-center">
-                <div className="flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-[#1E68C6] mr-2" />
+                <div className="flex items-center justify-center gap-1">
+                  <MapPin className="w-5 h-5 text-[#1E68C6]" />
                   <span className="text-2xl font-bold text-black font-neue-haas">Silicon Valley</span>
                 </div>
                 <p className="text-gray-600 font-montserrat text-xs">Based</p>
