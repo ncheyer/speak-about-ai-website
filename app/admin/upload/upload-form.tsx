@@ -12,6 +12,23 @@ export default function UploadForm() {
   const [error, setError] = useState<string | null>(null)
   const [uploadStatus, setUploadStatus] = useState<string | null>(null)
 
+  // Add this function to check image dimensions
+  const checkImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => {
+        URL.revokeObjectURL(img.src)
+        resolve({ width: img.width, height: img.height })
+      }
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src)
+        reject(new Error("Failed to load image"))
+      }
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
+  // Update the handleSubmit function with stricter file size limits
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -20,9 +37,11 @@ export default function UploadForm() {
       return
     }
 
-    // Check file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
-      setError("File size must be less than 10MB")
+    // Check file size (500KB limit)
+    const maxSizeKB = 500
+    const maxSizeBytes = maxSizeKB * 1024
+    if (file.size > maxSizeBytes) {
+      setError(`File size too large: ${(file.size / 1024).toFixed(1)}KB. Maximum allowed: ${maxSizeKB}KB`)
       return
     }
 
@@ -33,11 +52,20 @@ export default function UploadForm() {
     }
 
     try {
+      // Check image dimensions
+      setUploadStatus("Checking image dimensions...")
+      const dimensions = await checkImageDimensions(file)
+
+      if (dimensions.width < 800 || dimensions.height < 800) {
+        setError(`Image dimensions too small: ${dimensions.width}x${dimensions.height}px. Minimum required: 800x800px`)
+        return
+      }
+
       setUploading(true)
       setError(null)
       setUploadStatus("Starting upload...")
 
-      console.log("Starting upload for file:", file.name, "Size:", file.size)
+      console.log("Starting upload for file:", file.name, "Size:", file.size, "Dimensions:", dimensions)
 
       // Create a filename with timestamp to avoid conflicts
       const timestamp = new Date().getTime()
@@ -104,8 +132,33 @@ export default function UploadForm() {
           {file && (
             <div className="mt-2 text-sm text-gray-600">
               <p>File: {file.name}</p>
-              <p>Size: {(file.size / 1024 / 1024).toFixed(2)} MB</p>
+              <p>Size: {(file.size / 1024).toFixed(1)} KB</p>
               <p>Type: {file.type}</p>
+              {file.size > 500 * 1024 && (
+                <p className="text-red-600 font-semibold">⚠️ File too large - must be under 500KB</p>
+              )}
+            </div>
+          )}
+          {file && (
+            <div className="mt-4 p-3 bg-blue-50 text-blue-700 rounded">
+              <h3 className="font-bold mb-2">Image Requirements:</h3>
+              <ul className="list-disc pl-5 text-sm">
+                <li>
+                  <strong>Minimum dimensions:</strong> 800x800 pixels
+                </li>
+                <li>
+                  <strong>Maximum file size:</strong> 500KB
+                </li>
+                <li>
+                  <strong>Supported formats:</strong> JPEG, PNG, WebP, GIF
+                </li>
+                <li>
+                  <strong>Recommendation:</strong> Use JPEG format for smaller file sizes
+                </li>
+                <li>
+                  <strong>Tip:</strong> Compress images before uploading to meet size requirements
+                </li>
+              </ul>
             </div>
           )}
         </div>
@@ -156,6 +209,18 @@ export default function UploadForm() {
         </div>
       )}
 
+      {/* Image Optimization Tips */}
+      <div className="mt-8 p-4 bg-green-50 rounded">
+        <h3 className="font-bold mb-2 text-green-800">Image Optimization Tips:</h3>
+        <ul className="list-disc pl-5 space-y-1 text-sm text-green-700">
+          <li>Use online tools like TinyPNG, Squoosh, or Photoshop's "Save for Web" to compress images</li>
+          <li>JPEG format typically produces smaller file sizes than PNG for photos</li>
+          <li>Aim for 80-90% quality when compressing to balance size and visual quality</li>
+          <li>Consider using WebP format for even better compression (if supported)</li>
+          <li>Square aspect ratio (1:1) works best for speaker profile images</li>
+        </ul>
+      </div>
+
       {/* Debug Information */}
       <div className="mt-8 p-4 bg-gray-50 rounded">
         <h3 className="font-bold mb-2">Troubleshooting:</h3>
@@ -163,7 +228,6 @@ export default function UploadForm() {
           <li>Check the browser console (F12) for detailed error messages</li>
           <li>If you see "Failed to fetch" errors, the API route might not be responding</li>
           <li>If you see "401 Unauthorized" errors, the Blob token might be invalid</li>
-          <li>Try uploading a smaller image (under 1MB) to test the connection</li>
           <li>Make sure the /api/upload route exists and is properly configured</li>
         </ul>
       </div>

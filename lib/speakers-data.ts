@@ -97,12 +97,17 @@ let _cachedSpeakers: Speaker[] | null = null
 let _lastFetchTime = 0
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
-// Function to normalize image URLs
-function normalizeImageUrl(imageUrl: string): string {
-  if (!imageUrl) return "/placeholder.svg"
+// Function to normalize and validate image URLs
+function normalizeImageUrl(imageUrl: string, speakerName?: string): string {
+  if (!imageUrl) {
+    return "/placeholder.svg"
+  }
 
-  // If it's already a full URL (http/https), return as is
+  // If it's already a full URL (http/https), return as is but log if it's a Blob URL
   if (imageUrl.startsWith("http")) {
+    if (imageUrl.includes("blob.vercel-storage.com")) {
+      console.log(`Using Blob URL for ${speakerName}: ${imageUrl}`)
+    }
     return imageUrl
   }
 
@@ -131,7 +136,7 @@ async function loadSpeakers(): Promise<Speaker[]> {
       console.log(`Successfully loaded ${sheetSpeakers.length} speakers from Google Sheet`)
       _cachedSpeakers = sheetSpeakers.map((speaker) => ({
         ...speaker,
-        image: normalizeImageUrl(speaker.image),
+        image: normalizeImageUrl(speaker.image, speaker.name),
       }))
       _lastFetchTime = now
       return _cachedSpeakers
@@ -147,7 +152,7 @@ async function loadSpeakers(): Promise<Speaker[]> {
   _cachedSpeakers = localSpeakers
     .map((speaker) => ({
       ...speaker,
-      image: normalizeImageUrl(speaker.image),
+      image: normalizeImageUrl(speaker.image, speaker.name),
     }))
     .sort((a, b) => b.ranking - a.ranking)
   _lastFetchTime = now

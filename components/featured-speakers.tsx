@@ -96,31 +96,71 @@ export default function FeaturedSpeakers({ initialSpeakers }: FeaturedSpeakersPr
 function SpeakerCard({ speaker }: { speaker: Speaker }) {
   const [imageError, setImageError] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
+  const [currentImageSrc, setCurrentImageSrc] = useState("")
 
-  // Function to get the best available image source
-  const getImageSrc = () => {
-    if (imageError) {
-      return "/placeholder.svg?height=300&width=300"
+  // Function to get fallback image sources in order of preference
+  const getImageSources = () => {
+    const sources = []
+
+    // 1. Original image (could be Blob URL or local)
+    if (speaker.image && !imageError) {
+      sources.push(speaker.image)
     }
 
-    // If the image URL is a Vercel Blob URL and we're having issues, try the local version
-    if (speaker.image?.includes("blob.vercel-storage.com")) {
-      // Extract the original filename and try to find it locally
-      const filename = speaker.image.split("/").pop()?.split("-").slice(0, -1).join("-") + ".jpg"
-      return `/speakers/${filename}` || speaker.image
+    // 2. Try to derive local filename from speaker name
+    const localFilename = speaker.name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
+      .replace(/\s+/g, "-") // Replace spaces with hyphens
+    sources.push(`/speakers/${localFilename}-headshot.png`)
+    sources.push(`/speakers/${localFilename}-headshot.jpg`)
+    sources.push(`/speakers/${localFilename}-headshot.jpeg`)
+
+    // 3. Try slug-based filenames
+    if (speaker.slug) {
+      sources.push(`/speakers/${speaker.slug}-headshot.png`)
+      sources.push(`/speakers/${speaker.slug}-headshot.jpg`)
+      sources.push(`/speakers/${speaker.slug}-headshot.jpeg`)
+      sources.push(`/speakers/${speaker.slug}.png`)
+      sources.push(`/speakers/${speaker.slug}.jpg`)
     }
 
-    return speaker.image || "/placeholder.svg?height=300&width=300"
+    // 4. Final fallback
+    sources.push("/placeholder.svg?height=300&width=300")
+
+    return sources
   }
 
+  const [imageSources] = useState(getImageSources())
+  const [currentSourceIndex, setCurrentSourceIndex] = useState(0)
+
+  // Initialize the first image source
+  useState(() => {
+    if (imageSources.length > 0) {
+      setCurrentImageSrc(imageSources[0])
+    }
+  })
+
   const handleImageError = () => {
-    console.error(`Failed to load image for ${speaker.name}: ${speaker.image}`)
-    setImageError(true)
-    setImageLoading(false)
+    const nextIndex = currentSourceIndex + 1
+
+    if (nextIndex < imageSources.length) {
+      console.log(
+        `Image failed for ${speaker.name}: ${imageSources[currentSourceIndex]}, trying: ${imageSources[nextIndex]}`,
+      )
+      setCurrentSourceIndex(nextIndex)
+      setCurrentImageSrc(imageSources[nextIndex])
+      setImageLoading(true) // Reset loading state for next attempt
+    } else {
+      console.error(`All image sources failed for ${speaker.name}`)
+      setImageError(true)
+      setImageLoading(false)
+    }
   }
 
   const handleImageLoad = () => {
     setImageLoading(false)
+    setImageError(false)
   }
 
   return (
@@ -135,7 +175,7 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             )}
 
             <img
-              src={getImageSrc() || "/placeholder.svg"}
+              src={currentImageSrc || "/placeholder.svg"}
               alt={speaker.name}
               className={`w-full h-64 rounded-t-lg transition-all duration-300 group-hover:scale-105 ${
                 speaker.imagePosition === "top" ? "object-top object-cover" : "object-cover object-center"
@@ -150,9 +190,10 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             {speaker.industries[0] || "AI Expert"}
           </Badge>
 
-          {imageError && (
+          {/* Show debug info in development */}
+          {process.env.NODE_ENV === "development" && (imageError || currentSourceIndex > 0) && (
             <div className="absolute bottom-2 left-2 right-2 bg-yellow-100 border border-yellow-300 rounded p-1 text-xs text-yellow-800">
-              Using placeholder
+              {imageError ? "All sources failed" : `Using source ${currentSourceIndex + 1}/${imageSources.length}`}
             </div>
           )}
         </div>
