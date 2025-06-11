@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
@@ -94,95 +94,100 @@ export default function FeaturedSpeakers({ initialSpeakers }: FeaturedSpeakersPr
 }
 
 function SpeakerCard({ speaker }: { speaker: Speaker }) {
-  const [imageError, setImageError] = useState(false)
-  const [imageLoading, setImageLoading] = useState(true)
-  const [currentImageSrc, setCurrentImageSrc] = useState("")
+  const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading")
+  const [retryCount, setRetryCount] = useState(0)
+  const maxRetries = 3
 
-  // Function to get fallback image sources in order of preference
-  const getImageSources = () => {
-    const sources = []
-
-    // 1. Original image (could be Blob URL or local)
-    if (speaker.image && !imageError) {
-      sources.push(speaker.image)
-    }
-
-    // 2. Try to derive local filename from speaker name
-    const localFilename = speaker.name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
-      .replace(/\s+/g, "-") // Replace spaces with hyphens
-    sources.push(`/speakers/${localFilename}-headshot.png`)
-    sources.push(`/speakers/${localFilename}-headshot.jpg`)
-    sources.push(`/speakers/${localFilename}-headshot.jpeg`)
-
-    // 3. Try slug-based filenames
-    if (speaker.slug) {
-      sources.push(`/speakers/${speaker.slug}-headshot.png`)
-      sources.push(`/speakers/${speaker.slug}-headshot.jpg`)
-      sources.push(`/speakers/${speaker.slug}-headshot.jpeg`)
-      sources.push(`/speakers/${speaker.slug}.png`)
-      sources.push(`/speakers/${speaker.slug}.jpg`)
-    }
-
-    // 4. Final fallback
-    sources.push("/placeholder.svg?height=300&width=300")
-
-    return sources
-  }
-
-  const [imageSources] = useState(getImageSources())
-  const [currentSourceIndex, setCurrentSourceIndex] = useState(0)
-
-  // Initialize the first image source
-  useState(() => {
-    if (imageSources.length > 0) {
-      setCurrentImageSrc(imageSources[0])
-    }
-  })
+  const imageUrl = speaker.image || "/placeholder.svg?height=300&width=300&text=Speaker+Image"
 
   const handleImageError = () => {
-    const nextIndex = currentSourceIndex + 1
+    if (retryCount < maxRetries && speaker.image) {
+      // Retry loading the same image with a small delay
+      console.log(`Retrying image load for ${speaker.name} (attempt ${retryCount + 1}/${maxRetries})`)
+      setRetryCount((prev) => prev + 1)
 
-    if (nextIndex < imageSources.length) {
-      console.log(
-        `Image failed for ${speaker.name}: ${imageSources[currentSourceIndex]}, trying: ${imageSources[nextIndex]}`,
-      )
-      setCurrentSourceIndex(nextIndex)
-      setCurrentImageSrc(imageSources[nextIndex])
-      setImageLoading(true) // Reset loading state for next attempt
+      // Add a small delay before retry to handle temporary network issues
+      setTimeout(
+        () => {
+          setImageState("loading")
+          // Force reload by adding a cache-busting parameter
+          const img = new Image()
+          img.crossOrigin = "anonymous"
+          img.onload = () => setImageState("loaded")
+          img.onerror = () => {
+            if (retryCount + 1 >= maxRetries) {
+              console.error(`Failed to load image for ${speaker.name} after ${maxRetries} attempts: ${speaker.image}`)
+              setImageState("error")
+            } else {
+              handleImageError()
+            }
+          }
+          img.src = `${speaker.image}?retry=${retryCount + 1}&t=${Date.now()}`
+        },
+        1000 * (retryCount + 1),
+      ) // Exponential backoff
     } else {
-      console.error(`All image sources failed for ${speaker.name}`)
-      setImageError(true)
-      setImageLoading(false)
+      console.error(`Failed to load image for ${speaker.name}: ${speaker.image}`)
+      setImageState("error")
     }
   }
 
   const handleImageLoad = () => {
-    setImageLoading(false)
-    setImageError(false)
+    setImageState("loaded")
+    setRetryCount(0) // Reset retry count on successful load
   }
+
+  // Reset image state when speaker changes
+  useEffect(() => {
+    setImageState("loading")
+    setRetryCount(0)
+  }, [speaker.slug])
+
+  // Preload the image to handle CORS and caching issues
+  useEffect(() => {
+    if (speaker.image && speaker.image.includes("blob.vercel-storage.com")) {
+      const img = new Image()
+      img.crossOrigin = "anonymous"
+      img.onload = () => setImageState("loaded")
+      img.onerror = handleImageError
+      img.src = speaker.image
+    }
+  }, [speaker.image])
 
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
       <CardContent className="p-0">
         <div className="relative">
           <div className="w-full h-64 bg-gray-100 flex items-center justify-center relative overflow-hidden rounded-t-lg">
-            {imageLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                <div className="text-gray-500 text-sm">Loading...</div>
+            {imageState === "loading" && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                <div className="text-gray-500 text-sm">
+                  {retryCount > 0 ? `Retrying... (${retryCount}/${maxRetries})` : "Loading..."}
+                </div>
+              </div>
+            )}
+
+            {imageState === "error" && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
+                <div className="text-gray-400 text-sm text-center px-4">
+                  <div className="mb-2">📷</div>
+                  <div>Image temporarily unavailable</div>
+                  <div className="text-xs mt-1">Please try refreshing</div>
+                </div>
               </div>
             )}
 
             <img
-              src={currentImageSrc || "/placeholder.svg"}
+              src={imageUrl || "/placeholder.svg"}
               alt={speaker.name}
               className={`w-full h-64 rounded-t-lg transition-all duration-300 group-hover:scale-105 ${
                 speaker.imagePosition === "top" ? "object-top object-cover" : "object-cover object-center"
-              } ${imageLoading ? "opacity-0" : "opacity-100"}`}
+              } ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
               onError={handleImageError}
               onLoad={handleImageLoad}
               loading="lazy"
+              crossOrigin="anonymous"
+              style={{ display: imageState === "error" ? "none" : "block" }}
             />
           </div>
 
@@ -190,10 +195,10 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             {speaker.industries[0] || "AI Expert"}
           </Badge>
 
-          {/* Show debug info in development */}
-          {process.env.NODE_ENV === "development" && (imageError || currentSourceIndex > 0) && (
+          {/* Debug info for development */}
+          {process.env.NODE_ENV === "development" && (imageState === "error" || retryCount > 0) && (
             <div className="absolute bottom-2 left-2 right-2 bg-yellow-100 border border-yellow-300 rounded p-1 text-xs text-yellow-800">
-              {imageError ? "All sources failed" : `Using source ${currentSourceIndex + 1}/${imageSources.length}`}
+              {imageState === "error" ? `Failed after ${maxRetries} retries` : `Retry ${retryCount}/${maxRetries}`}
             </div>
           )}
         </div>

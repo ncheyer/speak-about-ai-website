@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,34 +14,59 @@ interface SpeakerProfileProps {
 }
 
 const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
-  const [imageError, setImageError] = useState(false)
-  const [imageLoading, setImageLoading] = useState(true)
+  const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading")
+  const [retryCount, setRetryCount] = useState(0)
+  const maxRetries = 3
 
-  // Function to get the best available image source
-  const getImageSrc = () => {
-    if (imageError) {
-      return "/placeholder.svg?height=400&width=500"
-    }
-
-    // If the image URL is a Vercel Blob URL and we're having issues, try the local version
-    if (speaker.image?.includes("blob.vercel-storage.com")) {
-      // Extract the original filename and try to find it locally
-      const filename = speaker.image.split("/").pop()?.split("-").slice(0, -1).join("-") + ".jpg"
-      return `/speakers/${filename}` || speaker.image
-    }
-
-    return speaker.image || "/placeholder.svg?height=400&width=500"
-  }
+  const imageUrl = speaker.image || "/placeholder.svg?height=400&width=500&text=Speaker+Image"
 
   const handleImageError = () => {
-    console.error(`Failed to load image: ${speaker.image}`)
-    setImageError(true)
-    setImageLoading(false)
+    if (retryCount < maxRetries && speaker.image) {
+      // Retry loading the same image with a small delay
+      console.log(`Retrying image load for ${speaker.name} (attempt ${retryCount + 1}/${maxRetries})`)
+      setRetryCount((prev) => prev + 1)
+
+      // Add a small delay before retry to handle temporary network issues
+      setTimeout(
+        () => {
+          setImageState("loading")
+          // Force reload by adding a cache-busting parameter
+          const img = new Image()
+          img.crossOrigin = "anonymous"
+          img.onload = () => setImageState("loaded")
+          img.onerror = () => {
+            if (retryCount + 1 >= maxRetries) {
+              console.error(`Failed to load image for ${speaker.name} after ${maxRetries} attempts: ${speaker.image}`)
+              setImageState("error")
+            } else {
+              handleImageError()
+            }
+          }
+          img.src = `${speaker.image}?retry=${retryCount + 1}&t=${Date.now()}`
+        },
+        1000 * (retryCount + 1),
+      ) // Exponential backoff
+    } else {
+      console.error(`Failed to load image for ${speaker.name}: ${speaker.image}`)
+      setImageState("error")
+    }
   }
 
   const handleImageLoad = () => {
-    setImageLoading(false)
+    setImageState("loaded")
+    setRetryCount(0) // Reset retry count on successful load
   }
+
+  // Preload the image to handle CORS and caching issues
+  useEffect(() => {
+    if (speaker.image && speaker.image.includes("blob.vercel-storage.com")) {
+      const img = new Image()
+      img.crossOrigin = "anonymous"
+      img.onload = () => setImageState("loaded")
+      img.onerror = handleImageError
+      img.src = speaker.image
+    }
+  }, [speaker.image])
 
   return (
     <div className="min-h-screen bg-white">
@@ -64,21 +89,35 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
               <CardContent className="p-0">
                 <div className="relative">
                   <div className="w-full h-96 bg-gray-100 flex items-center justify-center relative overflow-hidden rounded-t-lg">
-                    {imageLoading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                        <div className="text-gray-500">Loading image...</div>
+                    {imageState === "loading" && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                        <div className="text-gray-500">
+                          {retryCount > 0 ? `Retrying... (${retryCount}/${maxRetries})` : "Loading image..."}
+                        </div>
+                      </div>
+                    )}
+
+                    {imageState === "error" && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
+                        <div className="text-gray-400 text-center px-4">
+                          <div className="mb-2 text-4xl">📷</div>
+                          <div>Image temporarily unavailable</div>
+                          <div className="text-sm mt-1">Please try refreshing the page</div>
+                        </div>
                       </div>
                     )}
 
                     <img
-                      src={getImageSrc() || "/placeholder.svg"}
+                      src={imageUrl || "/placeholder.svg"}
                       alt={speaker.name}
                       className={`w-full h-96 rounded-t-lg transition-opacity duration-300 ${
                         speaker.imagePosition === "top" ? "object-top object-cover" : "object-center object-cover"
-                      } ${imageLoading ? "opacity-0" : "opacity-100"}`}
+                      } ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
                       onError={handleImageError}
                       onLoad={handleImageLoad}
                       loading="eager"
+                      crossOrigin="anonymous"
+                      style={{ display: imageState === "error" ? "none" : "block" }}
                     />
                   </div>
 
@@ -86,9 +125,15 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                     {speaker.fee}
                   </div>
 
-                  {imageError && (
+                  {/* Debug info for development */}
+                  {process.env.NODE_ENV === "development" && (imageState === "error" || retryCount > 0) && (
                     <div className="absolute bottom-2 left-2 right-2 bg-yellow-100 border border-yellow-300 rounded p-2 text-xs text-yellow-800">
-                      <strong>Note:</strong> Using placeholder image. Original image may be temporarily unavailable.
+                      <strong>Debug:</strong>{" "}
+                      {imageState === "error"
+                        ? `Failed after ${maxRetries} retries`
+                        : `Retry ${retryCount}/${maxRetries}`}
+                      <br />
+                      <strong>URL:</strong> {speaker.image}
                     </div>
                   )}
                 </div>
@@ -196,25 +241,6 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {/* Debug Information (only in development) */}
-            {process.env.NODE_ENV === "development" && (
-              <div className="mb-8 p-4 bg-gray-100 rounded">
-                <h3 className="font-bold mb-2">Debug Info:</h3>
-                <p>
-                  <strong>Original Image URL:</strong> {speaker.image}
-                </p>
-                <p>
-                  <strong>Current Image Source:</strong> {getImageSrc()}
-                </p>
-                <p>
-                  <strong>Image Error:</strong> {imageError ? "Yes" : "No"}
-                </p>
-                <p>
-                  <strong>Image Loading:</strong> {imageLoading ? "Yes" : "No"}
-                </p>
               </div>
             )}
 
