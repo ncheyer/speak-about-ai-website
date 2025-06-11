@@ -148,63 +148,72 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
 function SpeakerCard({ speaker }: { speaker: Speaker }) {
   const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading")
   const [retryCount, setRetryCount] = useState(0)
-  const maxRetries = 3
+  const [imageUrl, setImageUrl] = useState<string>("")
+  const maxRetries = 2
 
-  const imageUrl = speaker.image || "/placeholder.svg?height=300&width=300&text=Speaker+Image"
+  // Initialize image URL and handle different formats
+  useEffect(() => {
+    const url = speaker.image || "/placeholder.svg?height=300&width=300&text=Speaker+Image"
+
+    // Log the original URL for debugging
+    console.log(`Loading image for ${speaker.name}:`, url)
+
+    setImageUrl(url)
+    setImageState("loading")
+    setRetryCount(0)
+  }, [speaker.slug, speaker.image])
 
   const handleImageError = () => {
-    if (retryCount < maxRetries && speaker.image) {
-      // Retry loading the same image with a small delay
-      console.log(`Retrying image load for ${speaker.name} (attempt ${retryCount + 1}/${maxRetries})`)
-      setRetryCount((prev) => prev + 1)
+    console.error(`Image load failed for ${speaker.name}: ${imageUrl} (attempt ${retryCount + 1})`)
 
-      // Add a small delay before retry to handle temporary network issues
-      setTimeout(
-        () => {
-          setImageState("loading")
-          // Force reload by adding a cache-busting parameter
-          const img = new Image()
-          img.crossOrigin = "anonymous"
-          img.onload = () => setImageState("loaded")
-          img.onerror = () => {
-            if (retryCount + 1 >= maxRetries) {
-              console.error(`Failed to load image for ${speaker.name} after ${maxRetries} attempts: ${speaker.image}`)
-              setImageState("error")
-            } else {
-              handleImageError()
-            }
-          }
-          img.src = `${speaker.image}?retry=${retryCount + 1}&t=${Date.now()}`
-        },
-        1000 * (retryCount + 1),
-      ) // Exponential backoff
+    if (retryCount < maxRetries && speaker.image && speaker.image.includes("blob.vercel-storage.com")) {
+      const nextRetry = retryCount + 1
+      console.log(`Retrying image load for ${speaker.name} (attempt ${nextRetry}/${maxRetries})`)
+
+      setRetryCount(nextRetry)
+
+      // Add cache-busting parameters and retry with delay
+      setTimeout(() => {
+        const retryUrl = `${speaker.image}?retry=${nextRetry}&t=${Date.now()}&cache=false`
+        console.log(`Retry URL for ${speaker.name}:`, retryUrl)
+        setImageUrl(retryUrl)
+        setImageState("loading")
+      }, 1000 * nextRetry) // Progressive delay
     } else {
-      console.error(`Failed to load image for ${speaker.name}: ${speaker.image}`)
+      console.error(`All retries failed for ${speaker.name}`)
       setImageState("error")
     }
   }
 
   const handleImageLoad = () => {
+    console.log(`Image loaded successfully for ${speaker.name}:`, imageUrl)
     setImageState("loaded")
-    setRetryCount(0) // Reset retry count on successful load
   }
 
-  // Reset image state when speaker changes
+  // Preload image when URL changes
   useEffect(() => {
-    setImageState("loading")
-    setRetryCount(0)
-  }, [speaker.slug])
+    if (imageUrl && imageUrl.includes("blob.vercel-storage.com")) {
+      console.log(`Preloading image for ${speaker.name}:`, imageUrl)
 
-  // Preload the image to handle CORS and caching issues
-  useEffect(() => {
-    if (speaker.image && speaker.image.includes("blob.vercel-storage.com")) {
       const img = new Image()
       img.crossOrigin = "anonymous"
-      img.onload = () => setImageState("loaded")
-      img.onerror = handleImageError
-      img.src = speaker.image
+
+      img.onload = () => {
+        console.log(`Preload successful for ${speaker.name}`)
+        setImageState("loaded")
+      }
+
+      img.onerror = (e) => {
+        console.error(`Preload failed for ${speaker.name}:`, e)
+        handleImageError()
+      }
+
+      // Add a small delay to ensure the blob URL is ready
+      setTimeout(() => {
+        img.src = imageUrl
+      }, 100)
     }
-  }, [speaker.image])
+  }, [imageUrl])
 
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
@@ -252,10 +261,18 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             </Badge>
           )}
 
-          {/* Debug info for development */}
-          {process.env.NODE_ENV === "development" && (imageState === "error" || retryCount > 0) && (
+          {/* Debug info for development and production to help diagnose */}
+          {(process.env.NODE_ENV === "development" || imageState === "error") && (
             <div className="absolute bottom-2 left-2 right-2 bg-yellow-100 border border-yellow-300 rounded p-1 text-xs text-yellow-800">
-              {imageState === "error" ? `Failed after ${maxRetries} retries` : `Retry ${retryCount}/${maxRetries}`}
+              <div>
+                <strong>Status:</strong> {imageState}
+              </div>
+              <div>
+                <strong>Retries:</strong> {retryCount}/{maxRetries}
+              </div>
+              <div>
+                <strong>URL:</strong> {imageUrl.substring(0, 50)}...
+              </div>
             </div>
           )}
         </div>

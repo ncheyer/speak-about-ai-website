@@ -97,16 +97,26 @@ let _cachedSpeakers: Speaker[] | null = null
 let _lastFetchTime = 0
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
-// Function to normalize and validate image URLs
-function normalizeImageUrl(imageUrl: string, speakerName?: string): string {
+// Function to validate and normalize image URLs
+function validateImageUrl(imageUrl: string, speakerName?: string): string {
   if (!imageUrl) {
+    console.warn(`No image URL provided for ${speakerName}`)
     return "/placeholder.svg"
   }
 
-  // If it's already a full URL (http/https), return as is but log if it's a Blob URL
+  // Log all image URLs for debugging
+  console.log(`Image URL for ${speakerName}: ${imageUrl}`)
+
+  // If it's already a full URL (http/https), validate it
   if (imageUrl.startsWith("http")) {
     if (imageUrl.includes("blob.vercel-storage.com")) {
       console.log(`Using Blob URL for ${speakerName}: ${imageUrl}`)
+
+      // Validate blob URL format
+      if (!imageUrl.match(/^https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\/.+/)) {
+        console.error(`Invalid Blob URL format for ${speakerName}: ${imageUrl}`)
+        return "/placeholder.svg"
+      }
     }
     return imageUrl
   }
@@ -117,7 +127,9 @@ function normalizeImageUrl(imageUrl: string, speakerName?: string): string {
   }
 
   // Otherwise, assume it's a filename and prepend the speakers path
-  return `/speakers/${imageUrl}`
+  const normalizedUrl = `/speakers/${imageUrl}`
+  console.log(`Normalized local path for ${speakerName}: ${normalizedUrl}`)
+  return normalizedUrl
 }
 
 async function loadSpeakers(): Promise<Speaker[]> {
@@ -125,19 +137,30 @@ async function loadSpeakers(): Promise<Speaker[]> {
 
   // Return cached speakers if available and not expired
   if (_cachedSpeakers && now - _lastFetchTime < CACHE_DURATION) {
+    console.log("Using cached speakers data")
     return _cachedSpeakers
   }
 
   try {
-    console.log("Loading speakers data...")
+    console.log("Loading speakers data from Google Sheet...")
     const sheetSpeakers = await fetchSpeakersFromSheet()
 
     if (Array.isArray(sheetSpeakers) && sheetSpeakers.length > 0) {
       console.log(`Successfully loaded ${sheetSpeakers.length} speakers from Google Sheet`)
-      _cachedSpeakers = sheetSpeakers.map((speaker) => ({
-        ...speaker,
-        image: normalizeImageUrl(speaker.image, speaker.name),
-      }))
+
+      // Process and validate each speaker's image URL
+      _cachedSpeakers = sheetSpeakers.map((speaker) => {
+        const processedSpeaker = {
+          ...speaker,
+          image: validateImageUrl(speaker.image, speaker.name),
+        }
+
+        // Log each speaker for debugging
+        console.log(`Processed speaker: ${speaker.name} - Image: ${processedSpeaker.image}`)
+
+        return processedSpeaker
+      })
+
       _lastFetchTime = now
       return _cachedSpeakers
     } else {
@@ -152,7 +175,7 @@ async function loadSpeakers(): Promise<Speaker[]> {
   _cachedSpeakers = localSpeakers
     .map((speaker) => ({
       ...speaker,
-      image: normalizeImageUrl(speaker.image, speaker.name),
+      image: validateImageUrl(speaker.image, speaker.name),
     }))
     .sort((a, b) => b.ranking - a.ranking)
   _lastFetchTime = now
@@ -163,6 +186,7 @@ export async function getAllSpeakers(): Promise<Speaker[]> {
   try {
     const speakers = await loadSpeakers()
     const listedSpeakers = speakers.filter((speaker) => speaker.listed)
+    console.log(`Returning ${listedSpeakers.length} listed speakers`)
     return listedSpeakers
   } catch (error) {
     console.error("Error in getAllSpeakers:", error)
@@ -173,7 +197,13 @@ export async function getAllSpeakers(): Promise<Speaker[]> {
 export async function getSpeakerBySlug(slug: string): Promise<Speaker | undefined> {
   try {
     const speakers = await loadSpeakers()
-    return speakers.find((speaker) => speaker.slug === slug)
+    const speaker = speakers.find((speaker) => speaker.slug === slug)
+    if (speaker) {
+      console.log(`Found speaker by slug ${slug}: ${speaker.name}`)
+    } else {
+      console.warn(`No speaker found for slug: ${slug}`)
+    }
+    return speaker
   } catch (error) {
     console.error("Error in getSpeakerBySlug:", error)
     return localSpeakers.find((speaker) => speaker.slug === slug)
@@ -222,6 +252,7 @@ export async function getSpeakersByIndustry(industry: string): Promise<Speaker[]
 export async function getFeaturedSpeakers(count = 8): Promise<Speaker[]> {
   try {
     const speakers = await getAllSpeakers()
+    console.log(`Returning ${Math.min(count, speakers.length)} featured speakers`)
     return speakers.slice(0, count)
   } catch (error) {
     console.error("Error in getFeaturedSpeakers:", error)
