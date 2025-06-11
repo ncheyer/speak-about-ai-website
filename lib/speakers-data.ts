@@ -112,9 +112,12 @@ async function loadSpeakers(): Promise<Speaker[]> {
 
     if (Array.isArray(sheetSpeakers) && sheetSpeakers.length > 0) {
       console.log(`Successfully loaded ${sheetSpeakers.length} speakers from Google Sheet`)
-      _cachedSpeakers = sheetSpeakers
+      _cachedSpeakers = sheetSpeakers.map((speaker) => ({
+        ...speaker,
+        image: speaker.image && speaker.image.startsWith("http") ? speaker.image : speaker.image || "/placeholder.svg",
+      }))
       _lastFetchTime = now
-      return sheetSpeakers
+      return _cachedSpeakers
     } else {
       console.log("No speakers returned from Google Sheet, using local fallback")
     }

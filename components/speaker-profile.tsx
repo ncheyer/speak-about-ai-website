@@ -32,15 +32,25 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
             <Card className="shadow-lg border-0">
               <CardContent className="p-0">
                 <div className="relative">
-                  <Image
-                    src={speaker.image || "/placeholder.svg"}
-                    alt={speaker.name}
-                    width={400}
-                    height={500}
-                    className={`w-full h-96 rounded-t-lg ${
-                      speaker.imagePosition === "top" ? "object-top object-cover" : "object-center object-cover"
-                    }`}
-                  />
+                  <div className="w-full h-96 bg-gray-100 flex items-center justify-center">
+                    {/* Add loading and error states */}
+                    <Image
+                      src={speaker.image || "/placeholder.svg"}
+                      alt={speaker.name}
+                      width={400}
+                      height={500}
+                      className={`w-full h-96 rounded-t-lg ${
+                        speaker.imagePosition === "top" ? "object-top object-cover" : "object-center object-cover"
+                      }`}
+                      onError={(e) => {
+                        console.error(`Failed to load image: ${speaker.image}`)
+                        // Fall back to placeholder on error
+                        e.currentTarget.src = "/placeholder.svg?height=400&width=500"
+                      }}
+                      loading="eager"
+                      priority={true}
+                    />
+                  </div>
                   <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-semibold text-gray-900">
                     {speaker.fee}
                   </div>
