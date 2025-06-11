@@ -22,10 +22,13 @@ export default function DebugSheetFetchPage() {
 
     addLog("Starting direct Google Sheets API test...")
 
-    const spreadsheetId = process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID || "YOUR_SHEET_ID"
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY || "YOUR_API_KEY"
+    // Get environment variables from the server via API route
+    const envResponse = await fetch("/api/debug-env")
+    const envData = await envResponse.json()
+    const spreadsheetId = envData.sheetId
+    const apiKey = envData.apiKey
 
-    addLog(`Sheet ID: ${spreadsheetId}`)
+    addLog(`Sheet ID: ${spreadsheetId || "Not available"}`)
     addLog(`API Key: ${apiKey ? `${apiKey.substring(0, 10)}...` : "Not found"}`)
 
     try {
