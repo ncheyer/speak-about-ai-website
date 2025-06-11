@@ -1,8 +1,30 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { getAllSpeakers } from "@/lib/speakers-data"
 import Link from "next/link"
 
-export default async function SpeakersDebugPage() {
-  const speakers = await getAllSpeakers()
+export default function SpeakersDebugPage() {
+  const [speakers, setSpeakers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadSpeakers() {
+      try {
+        const speakersData = await getAllSpeakers()
+        setSpeakers(speakersData)
+      } catch (error) {
+        console.error("Error loading speakers:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadSpeakers()
+  }, [])
+
+  if (loading) {
+    return <div className="p-8">Loading speakers...</div>
+  }
 
   return (
     <div className="p-8 max-w-4xl mx-auto">

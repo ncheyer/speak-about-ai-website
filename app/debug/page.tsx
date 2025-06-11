@@ -1,11 +1,32 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { getSpeakerBySlug, getAllSpeakers } from "@/lib/speakers-data"
 
-export default async function DebugPage() {
-  // Get Peter's data specifically
-  const peter = await getSpeakerBySlug("peter-norvig")
+export default function DebugPage() {
+  const [peter, setPeter] = useState(null)
+  const [allSpeakers, setAllSpeakers] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  // Get all speakers to see what's being loaded
-  const allSpeakers = await getAllSpeakers()
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const peterData = await getSpeakerBySlug("peter-norvig")
+        const speakersData = await getAllSpeakers()
+        setPeter(peterData)
+        setAllSpeakers(speakersData)
+      } catch (error) {
+        console.error("Error loading data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  if (loading) {
+    return <div className="p-8">Loading...</div>
+  }
 
   return (
     <div className="p-8">
