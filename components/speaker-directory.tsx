@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react" // Import useEffect
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ import Link from "next/link"
 import { searchSpeakers, type Speaker } from "@/lib/speakers-data"
 
 interface SpeakerDirectoryProps {
-  initialSpeakers: Speaker[] // New prop for initial data
+  initialSpeakers: Speaker[]
 }
 
 export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryProps) {
@@ -24,7 +24,7 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
   // Effect to re-filter speakers when search query or industry changes
   useEffect(() => {
     const filterAndSetSpeakers = async () => {
-      let filtered = await searchSpeakers(searchQuery) // searchSpeakers is now async
+      let filtered = await searchSpeakers(searchQuery)
       if (selectedIndustry !== "all") {
         filtered = filtered.filter((speaker) =>
           speaker.industries.some((industry) => industry.toLowerCase().includes(selectedIndustry.toLowerCase())),
@@ -37,7 +37,7 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
     filterAndSetSpeakers()
   }, [searchQuery, selectedIndustry])
 
-  // Get unique industries for filter dropdown (can be derived from initialSpeakers)
+  // Get unique industries for filter dropdown
   const industries = Array.from(new Set(initialSpeakers.flatMap((speaker) => speaker.industries))).sort()
 
   const handleLoadMore = () => {
@@ -146,17 +146,58 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
 }
 
 function SpeakerCard({ speaker }: { speaker: Speaker }) {
+  const [imageError, setImageError] = useState(false)
+  const [imageLoading, setImageLoading] = useState(true)
+
+  // Function to get the best available image source
+  const getImageSrc = () => {
+    if (imageError) {
+      return "/placeholder.svg?height=300&width=300"
+    }
+
+    // If the image URL is a Vercel Blob URL and we're having issues, try the local version
+    if (speaker.image?.includes("blob.vercel-storage.com")) {
+      // Extract the original filename and try to find it locally
+      const filename = speaker.image.split("/").pop()?.split("-").slice(0, -1).join("-") + ".jpg"
+      return `/speakers/${filename}` || speaker.image
+    }
+
+    return speaker.image || "/placeholder.svg?height=300&width=300"
+  }
+
+  const handleImageError = () => {
+    console.error(`Failed to load image for ${speaker.name}: ${speaker.image}`)
+    setImageError(true)
+    setImageLoading(false)
+  }
+
+  const handleImageLoad = () => {
+    setImageLoading(false)
+  }
+
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
       <CardContent className="p-0">
         <div className="relative">
-          <img
-            src={speaker.image || "/placeholder.svg?height=300&width=300"}
-            alt={speaker.name}
-            className={`w-full h-64 rounded-t-lg transition-transform duration-300 group-hover:scale-105 ${
-              speaker.imagePosition === "top" ? "object-top object-cover" : "object-cover object-center"
-            }`}
-          />
+          <div className="w-full h-64 bg-gray-100 flex items-center justify-center relative overflow-hidden rounded-t-lg">
+            {imageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div className="text-gray-500 text-sm">Loading...</div>
+              </div>
+            )}
+
+            <img
+              src={getImageSrc() || "/placeholder.svg"}
+              alt={speaker.name}
+              className={`w-full h-64 rounded-t-lg transition-all duration-300 group-hover:scale-105 ${
+                speaker.imagePosition === "top" ? "object-top object-cover" : "object-cover object-center"
+              } ${imageLoading ? "opacity-0" : "opacity-100"}`}
+              onError={handleImageError}
+              onLoad={handleImageLoad}
+              loading="lazy"
+            />
+          </div>
+
           <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded text-sm font-semibold text-gray-900 font-montserrat">
             {speaker.fee}
           </div>
@@ -164,6 +205,12 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             <Badge className="absolute top-4 left-4 bg-[#1E68C6] text-white font-montserrat">
               {speaker.industries[0]}
             </Badge>
+          )}
+
+          {imageError && (
+            <div className="absolute bottom-2 left-2 right-2 bg-yellow-100 border border-yellow-300 rounded p-1 text-xs text-yellow-800">
+              Using placeholder
+            </div>
           )}
         </div>
 

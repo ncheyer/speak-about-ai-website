@@ -1,5 +1,7 @@
+"use client"
+
 import type React from "react"
-import Image from "next/image"
+import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,6 +14,35 @@ interface SpeakerProfileProps {
 }
 
 const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
+  const [imageError, setImageError] = useState(false)
+  const [imageLoading, setImageLoading] = useState(true)
+
+  // Function to get the best available image source
+  const getImageSrc = () => {
+    if (imageError) {
+      return "/placeholder.svg?height=400&width=500"
+    }
+
+    // If the image URL is a Vercel Blob URL and we're having issues, try the local version
+    if (speaker.image?.includes("blob.vercel-storage.com")) {
+      // Extract the original filename and try to find it locally
+      const filename = speaker.image.split("/").pop()?.split("-").slice(0, -1).join("-") + ".jpg"
+      return `/speakers/${filename}` || speaker.image
+    }
+
+    return speaker.image || "/placeholder.svg?height=400&width=500"
+  }
+
+  const handleImageError = () => {
+    console.error(`Failed to load image: ${speaker.image}`)
+    setImageError(true)
+    setImageLoading(false)
+  }
+
+  const handleImageLoad = () => {
+    setImageLoading(false)
+  }
+
   return (
     <div className="min-h-screen bg-white">
       {/* Back Navigation */}
@@ -32,28 +63,34 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
             <Card className="shadow-lg border-0">
               <CardContent className="p-0">
                 <div className="relative">
-                  <div className="w-full h-96 bg-gray-100 flex items-center justify-center">
-                    {/* Add loading and error states */}
-                    <Image
-                      src={speaker.image || "/placeholder.svg"}
+                  <div className="w-full h-96 bg-gray-100 flex items-center justify-center relative overflow-hidden rounded-t-lg">
+                    {imageLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                        <div className="text-gray-500">Loading image...</div>
+                      </div>
+                    )}
+
+                    <img
+                      src={getImageSrc() || "/placeholder.svg"}
                       alt={speaker.name}
-                      width={400}
-                      height={500}
-                      className={`w-full h-96 rounded-t-lg ${
+                      className={`w-full h-96 rounded-t-lg transition-opacity duration-300 ${
                         speaker.imagePosition === "top" ? "object-top object-cover" : "object-center object-cover"
-                      }`}
-                      onError={(e) => {
-                        console.error(`Failed to load image: ${speaker.image}`)
-                        // Fall back to placeholder on error
-                        e.currentTarget.src = "/placeholder.svg?height=400&width=500"
-                      }}
+                      } ${imageLoading ? "opacity-0" : "opacity-100"}`}
+                      onError={handleImageError}
+                      onLoad={handleImageLoad}
                       loading="eager"
-                      priority={true}
                     />
                   </div>
+
                   <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-semibold text-gray-900">
                     {speaker.fee}
                   </div>
+
+                  {imageError && (
+                    <div className="absolute bottom-2 left-2 right-2 bg-yellow-100 border border-yellow-300 rounded p-2 text-xs text-yellow-800">
+                      <strong>Note:</strong> Using placeholder image. Original image may be temporarily unavailable.
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-6">
@@ -159,6 +196,25 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Debug Information (only in development) */}
+            {process.env.NODE_ENV === "development" && (
+              <div className="mb-8 p-4 bg-gray-100 rounded">
+                <h3 className="font-bold mb-2">Debug Info:</h3>
+                <p>
+                  <strong>Original Image URL:</strong> {speaker.image}
+                </p>
+                <p>
+                  <strong>Current Image Source:</strong> {getImageSrc()}
+                </p>
+                <p>
+                  <strong>Image Error:</strong> {imageError ? "Yes" : "No"}
+                </p>
+                <p>
+                  <strong>Image Loading:</strong> {imageLoading ? "Yes" : "No"}
+                </p>
               </div>
             )}
 

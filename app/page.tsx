@@ -4,6 +4,7 @@ import FeaturedSpeakers from "@/components/featured-speakers"
 import ClientLogos from "@/components/client-logos"
 import WhyChooseUs from "@/components/why-choose-us"
 import BookingCTA from "@/components/booking-cta"
+import { getFeaturedSpeakers } from "@/lib/speakers-data"
 
 export const metadata: Metadata = {
   title: "Book Top AI Keynote Speakers 2025 | The Only AI-Exclusive Speaker Bureau",
@@ -20,11 +21,20 @@ export const metadata: Metadata = {
 }
 
 export default async function HomePage() {
+  // Pre-load featured speakers for better performance
+  let featuredSpeakers = []
+  try {
+    featuredSpeakers = await getFeaturedSpeakers(8)
+  } catch (error) {
+    console.error("Failed to load featured speakers for homepage:", error)
+    // Component will handle the empty array gracefully
+  }
+
   return (
     <main className="min-h-screen">
       <Hero />
       <ClientLogos />
-      <FeaturedSpeakers />
+      <FeaturedSpeakers initialSpeakers={featuredSpeakers} />
       <WhyChooseUs />
       <BookingCTA />
     </main>

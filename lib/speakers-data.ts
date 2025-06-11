@@ -20,7 +20,7 @@ export interface Speaker {
   ranking: number
 }
 
-// Enhanced local fallback data
+// Enhanced local fallback data with working local images
 const localSpeakers: Speaker[] = [
   {
     slug: "adam-cheyer",
@@ -91,12 +91,29 @@ const localSpeakers: Speaker[] = [
     industries: ["Technology", "Finance", "Healthcare", "Consulting"],
     ranking: 92,
   },
-  // Add more speakers as needed
 ]
 
 let _cachedSpeakers: Speaker[] | null = null
 let _lastFetchTime = 0
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
+// Function to normalize image URLs
+function normalizeImageUrl(imageUrl: string): string {
+  if (!imageUrl) return "/placeholder.svg"
+
+  // If it's already a full URL (http/https), return as is
+  if (imageUrl.startsWith("http")) {
+    return imageUrl
+  }
+
+  // If it starts with /, it's already a proper path
+  if (imageUrl.startsWith("/")) {
+    return imageUrl
+  }
+
+  // Otherwise, assume it's a filename and prepend the speakers path
+  return `/speakers/${imageUrl}`
+}
 
 async function loadSpeakers(): Promise<Speaker[]> {
   const now = Date.now()
@@ -114,7 +131,7 @@ async function loadSpeakers(): Promise<Speaker[]> {
       console.log(`Successfully loaded ${sheetSpeakers.length} speakers from Google Sheet`)
       _cachedSpeakers = sheetSpeakers.map((speaker) => ({
         ...speaker,
-        image: speaker.image && speaker.image.startsWith("http") ? speaker.image : speaker.image || "/placeholder.svg",
+        image: normalizeImageUrl(speaker.image),
       }))
       _lastFetchTime = now
       return _cachedSpeakers
@@ -127,7 +144,12 @@ async function loadSpeakers(): Promise<Speaker[]> {
 
   // Fallback to local data
   console.log("Using local speaker data as fallback")
-  _cachedSpeakers = localSpeakers.sort((a, b) => b.ranking - a.ranking)
+  _cachedSpeakers = localSpeakers
+    .map((speaker) => ({
+      ...speaker,
+      image: normalizeImageUrl(speaker.image),
+    }))
+    .sort((a, b) => b.ranking - a.ranking)
   _lastFetchTime = now
   return _cachedSpeakers
 }
