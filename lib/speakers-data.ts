@@ -117,6 +117,74 @@ const localSpeakers: Speaker[] = [
     industries: ["Technology", "Retail", "Marketing"],
     ranking: 95, // Assign a ranking
   },
+  {
+    slug: "gopi-kallayil",
+    name: "Gopi Kallayil",
+    title: "Chief Evangelist of Brand Marketing at Google",
+    image: "/speakers/gopi-kallayil-headshot.jpg",
+    imagePosition: "top",
+    imageOffsetY: "-10px",
+    bio: "Gopi Kallayil is the Chief Evangelist of Brand Marketing at Google. In his role, he works with Google's marketing teams and helps evangelize Google's brand marketing vision, strategy, and execution. He is also a passionate advocate for mindfulness and well-being in the workplace.",
+    programs: [
+      "The Future of Brand Marketing",
+      "Innovation and Creativity at Google",
+      "Mindfulness and Well-being in the Workplace",
+    ],
+    fee: "Please Inquire",
+    location: "San Francisco, California",
+    linkedin: "https://www.linkedin.com/in/gopikallayil/",
+    website: "http://gopikallayil.com/",
+    email: "gopi.kallayil@gmail.com",
+    contact: "Direct",
+    listed: true,
+    expertise: ["Brand Marketing", "Innovation", "Mindfulness"],
+    industries: ["Technology", "Marketing"],
+    ranking: 88,
+  },
+  {
+    slug: "jamie-metzl",
+    name: "Jamie Metzl",
+    title: "Technology and Healthcare Futurist, Author, and Geopolitical Expert",
+    image: "/speakers/jamie-metzl-headshot.jpg",
+    imagePosition: "top",
+    imageOffsetY: "-10px",
+    bio: "Jamie Metzl is a leading technology and healthcare futurist, author, and geopolitical expert. He explores the intersection of emerging technologies, healthcare, and global politics. Jamie is a sought-after speaker and advisor on the future of humanity.",
+    programs: [
+      "The Future of Healthcare",
+      "The Geopolitics of Technology",
+      "Hacking Darwin: Genetic Engineering and the Future of Humanity",
+    ],
+    fee: "Please Inquire",
+    location: "New York, New York",
+    linkedin: "https://www.linkedin.com/in/jamiemetzl/",
+    website: "https://jamiemetzl.com/",
+    email: "jamie@jamiemetzl.com",
+    contact: "Direct",
+    listed: true,
+    expertise: ["Technology", "Healthcare", "Geopolitics"],
+    industries: ["Technology", "Healthcare", "Government"],
+    ranking: 90,
+  },
+  {
+    slug: "david-ewing-duncan",
+    name: "David Ewing Duncan",
+    title: "Science Journalist, Author, and Commentator",
+    image: "/speakers/david-ewing-duncan-headshot.jpg",
+    imagePosition: "top",
+    imageOffsetY: "-10px",
+    bio: "David Ewing Duncan is a renowned science journalist, author, and commentator. He covers a wide range of topics, including genetics, neuroscience, and the future of humanity. David is known for his engaging and thought-provoking presentations.",
+    programs: ["The Future of Genetics", "The Power of the Brain", "When I Die: Lessons From the Death Zone"],
+    fee: "Please Inquire",
+    location: "New York, New York",
+    linkedin: "https://www.linkedin.com/in/david-ewing-duncan-0a77451/",
+    website: "http://www.davideduncan.com/",
+    email: "david@davideduncan.com",
+    contact: "Direct",
+    listed: true,
+    expertise: ["Genetics", "Neuroscience", "Science Journalism"],
+    industries: ["Science", "Journalism", "Healthcare"],
+    ranking: 85,
+  },
 ]
 
 let _cachedSpeakers: Speaker[] | null = null
@@ -205,6 +273,10 @@ async function loadSpeakers(): Promise<Speaker[]> {
   _cachedSpeakers = Array.from(uniqueSpeakersMap.values()).sort((a, b) => b.ranking - a.ranking)
   _lastFetchTime = now
   console.log(`Total unique speakers loaded: ${_cachedSpeakers.length}`)
+  const sampleSpeaker = _cachedSpeakers.find((s) => s.slug === "adam-cheyer" || s.slug === "peter-norvig")
+  if (sampleSpeaker) {
+    console.log(`Sample speaker (${sampleSpeaker.name}) expertise: ${JSON.stringify(sampleSpeaker.expertise)}`)
+  }
   return _cachedSpeakers
 }
 

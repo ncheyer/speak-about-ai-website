@@ -63,7 +63,9 @@ export async function fetchSpeakersFromSheet(): Promise<Speaker[]> {
             } else if (key === "ranking") {
               value = Number.parseInt(value, 10) || 0
             } else if (["expertise", "industries", "programs"].includes(key)) {
+              console.log(`Processing ${key}: raw value = "${value}"`)
               value = value ? value.split(",").map((s: string) => s.trim()) : []
+              console.log(`Processed ${key}: array value = ${JSON.stringify(value)}`)
             }
             ;(speaker as any)[key] = value
           })
@@ -87,6 +89,7 @@ export async function fetchSpeakersFromSheet(): Promise<Speaker[]> {
             industries: speaker.industries || [],
             ranking: speaker.ranking || 0,
             imagePosition: speaker.imageposition || "center", // Handle 'imagePosition' from sheet
+            imageOffsetY: speaker.imageoffsety || "0%", // Handle 'imageOffsetY' from sheet
           } as Speaker
         } catch (rowError) {
           console.error("Error processing speaker row:", rowError)

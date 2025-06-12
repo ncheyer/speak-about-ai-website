@@ -241,14 +241,16 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             <img
               src={imageUrl || "/placeholder.svg"}
               alt={speaker.name}
-              className={`w-full h-64 rounded-t-lg transition-all duration-300 group-hover:scale-105 ${
-                speaker.imagePosition === "top" ? "object-top object-cover" : "object-cover object-center"
-              } ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
+              className={`w-full h-64 rounded-t-lg transition-all duration-300 group-hover:scale-105 ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
               onError={handleImageError}
               onLoad={handleImageLoad}
               loading="lazy"
               crossOrigin="anonymous"
-              style={{ display: imageState === "error" ? "none" : "block" }}
+              style={{
+                objectFit: "cover", // Ensure object-fit is cover
+                objectPosition: speaker.imagePosition === "top" ? `center ${speaker.imageOffsetY || "0%"}` : "center",
+                display: imageState === "error" ? "none" : "block",
+              }}
             />
           </div>
 

@@ -14,11 +14,14 @@ interface SpeakerProfileProps {
 }
 
 const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
+  const imageUrl = speaker.image || "/placeholder.svg?height=400&width=500&text=Speaker+Image"
+  console.log(
+    `SpeakerProfile: ${speaker.name} - imagePosition: ${speaker.imagePosition}, imageOffsetY: ${speaker.imageOffsetY}, imageUrl: ${imageUrl}`,
+  )
   const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading")
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
-
-  const imageUrl = speaker.image || "/placeholder.svg?height=400&width=500&text=Speaker+Image"
+  console.log(`SpeakerProfile for ${speaker.name}: Expertise received: ${JSON.stringify(speaker.expertise)}`)
 
   const handleImageError = () => {
     if (retryCount < maxRetries && speaker.image) {
@@ -110,16 +113,17 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                     <img
                       src={imageUrl || "/placeholder.svg"}
                       alt={speaker.name}
-                      className={`w-full h-96 rounded-t-lg transition-opacity duration-300 object-cover ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
-                      style={{
-                        objectPosition:
-                          speaker.imagePosition === "top" ? `center ${speaker.imageOffsetY || "0%"}` : "center",
-                      }}
+                      className={`w-full h-96 rounded-t-lg transition-opacity duration-300 ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
                       onError={handleImageError}
                       onLoad={handleImageLoad}
                       loading="eager"
                       crossOrigin="anonymous"
-                      style={{ display: imageState === "error" ? "none" : "block" }}
+                      style={{
+                        objectFit: "cover", // Ensure object-fit is cover
+                        objectPosition:
+                          speaker.imagePosition === "top" ? `center ${speaker.imageOffsetY || "0%"}` : "center",
+                        display: imageState === "error" ? "none" : "block",
+                      }}
                     />
                   </div>
 
