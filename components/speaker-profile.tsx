@@ -1,68 +1,75 @@
 "use client"
-import { useState, useEffect } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, MapPin, Linkedin, Globe, Mail } from "lucide-react"
-import Link from "next/link"
 
-const SpeakerProfile = ({ speaker }) => {
+import type React from "react"
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { MapPin, Linkedin, Globe, Mail, ArrowLeft } from "lucide-react"
+import type { Speaker } from "@/lib/speakers-data"
+
+interface SpeakerProfileProps {
+  speaker: Speaker
+}
+
+const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
   const imageUrl = speaker.image || "/placeholder.svg?height=400&width=500&text=Speaker+Image"
-  console.log(
-    `SpeakerProfile: ${speaker.name} - imagePosition: ${speaker.imagePosition}, imageOffsetY: ${speaker.imageOffsetY}, imageUrl: ${imageUrl}`,
-  )
+  // console.log(
+  //   `SpeakerProfile: ${speaker.name} - imagePosition: ${speaker.imagePosition}, imageOffsetY: ${speaker.imageOffsetY}, imageUrl: ${imageUrl}`,
+  // )
   const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading")
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
-  console.log(`SpeakerProfile for ${speaker.name}: Expertise received: ${JSON.stringify(speaker.expertise)}`)
+  // console.log(`SpeakerProfile for ${speaker.name}: Expertise received: ${JSON.stringify(speaker.expertise)}`)
 
   const handleImageError = () => {
     if (retryCount < maxRetries && speaker.image) {
-      // Retry loading the same image with a small delay
-      console.log(`Retrying image load for ${speaker.name} (attempt ${retryCount + 1}/${maxRetries})`)
+      // console.log(`Retrying image load for ${speaker.name} (attempt ${retryCount + 1}/${maxRetries})`)
       setRetryCount((prev) => prev + 1)
-
-      // Add a small delay before retry to handle temporary network issues
       setTimeout(
         () => {
           setImageState("loading")
-          // Force reload by adding a cache-busting parameter
           const img = new Image()
           img.crossOrigin = "anonymous"
           img.onload = () => setImageState("loaded")
           img.onerror = () => {
             if (retryCount + 1 >= maxRetries) {
-              console.error(`Failed to load image for ${speaker.name} after ${maxRetries} attempts: ${speaker.image}`)
+              // console.error(`Failed to load image for ${speaker.name} after ${maxRetries} attempts: ${speaker.image}`)
               setImageState("error")
             } else {
-              handleImageError()
+              handleImageError() // Recursive call, already increments retryCount via setRetryCount
             }
           }
           img.src = `${speaker.image}?retry=${retryCount + 1}&t=${Date.now()}`
         },
         1000 * (retryCount + 1),
-      ) // Exponential backoff
+      )
     } else {
-      console.error(`Failed to load image for ${speaker.name}: ${speaker.image}`)
+      // console.error(`Failed to load image for ${speaker.name}: ${speaker.image}`)
       setImageState("error")
     }
   }
 
   const handleImageLoad = () => {
     setImageState("loaded")
-    setRetryCount(0) // Reset retry count on successful load
+    setRetryCount(0)
   }
 
-  // Preload the image to handle CORS and caching issues
   useEffect(() => {
     if (speaker.image && speaker.image.includes("blob.vercel-storage.com")) {
       const img = new Image()
       img.crossOrigin = "anonymous"
-      img.onload = () => setImageState("loaded")
-      img.onerror = handleImageError
+      img.onload = handleImageLoad
+      img.onerror = handleImageError // Initial error will trigger retries
       img.src = speaker.image
+    } else if (speaker.image) {
+      setImageState("loaded") // Assume non-blob images load fine or handle differently
+    } else {
+      setImageState("error") // No image URL
     }
-  }, [speaker.image])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speaker.image]) // Only re-run if speaker.image changes
 
   return (
     <div className="min-h-screen bg-white">
@@ -93,18 +100,32 @@ const SpeakerProfile = ({ speaker }) => {
                       </div>
                     )}
 
-                    {imageState === "error" && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
-                        <div className="text-gray-400 text-center px-4">
-                          <div className="mb-2 text-4xl">📷</div>
-                          <div>Image temporarily unavailable</div>
-                          <div className="text-sm mt-1">Please try refreshing the page</div>
+                    {imageState === "error" &&
+                      !speaker.image && ( // Show placeholder only if no image URL
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
+                          <div className="text-gray-400 text-center px-4">
+                            <div className="mb-2 text-4xl">📷</div>
+                            <div>Speaker image unavailable</div>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    {imageState === "error" &&
+                      speaker.image && ( // Show error if image URL exists but failed
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
+                          <div className="text-gray-400 text-center px-4">
+                            <div className="mb-2 text-4xl">📷</div>
+                            <div>Image temporarily unavailable</div>
+                            <div className="text-sm mt-1">Please try refreshing the page</div>
+                          </div>
+                        </div>
+                      )}
 
                     <img
-                      src={imageUrl || "/placeholder.svg"}
+                      src={
+                        imageState === "error" && !speaker.image
+                          ? "/placeholder.svg?height=400&width=500&text=Speaker+Image"
+                          : imageUrl
+                      }
                       alt={speaker.name}
                       className={`w-full h-96 rounded-t-lg transition-opacity duration-300 ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
                       onError={handleImageError}
@@ -112,10 +133,10 @@ const SpeakerProfile = ({ speaker }) => {
                       loading="eager"
                       crossOrigin="anonymous"
                       style={{
-                        objectFit: "cover", // Ensure object-fit is cover
+                        objectFit: "cover",
                         objectPosition:
                           speaker.imagePosition === "top" ? `center ${speaker.imageOffsetY || "0%"}` : "center",
-                        display: imageState === "error" ? "none" : "block",
+                        display: imageState === "error" && speaker.image ? "none" : "block", // Hide broken img if URL existed
                       }}
                     />
                   </div>
@@ -124,17 +145,17 @@ const SpeakerProfile = ({ speaker }) => {
                     {speaker.fee}
                   </div>
 
-                  {/* Debug info for development */}
-                  {process.env.NODE_ENV === "development" && (imageState === "error" || retryCount > 0) && (
-                    <div className="absolute bottom-2 left-2 right-2 bg-yellow-100 border border-yellow-300 rounded p-2 text-xs text-yellow-800">
-                      <strong>Debug:</strong>{" "}
-                      {imageState === "error"
-                        ? `Failed after ${maxRetries} retries`
-                        : `Retry ${retryCount}/${maxRetries}`}
-                      <br />
-                      <strong>URL:</strong> {speaker.image}
-                    </div>
-                  )}
+                  {process.env.NODE_ENV === "development" &&
+                    ((imageState === "error" && speaker.image) || retryCount > 0) && (
+                      <div className="absolute bottom-2 left-2 right-2 bg-yellow-100 border border-yellow-300 rounded p-2 text-xs text-yellow-800">
+                        <strong>Debug:</strong>{" "}
+                        {imageState === "error" && speaker.image
+                          ? `Failed after ${maxRetries} retries`
+                          : `Retry ${retryCount}/${maxRetries}`}
+                        <br />
+                        <strong>URL:</strong> {speaker.image}
+                      </div>
+                    )}
                 </div>
 
                 <div className="p-6">
@@ -148,7 +169,6 @@ const SpeakerProfile = ({ speaker }) => {
                     </div>
                   )}
 
-                  {/* Industries */}
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold text-gray-900 mb-2 font-montserrat">Industries:</h3>
                     <div className="flex flex-wrap gap-2">
@@ -160,7 +180,6 @@ const SpeakerProfile = ({ speaker }) => {
                     </div>
                   </div>
 
-                  {/* Social Links */}
                   <div className="flex space-x-4 mb-6">
                     {speaker.linkedin && (
                       <a
@@ -189,18 +208,20 @@ const SpeakerProfile = ({ speaker }) => {
                     )}
                   </div>
 
-                  {/* CTA Buttons */}
                   <div className="space-y-3">
                     <Button
                       asChild
-                      className="w-full font-montserrat"
+                      className="w-full font-montserrat shadow-lg hover:shadow-xl transition-all duration-300"
                       style={{
                         background: "linear-gradient(to right, #F59E0B, #D97706)",
-                        color: "white",
+                        color: "white", // Style for Button component
                         border: "none",
                       }}
                     >
-                      <Link href={`/contact?source=speaker_profile&speakerName=${encodeURIComponent(speaker.name)}`}>
+                      <Link
+                        href={`/contact?source=speaker_profile&speakerName=${encodeURIComponent(speaker.name)}`}
+                        className="text-white no-underline" // Style for the Link (rendered <a> tag)
+                      >
                         Check Availability
                       </Link>
                     </Button>
@@ -210,9 +231,7 @@ const SpeakerProfile = ({ speaker }) => {
             </Card>
           </div>
 
-          {/* Right Column - Detailed Information */}
           <div className="lg:col-span-2">
-            {/* Biography */}
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Biography</h2>
               <div className="prose prose-lg max-w-none font-montserrat">
@@ -224,7 +243,6 @@ const SpeakerProfile = ({ speaker }) => {
               </div>
             </div>
 
-            {/* Expertise */}
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Areas of Expertise</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -236,7 +254,6 @@ const SpeakerProfile = ({ speaker }) => {
               </div>
             </div>
 
-            {/* Speaking Programs */}
             {speaker.programs && speaker.programs.length > 0 && (
               <div className="mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Speaking Programs</h2>
@@ -250,7 +267,6 @@ const SpeakerProfile = ({ speaker }) => {
               </div>
             )}
 
-            {/* Contact CTA */}
             <div className="bg-[#1E68C6] rounded-lg p-8 text-center">
               <h3 className="text-2xl font-bold text-white mb-4 font-neue-haas">Ready to Book {speaker.name}?</h3>
               <p className="text-white text-opacity-90 mb-6 font-montserrat">
@@ -259,14 +275,19 @@ const SpeakerProfile = ({ speaker }) => {
               <Button
                 asChild
                 size="lg"
-                className="font-montserrat"
+                className="font-montserrat shadow-lg hover:shadow-xl transition-all duration-300"
                 style={{
                   background: "linear-gradient(to right, #F59E0B, #D97706)",
-                  color: "white",
+                  color: "white", // Style for Button component
                   border: "none",
                 }}
               >
-                <Link href="/contact">Contact Us Now</Link>
+                <Link
+                  href={`/contact?source=speaker_profile_cta&speakerName=${encodeURIComponent(speaker.name)}`}
+                  className="text-white no-underline" // Style for the Link (rendered <a> tag)
+                >
+                  Contact Us Now
+                </Link>
               </Button>
             </div>
           </div>
