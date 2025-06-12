@@ -235,13 +235,13 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             <Button
               asChild
               variant="outline"
-              className="flex-1 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white font-montserrat"
+              className="flex-1 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white font-montserrat text-xs sm:text-sm px-2 h-auto py-2"
             >
               <Link href={`/speakers/${speaker.slug}`}>View Profile</Link>
             </Button>
             <Button
               asChild
-              className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat"
+              className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat text-xs sm:text-sm px-2 h-auto py-2 whitespace-normal"
             >
               <Link
                 href={`/contact?source=featured_speakers&speakerName=${encodeURIComponent(speaker.name)}`}
