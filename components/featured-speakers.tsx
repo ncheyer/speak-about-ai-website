@@ -241,7 +241,7 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             </Button>
             <Button
               asChild
-              className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat"
+              className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat"
             >
               <Link
                 href={`/contact?source=featured_speakers&speakerName=${encodeURIComponent(speaker.name)}`}
