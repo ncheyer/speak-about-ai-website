@@ -167,44 +167,44 @@ async function loadSpeakers(): Promise<Speaker[]> {
     return _cachedSpeakers
   }
 
+  let allSpeakers: Speaker[] = []
+
   try {
-    console.log("Loading speakers data from Google Sheet...")
+    console.log("Attempting to load speakers from Google Sheet...")
     const sheetSpeakers = await fetchSpeakersFromSheet()
 
     if (Array.isArray(sheetSpeakers) && sheetSpeakers.length > 0) {
-      console.log(`Successfully loaded ${sheetSpeakers.length} speakers from Google Sheet`)
-
-      // Process and validate each speaker's image URL
-      _cachedSpeakers = sheetSpeakers.map((speaker) => {
-        const processedSpeaker = {
-          ...speaker,
-          image: validateImageUrl(speaker.image, speaker.name),
-        }
-
-        // Log each speaker for debugging
-        console.log(`Processed speaker: ${speaker.name} - Image: ${processedSpeaker.image}`)
-
-        return processedSpeaker
-      })
-
-      _lastFetchTime = now
-      return _cachedSpeakers
+      console.log(`Successfully loaded ${sheetSpeakers.length} speakers from Google Sheet.`)
+      allSpeakers = sheetSpeakers.map((speaker) => ({
+        ...speaker,
+        image: validateImageUrl(speaker.image, speaker.name),
+      }))
     } else {
-      console.log("No speakers returned from Google Sheet, using local fallback")
+      console.log("No speakers returned from Google Sheet or an error occurred. Falling back to local data.")
+      allSpeakers = localSpeakers.map((speaker) => ({
+        ...speaker,
+        image: validateImageUrl(speaker.image, speaker.name),
+      }))
     }
   } catch (error) {
-    console.error("Error fetching speakers from Google Sheet:", error)
-  }
-
-  // Fallback to local data
-  console.log("Using local speaker data as fallback")
-  _cachedSpeakers = localSpeakers
-    .map((speaker) => ({
+    console.error("Error fetching speakers from Google Sheet, falling back to local data:", error)
+    allSpeakers = localSpeakers.map((speaker) => ({
       ...speaker,
       image: validateImageUrl(speaker.image, speaker.name),
     }))
-    .sort((a, b) => b.ranking - a.ranking)
+  }
+
+  // Deduplicate speakers by slug, prioritizing the first occurrence (e.g., from sheet if loaded)
+  const uniqueSpeakersMap = new Map<string, Speaker>()
+  for (const speaker of allSpeakers) {
+    if (!uniqueSpeakersMap.has(speaker.slug)) {
+      uniqueSpeakersMap.set(speaker.slug, speaker)
+    }
+  }
+
+  _cachedSpeakers = Array.from(uniqueSpeakersMap.values()).sort((a, b) => b.ranking - a.ranking)
   _lastFetchTime = now
+  console.log(`Total unique speakers loaded: ${_cachedSpeakers.length}`)
   return _cachedSpeakers
 }
 
