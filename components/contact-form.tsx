@@ -2,8 +2,25 @@
 
 import { useEffect } from "react"
 import { Phone, Mail, Clock } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 
 export default function ContactForm() {
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const source = searchParams.get("source")
+    const speakerName = searchParams.get("speakerName")
+    const industry = searchParams.get("industry")
+
+    if (source || speakerName || industry) {
+      console.log("Pipedrive Contact Form received URL parameters:")
+      if (source) console.log(`- Source: ${source}`)
+      if (speakerName) console.log(`- Speaker Name: ${speakerName}`)
+      if (industry) console.log(`- Industry: ${industry}`)
+      console.log("Ensure your Pipedrive webform is configured to map these parameters to fields.")
+    }
+  }, [searchParams])
+
   useEffect(() => {
     // Load Pipedrive webforms script
     const script = document.createElement("script")

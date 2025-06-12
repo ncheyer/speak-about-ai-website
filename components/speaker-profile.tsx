@@ -198,11 +198,10 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
 
                   {/* CTA Buttons */}
                   <div className="space-y-3">
-                    <Button asChild className="w-full bg-[#1E68C6] hover:bg-[#5084C6] font-montserrat">
-                      <Link href="/contact">Check Availability</Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full font-montserrat">
-                      <Link href="/contact">Request Speaker Kit</Link>
+                    <Button asChild className="w-full bg-[#FFD700] hover:bg-[#E5C100] text-black font-montserrat">
+                      <Link href={`/contact?source=speaker_profile&speakerName=${encodeURIComponent(speaker.name)}`}>
+                        Check Availability
+                      </Link>
                     </Button>
                   </div>
                 </div>
@@ -256,7 +255,7 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
               <p className="text-white text-opacity-90 mb-6 font-montserrat">
                 Contact us for availability, speaking fees, and custom program development.
               </p>
-              <Button asChild size="lg" className="bg-white text-[#1E68C6] hover:bg-gray-100 font-montserrat">
+              <Button asChild size="lg" className="bg-[#FFD700] text-black hover:bg-[#E5C100] font-montserrat">
                 <Link href="/contact">Contact Us Now</Link>
               </Button>
             </div>

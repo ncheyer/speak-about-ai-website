@@ -252,11 +252,11 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
                 display: imageState === "error" ? "none" : "block",
               }}
             />
+            <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded text-sm font-semibold text-gray-900 font-montserrat">
+              {speaker.fee}
+            </div>
           </div>
 
-          <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded text-sm font-semibold text-gray-900 font-montserrat">
-            {speaker.fee}
-          </div>
           {speaker.industries[0] && (
             <Badge className="absolute top-4 left-4 bg-[#1E68C6] text-white font-montserrat">
               {speaker.industries[0]}
@@ -305,7 +305,9 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
               <Link href={`/speakers/${speaker.slug}`}>View Profile</Link>
             </Button>
             <Button asChild variant="outline" className="flex-1 font-montserrat">
-              <Link href="/contact">Book Now</Link>
+              <Link href={`/contact?source=speaker_directory&speakerName=${encodeURIComponent(speaker.name)}`}>
+                Book Now
+              </Link>
             </Button>
           </div>
         </div>

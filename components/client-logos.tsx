@@ -40,8 +40,7 @@ export default function ClientLogos() {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Trusted by Industry Leaders</h2>
           <p className="text-lg text-gray-600">
-            Fortune 1000 companies, governments, and international organizations choose our AI speakers for their most
-            important events
+            Our speakers have worked with leading organizations around the world for their most important events.
           </p>
         </div>
 

@@ -51,7 +51,9 @@ export default async function HealthcareAISpeakersPage() {
                 </li>
               </ul>
               <Button asChild className="w-full bg-[#1E68C6] hover:bg-[#5084C6]">
-                <Link href="/contact">Book a Healthcare AI Speaker</Link>
+                <Link href="/contact?source=healthcare_industry_page&industry=Healthcare">
+                  Book a Healthcare AI Speaker
+                </Link>
               </Button>
             </div>
           </div>
@@ -112,7 +114,11 @@ export default async function HealthcareAISpeakersPage() {
                           <Link href={`/speakers/${speaker.slug}`}>View Profile</Link>
                         </Button>
                         <Button asChild variant="outline" className="flex-1">
-                          <Link href="/contact">Book Now</Link>
+                          <Link
+                            href={`/contact?source=healthcare_industry_page&speakerName=${encodeURIComponent(speaker.name)}&industry=Healthcare`}
+                          >
+                            Book Now
+                          </Link>
                         </Button>
                       </div>
                     </div>
@@ -194,7 +200,7 @@ export default async function HealthcareAISpeakersPage() {
             and healthcare organizations worldwide.
           </p>
           <Button asChild size="lg" className="bg-white text-[#1E68C6] hover:bg-[#EAEAEE] text-lg px-8 py-4">
-            <Link href="/contact">Contact Us for Availability</Link>
+            <Link href="/contact?source=healthcare_industry_page&industry=Healthcare">Contact Us for Availability</Link>
           </Button>
         </div>
       </section>

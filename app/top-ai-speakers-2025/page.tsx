@@ -81,7 +81,7 @@ export default function TopAISpeakers2025() {
             pioneers to Fortune 500 executives, these are the voices shaping AI's future.
           </p>
           <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
-            <Link href="/contact">Book a Top Speaker</Link>
+            <Link href="/contact?source=top_speakers_2025_page">Book a Top Speaker</Link>
           </Button>
         </div>
       </section>
@@ -115,7 +115,11 @@ export default function TopAISpeakers2025() {
                         <Link href={`/speakers/${speaker.slug}`}>View Profile</Link>
                       </Button>
                       <Button asChild variant="outline" className="flex-1">
-                        <Link href="/contact">Book Now</Link>
+                        <Link
+                          href={`/contact?source=top_speakers_2025_page&speakerName=${encodeURIComponent(speaker.name)}`}
+                        >
+                          Book Now
+                        </Link>
                       </Button>
                     </div>
                   </div>

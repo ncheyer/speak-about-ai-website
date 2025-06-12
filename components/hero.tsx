@@ -61,7 +61,7 @@ export default function Hero() {
               <div className="text-center">
                 <div className="flex items-center justify-center">
                   <Users className="w-5 h-5 text-[#1E68C6] mr-2" />
-                  <span className="text-2xl font-bold text-black font-neue-haas">67+</span>
+                  <span className="text-2xl font-bold text-black font-neue-haas">53+</span>
                 </div>
                 <p className="text-gray-600 font-montserrat text-xs">AI Experts</p>
               </div>

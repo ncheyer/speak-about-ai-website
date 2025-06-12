@@ -190,6 +190,9 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
               crossOrigin="anonymous"
               style={{ display: imageState === "error" ? "none" : "block" }}
             />
+            <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded text-sm font-semibold text-gray-900 font-montserrat">
+              {speaker.fee}
+            </div>
           </div>
 
           <Badge className="absolute top-4 left-4 bg-[#1E68C6] text-white font-montserrat">
@@ -226,7 +229,7 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
           </div>
 
           <Link
-            href="/contact"
+            href={`/contact?source=featured_speakers&speakerName=${encodeURIComponent(speaker.name)}`}
             className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#1E68C6] text-white hover:bg-[#5084C6] transition-colors font-montserrat"
           >
             Check Availability

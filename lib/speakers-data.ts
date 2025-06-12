@@ -329,7 +329,21 @@ export async function searchSpeakers(query: string): Promise<Speaker[]> {
       const titleMatch = speaker.title.toLowerCase().includes(lowercaseQuery)
       const expertiseMatch = speaker.expertise.some((skill) => skill.toLowerCase().includes(lowercaseQuery))
       const industryMatch = speaker.industries.some((industry) => industry.toLowerCase().includes(lowercaseQuery))
-      const bioMatch = lowercaseQuery.length >= 4 && speaker.bio.toLowerCase().includes(lowercaseQuery)
+
+      // More precise bio matching - only match if it's a significant term or company name
+      // Avoid matching common words that might appear in passing mentions
+      const bioMatch =
+        lowercaseQuery.length >= 4 &&
+        (speaker.bio
+          .toLowerCase()
+          .includes(` ${lowercaseQuery} `) || // Whole word match
+          speaker.bio.toLowerCase().includes(`${lowercaseQuery}.`) || // End of sentence
+          speaker.bio.toLowerCase().includes(`${lowercaseQuery},`) || // In a list
+          speaker.bio.toLowerCase().includes(`${lowercaseQuery}'s`) || // Possessive
+          speaker.bio.toLowerCase().startsWith(lowercaseQuery) || // Start of bio
+          speaker.bio.toLowerCase().includes(`at ${lowercaseQuery}`) || // Company affiliation
+          speaker.bio.toLowerCase().includes(`from ${lowercaseQuery}`) || // Previous company
+          speaker.bio.toLowerCase().includes(`with ${lowercaseQuery}`)) // Partnership/collaboration
 
       return nameMatch || titleMatch || expertiseMatch || industryMatch || bioMatch
     })
