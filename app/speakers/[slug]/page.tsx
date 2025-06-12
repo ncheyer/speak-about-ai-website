@@ -1,17 +1,20 @@
 import { getSpeakerBySlug } from "@/lib/speakers-data"
 
+interface Params {
+  slug: string
+}
+
 interface Props {
-  params: {
-    slug: string
-  }
+  params: Params
 }
 
 export default async function SpeakerPage({ params }: Props) {
   const speaker = await getSpeakerBySlug(params.slug)
+  console.log(`[slug] page.tsx: Speaker data fetched for ${speaker?.name}: Expertise =`, speaker?.expertise)
 
-  console.log(
-    `[slug] page.tsx: Speaker data fetched for ${speaker.name}: Expertise = ${JSON.stringify(speaker.expertise)}`,
-  )
+  if (!speaker) {
+    return <div>Speaker not found</div>
+  }
 
   return (
     <div>
