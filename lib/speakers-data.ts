@@ -6,6 +6,7 @@ export interface Speaker {
   title: string
   image: string
   imagePosition?: string
+  imageOffsetY?: string // New property for vertical offset, e.g., "-10px" or "-5%"
   bio: string
   programs: string[]
   fee: string
@@ -29,6 +30,7 @@ const localSpeakers: Speaker[] = [
       "VP of AI Experience at Airbnb, Co-Founder of Siri, Gameplanner.ai, Viv Labs, Sentient, and Founding Member of Change.org",
     image: "/speakers/adam-cheyer-headshot.png",
     imagePosition: "top",
+    imageOffsetY: "-10px", // Adjusted slightly upwards
     bio: "Adam is an expert in entrepreneurship, artificial intelligence, and scaling startups. With over ten years of experience founding and exiting companies, he was a co-founder of Siri, which Apple acquired, co-founded Viv Labs, which was acquired by Samsung, and Gameplanner.AI, which was Airbnb's first acquisition since going public. Through Siri and Bixby (Apple & Samsung's voice assistants), Adam has created key technology in over 1.5 billion devices.\n\nA founding developer of Change.org, he's helped unite 500M+ members to create social change across the globe. After his most recent acquisition, he leads all AI efforts at Airbnb as the VP of AI Experience.\n\nAdam is a 30+ year veteran in Artificial Intelligence, initially starting as a researcher at SRI International. With 39 patents and 60+ publications, his technical expertise and visionary approach to entrepreneurship are widely recognized across the globe.",
     programs: [
       "ChatGPT and The Rise of Conversational AI",
@@ -90,6 +92,30 @@ const localSpeakers: Speaker[] = [
     expertise: ["AI Strategy", "Decision Intelligence", "Data Science", "Business AI"],
     industries: ["Technology", "Finance", "Healthcare", "Consulting"],
     ranking: 92,
+  },
+  {
+    slug: "katie-mcmahon",
+    name: "Katie McMahon",
+    title: "Former VP of Global Marketing at Apple, Founding Executive of Apple Retail, and Author",
+    image: "/speakers/Katie-McMahon-Headshot.jpeg",
+    imagePosition: "top", // Set to top
+    imageOffsetY: "-10px", // Adjusted slightly upwards
+    bio: "Katie McMahon is a dynamic marketing executive and author known for her pivotal role in Apple's global marketing and retail initiatives. As a founding executive of Apple Retail, she helped shape the customer experience that became a benchmark for the industry. Her expertise spans brand building, consumer engagement, and creating memorable customer journeys. Katie is also an accomplished author, sharing insights on innovation and leadership.",
+    programs: [
+      "Building Iconic Brands in the Age of AI",
+      "The Future of Retail: AI-Powered Customer Experiences",
+      "Innovation Lessons from Apple",
+    ],
+    fee: "Please Inquire",
+    location: "San Francisco, California",
+    linkedin: "https://www.linkedin.com/in/katiemcmahon/",
+    website: "",
+    email: "",
+    contact: "Direct",
+    listed: true,
+    expertise: ["Brand Strategy", "Retail Innovation", "Consumer Marketing", "Leadership"],
+    industries: ["Technology", "Retail", "Marketing"],
+    ranking: 95, // Assign a ranking
   },
 ]
 

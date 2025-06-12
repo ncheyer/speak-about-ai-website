@@ -110,9 +110,11 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                     <img
                       src={imageUrl || "/placeholder.svg"}
                       alt={speaker.name}
-                      className={`w-full h-96 rounded-t-lg transition-opacity duration-300 ${
-                        speaker.imagePosition === "top" ? "object-top object-cover" : "object-center object-cover"
-                      } ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
+                      className={`w-full h-96 rounded-t-lg transition-opacity duration-300 object-cover ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
+                      style={{
+                        objectPosition:
+                          speaker.imagePosition === "top" ? `center ${speaker.imageOffsetY || "0%"}` : "center",
+                      }}
                       onError={handleImageError}
                       onLoad={handleImageLoad}
                       loading="eager"
