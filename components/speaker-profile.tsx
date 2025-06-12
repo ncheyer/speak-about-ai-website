@@ -15,17 +15,12 @@ interface SpeakerProfileProps {
 
 const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
   const imageUrl = speaker.image || "/placeholder.svg?height=400&width=500&text=Speaker+Image"
-  // console.log(
-  //   `SpeakerProfile: ${speaker.name} - imagePosition: ${speaker.imagePosition}, imageOffsetY: ${speaker.imageOffsetY}, imageUrl: ${imageUrl}`,
-  // )
   const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading")
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
-  // console.log(`SpeakerProfile for ${speaker.name}: Expertise received: ${JSON.stringify(speaker.expertise)}`)
 
   const handleImageError = () => {
     if (retryCount < maxRetries && speaker.image) {
-      // console.log(`Retrying image load for ${speaker.name} (attempt ${retryCount + 1}/${maxRetries})`)
       setRetryCount((prev) => prev + 1)
       setTimeout(
         () => {
@@ -35,10 +30,9 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
           img.onload = () => setImageState("loaded")
           img.onerror = () => {
             if (retryCount + 1 >= maxRetries) {
-              // console.error(`Failed to load image for ${speaker.name} after ${maxRetries} attempts: ${speaker.image}`)
               setImageState("error")
             } else {
-              handleImageError() // Recursive call, already increments retryCount via setRetryCount
+              handleImageError()
             }
           }
           img.src = `${speaker.image}?retry=${retryCount + 1}&t=${Date.now()}`
@@ -46,7 +40,6 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
         1000 * (retryCount + 1),
       )
     } else {
-      // console.error(`Failed to load image for ${speaker.name}: ${speaker.image}`)
       setImageState("error")
     }
   }
@@ -61,19 +54,18 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
       const img = new Image()
       img.crossOrigin = "anonymous"
       img.onload = handleImageLoad
-      img.onerror = handleImageError // Initial error will trigger retries
+      img.onerror = handleImageError
       img.src = speaker.image
     } else if (speaker.image) {
-      setImageState("loaded") // Assume non-blob images load fine or handle differently
+      setImageState("loaded")
     } else {
-      setImageState("error") // No image URL
+      setImageState("error")
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [speaker.image]) // Only re-run if speaker.image changes
+  }, [speaker.image])
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Back Navigation */}
       <div className="bg-gray-50 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link href="/speakers" className="inline-flex items-center text-[#1E68C6] hover:underline">
@@ -83,10 +75,8 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
         </div>
       </div>
 
-      {/* Speaker Profile */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Left Column - Speaker Image and Basic Info */}
           <div className="lg:col-span-1">
             <Card className="shadow-lg border-0">
               <CardContent className="p-0">
@@ -99,27 +89,23 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                         </div>
                       </div>
                     )}
-
-                    {imageState === "error" &&
-                      !speaker.image && ( // Show placeholder only if no image URL
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
-                          <div className="text-gray-400 text-center px-4">
-                            <div className="mb-2 text-4xl">📷</div>
-                            <div>Speaker image unavailable</div>
-                          </div>
+                    {imageState === "error" && !speaker.image && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
+                        <div className="text-gray-400 text-center px-4">
+                          <div className="mb-2 text-4xl">📷</div>
+                          <div>Speaker image unavailable</div>
                         </div>
-                      )}
-                    {imageState === "error" &&
-                      speaker.image && ( // Show error if image URL exists but failed
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
-                          <div className="text-gray-400 text-center px-4">
-                            <div className="mb-2 text-4xl">📷</div>
-                            <div>Image temporarily unavailable</div>
-                            <div className="text-sm mt-1">Please try refreshing the page</div>
-                          </div>
+                      </div>
+                    )}
+                    {imageState === "error" && speaker.image && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
+                        <div className="text-gray-400 text-center px-4">
+                          <div className="mb-2 text-4xl">📷</div>
+                          <div>Image temporarily unavailable</div>
+                          <div className="text-sm mt-1">Please try refreshing the page</div>
                         </div>
-                      )}
-
+                      </div>
+                    )}
                     <img
                       src={
                         imageState === "error" && !speaker.image
@@ -136,15 +122,13 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                         objectFit: "cover",
                         objectPosition:
                           speaker.imagePosition === "top" ? `center ${speaker.imageOffsetY || "0%"}` : "center",
-                        display: imageState === "error" && speaker.image ? "none" : "block", // Hide broken img if URL existed
+                        display: imageState === "error" && speaker.image ? "none" : "block",
                       }}
                     />
                   </div>
-
                   <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-semibold text-gray-900">
                     {speaker.fee}
                   </div>
-
                   {process.env.NODE_ENV === "development" &&
                     ((imageState === "error" && speaker.image) || retryCount > 0) && (
                       <div className="absolute bottom-2 left-2 right-2 bg-yellow-100 border border-yellow-300 rounded p-2 text-xs text-yellow-800">
@@ -161,14 +145,12 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                 <div className="p-6">
                   <h1 className="text-2xl font-bold text-gray-900 mb-2 font-neue-haas">{speaker.name}</h1>
                   <p className="text-[#5084C6] font-semibold mb-4 font-montserrat">{speaker.title}</p>
-
                   {speaker.location && (
                     <div className="flex items-center text-gray-600 mb-4">
                       <MapPin className="w-4 h-4 mr-2" />
                       <span className="font-montserrat">{speaker.location}</span>
                     </div>
                   )}
-
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold text-gray-900 mb-2 font-montserrat">Industries:</h3>
                     <div className="flex flex-wrap gap-2">
@@ -179,7 +161,6 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                       ))}
                     </div>
                   </div>
-
                   <div className="flex space-x-4 mb-6">
                     {speaker.linkedin && (
                       <a
@@ -207,20 +188,14 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                       </a>
                     )}
                   </div>
-
                   <div className="space-y-3">
                     <Button
                       asChild
-                      className="w-full font-montserrat shadow-lg hover:shadow-xl transition-all duration-300"
-                      style={{
-                        background: "linear-gradient(to right, #F59E0B, #D97706)",
-                        color: "white", // Style for Button component
-                        border: "none",
-                      }}
+                      className="w-full font-montserrat shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0"
                     >
                       <Link
                         href={`/contact?source=speaker_profile&speakerName=${encodeURIComponent(speaker.name)}`}
-                        className="text-white no-underline" // Style for the Link (rendered <a> tag)
+                        className="text-white no-underline"
                       >
                         Check Availability
                       </Link>
@@ -242,7 +217,6 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                 ))}
               </div>
             </div>
-
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Areas of Expertise</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -253,7 +227,6 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                 ))}
               </div>
             </div>
-
             {speaker.programs && speaker.programs.length > 0 && (
               <div className="mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Speaking Programs</h2>
@@ -266,7 +239,6 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                 </div>
               </div>
             )}
-
             <div className="bg-[#1E68C6] rounded-lg p-8 text-center">
               <h3 className="text-2xl font-bold text-white mb-4 font-neue-haas">Ready to Book {speaker.name}?</h3>
               <p className="text-white text-opacity-90 mb-6 font-montserrat">
@@ -275,16 +247,11 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
               <Button
                 asChild
                 size="lg"
-                className="font-montserrat shadow-lg hover:shadow-xl transition-all duration-300"
-                style={{
-                  background: "linear-gradient(to right, #F59E0B, #D97706)",
-                  color: "white", // Style for Button component
-                  border: "none",
-                }}
+                className="font-montserrat shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0"
               >
                 <Link
                   href={`/contact?source=speaker_profile_cta&speakerName=${encodeURIComponent(speaker.name)}`}
-                  className="text-white no-underline" // Style for the Link (rendered <a> tag)
+                  className="text-white no-underline"
                 >
                   Contact Us Now
                 </Link>

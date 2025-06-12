@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
+import { Button } from "@/components/ui/button"
 import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
 
 interface FeaturedSpeakersProps {
@@ -81,12 +82,14 @@ export default function FeaturedSpeakers({ initialSpeakers }: FeaturedSpeakersPr
         </div>
 
         <div className="text-center">
-          <Link
-            href="/speakers"
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-11 px-8 border border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white transition-colors font-montserrat"
+          <Button
+            asChild
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-11 px-8 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat"
           >
-            View All {speakers.length > 0 ? `${speakers.length}+` : ""} AI Speakers
-          </Link>
+            <Link href="/speakers" className="text-white no-underline">
+              View All AI Speakers
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
@@ -155,8 +158,8 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
   }, [speaker.image])
 
   return (
-    <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
-      <CardContent className="p-0">
+    <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg flex flex-col">
+      <CardContent className="p-0 flex flex-col flex-grow">
         <div className="relative">
           <div className="w-full h-64 bg-gray-100 flex items-center justify-center relative overflow-hidden rounded-t-lg">
             {imageState === "loading" && (
@@ -183,12 +186,12 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
               className={`w-full h-64 rounded-t-lg transition-all duration-300 group-hover:scale-105 object-cover ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
               style={{
                 objectPosition: speaker.imagePosition === "top" ? `center ${speaker.imageOffsetY || "0%"}` : "center",
+                display: imageState === "error" ? "none" : "block",
               }}
               onError={handleImageError}
               onLoad={handleImageLoad}
               loading="lazy"
               crossOrigin="anonymous"
-              style={{ display: imageState === "error" ? "none" : "block" }}
             />
             <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded text-sm font-semibold text-gray-900 font-montserrat">
               {speaker.fee}
@@ -207,10 +210,10 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
           )}
         </div>
 
-        <div className="p-6">
+        <div className="p-6 flex flex-col flex-grow">
           <h3 className="text-xl font-bold text-black mb-2 font-neue-haas">{speaker.name}</h3>
           <p className="text-[#5084C6] font-semibold mb-3 font-montserrat text-sm">{speaker.title}</p>
-          <p className="text-gray-600 text-sm mb-4 line-clamp-3 font-montserrat">{speaker.bio}</p>
+          <p className="text-gray-600 text-sm mb-4 line-clamp-3 font-montserrat flex-grow">{speaker.bio}</p>
 
           <div className="mb-4">
             <h4 className="text-sm font-semibold text-black mb-2 font-montserrat">Speaking Topics:</h4>
@@ -228,12 +231,26 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             </div>
           </div>
 
-          <Link
-            href={`/contact?source=featured_speakers&speakerName=${encodeURIComponent(speaker.name)}`}
-            className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#1E68C6] text-white hover:bg-[#5084C6] transition-colors font-montserrat"
-          >
-            Check Availability
-          </Link>
+          <div className="mt-auto flex flex-col sm:flex-row gap-2">
+            <Button
+              asChild
+              variant="outline"
+              className="flex-1 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white font-montserrat"
+            >
+              <Link href={`/speakers/${speaker.slug}`}>View Profile</Link>
+            </Button>
+            <Button
+              asChild
+              className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat"
+            >
+              <Link
+                href={`/contact?source=featured_speakers&speakerName=${encodeURIComponent(speaker.name)}`}
+                className="text-white no-underline"
+              >
+                Check Availability
+              </Link>
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
