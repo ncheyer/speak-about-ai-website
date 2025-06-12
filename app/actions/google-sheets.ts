@@ -59,12 +59,18 @@ export async function fetchSpeakersFromSheet(): Promise<Speaker[]> {
               value = false
             } else if (key === "ranking") {
               value = Number.parseInt(value, 10) || 0
-            } else if (key.includes("expertise") || key === "topics") {
-              console.log(`Processing expertise: raw value = "${value}"`)
+            }
+            // Handle 'expertise' column
+            else if (key === "expertise") {
               value = value ? value.split(",").map((s: string) => s.trim()) : []
-              console.log(`Processed expertise: array value = ${JSON.stringify(value)}`)
               ;(speaker as any)["expertise"] = value
-              return // Skip the generic assignment below
+              return
+            }
+            // Handle 'topics' column, map to 'programs'
+            else if (key === "topics") {
+              value = value ? value.split(",").map((s: string) => s.trim()) : []
+              ;(speaker as any)["programs"] = value
+              return
             } else if (key.includes("industries")) {
               console.log(`Processing industries: raw value = "${value}"`)
               value = value ? value.split(",").map((s: string) => s.trim()) : []

@@ -212,14 +212,14 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
           <div className="mb-4">
             <h4 className="text-sm font-semibold text-black mb-2 font-montserrat">Speaking Topics:</h4>
             <div className="flex flex-wrap gap-1">
-              {speaker.expertise.slice(0, 2).map((topic, index) => (
+              {speaker.programs.slice(0, 2).map((topic, index) => (
                 <Badge key={index} variant="secondary" className="text-xs font-montserrat">
                   {topic}
                 </Badge>
               ))}
-              {speaker.expertise.length > 2 && (
+              {speaker.programs.length > 2 && (
                 <Badge variant="secondary" className="text-xs font-montserrat">
-                  +{speaker.expertise.length - 2} more
+                  +{speaker.programs.length - 2} more
                 </Badge>
               )}
             </div>
