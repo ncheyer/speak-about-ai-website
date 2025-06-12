@@ -1,4 +1,5 @@
 import { getSpeakerBySlug } from "@/lib/speakers-data"
+import SpeakerProfile from "@/components/speaker-profile" // Ensure this import is present
 
 interface Params {
   slug: string
@@ -10,17 +11,17 @@ interface Props {
 
 export default async function SpeakerPage({ params }: Props) {
   const speaker = await getSpeakerBySlug(params.slug)
-  console.log(`[slug] page.tsx: Speaker data fetched for ${speaker?.name}: Expertise =`, speaker?.expertise)
+
+  // This log will appear in your server-side terminal/Vercel logs
+  console.log(
+    `[slug] page.tsx: Speaker data fetched for ${speaker?.name}: Expertise = ${JSON.stringify(speaker?.expertise)}`,
+  )
 
   if (!speaker) {
-    return <div>Speaker not found</div>
+    // Using notFound() for proper Next.js 404 handling
+    // If you want a custom message, you can render it here before calling notFound()
+    return <div>Speaker not found. Please check the URL.</div>
   }
 
-  return (
-    <div>
-      <h1>{speaker.name}</h1>
-      <p>{speaker.bio}</p>
-      <p>Expertise: {speaker.expertise}</p>
-    </div>
-  )
+  return <SpeakerProfile speaker={speaker} />
 }

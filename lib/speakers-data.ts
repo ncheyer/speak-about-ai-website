@@ -277,6 +277,11 @@ async function loadSpeakers(): Promise<Speaker[]> {
   if (sampleSpeaker) {
     console.log(`Sample speaker (${sampleSpeaker.name}) expertise: ${JSON.stringify(sampleSpeaker.expertise)}`)
   }
+  // Add a specific log for Adam Cheyer's expertise here
+  const adamCheyer = _cachedSpeakers.find((s) => s.slug === "adam-cheyer")
+  if (adamCheyer) {
+    console.log(`lib/speakers-data.ts: Adam Cheyer's expertise before caching: ${JSON.stringify(adamCheyer.expertise)}`)
+  }
   return _cachedSpeakers
 }
 
