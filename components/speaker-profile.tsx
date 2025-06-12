@@ -1,19 +1,12 @@
 "use client"
-
-import type React from "react"
 import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Linkedin, Globe, Mail, ArrowLeft } from "lucide-react"
-import type { Speaker } from "@/lib/speakers-data"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft, MapPin, Linkedin, Globe, Mail } from "lucide-react"
+import Link from "next/link"
 
-interface SpeakerProfileProps {
-  speaker: Speaker
-}
-
-const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
+const SpeakerProfile = ({ speaker }) => {
   const imageUrl = speaker.image || "/placeholder.svg?height=400&width=500&text=Speaker+Image"
   console.log(
     `SpeakerProfile: ${speaker.name} - imagePosition: ${speaker.imagePosition}, imageOffsetY: ${speaker.imageOffsetY}, imageUrl: ${imageUrl}`,
@@ -198,7 +191,15 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
 
                   {/* CTA Buttons */}
                   <div className="space-y-3">
-                    <Button asChild className="w-full bg-[#FFD700] hover:bg-[#E5C100] text-black font-montserrat">
+                    <Button
+                      asChild
+                      className="w-full font-montserrat"
+                      style={{
+                        background: "linear-gradient(to right, #F59E0B, #D97706)",
+                        color: "white",
+                        border: "none",
+                      }}
+                    >
                       <Link href={`/contact?source=speaker_profile&speakerName=${encodeURIComponent(speaker.name)}`}>
                         Check Availability
                       </Link>
@@ -255,7 +256,16 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
               <p className="text-white text-opacity-90 mb-6 font-montserrat">
                 Contact us for availability, speaking fees, and custom program development.
               </p>
-              <Button asChild size="lg" className="bg-[#FFD700] text-black hover:bg-[#E5C100] font-montserrat">
+              <Button
+                asChild
+                size="lg"
+                className="font-montserrat"
+                style={{
+                  background: "linear-gradient(to right, #F59E0B, #D97706)",
+                  color: "white",
+                  border: "none",
+                }}
+              >
                 <Link href="/contact">Contact Us Now</Link>
               </Button>
             </div>
