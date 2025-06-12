@@ -40,6 +40,7 @@ export async function fetchSpeakersFromSheet(): Promise<Speaker[]> {
     }
 
     const headers = values[0]
+    console.log("Headers found in Google Sheet:", JSON.stringify(headers))
     const rows = values.slice(1)
 
     // Map rows to Speaker objects, handling type conversions
@@ -48,11 +49,7 @@ export async function fetchSpeakersFromSheet(): Promise<Speaker[]> {
         try {
           const speaker: Partial<Speaker> = {}
           headers.forEach((header: string, index: number) => {
-            // Convert header to a consistent key format (e.g., remove spaces, lowercase first letter)
-            const key = header
-              .replace(/\s(.)/g, (match, p1) => p1.toUpperCase())
-              .replace(/\s/g, "")
-              .toLowerCase()
+            const key = header.replace(/\s/g, "").toLowerCase()
             let value: any = row[index]
 
             // Type conversions
@@ -62,10 +59,24 @@ export async function fetchSpeakersFromSheet(): Promise<Speaker[]> {
               value = false
             } else if (key === "ranking") {
               value = Number.parseInt(value, 10) || 0
-            } else if (["expertise", "industries", "programs"].includes(key)) {
-              console.log(`Processing ${key}: raw value = "${value}"`)
+            } else if (key.includes("expertise") || key === "topics") {
+              console.log(`Processing expertise: raw value = "${value}"`)
               value = value ? value.split(",").map((s: string) => s.trim()) : []
-              console.log(`Processed ${key}: array value = ${JSON.stringify(value)}`)
+              console.log(`Processed expertise: array value = ${JSON.stringify(value)}`)
+              ;(speaker as any)["expertise"] = value
+              return // Skip the generic assignment below
+            } else if (key.includes("industries")) {
+              console.log(`Processing industries: raw value = "${value}"`)
+              value = value ? value.split(",").map((s: string) => s.trim()) : []
+              console.log(`Processed industries: array value = ${JSON.stringify(value)}`)
+              ;(speaker as any)["industries"] = value
+              return // Skip the generic assignment below
+            } else if (key.includes("programs")) {
+              console.log(`Processing programs: raw value = "${value}"`)
+              value = value ? value.split(",").map((s: string) => s.trim()) : []
+              console.log(`Processed programs: array value = ${JSON.stringify(value)}`)
+              ;(speaker as any)["programs"] = value
+              return // Skip the generic assignment below
             }
             ;(speaker as any)[key] = value
           })
