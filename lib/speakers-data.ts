@@ -19,6 +19,27 @@ export interface Speaker {
   expertise: string[]
   industries: string[]
   ranking: number
+  // Add structured fields for videos
+  videos?: {
+    id: string // Unique identifier for the video
+    title: string // Title of the video
+    url: string // YouTube or other video platform URL
+    thumbnail?: string // Optional custom thumbnail URL (if not provided, can use YouTube thumbnail)
+    source?: string // Source platform (e.g., "YouTube", "Vimeo")
+    duration?: string // Duration in format "MM:SS"
+    description?: string // Optional description of the video content
+    date?: string // Optional recording date
+  }[]
+  // Add structured fields for testimonials
+  testimonials?: {
+    quote: string // The testimonial text
+    author: string // Name of the person giving the testimonial
+    position: string // Job title of the person
+    company: string // Company or organization
+    event?: string // Optional event where the speaker presented
+    date?: string // Optional date of the testimonial
+    logo?: string // Optional company logo URL
+  }[]
 }
 
 // Enhanced local fallback data with working local images

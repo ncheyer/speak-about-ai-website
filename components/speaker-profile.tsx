@@ -6,8 +6,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Linkedin, Globe, Mail, ArrowLeft } from "lucide-react"
+import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote } from "lucide-react"
 import type { Speaker } from "@/lib/speakers-data"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface SpeakerProfileProps {
   speaker: Speaker
@@ -18,6 +19,54 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
   const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading")
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
+  const [activeTab, setActiveTab] = useState("about")
+
+  // Sample videos data if none provided
+  const videos = speaker.videos || [
+    {
+      id: "sample1",
+      title: "The Future of AI in Business",
+      thumbnail: "/placeholder.svg?height=200&width=350&text=Video+Thumbnail",
+      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      source: "YouTube",
+      duration: "45:22",
+    },
+    {
+      id: "sample2",
+      title: `${speaker.name} on Innovation and Technology`,
+      thumbnail: "/placeholder.svg?height=200&width=350&text=Video+Thumbnail",
+      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      source: "YouTube",
+      duration: "32:15",
+    },
+  ]
+
+  // Sample testimonials data if none provided
+  const testimonials = speaker.testimonials || [
+    {
+      quote: `${speaker.name}'s keynote was the highlight of our conference. Their insights on AI were both profound and practical.`,
+      author: "Jane Smith",
+      position: "Event Director",
+      company: "Tech Innovation Summit",
+      event: "Annual Technology Conference 2024",
+    },
+    {
+      quote:
+        "Our audience was captivated from start to finish. The presentation perfectly balanced technical depth with accessibility.",
+      author: "Michael Johnson",
+      position: "CEO",
+      company: "Future Technologies Inc.",
+      event: "Executive Leadership Forum",
+    },
+    {
+      quote:
+        "We've received overwhelmingly positive feedback from attendees. The practical takeaways were exactly what our organization needed.",
+      author: "Sarah Williams",
+      position: "Head of Learning & Development",
+      company: "Global Enterprises",
+      event: "Digital Transformation Workshop",
+    },
+  ]
 
   const handleImageError = () => {
     if (retryCount < maxRetries && speaker.image) {
@@ -207,39 +256,119 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
           </div>
 
           <div className="lg:col-span-2">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Biography</h2>
-              <div className="prose prose-lg max-w-none font-montserrat">
-                {speaker.bio.split("\n").map((paragraph, index) => (
-                  <p key={index} className="mb-4 text-gray-600 leading-relaxed">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-            </div>
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Areas of Expertise</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {speaker.expertise.map((skill, index) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                    <span className="font-semibold text-gray-900 font-montserrat">{skill}</span>
+            <Tabs defaultValue="about" className="w-full" onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2 mb-8">
+                <TabsTrigger value="about" className="text-base font-montserrat">
+                  Biography & Programs
+                </TabsTrigger>
+                <TabsTrigger value="media" className="text-base font-montserrat">
+                  Videos & Testimonials
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="about" className="space-y-8">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Biography</h2>
+                  <div className="prose prose-lg max-w-none font-montserrat">
+                    {speaker.bio.split("\n").map((paragraph, index) => (
+                      <p key={index} className="mb-4 text-gray-600 leading-relaxed">
+                        {paragraph}
+                      </p>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-            {speaker.programs && speaker.programs.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Speaking Programs</h2>
-                <div className="space-y-4">
-                  {speaker.programs.map((program, index) => (
-                    <div key={index} className="bg-blue-50 p-6 rounded-lg border-l-4 border-[#1E68C6]">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2 font-neue-haas">{program}</h3>
-                    </div>
-                  ))}
                 </div>
-              </div>
-            )}
-            <div className="bg-[#1E68C6] rounded-lg p-8 text-center">
+
+                {speaker.programs && speaker.programs.length > 0 && (
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Speaking Programs</h2>
+                    <div className="space-y-4">
+                      {speaker.programs.map((program, index) => (
+                        <div key={index} className="bg-blue-50 p-6 rounded-lg border-l-4 border-[#1E68C6]">
+                          <h3 className="text-xl font-semibold text-gray-900 mb-2 font-neue-haas">{program}</h3>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Areas of Expertise</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {speaker.expertise.map((skill, index) => (
+                      <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                        <span className="font-semibold text-gray-900 font-montserrat">{skill}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="media" className="space-y-8">
+                {/* Videos Section */}
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Videos</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {videos.map((video) => (
+                      <a
+                        key={video.id}
+                        href={video.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group block"
+                      >
+                        <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
+                          <div className="aspect-video bg-gray-100 relative">
+                            <img
+                              src={video.thumbnail || "/placeholder.svg"}
+                              alt={video.title}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
+                              <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <Play className="w-8 h-8 text-[#1E68C6] ml-1" />
+                              </div>
+                            </div>
+                            <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                              {video.duration}
+                            </div>
+                          </div>
+                          <div className="p-4 bg-white">
+                            <h3 className="font-semibold text-gray-900 group-hover:text-[#1E68C6] transition-colors duration-300 font-montserrat">
+                              {video.title}
+                            </h3>
+                            <p className="text-sm text-gray-500 mt-1 font-montserrat">{video.source}</p>
+                          </div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Testimonials Section */}
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Testimonials</h2>
+                  <div className="space-y-6">
+                    {testimonials.map((testimonial, index) => (
+                      <div key={index} className="bg-gray-50 p-6 rounded-lg border-l-4 border-[#1E68C6] relative">
+                        <Quote className="absolute top-4 right-4 w-8 h-8 text-gray-200" />
+                        <p className="text-gray-700 italic mb-4 font-montserrat relative z-10">"{testimonial.quote}"</p>
+                        <div>
+                          <p className="font-semibold text-gray-900 font-montserrat">{testimonial.author}</p>
+                          <p className="text-sm text-gray-600 font-montserrat">
+                            {testimonial.position}, {testimonial.company}
+                          </p>
+                          {testimonial.event && (
+                            <p className="text-xs text-gray-500 mt-1 font-montserrat">{testimonial.event}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="bg-[#1E68C6] rounded-lg p-8 text-center mt-12">
               <h3 className="text-2xl font-bold text-white mb-4 font-neue-haas">Ready to Book {speaker.name}?</h3>
               <p className="text-white text-opacity-90 mb-6 font-montserrat">
                 Contact us for availability, speaking fees, and custom program development.
