@@ -2,9 +2,8 @@
 
 import { useEffect } from "react"
 
-export function ScrollToTop() {
+export default function ScrollToTop() {
   useEffect(() => {
-    // Scroll to top immediately when component mounts
     window.scrollTo(0, 0)
   }, [])
 

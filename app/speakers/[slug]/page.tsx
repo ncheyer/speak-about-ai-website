@@ -1,5 +1,6 @@
 import { getSpeakerBySlug } from "@/lib/speakers-data"
-import SpeakerProfile from "@/components/speaker-profile" // Ensure this import is present
+import SpeakerProfile from "@/components/speaker-profile"
+import ScrollToTop from "./scroll-to-top"
 
 interface Params {
   slug: string
@@ -8,19 +9,6 @@ interface Params {
 interface Props {
   params: Params
 }
-;("use client")
-
-import { useEffect } from "react"
-
-function ScrollToTop() {
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
-
-  return null
-}
-
-export { ScrollToTop }
 
 export default async function SpeakerPage({ params }: Props) {
   const speaker = await getSpeakerBySlug(params.slug)
