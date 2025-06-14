@@ -219,7 +219,7 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
       <CardContent className="p-0">
         <div className="relative">
-          <div className="w-full h-48 sm:h-56 md:h-64 bg-gray-100 flex items-center justify-center relative overflow-hidden rounded-t-lg">
+          <div className="w-full aspect-square sm:aspect-[4/5] md:aspect-[3/4] bg-gray-100 flex items-center justify-center relative overflow-hidden rounded-t-lg">
             {imageState === "loading" && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
                 <div className="text-gray-500 text-sm">
@@ -241,7 +241,7 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             <img
               src={imageUrl || "/placeholder.svg"}
               alt={speaker.name}
-              className={`w-full h-48 sm:h-56 md:h-64 rounded-t-lg transition-all duration-300 group-hover:scale-105 ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
+              className={`w-full h-full rounded-t-lg transition-all duration-300 group-hover:scale-105 ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
               onError={handleImageError}
               onLoad={handleImageLoad}
               loading="lazy"
