@@ -24,7 +24,7 @@ export default async function HomePage() {
   // Pre-load featured speakers for better performance
   let featuredSpeakers = []
   try {
-    featuredSpeakers = await getFeaturedSpeakers(8)
+    featuredSpeakers = await getFeaturedSpeakers(6)
   } catch (error) {
     console.error("Failed to load featured speakers for homepage:", error)
     // Component will handle the empty array gracefully
