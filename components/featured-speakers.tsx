@@ -248,23 +248,10 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             )}
           </div>
 
-          <div className="mt-auto flex flex-col sm:flex-row gap-3">
+          <div className="mt-auto flex flex-col gap-3">
             <Button
               asChild
-              variant="outline"
-              className="flex-1 border-2 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white font-montserrat text-xs sm:text-sm px-3 py-3 h-auto shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 bg-white hover:border-[#1E68C6] font-semibold"
-              style={{
-                boxShadow: "0 4px 8px rgba(30, 104, 198, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
-              }}
-            >
-              <Link href={`/speakers/${speaker.slug}`} className="flex items-center justify-center gap-1">
-                <span>👤</span>
-                View Profile
-              </Link>
-            </Button>
-            <Button
-              asChild
-              className="flex-1 bg-gradient-to-b from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 text-white border-0 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-montserrat text-xs sm:text-sm px-3 py-3 h-auto font-semibold"
+              className="w-full bg-gradient-to-b from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 text-white border-0 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-montserrat text-xs sm:text-sm px-3 py-3 h-auto font-semibold"
               style={{
                 boxShadow:
                   "0 6px 12px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.1)",
@@ -272,10 +259,21 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             >
               <Link
                 href={`/contact?source=featured_speakers&speakerName=${encodeURIComponent(speaker.name)}`}
-                className="text-white no-underline flex items-center justify-center gap-1"
+                className="text-white no-underline flex items-center justify-center"
               >
-                <span>⚡</span>
                 Check Availability
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="w-full border-2 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white font-montserrat text-xs sm:text-sm px-3 py-3 h-auto shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 bg-white hover:border-[#1E68C6] font-semibold"
+              style={{
+                boxShadow: "0 4px 8px rgba(30, 104, 198, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
+              }}
+            >
+              <Link href={`/speakers/${speaker.slug}`} className="flex items-center justify-center">
+                View Profile
               </Link>
             </Button>
           </div>
