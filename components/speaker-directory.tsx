@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter } from "lucide-react"
+import { Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
 import Link from "next/link"
 import { searchSpeakers, type Speaker } from "@/lib/speakers-data"
 
@@ -149,6 +149,7 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
   const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading")
   const [retryCount, setRetryCount] = useState(0)
   const [imageUrl, setImageUrl] = useState<string>("")
+  const [showFee, setShowFee] = useState(false)
   const maxRetries = 2
 
   // Initialize image URL and handle different formats
@@ -252,9 +253,6 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
                 display: imageState === "error" ? "none" : "block",
               }}
             />
-            <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded text-sm font-semibold text-gray-900 font-montserrat">
-              {speaker.fee}
-            </div>
           </div>
 
           {speaker.industries[0] && (
@@ -282,7 +280,6 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
         <div className="p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-2 font-neue-haas">{speaker.name}</h3>
           <p className="text-[#5084C6] font-semibold mb-3 font-montserrat text-sm">{speaker.title}</p>
-          <p className="text-gray-600 text-sm mb-4 line-clamp-3 font-montserrat">{speaker.bio}</p>
 
           <div className="mb-4">
             <h4 className="text-sm font-semibold text-gray-900 mb-2 font-montserrat">Speaking Topics:</h4>
@@ -298,6 +295,25 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
                 </Badge>
               )}
             </div>
+          </div>
+
+          {/* Speaker Fee Dropdown */}
+          <div className="mb-4">
+            <button
+              onClick={() => setShowFee(!showFee)}
+              className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-900 mb-2 font-montserrat hover:text-[#1E68C6] transition-colors"
+            >
+              Speaker Fee
+              {showFee ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            {showFee && (
+              <div className="bg-[#1E68C6] bg-opacity-10 p-3 rounded-lg">
+                <div className="text-lg font-bold text-[#1E68C6] font-montserrat">{speaker.fee}</div>
+                <div className="text-xs text-gray-600 font-montserrat mt-1">
+                  Contact us for availability and booking details
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2">
