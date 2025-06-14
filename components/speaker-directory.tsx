@@ -316,12 +316,32 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             )}
           </div>
 
-          <div className="flex gap-2">
-            <Button asChild className="flex-1 bg-[#1E68C6] hover:bg-[#5084C6] font-montserrat">
-              <Link href={`/speakers/${speaker.slug}`}>View Profile</Link>
+          <div className="flex gap-3">
+            <Button
+              asChild
+              className="flex-1 border-2 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white font-montserrat shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 bg-white hover:border-[#1E68C6] font-semibold py-3 h-auto"
+              style={{
+                boxShadow: "0 4px 8px rgba(30, 104, 198, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
+              }}
+            >
+              <Link href={`/speakers/${speaker.slug}`} className="flex items-center justify-center gap-1">
+                <span>👤</span>
+                View Profile
+              </Link>
             </Button>
-            <Button asChild variant="outline" className="flex-1 font-montserrat">
-              <Link href={`/contact?source=speaker_directory&speakerName=${encodeURIComponent(speaker.name)}`}>
+            <Button
+              asChild
+              className="flex-1 bg-gradient-to-b from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 text-white border-0 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-montserrat font-semibold py-3 h-auto"
+              style={{
+                boxShadow:
+                  "0 6px 12px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              <Link
+                href={`/contact?source=speaker_directory&speakerName=${encodeURIComponent(speaker.name)}`}
+                className="text-white no-underline flex items-center justify-center gap-1"
+              >
+                <span>⚡</span>
                 Book Now
               </Link>
             </Button>
