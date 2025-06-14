@@ -8,6 +8,19 @@ interface Params {
 interface Props {
   params: Params
 }
+;("use client")
+
+import { useEffect } from "react"
+
+function ScrollToTop() {
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
+  return null
+}
+
+export { ScrollToTop }
 
 export default async function SpeakerPage({ params }: Props) {
   const speaker = await getSpeakerBySlug(params.slug)
@@ -23,5 +36,10 @@ export default async function SpeakerPage({ params }: Props) {
     return <div>Speaker not found. Please check the URL.</div>
   }
 
-  return <SpeakerProfile speaker={speaker} />
+  return (
+    <>
+      <ScrollToTop />
+      <SpeakerProfile speaker={speaker} />
+    </>
+  )
 }

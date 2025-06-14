@@ -21,25 +21,18 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
   const maxRetries = 3
   const [activeTab, setActiveTab] = useState("about")
 
-  // Sample videos data if none provided
-  const videos = speaker.videos || [
-    {
-      id: "sample1",
-      title: "The Future of AI in Business",
-      thumbnail: "/placeholder.svg?height=200&width=350&text=Video+Thumbnail",
-      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      source: "YouTube",
-      duration: "45:22",
-    },
-    {
-      id: "sample2",
-      title: `${speaker.name} on Innovation and Technology`,
-      thumbnail: "/placeholder.svg?height=200&width=350&text=Video+Thumbnail",
-      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      source: "YouTube",
-      duration: "32:15",
-    },
-  ]
+  // Use speaker videos or empty array (no samples)
+  const videos = speaker.videos || []
+
+  // Log for debugging
+  // Enhanced logging for debugging
+  console.log("Speaker profile data:", {
+    name: speaker.name,
+    hasVideos: Boolean(speaker.videos),
+    videosCount: speaker.videos?.length || 0,
+    videosData: speaker.videos || "No videos data",
+    rawVideosData: JSON.stringify(speaker.videos),
+  })
 
   // Sample testimonials data if none provided
   const testimonials = speaker.testimonials || [
