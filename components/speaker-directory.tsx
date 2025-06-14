@@ -17,8 +17,8 @@ interface SpeakerDirectoryProps {
 export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedIndustry, setSelectedIndustry] = useState("all")
-  const [displayedSpeakers, setDisplayedSpeakers] = useState<Speaker[]>(initialSpeakers.slice(0, 12))
-  const [allFilteredSpeakers, setAllFilteredSpeakers] = useState<Speaker[]>(initialSpeakers)
+  const [displayedSpeakers, setDisplayedSpeakers] = useState<Speaker[]>(initialSpeakers?.slice(0, 12) || [])
+  const [allFilteredSpeakers, setAllFilteredSpeakers] = useState<Speaker[]>(initialSpeakers || [])
   const [displayCount, setDisplayCount] = useState(12)
 
   // Effect to re-filter speakers when search query or industry changes
@@ -38,11 +38,22 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
   }, [searchQuery, selectedIndustry])
 
   // Get unique industries for filter dropdown
-  const industries = Array.from(new Set(initialSpeakers.flatMap((speaker) => speaker.industries))).sort()
+  const industries = Array.from(new Set((initialSpeakers || []).flatMap((speaker) => speaker.industries))).sort()
 
   const handleLoadMore = () => {
     setDisplayCount((prevCount) => prevCount + 12)
     setDisplayedSpeakers(allFilteredSpeakers.slice(0, displayCount + 12))
+  }
+
+  // Handle loading state
+  if (!initialSpeakers) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-500">Loading speakers...</div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -55,8 +66,8 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
               All AI Keynote Speakers
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat">
-              Browse our complete directory of {initialSpeakers.length}+ world-class artificial intelligence experts,
-              machine learning pioneers, and tech visionaries.
+              Browse our complete directory of world-class artificial intelligence experts, tech visionaries, and
+              industry practitioners.
             </p>
           </div>
 
