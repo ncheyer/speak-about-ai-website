@@ -20,8 +20,8 @@ export function SpeakerCard({ speaker, priorityImage = false }: SpeakerCardProps
     imageOffsetY = "0%",
     industries,
     slug,
-    isBookable, // Assuming this flag determines "Book Now" vs "Check Availability"
-    feeRange, // Or whatever determines the fee display
+    isBookable,
+    feeRange,
   } = speaker
 
   const profileLink = `/speakers/${slug}`
@@ -77,28 +77,21 @@ export function SpeakerCard({ speaker, priorityImage = false }: SpeakerCardProps
         <div className="w-full flex flex-col space-y-3">
           <Button
             asChild
-            variant="outline"
-            className={`${commonButtonClasses} border-2 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white bg-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 hover:border-[#1E68C6] font-semibold py-3 h-auto`}
-            style={{
-              boxShadow: "0 4px 8px rgba(30, 104, 198, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
-            }}
+            className={`${commonButtonClasses} bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0 shadow-lg hover:shadow-xl`}
           >
-            <Link href={profileLink}>
-              <User size={16} />
-              <span>View Profile</span>
+            <Link href={contactLink}>
+              <CalendarCheck size={16} />
+              <span>Book Speaker Today</span>
             </Link>
           </Button>
           <Button
             asChild
-            className={`${commonButtonClasses} bg-gradient-to-b from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 text-white border-0 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-montserrat font-semibold py-3 h-auto`}
-            style={{
-              boxShadow:
-                "0 6px 12px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.1)",
-            }}
+            variant="outline"
+            className={`${commonButtonClasses} border-2 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white bg-white`}
           >
-            <Link href={contactLink}>
-              <CalendarCheck size={16} />
-              <span>Inquire About Speaker</span>
+            <Link href={profileLink}>
+              <User size={16} />
+              <span>View Profile</span>
             </Link>
           </Button>
         </div>
