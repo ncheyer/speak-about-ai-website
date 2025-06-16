@@ -252,10 +252,7 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             <Button
               asChild
               variant="outline"
-              className="flex-1 border-2 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white font-montserrat text-xs sm:text-sm px-2 h-auto py-2 whitespace-normal shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 bg-white hover:border-[#1E68C6] font-semibold"
-              style={{
-                boxShadow: "0 4px 8px rgba(30, 104, 198, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
-              }}
+              className="flex-1 border-2 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white font-montserrat text-xs sm:text-sm px-2 h-auto py-2 whitespace-normal shadow-lg hover:shadow-xl transition-all duration-300 bg-white font-semibold"
             >
               <Link href={`/speakers/${speaker.slug}`} className="flex items-center justify-center">
                 View Profile
@@ -263,11 +260,7 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
             </Button>
             <Button
               asChild
-              className="flex-1 bg-gradient-to-b from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 text-white border-0 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-montserrat text-xs sm:text-sm px-2 h-auto py-2 whitespace-normal font-semibold"
-              style={{
-                boxShadow:
-                  "0 6px 12px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.1)",
-              }}
+              className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat text-xs sm:text-sm px-2 h-auto py-2 whitespace-normal font-semibold"
             >
               <Link
                 href={`/contact?source=featured_speakers&speakerName=${encodeURIComponent(speaker.name)}`}

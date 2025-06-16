@@ -28,7 +28,7 @@ export function SpeakerCard({ speaker, priorityImage = false }: SpeakerCardProps
   const contactLink = `/contact?source=speaker_card&speakerName=${encodeURIComponent(name)}`
 
   const commonButtonClasses =
-    "w-full text-xs sm:text-sm px-3 h-auto py-3 whitespace-normal rounded-md font-semibold transform transition-transform duration-150 ease-in-out active:translate-y-0.5 shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:shadow-[0_2px_0_0_rgba(0,0,0,0.2)] flex items-center justify-center gap-2"
+    "w-full text-xs sm:text-sm px-3 h-auto py-3 whitespace-normal rounded-md font-semibold transition-all duration-300 flex items-center justify-center gap-2"
 
   return (
     <Card className="flex flex-col h-full overflow-hidden rounded-lg shadow-xl hover:shadow-2xl transition-shadow duration-300 border-0 bg-white">
@@ -77,17 +77,17 @@ export function SpeakerCard({ speaker, priorityImage = false }: SpeakerCardProps
         <div className="w-full flex flex-col space-y-3">
           <Button
             asChild
-            className={`${commonButtonClasses} bg-gradient-to-r from-amber-500 to-amber-600 text-white border-b-4 border-amber-700 active:border-b-0 hover:from-amber-600 hover:to-amber-700`}
+            className={`${commonButtonClasses} bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0 shadow-lg hover:shadow-xl`}
           >
             <Link href={contactLink}>
               <CalendarCheck size={16} />
-              <span>{isBookable ? "Book Now" : "Check Availability"}</span>
+              <span>Book Speaker Today</span>
             </Link>
           </Button>
           <Button
             asChild
             variant="outline"
-            className={`${commonButtonClasses} bg-[#1E68C6] text-white hover:bg-[#1A5AAD] border-b-4 border-blue-700 active:border-b-0`}
+            className={`${commonButtonClasses} border-2 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white bg-white`}
           >
             <Link href={profileLink}>
               <User size={16} />
