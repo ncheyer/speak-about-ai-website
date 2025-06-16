@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Hero from "@/components/hero"
-import FeaturedSpeakers from "@/components/featured-speakers"
 import ClientLogos from "@/components/client-logos"
+import FeaturedSpeakers from "@/components/featured-speakers"
 import WhyChooseUs from "@/components/why-choose-us"
 import BookingCTA from "@/components/booking-cta"
 import { getFeaturedSpeakers } from "@/lib/speakers-data"
