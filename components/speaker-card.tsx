@@ -14,7 +14,7 @@ interface UnifiedSpeakerCardProps {
   maxTopicsToShow?: number
 }
 
-export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 3 }: UnifiedSpeakerCardProps) {
+export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 1 }: UnifiedSpeakerCardProps) {
   // If speaker prop is somehow null or undefined, render nothing or a placeholder
   // This is an extra layer of defense; parent components should filter out invalid speakers.
   if (!speaker || !speaker.slug) {
@@ -127,19 +127,19 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 3 }: Uni
 
         {safePrograms.length > 0 && (
           <div className="mb-4">
-            <h4 className="text-xs font-semibold text-gray-700 mb-1 font-montserrat">Key Topics:</h4>
+            <h4 className="text-xs font-semibold text-gray-700 mb-1 font-montserrat">Keynote Topic:</h4>
             <div className="flex flex-wrap gap-1">
               {safePrograms.slice(0, maxTopicsToShow).map((topic, index) => (
                 <Badge
                   key={`${slug}-topic-${index}`} // slug is guaranteed here
                   variant="outline"
-                  className="text-xs font-montserrat border-gray-300 text-gray-700 bg-gray-50"
+                  className="text-xs font-montserrat border-blue-200 text-blue-700 bg-blue-50"
                 >
                   {topic}
                 </Badge>
               ))}
               {safePrograms.length > maxTopicsToShow && (
-                <Badge variant="outline" className="text-xs font-montserrat border-gray-300 text-gray-700 bg-gray-50">
+                <Badge variant="outline" className="text-xs font-montserrat border-blue-200 text-blue-700 bg-blue-50">
                   +{safePrograms.length - maxTopicsToShow} more
                 </Badge>
               )}

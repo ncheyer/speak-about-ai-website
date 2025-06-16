@@ -441,7 +441,9 @@ export async function getAllSpeakers(): Promise<Speaker[]> {
   const now = Date.now()
   // console.log("getAllSpeakers: Attempting to fetch speakers.")
   if (allSpeakersCache && lastFetchTime && now - lastFetchTime < CACHE_DURATION) {
-    const listedSpeakers = allSpeakersCache.filter((speaker) => speaker.listed !== false)
+    const listedSpeakers = allSpeakersCache
+      .filter((speaker) => speaker.listed !== false)
+      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0)) // Sort by ranking descending
     // console.log(`getAllSpeakers: Cache hit. Returning ${listedSpeakers.length} listed speakers.`)
     return listedSpeakers
   }
@@ -450,7 +452,9 @@ export async function getAllSpeakers(): Promise<Speaker[]> {
     const fetchedSpeakers = await fetchAllSpeakersFromSheet()
     allSpeakersCache = fetchedSpeakers
     lastFetchTime = now
-    const listedSpeakers = allSpeakersCache.filter((speaker) => speaker.listed !== false)
+    const listedSpeakers = allSpeakersCache
+      .filter((speaker) => speaker.listed !== false)
+      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0)) // Sort by ranking descending
     // console.log(`getAllSpeakers: Stored in cache. Returning ${listedSpeakers.length} listed speakers.`)
     return listedSpeakers
   } catch (error) {
@@ -466,7 +470,9 @@ export async function getFeaturedSpeakers(limit = 8): Promise<Speaker[]> {
     const speakers = await getAllSpeakers()
     // console.log(`getFeaturedSpeakers: Received ${speakers.length} speakers.`)
     if (speakers.length === 0) return []
-    const featured = speakers.filter((speaker) => speaker.featured === true)
+    const featured = speakers
+      .filter((speaker) => speaker.featured === true)
+      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0)) // Sort featured speakers by ranking
     // console.log(`getFeaturedSpeakers: Found ${featured.length} featured speakers before limit.`)
     return featured.slice(0, limit)
   } catch (error) {
@@ -498,17 +504,19 @@ export async function searchSpeakers(query: string): Promise<Speaker[]> {
     const speakers = await getAllSpeakers()
     if (!query || query.trim() === "") return speakers
     const lowerQuery = query.toLowerCase().trim()
-    return speakers.filter(
-      (speaker) =>
-        speaker.name.toLowerCase().includes(lowerQuery) ||
-        speaker.title.toLowerCase().includes(lowerQuery) ||
-        (speaker.bio && speaker.bio.toLowerCase().includes(lowerQuery)) ||
-        (speaker.industries && speaker.industries.some((ind) => ind.toLowerCase().includes(lowerQuery))) ||
-        (speaker.programs && speaker.programs.some((prog) => prog.toLowerCase().includes(lowerQuery))) ||
-        (speaker.topics && speaker.topics.some((topic) => topic.toLowerCase().includes(lowerQuery))) ||
-        (speaker.expertise && speaker.expertise.some((exp) => exp.toLowerCase().includes(lowerQuery))) ||
-        (speaker.tags && speaker.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))),
-    )
+    return speakers
+      .filter(
+        (speaker) =>
+          speaker.name.toLowerCase().includes(lowerQuery) ||
+          speaker.title.toLowerCase().includes(lowerQuery) ||
+          (speaker.bio && speaker.bio.toLowerCase().includes(lowerQuery)) ||
+          (speaker.industries && speaker.industries.some((ind) => ind.toLowerCase().includes(lowerQuery))) ||
+          (speaker.programs && speaker.programs.some((prog) => prog.toLowerCase().includes(lowerQuery))) ||
+          (speaker.topics && speaker.topics.some((topic) => topic.toLowerCase().includes(lowerQuery))) ||
+          (speaker.expertise && speaker.expertise.some((exp) => exp.toLowerCase().includes(lowerQuery))) ||
+          (speaker.tags && speaker.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))),
+      )
+      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0)) // Sort search results by ranking
   } catch (error) {
     console.error(`Failed to search speakers with query "${query}":`, error)
     return []
