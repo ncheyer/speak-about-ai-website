@@ -165,19 +165,23 @@ a[class*="bg-primary"]:hover {
   border-color: #1e68c6 !important;
 }
 
-/* Marquee animation for client logos */
+/* Smooth marquee animation for client logos */
 @keyframes marquee {
   0% {
     transform: translateX(0);
   }
   100% {
     transform: translateX(-50%);
-  } /* Moves half the total width of the duplicated content */
+  }
 }
 
 .animate-marquee {
-  animation: marquee 30s linear infinite; /* Adjust duration as needed for speed */
-  white-space: nowrap; /* Prevent logos from wrapping */
-  display: flex; /* Ensure flex behavior for logos */
-  width: fit-content; /* Allow content to determine width for animation */
+  animation: marquee 40s linear infinite;
+  will-change: transform;
+}
+
+/* Ensure smooth animation performance */
+.animate-marquee * {
+  backface-visibility: hidden;
+  perspective: 1000px;
 }

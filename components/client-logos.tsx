@@ -26,7 +26,7 @@ export default function ClientLogos() {
       name: "Visa",
       src: "/logos/Visa_Inc._logo.svg",
       alt: "Visa Inc. logo",
-      size: "small", // Changed to small size
+      size: "small",
     },
     {
       name: "Rio Innovation Week",
@@ -70,16 +70,22 @@ export default function ClientLogos() {
   const allClients = [...clients, ...clients]
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="pt-8 pb-16 bg-gray-50">
+      {" "}
+      {/* Reduced pt-16 to pt-8 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
+        <div className="text-center mb-6">
+          {" "}
+          {/* Reduced mb-12 to mb-6 */}
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Trusted by Industry Leaders</h2>
           <p className="text-lg text-gray-600">
             Our speakers have worked with leading organizations around the world for their most important events.
           </p>
         </div>
       </div>
-      <div className="relative w-full overflow-hidden py-4">
+      <div className="relative w-full overflow-hidden py-2">
+        {" "}
+        {/* Reduced py-4 to py-2 */}
         <div className="flex animate-marquee">
           {allClients.map((client, index) => (
             <div key={index} className="flex-shrink-0 flex items-center justify-center px-8 py-4">
