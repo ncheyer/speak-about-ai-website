@@ -98,9 +98,9 @@ function sanitizePotentiallyCorruptJsonString(rawJsonString: string): string {
     }
   } while (s.length < prevStringLength && s.length > 1)
 
-  // 4. Handle Google Sheets' common way of escaping quotes: "" -> "
+  // 4. Handle Google Sheets' common way of escaping quotes: "" -> \"
   //    This is crucial for content like {""key"": ""value""} or {"text": "value with ""quotes"" inside"}
-  s = s.replace(/""/g, '"')
+  s = s.replace(/""/g, '\\"')
 
   // 5. Basic structural check: if it's not empty, it should ideally start/end with brackets/braces.
   //    This is a weak check; deeper validation happens at parse time.
