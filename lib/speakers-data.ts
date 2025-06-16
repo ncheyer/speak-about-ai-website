@@ -1,45 +1,124 @@
-import { fetchSpeakersFromSheet } from "@/app/actions/google-sheets"
+import { google } from "googleapis"
 
 export interface Speaker {
   slug: string
   name: string
   title: string
-  image: string
+  bio?: string
+  image?: string
   imagePosition?: string
-  imageOffsetY?: string // New property for vertical offset, e.g., "-10px" or "-5%"
-  bio: string
-  programs: string[]
-  fee: string
-  location: string
+  imageOffsetY?: string
+  programs?: string[]
+  industries?: string[]
+  fee?: string
+  feeRange?: string
+  location?: string
   linkedin?: string
+  twitter?: string
   website?: string
-  email: string
-  contact: string
-  listed: boolean
-  expertise: string[]
-  industries: string[]
-  ranking: number
+  featured?: boolean
+  videos?: string[]
+  testimonials?: { quote: string; author: string }[]
+  tags?: string[]
+  lastUpdated?: string
+  pronouns?: string
+  languages?: string[]
+  availability?: string
+  isVirtual?: boolean
+  travelsFrom?: string
+  topics?: string[] // Consolidate programs/keynotes here if needed
+  listed?: boolean
+  expertise?: string[]
+  ranking?: number
   // Add structured fields for videos
-  videos?: {
-    id: string // Unique identifier for the video
-    title: string // Title of the video
-    url: string // YouTube or other video platform URL
-    thumbnail?: string // Optional custom thumbnail URL (if not provided, can use YouTube thumbnail)
-    source?: string // Source platform (e.g., "YouTube", "Vimeo")
-    duration?: string // Duration in format "MM:SS"
-    description?: string // Optional description of the video content
-    date?: string // Optional recording date
-  }[]
-  // Add structured fields for testimonials
-  testimonials?: {
-    quote: string // The testimonial text
-    author: string // Name of the person giving the testimonial
-    position: string // Job title of the person
-    company: string // Company or organization
-    event?: string // Optional event where the speaker presented
-    date?: string // Optional date of the testimonial
-    logo?: string // Optional company logo URL
-  }[]
+  // videos?: {
+  //   id: string // Unique identifier for the video
+  //   title: string // Title of the video
+  //   url: string // YouTube or other video platform URL
+  //   thumbnail?: string // Optional custom thumbnail URL (if not provided, can use YouTube thumbnail)
+  //   source?: string // Source platform (e.g., "YouTube", "Vimeo")
+  //   duration?: string // Duration in format "MM:SS"
+  //   description?: string // Optional description of the video content
+  //   date?: string // Optional recording date
+  // }[]
+  // // Add structured fields for testimonials
+  // testimonials?: {
+  //   quote: string // The testimonial text
+  //   author: string // Name of the person giving the testimonial
+  //   position: string // Job title of the person
+  //   company: string // Company or organization
+  //   event?: string // Optional event where the speaker presented
+  //   date?: string // Optional date of the testimonial
+  //   logo?: string // Optional company logo URL
+  // }[]
+}
+
+const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID
+const API_KEY = process.env.GOOGLE_SHEETS_API_KEY
+const SHEET_NAME = "Speakers" // Assuming your sheet name is "Speakers"
+
+const sheets = google.sheets({ version: "v4", auth: API_KEY })
+
+// More defensive mapping with defaults for ALL fields
+function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
+  if (!data || data.length < 2) {
+    console.warn("No data or only header row found in Google Sheet.")
+    return []
+  }
+
+  const headers = data[0].map((header) => header.toLowerCase().trim().replace(/\s+/g, "_")) // Normalize headers
+  const speakerRows = data.slice(1)
+
+  return speakerRows
+    .map((row, rowIndex) => {
+      const speakerData: any = {}
+      headers.forEach((header, index) => {
+        speakerData[header] = row[index] !== undefined && row[index] !== null ? String(row[index]).trim() : undefined
+      })
+
+      // Ensure essential fields have fallbacks to prevent crashes
+      const slug =
+        speakerData.slug ||
+        (speakerData.name ? speakerData.name.toLowerCase().replace(/\s+/g, "-") : `speaker-${rowIndex}`)
+      const name = speakerData.name || "Unnamed Speaker"
+      const title = speakerData.title || "N/A"
+
+      try {
+        return {
+          slug: slug,
+          name: name,
+          title: title,
+          bio: speakerData.bio || "",
+          image: speakerData.image || undefined, // Let placeholder handle if undefined
+          imagePosition: speakerData.image_position || "center",
+          imageOffsetY: speakerData.image_offset_y || "0%",
+          programs: speakerData.programs ? speakerData.programs.split(",").map((s: string) => s.trim()) : [],
+          industries: speakerData.industries ? speakerData.industries.split(",").map((s: string) => s.trim()) : [],
+          fee: speakerData.fee || "Inquire for Fee",
+          feeRange: speakerData.fee_range || undefined,
+          location: speakerData.location || "N/A",
+          linkedin: speakerData.linkedin || undefined,
+          twitter: speakerData.twitter || undefined,
+          website: speakerData.website || undefined,
+          featured: speakerData.featured ? speakerData.featured.toLowerCase() === "true" : false,
+          videos: speakerData.videos ? speakerData.videos.split(",").map((s: string) => s.trim()) : [],
+          testimonials: speakerData.testimonials ? JSON.parse(speakerData.testimonials) : [], // Assuming testimonials are stored as JSON string
+          tags: speakerData.tags ? speakerData.tags.split(",").map((s: string) => s.trim()) : [],
+          lastUpdated: speakerData.last_updated || new Date().toISOString(),
+          pronouns: speakerData.pronouns || undefined,
+          languages: speakerData.languages ? speakerData.languages.split(",").map((s: string) => s.trim()) : [],
+          availability: speakerData.availability || "Contact for availability",
+          isVirtual: speakerData.is_virtual ? speakerData.is_virtual.toLowerCase() === "true" : true,
+          travelsFrom: speakerData.travels_from || "N/A",
+          topics: speakerData.topics ? speakerData.topics.split(",").map((s: string) => s.trim()) : [], // Added topics
+        } as Speaker // Type assertion
+      } catch (parseError) {
+        console.error(`Error parsing speaker data for row ${rowIndex + 1} (Name: ${name}):`, parseError)
+        console.error("Problematic row data:", speakerData)
+        return null // Skip this speaker if there's a critical parsing error
+      }
+    })
+    .filter((speaker): speaker is Speaker => speaker !== null) // Filter out nulls from parsing errors
 }
 
 // Enhanced local fallback data with working local images
@@ -260,26 +339,27 @@ async function loadSpeakers(): Promise<Speaker[]> {
 
   try {
     console.log("Attempting to load speakers from Google Sheet...")
-    const sheetSpeakers = await fetchSpeakersFromSheet()
+    // const sheetSpeakers = await fetchSpeakersFromSheet()
+    const sheetSpeakers = await fetchAllSpeakersFromSheet()
 
     if (Array.isArray(sheetSpeakers) && sheetSpeakers.length > 0) {
       console.log(`Successfully loaded ${sheetSpeakers.length} speakers from Google Sheet.`)
       allSpeakers = sheetSpeakers.map((speaker) => ({
         ...speaker,
-        image: validateImageUrl(speaker.image, speaker.name),
+        // image: validateImageUrl(speaker.image, speaker.name),
       }))
     } else {
       console.log("No speakers returned from Google Sheet or an error occurred. Falling back to local data.")
       allSpeakers = localSpeakers.map((speaker) => ({
         ...speaker,
-        image: validateImageUrl(speaker.image, speaker.name),
+        // image: validateImageUrl(speaker.image, speaker.name),
       }))
     }
   } catch (error) {
     console.error("Error fetching speakers from Google Sheet, falling back to local data:", error)
     allSpeakers = localSpeakers.map((speaker) => ({
       ...speaker,
-      image: validateImageUrl(speaker.image, speaker.name),
+      // image: validateImageUrl(speaker.image, speaker.name),
     }))
   }
 
@@ -306,104 +386,247 @@ async function loadSpeakers(): Promise<Speaker[]> {
   return _cachedSpeakers
 }
 
-export async function getAllSpeakers(): Promise<Speaker[]> {
+let allSpeakersCache: Speaker[] | null = null
+let lastFetchTime: number | null = null
+// const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
+async function fetchAllSpeakersFromSheet(): Promise<Speaker[]> {
+  console.log("Attempting to fetch speakers from Google Sheet...")
+  if (!SPREADSHEET_ID || !API_KEY) {
+    console.error("Google Sheets API Key or Spreadsheet ID is not configured.")
+    // Fallback to empty array or throw error, depending on desired behavior
+    // For build stability, returning empty array is safer.
+    return []
+  }
+
   try {
-    const speakers = await loadSpeakers()
-    const listedSpeakers = speakers.filter((speaker) => speaker.listed)
-    console.log(`Returning ${listedSpeakers.length} listed speakers`)
-    return listedSpeakers
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SHEET_NAME}!A:Z`, // Adjust range as needed
+    })
+
+    const values = response.data.values
+    if (!values || values.length === 0) {
+      console.warn("No data returned from Google Sheet.")
+      return []
+    }
+    console.log(`Successfully fetched ${values.length - 1} speaker rows from sheet.`)
+    return mapGoogleSheetDataToSpeakers(values)
   } catch (error) {
-    console.error("Error in getAllSpeakers:", error)
-    return localSpeakers.filter((speaker) => speaker.listed)
+    console.error("Error fetching data from Google Sheets:", error)
+    // Return empty array on error to prevent build crashes
+    return []
   }
 }
 
+export async function getAllSpeakers(): Promise<Speaker[]> {
+  const now = Date.now()
+  if (allSpeakersCache && lastFetchTime && now - lastFetchTime < CACHE_DURATION) {
+    console.log("Returning all speakers from cache.")
+    return allSpeakersCache
+  }
+
+  try {
+    allSpeakersCache = await fetchAllSpeakersFromSheet()
+    lastFetchTime = now
+    console.log(`Fetched and cached ${allSpeakersCache.length} speakers.`)
+    return allSpeakersCache
+  } catch (error) {
+    console.error("Failed to get all speakers:", error)
+    return [] // Ensure an array is always returned
+  }
+}
+
+// export async function getAllSpeakers(): Promise<Speaker[]> {
+//   try {
+//     const speakers = await loadSpeakers()
+//     const listedSpeakers = speakers.filter((speaker) => speaker.listed)
+//     console.log(`Returning ${listedSpeakers.length} listed speakers`)
+//     return listedSpeakers
+//   } catch (error) {
+//     console.error("Error in getAllSpeakers:", error)
+//     return localSpeakers.filter((speaker) => speaker.listed)
+//   }
+// }
+
+export async function getFeaturedSpeakers(limit = 8): Promise<Speaker[]> {
+  try {
+    const speakers = await getAllSpeakers()
+    const featured = speakers.filter((speaker) => speaker.featured)
+    console.log(`Found ${featured.length} featured speakers. Limiting to ${limit}.`)
+    return featured.slice(0, limit)
+  } catch (error) {
+    console.error("Failed to get featured speakers:", error)
+    return [] // Ensure an array is always returned
+  }
+}
+
+// export async function getFeaturedSpeakers(count = 8): Promise<Speaker[]> {
+//   try {
+//     const speakers = await getAllSpeakers()
+//     console.log(`Returning ${Math.min(count, speakers.length)} featured speakers`)
+//     return speakers.slice(0, count)
+//   } catch (error) {
+//     console.error("Error in getFeaturedSpeakers:", error)
+//     return localSpeakers.filter((speaker) => speaker.listed).slice(0, count)
+//   }
+// }
+
 export async function getSpeakerBySlug(slug: string): Promise<Speaker | undefined> {
   try {
-    const speakers = await loadSpeakers()
-    const speaker = speakers.find((speaker) => speaker.slug === slug)
+    const speakers = await getAllSpeakers()
+    const speaker = speakers.find((s) => s.slug === slug)
     if (speaker) {
-      console.log(`Found speaker by slug ${slug}: ${speaker.name}`)
+      console.log(`Speaker found for slug ${slug}: ${speaker.name}`)
     } else {
       console.warn(`No speaker found for slug: ${slug}`)
     }
     return speaker
   } catch (error) {
-    console.error("Error in getSpeakerBySlug:", error)
-    return localSpeakers.find((speaker) => speaker.slug === slug)
+    console.error(`Failed to get speaker by slug ${slug}:`, error)
+    return undefined // Ensure undefined is returned on error
   }
 }
 
+// export async function getSpeakerBySlug(slug: string): Promise<Speaker | undefined> {
+//   try {
+//     const speakers = await loadSpeakers()
+//     const speaker = speakers.find((speaker) => speaker.slug === slug)
+//     if (speaker) {
+//       console.log(`Found speaker by slug ${slug}: ${speaker.name}`)
+//     } else {
+//       console.warn(`No speaker found for slug: ${slug}`)
+//     }
+//     return speaker
+//   } catch (error) {
+//     console.error("Error in getSpeakerBySlug:", error)
+//     return localSpeakers.find((speaker) => speaker.slug === slug)
+//   }
+// }
+
 export async function searchSpeakers(query: string): Promise<Speaker[]> {
   try {
-    const speakers = await loadSpeakers()
-    const lowercaseQuery = query.toLowerCase().trim()
-
-    if (!lowercaseQuery) {
-      return speakers.filter((speaker) => speaker.listed)
+    const speakers = await getAllSpeakers()
+    if (!query) {
+      return speakers // Return all if query is empty
     }
-
-    return speakers.filter((speaker) => {
-      if (!speaker.listed) return false
-
-      const nameMatch = speaker.name.toLowerCase().includes(lowercaseQuery)
-      const titleMatch = speaker.title.toLowerCase().includes(lowercaseQuery)
-      const expertiseMatch = speaker.expertise.some((skill) => skill.toLowerCase().includes(lowercaseQuery))
-      const industryMatch = speaker.industries.some((industry) => industry.toLowerCase().includes(lowercaseQuery))
-
-      // More precise bio matching - only match if it's a significant term or company name
-      // Avoid matching common words that might appear in passing mentions
-      const bioMatch =
-        lowercaseQuery.length >= 4 &&
-        (speaker.bio
-          .toLowerCase()
-          .includes(` ${lowercaseQuery} `) || // Whole word match
-          speaker.bio.toLowerCase().includes(`${lowercaseQuery}.`) || // End of sentence
-          speaker.bio.toLowerCase().includes(`${lowercaseQuery},`) || // In a list
-          speaker.bio.toLowerCase().includes(`${lowercaseQuery}'s`) || // Possessive
-          speaker.bio.toLowerCase().startsWith(lowercaseQuery) || // Start of bio
-          speaker.bio.toLowerCase().includes(`at ${lowercaseQuery}`) || // Company affiliation
-          speaker.bio.toLowerCase().includes(`from ${lowercaseQuery}`) || // Previous company
-          speaker.bio.toLowerCase().includes(`with ${lowercaseQuery}`)) // Partnership/collaboration
-
-      return nameMatch || titleMatch || expertiseMatch || industryMatch || bioMatch
+    const lowerQuery = query.toLowerCase()
+    const results = speakers.filter((speaker) => {
+      return (
+        speaker.name.toLowerCase().includes(lowerQuery) ||
+        speaker.title.toLowerCase().includes(lowerQuery) ||
+        (speaker.bio && speaker.bio.toLowerCase().includes(lowerQuery)) ||
+        (speaker.industries && speaker.industries.some((ind) => ind.toLowerCase().includes(lowerQuery))) ||
+        (speaker.programs && speaker.programs.some((prog) => prog.toLowerCase().includes(lowerQuery))) ||
+        (speaker.tags && speaker.tags.some((tag) => tag.toLowerCase().includes(lowerQuery)))
+      )
     })
+    console.log(`Search for "${query}" found ${results.length} speakers.`)
+    return results
   } catch (error) {
-    console.error("Error in searchSpeakers:", error)
+    console.error(`Failed to search speakers with query "${query}":`, error)
+    return [] // Ensure an array is always returned
+  }
+}
+
+// export async function searchSpeakers(query: string): Promise<Speaker[]> {
+//   try {
+//     const speakers = await loadSpeakers()
+//     const lowercaseQuery = query.toLowerCase().trim()
+
+//     if (!lowercaseQuery) {
+//       return speakers.filter((speaker) => speaker.listed)
+//     }
+
+//     return speakers.filter((speaker) => {
+//       if (!speaker.listed) return false
+
+//       const nameMatch = speaker.name.toLowerCase().includes(lowercaseQuery)
+//       const titleMatch = speaker.title.toLowerCase().includes(lowercaseQuery)
+//       const expertiseMatch = speaker.expertise.some((skill) => skill.toLowerCase().includes(lowercaseQuery))
+//       const industryMatch = speaker.industries.some((industry) => industry.toLowerCase().includes(lowercaseQuery))
+
+//       // More precise bio matching - only match if it's a significant term or company name
+//       // Avoid matching common words that might appear in passing mentions
+//       const bioMatch =
+//         lowercaseQuery.length >= 4 &&
+//         (speaker.bio
+//           .toLowerCase()
+//           .includes(` ${lowercaseQuery} `) || // Whole word match
+//           speaker.bio.toLowerCase().includes(`${lowercaseQuery}.`) || // End of sentence
+//           speaker.bio.toLowerCase().includes(`${lowercaseQuery},`) || // In a list
+//           speaker.bio.toLowerCase().includes(`${lowercaseQuery}'s`) || // Possessive
+//           speaker.bio.toLowerCase().startsWith(lowercaseQuery) || // Start of bio
+//           speaker.bio.toLowerCase().includes(`at ${lowercaseQuery}`) || // Company affiliation
+//           speaker.bio.toLowerCase().includes(`from ${lowercaseQuery}`) || // Previous company
+//           speaker.bio.toLowerCase().includes(`with ${lowercaseQuery}`)) // Partnership/collaboration
+
+//       return nameMatch || titleMatch || expertiseMatch || industryMatch || bioMatch
+//     })
+//   } catch (error) {
+//     console.error("Error in searchSpeakers:", error)
+//     return []
+//   }
+// }
+
+// Function to get unique industries for filter dropdowns
+export async function getUniqueIndustries(): Promise<string[]> {
+  try {
+    const speakers = await getAllSpeakers()
+    const allIndustries = speakers.flatMap((speaker) => speaker.industries || [])
+    const unique = Array.from(new Set(allIndustries.filter((ind) => ind))) // Filter out empty strings
+    console.log("Unique industries for filtering:", unique)
+    return unique.sort()
+  } catch (error) {
+    console.error("Failed to get unique industries:", error)
     return []
   }
 }
 
 export async function getSpeakersByIndustry(industry: string): Promise<Speaker[]> {
   try {
-    const speakers = await loadSpeakers()
-    return speakers.filter(
+    const allSpeakers = await getAllSpeakers() // Use the main function to get all speakers
+    if (!industry) {
+      // If no specific industry, return all listed speakers or just all speakers based on desired behavior
+      // For now, let's assume it should return speakers matching the industry, or empty if no industry.
+      // Or, if an empty industry string means "all industries", then:
+      // return allSpeakers.filter(speaker => speaker.listed);
+      return [] // Or handle as an error/specific case
+    }
+    const lowerIndustry = industry.toLowerCase()
+    const results = allSpeakers.filter(
       (speaker) =>
-        speaker.listed && speaker.industries.some((ind) => ind.toLowerCase().includes(industry.toLowerCase())),
+        speaker.listed && // Ensure speaker is listed
+        speaker.industries && // Ensure industries array exists
+        speaker.industries.some((ind) => ind.toLowerCase().includes(lowerIndustry)),
     )
+    console.log(`Found ${results.length} speakers for industry "${industry}".`)
+    return results
   } catch (error) {
-    console.error("Error in getSpeakersByIndustry:", error)
-    return []
+    console.error(`Error in getSpeakersByIndustry for industry "${industry}":`, error)
+    return [] // Return empty array on error
   }
 }
 
-export async function getFeaturedSpeakers(count = 8): Promise<Speaker[]> {
-  try {
-    const speakers = await getAllSpeakers()
-    console.log(`Returning ${Math.min(count, speakers.length)} featured speakers`)
-    return speakers.slice(0, count)
-  } catch (error) {
-    console.error("Error in getFeaturedSpeakers:", error)
-    return localSpeakers.filter((speaker) => speaker.listed).slice(0, count)
-  }
-}
+// export async function getSpeakersByIndustry(industry: string): Promise<Speaker[]> {
+//   try {
+//     const speakers = await loadSpeakers()
+//     return speakers.filter(
+//       (speaker) =>
+//         speaker.listed && speaker.industries.some((ind) => ind.toLowerCase().includes(industry.toLowerCase())),
+//     )
+//   } catch (error) {
+//     console.error("Error in getSpeakersByIndustry:", error)
+//     return []
+//   }
+// }
 
-export async function getTopSpeakers(count = 6): Promise<Speaker[]> {
-  try {
-    const speakers = await getAllSpeakers()
-    return speakers.slice(0, count)
-  } catch (error) {
-    console.error("Error in getTopSpeakers:", error)
-    return localSpeakers.filter((speaker) => speaker.listed).slice(0, count)
-  }
-}
+// export async function getTopSpeakers(count = 6): Promise<Speaker[]> {
+//   try {
+//     const speakers = await getAllSpeakers()
+//     return speakers.slice(0, count)
+//   } catch (error) {
+//     console.error("Error in getTopSpeakers:", error)
+//     return localSpeakers.filter((speaker) => speaker.listed).slice(0, count)
+//   }
+// }

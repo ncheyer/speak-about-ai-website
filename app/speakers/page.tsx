@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import SpeakerDirectory from "@/components/speaker-directory"
-import { getAllSpeakers } from "@/lib/speakers-data"
+import { getAllSpeakers, type Speaker } from "@/lib/speakers-data" // Ensure Speaker type is imported
 
 export const metadata: Metadata = {
   title: "All AI Keynote Speakers | Browse World-Class AI Experts",
@@ -11,7 +11,18 @@ export const metadata: Metadata = {
 }
 
 export default async function SpeakersPage() {
-  const allSpeakers = await getAllSpeakers()
+  let allSpeakers: Speaker[] = [] // Default to empty array
+  try {
+    allSpeakers = await getAllSpeakers()
+    if (allSpeakers.length === 0) {
+      console.warn(
+        "SpeakersPage: getAllSpeakers returned an empty array. This might be due to a fetch error or no data.",
+      )
+    }
+  } catch (error) {
+    console.error("SpeakersPage: Failed to load speakers:", error)
+    // allSpeakers remains an empty array, SpeakerDirectory should handle this
+  }
 
   return (
     <div className="min-h-screen bg-white">

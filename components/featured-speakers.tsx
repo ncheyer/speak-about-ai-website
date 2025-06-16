@@ -2,36 +2,42 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ChevronDown, ChevronUp } from "lucide-react"
 import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
+import { SpeakerCard } from "@/components/speaker-card"
 
 interface FeaturedSpeakersProps {
   initialSpeakers?: Speaker[]
 }
 
 export default function FeaturedSpeakers({ initialSpeakers }: FeaturedSpeakersProps) {
-  const [speakers, setSpeakers] = useState<Speaker[]>(initialSpeakers || [])
+  const [speakers, setSpeakers] = useState<Speaker[]>(
+    Array.isArray(initialSpeakers) ? initialSpeakers.filter((s) => s && s.slug) : [], // Filter on init
+  )
   const [loading, setLoading] = useState(!initialSpeakers)
   const [error, setError] = useState(false)
 
-  // Load speakers if not provided as props
-  useState(() => {
+  useEffect(() => {
     if (!initialSpeakers) {
       getFeaturedSpeakers(8)
         .then((data) => {
-          setSpeakers(data)
+          // Filter out speakers without a slug or that are null/undefined
+          const validSpeakers = Array.isArray(data) ? data.filter((s) => s && s.slug) : []
+          setSpeakers(validSpeakers)
           setLoading(false)
         })
         .catch((err) => {
           console.error("Failed to load featured speakers:", err)
           setError(true)
+          setSpeakers([])
           setLoading(false)
         })
+    } else {
+      // Ensure initialSpeakers are also filtered if provided directly
+      setSpeakers(Array.isArray(initialSpeakers) ? initialSpeakers.filter((s) => s && s.slug) : [])
+      setLoading(false)
     }
-  })
+  }, [initialSpeakers])
 
   if (loading) {
     return (
@@ -47,19 +53,24 @@ export default function FeaturedSpeakers({ initialSpeakers }: FeaturedSpeakersPr
   }
 
   if (error || speakers.length === 0) {
+    // speakers is now guaranteed to be an array of valid items or empty
     return (
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-black mb-4 font-neue-haas">Featured AI Keynote Speakers</h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat mb-8">
-            Unable to load speakers at the moment. Please try again later.
+            {error
+              ? "Unable to load speakers at the moment. Please try again later."
+              : "No featured speakers available at this time."}
           </p>
-          <Link
-            href="/speakers"
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-11 px-8 border border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white transition-colors"
-          >
-            View All Speakers
-          </Link>
+          {error && ( // Only show "View All" if it was an error, not if there are just no featured speakers
+            <Link
+              href="/speakers"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-11 px-8 border border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white transition-colors mt-4"
+            >
+              View All Speakers
+            </Link>
+          )}
         </div>
       </section>
     )
@@ -77,8 +88,14 @@ export default function FeaturedSpeakers({ initialSpeakers }: FeaturedSpeakersPr
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          {/* speakers array is already filtered to ensure s and s.slug exist */}
           {speakers.map((speaker) => (
-            <SpeakerCard key={speaker.slug} speaker={speaker} />
+            <SpeakerCard
+              key={speaker.slug} // slug is guaranteed here
+              speaker={speaker}
+              contactSource="featured_speakers"
+              maxTopicsToShow={2}
+            />
           ))}
         </div>
 
@@ -94,184 +111,5 @@ export default function FeaturedSpeakers({ initialSpeakers }: FeaturedSpeakersPr
         </div>
       </div>
     </section>
-  )
-}
-
-function SpeakerCard({ speaker }: { speaker: Speaker }) {
-  const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading")
-  const [retryCount, setRetryCount] = useState(0)
-  const [showFee, setShowFee] = useState(false)
-  const maxRetries = 3
-
-  const imageUrl = speaker.image || "/placeholder.svg?height=300&width=300&text=Speaker+Image"
-
-  const handleImageError = () => {
-    if (retryCount < maxRetries && speaker.image) {
-      // Retry loading the same image with a small delay
-      console.log(`Retrying image load for ${speaker.name} (attempt ${retryCount + 1}/${maxRetries})`)
-      setRetryCount((prev) => prev + 1)
-
-      // Add a small delay before retry to handle temporary network issues
-      setTimeout(
-        () => {
-          setImageState("loading")
-          // Force reload by adding a cache-busting parameter
-          const img = new Image()
-          img.crossOrigin = "anonymous"
-          img.onload = () => setImageState("loaded")
-          img.onerror = () => {
-            if (retryCount + 1 >= maxRetries) {
-              console.error(`Failed to load image for ${speaker.name} after ${maxRetries} attempts: ${speaker.image}`)
-              setImageState("error")
-            } else {
-              handleImageError()
-            }
-          }
-          img.src = `${speaker.image}?retry=${retryCount + 1}&t=${Date.now()}`
-        },
-        1000 * (retryCount + 1),
-      ) // Exponential backoff
-    } else {
-      console.error(`Failed to load image for ${speaker.name}: ${speaker.image}`)
-      setImageState("error")
-    }
-  }
-
-  const handleImageLoad = () => {
-    setImageState("loaded")
-    setRetryCount(0) // Reset retry count on successful load
-  }
-
-  // Reset image state when speaker changes
-  useEffect(() => {
-    setImageState("loading")
-    setRetryCount(0)
-  }, [speaker.slug])
-
-  // Preload the image to handle CORS and caching issues
-  useEffect(() => {
-    if (speaker.image && speaker.image.includes("blob.vercel-storage.com")) {
-      const img = new Image()
-      img.crossOrigin = "anonymous"
-      img.onload = () => setImageState("loaded")
-      img.onerror = handleImageError
-      img.src = speaker.image
-    }
-  }, [speaker.image])
-
-  return (
-    <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg flex flex-col">
-      <CardContent className="p-0 flex flex-col flex-grow">
-        <div className="relative">
-          <div className="w-full aspect-square sm:aspect-[4/5] md:aspect-[3/4] bg-gray-100 flex items-center justify-center relative overflow-hidden rounded-t-lg">
-            {imageState === "loading" && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                <div className="text-gray-500 text-sm">
-                  {retryCount > 0 ? `Retrying... (${retryCount}/${maxRetries})` : "Loading..."}
-                </div>
-              </div>
-            )}
-
-            {imageState === "error" && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
-                <div className="text-gray-400 text-sm text-center px-4">
-                  <div className="mb-2">📷</div>
-                  <div>Image temporarily unavailable</div>
-                  <div className="text-xs mt-1">Please try refreshing</div>
-                </div>
-              </div>
-            )}
-
-            <img
-              src={imageUrl || "/placeholder.svg"}
-              alt={speaker.name}
-              className={`w-full h-full rounded-t-lg transition-all duration-300 group-hover:scale-105 object-cover ${imageState === "loaded" ? "opacity-100" : "opacity-0"}`}
-              style={{
-                objectPosition: speaker.imagePosition === "top" ? `center ${speaker.imageOffsetY || "0%"}` : "center",
-                display: imageState === "error" ? "none" : "block",
-              }}
-              onError={handleImageError}
-              onLoad={handleImageLoad}
-              loading="lazy"
-              crossOrigin="anonymous"
-            />
-          </div>
-
-          <Badge className="absolute top-4 left-4 bg-[#1E68C6] text-white font-montserrat">
-            {speaker.industries[0] || "AI Expert"}
-          </Badge>
-
-          {/* Debug info for development */}
-          {process.env.NODE_ENV === "development" && (imageState === "error" || retryCount > 0) && (
-            <div className="absolute bottom-2 left-2 right-2 bg-yellow-100 border border-yellow-300 rounded p-1 text-xs text-yellow-800">
-              {imageState === "error" ? `Failed after ${maxRetries} retries` : `Retry ${retryCount}/${maxRetries}`}
-            </div>
-          )}
-        </div>
-
-        <div className="p-6 flex flex-col flex-grow">
-          <h3 className="text-xl font-bold text-black mb-2 font-neue-haas">{speaker.name}</h3>
-          <p className="text-[#5084C6] font-semibold mb-3 font-montserrat text-sm">{speaker.title}</p>
-
-          <div className="mb-4">
-            <h4 className="text-sm font-semibold text-black mb-2 font-montserrat">Speaking Topics:</h4>
-            <div className="flex flex-wrap gap-1">
-              {speaker.programs.slice(0, 2).map((topic, index) => (
-                <Badge key={index} variant="secondary" className="text-xs font-montserrat">
-                  {topic}
-                </Badge>
-              ))}
-              {speaker.programs.length > 2 && (
-                <Badge variant="secondary" className="text-xs font-montserrat">
-                  +{speaker.programs.length - 2} more
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          {/* Speaker Fee Dropdown */}
-          <div className="mb-4">
-            <button
-              onClick={() => setShowFee(!showFee)}
-              className="flex items-center justify-between w-full text-left text-sm font-semibold text-black mb-2 font-montserrat hover:text-[#1E68C6] transition-colors"
-            >
-              Speaker Fee
-              {showFee ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-            {showFee && (
-              <div className="bg-[#1E68C6] bg-opacity-10 p-3 rounded-lg">
-                <div className="text-lg font-bold text-[#1E68C6] font-montserrat">{speaker.fee}</div>
-                <div className="text-xs text-gray-600 font-montserrat mt-1">
-                  Contact us for availability and booking details
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-auto flex flex-col sm:flex-row gap-3">
-            <Button
-              asChild
-              variant="outline"
-              className="flex-1 border-2 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white font-montserrat text-xs sm:text-sm px-2 h-auto py-2 whitespace-normal shadow-lg hover:shadow-xl transition-all duration-300 bg-white font-semibold"
-            >
-              <Link href={`/speakers/${speaker.slug}`} className="flex items-center justify-center">
-                View Profile
-              </Link>
-            </Button>
-            <Button
-              asChild
-              className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat text-xs sm:text-sm px-2 h-auto py-2 whitespace-normal font-semibold"
-            >
-              <Link
-                href={`/contact?source=featured_speakers&speakerName=${encodeURIComponent(speaker.name)}`}
-                className="text-white no-underline flex items-center justify-center"
-              >
-                Book Speaker Today
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   )
 }

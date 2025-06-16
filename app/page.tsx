@@ -4,7 +4,7 @@ import ClientLogos from "@/components/client-logos"
 import FeaturedSpeakers from "@/components/featured-speakers"
 import WhyChooseUs from "@/components/why-choose-us"
 import BookingCTA from "@/components/booking-cta"
-import { getFeaturedSpeakers } from "@/lib/speakers-data"
+import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data" // Ensure Speaker type is imported
 
 export const metadata: Metadata = {
   title: "Book Top AI Keynote Speakers 2025 | The Only AI-Exclusive Speaker Bureau",
@@ -21,13 +21,17 @@ export const metadata: Metadata = {
 }
 
 export default async function HomePage() {
-  // Pre-load featured speakers for better performance
-  let featuredSpeakers = []
+  let featuredSpeakers: Speaker[] = [] // Default to empty array
   try {
     featuredSpeakers = await getFeaturedSpeakers(6)
+    if (featuredSpeakers.length === 0) {
+      console.warn(
+        "HomePage: getFeaturedSpeakers returned an empty array. This might be due to a fetch error or no featured speakers.",
+      )
+    }
   } catch (error) {
-    console.error("Failed to load featured speakers for homepage:", error)
-    // Component will handle the empty array gracefully
+    console.error("HomePage: Failed to load featured speakers:", error)
+    // featuredSpeakers remains an empty array, FeaturedSpeakers component should handle this
   }
 
   return (
