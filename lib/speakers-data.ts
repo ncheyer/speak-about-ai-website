@@ -53,103 +53,109 @@ const SHEET_NAME = "Speakers"
 /**
  * Sanitizes a string that is supposed to be JSON but might be corrupted
  * due to manual entry, copy-pasting, or spreadsheet export issues.
- * @param rawJsonString The potentially broken JSON string.
- * @param speakerName For logging purposes.
- * @param fieldName For logging purposes.
- * @returns A cleaner string that is more likely to be valid JSON.
  */
 function sanitizePotentiallyCorruptJsonString(rawJsonString: string): string {
   if (!rawJsonString || typeof rawJsonString !== "string") {
-    return "" // Return empty string; JSON.parse will fail, caught by caller
+    return "[]" // Return empty array string for safety
   }
 
   let s = rawJsonString.trim()
 
-  // 1. Normalize smart quotes and newlines
-  s = s.replace(/[“”]/g, '"') // Smart double quotes to standard
-  s = s.replace(/[‘’]/g, "'") // Smart single quotes to standard (JSON prefers double, but this helps clean)
-  s = s.replace(/(\r\n|\n|\r)+/gm, " ") // Replace newlines with space
-
-  // 2. Attempt to strip common non-JSON prefixes like "json" if they appear before structure
-  if (s.toLowerCase().startsWith("json") && (s.charAt(4) === '"' || s.charAt(4) === "[" || s.charAt(4) === "{")) {
-    s = s.substring(4).trim()
+  // Early return for obviously empty cases
+  if (s === "" || s === "null" || s === "undefined") {
+    return "[]"
   }
 
-  // 3. Iteratively remove outer quotes if the whole string is wrapped.
-  //    Example: `"""[...]"""` becomes `[...]`
-  let prevStringLength
-  do {
-    prevStringLength = s.length
-    if (s.startsWith('"') && s.endsWith('"') && s.length > 1) {
-      const inner = s.substring(1, s.length - 1).trim()
-      // Only unwrap if the inner content looks like a plausible JSON structure or is itself quoted
-      if (
-        (inner.startsWith("[") && inner.endsWith("]")) ||
-        (inner.startsWith("{") && inner.endsWith("}")) ||
-        (inner.startsWith('"') && inner.endsWith('"')) || // Handles nested quoting like """value"""
-        !inner.includes('"')
-      ) {
-        // Or if inner has no quotes, it might be a simple value that was over-quoted
+  try {
+    // Step 1: Handle common Google Sheets export issues
+    // Remove BOM and other invisible characters
+    s = s.replace(/^\uFEFF/, "") // Remove BOM
+    s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "") // Remove control characters
+
+    // Step 2: Normalize quotes and line breaks
+    s = s.replace(/[""]/g, '"') // Smart quotes to standard
+    s = s.replace(/['']/g, "'") // Smart single quotes
+    s = s.replace(/(\r\n|\n|\r)/g, " ") // Replace line breaks with spaces
+    s = s.replace(/\s+/g, " ") // Collapse multiple spaces
+
+    // Step 3: Handle Google Sheets double-quote escaping
+    // In Google Sheets, quotes are often escaped as ""
+    s = s.replace(/""/g, '\\"')
+
+    // Step 4: Remove outer wrapping quotes if present
+    let iterations = 0
+    while (s.startsWith('"') && s.endsWith('"') && iterations < 5) {
+      const inner = s.slice(1, -1)
+      if (inner.startsWith("[") || inner.startsWith("{")) {
         s = inner
+        iterations++
       } else {
-        // If inner content is complex and not clearly structured, stop unwrapping
         break
       }
     }
-  } while (s.length < prevStringLength && s.length > 1)
 
-  // 4. Handle Google Sheets' common way of escaping quotes: "" -> \"
-  //    This is crucial for content like {""key"": ""value""} or {"text": "value with ""quotes"" inside"}
-  s = s.replace(/""/g, '\\"')
+    // Step 5: Basic structure validation and repair
+    if (!s.startsWith("[") && !s.startsWith("{")) {
+      // If it doesn't look like JSON, return empty array
+      return "[]"
+    }
 
-  // 5. Basic structural check: if it's not empty, it should ideally start/end with brackets/braces.
-  //    This is a weak check; deeper validation happens at parse time.
-  if (s.length > 0 && !((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("{") && s.endsWith("}")))) {
-    // If it doesn't look like an array or object after initial cleaning,
-    // it might be a simple string value or still be malformed.
-    // We'll let JSON.parse attempt it. If it's a valid simple string like "text", parse will fail.
-    // If it was supposed to be an object/array but is broken, parse will also fail.
+    // Step 6: Attempt to fix common structural issues
+    // Fix missing commas between objects
+    s = s.replace(/}\s*{/g, "},{")
+    s = s.replace(/]\s*\[/g, "],[")
+
+    // Fix trailing commas
+    s = s.replace(/,\s*}/g, "}")
+    s = s.replace(/,\s*]/g, "]")
+
+    // Step 7: Handle truncated JSON by attempting to close it
+    if (s.startsWith("[") && !s.endsWith("]")) {
+      // Count open/close brackets to determine how many we need
+      const openBrackets = (s.match(/\[/g) || []).length
+      const closeBrackets = (s.match(/\]/g) || []).length
+      const openBraces = (s.match(/\{/g) || []).length
+      const closeBraces = (s.match(/\}/g) || []).length
+
+      // Add missing closing braces first
+      for (let i = 0; i < openBraces - closeBraces; i++) {
+        s += "}"
+      }
+
+      // Add missing closing brackets
+      for (let i = 0; i < openBrackets - closeBrackets; i++) {
+        s += "]"
+      }
+    }
+
+    // Step 8: Final validation attempt
+    try {
+      JSON.parse(s)
+      return s
+    } catch (parseError) {
+      // If still invalid, try one more repair attempt
+      // Remove any trailing incomplete elements
+      const lastCommaIndex = s.lastIndexOf(",")
+      if (lastCommaIndex > 0) {
+        const beforeComma = s.substring(0, lastCommaIndex)
+        const afterComma = s.substring(lastCommaIndex + 1).trim()
+
+        // If what comes after the comma looks incomplete, remove it
+        if (!afterComma.includes("}") && !afterComma.includes("]")) {
+          s = beforeComma
+
+          // Add proper closing
+          if (s.startsWith("[")) s += "]"
+          if (s.startsWith("{")) s += "}"
+        }
+      }
+
+      return s
+    }
+  } catch (error) {
+    console.warn("Error in JSON sanitization:", error)
+    return "[]"
   }
-
-  if (s.length === 0) return "[]" // Default to empty array string if it becomes empty
-
-  // 6. Attempt to fix common missing comma issues. Applied to the cleaned string.
-  let coreJson = s
-  // Between objects: {}{ } -> {},{}
-  coreJson = coreJson.replace(/}\s*{/g, "},{")
-  // Between arrays: [][] -> [],[]
-  coreJson = coreJson.replace(/]\s*\[/g, "],[")
-  // Object then array: {}[] -> {},[]
-  coreJson = coreJson.replace(/}\s*\[/g, "},[")
-  // Array then object: []{} -> [],{}
-  coreJson = coreJson.replace(/]\s*{/g, "],{")
-
-  // After a string value, before another string key: "value" "key": -> "value", "key":
-  coreJson = coreJson.replace(/("(?:\\[\s\S]|[^"])*")\s+("(?:\\[\s\S]|[^"])*"\s*:)/g, "$1, $2")
-  // After a number, boolean, or null, before a string key: 123 "key": -> 123, "key":
-  coreJson = coreJson.replace(
-    /(\b(?:[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?|true|false|null)\b)\s+("(?:\\[\s\S]|[^"])*"\s*:)/g,
-    "$1, $2",
-  )
-  // After a closing brace or bracket, before a string key: } "key": -> }, "key":
-  coreJson = coreJson.replace(/([}\]])\s+("(?:\\[\s\S]|[^"])*"\s*:)/g, "$1, $2")
-
-  // Fix trailing commas before closing brace/bracket (JSON5 allows them, but standard JSON doesn't)
-  coreJson = coreJson.replace(/,\s*}/g, "}")
-  coreJson = coreJson.replace(/,\s*]/g, "]")
-
-  // Attempt to ensure outer structure is an array if it looks like a list of objects/values not wrapped in []
-  // This is heuristic: if it contains '},{' but doesn't start/end with '[', ']', wrap it.
-  if (coreJson.includes("},{") && !coreJson.startsWith("[")) {
-    coreJson = "[" + coreJson + "]"
-  }
-
-  // Fix for unterminated strings: if a string seems to end prematurely before a comma or closing bracket/brace
-  // This is very heuristic. Example: {"text": "unterminated, "key": "value"}
-  // We can try to add a quote if a comma or brace/bracket immediately follows an odd number of quotes.
-  // This is complex and risky. For now, we rely on JSON.parse to report unterminated strings.
-
-  return coreJson
 }
 
 function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
@@ -174,42 +180,73 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
         if (!columnData || typeof columnData !== "string" || columnData.trim() === "") {
           return []
         }
+
         const originalString = String(columnData).trim()
 
-        // Attempt 1: Parse the string directly (if it's already valid JSON)
-        try {
-          // Quick check: if it doesn't start with [ or {, it's unlikely to be a JSON array/object string.
-          if (originalString.length > 0 && !originalString.startsWith("[") && !originalString.startsWith("{")) {
-            // console.warn(
-            //   `Skipping non-JSON-like string for ${columnName} for ${name} (Row ${rowIndex + 2}). Value: "${originalString.substring(0,100)}..."`
-            // );
-            return [] // Not a JSON array/object
-          }
-          if (originalString === "[]" || originalString === "{}") return [] // Empty valid JSON
-
-          const parsed = JSON.parse(originalString)
-          if (Array.isArray(parsed)) return parsed
-          if (typeof parsed === "object" && parsed !== null) return [parsed] // Wrap single object in array
-          return [] // Parsed to something else (e.g. null, string, number)
-        } catch (e1) {
-          // Failed direct parse, proceed to sanitize and retry
+        // Skip obviously non-JSON content
+        if (
+          originalString.length > 0 &&
+          !originalString.startsWith("[") &&
+          !originalString.startsWith("{") &&
+          !originalString.startsWith('"[') &&
+          !originalString.startsWith('"{')
+        ) {
+          return []
         }
 
-        // Attempt 2: Sanitize and then parse.
-        let sanitizedJson = ""
-        try {
-          sanitizedJson = sanitizePotentiallyCorruptJsonString(originalString)
-          if (sanitizedJson === "[]" || sanitizedJson === "{}") return [] // Empty valid JSON after sanitization
-
-          const parsed = JSON.parse(sanitizedJson)
-          if (Array.isArray(parsed)) return parsed
-          if (typeof parsed === "object" && parsed !== null) return [parsed] // Wrap single object
+        // Handle empty JSON cases
+        if (originalString === "[]" || originalString === "{}" || originalString === '""') {
           return []
-        } catch (e2) {
-          console.error(
-            `CRITICAL JSON PARSE ERROR for ${columnName} for ${name} (Row ${rowIndex + 2}). Failed after sanitization. Error: ${(e2 as Error).message}. Original: "${originalString.substring(0, 150)}...". Sanitized: "${sanitizedJson.substring(0, 150)}..."`,
+        }
+
+        // Strategy 1: Try parsing directly
+        try {
+          const parsed = JSON.parse(originalString)
+          if (Array.isArray(parsed)) return parsed
+          if (typeof parsed === "object" && parsed !== null) return [parsed]
+          return []
+        } catch (directParseError) {
+          // Continue to sanitization
+        }
+
+        // Strategy 2: Sanitize and parse
+        try {
+          const sanitized = sanitizePotentiallyCorruptJsonString(originalString)
+          const parsed = JSON.parse(sanitized)
+          if (Array.isArray(parsed)) return parsed
+          if (typeof parsed === "object" && parsed !== null) return [parsed]
+          return []
+        } catch (sanitizedParseError) {
+          // Strategy 3: Try to extract valid JSON objects manually
+          try {
+            const objectMatches = originalString.match(/\{[^{}]*\}/g)
+            if (objectMatches && objectMatches.length > 0) {
+              const validObjects = []
+              for (const match of objectMatches) {
+                try {
+                  const obj = JSON.parse(match)
+                  validObjects.push(obj)
+                } catch (objError) {
+                  // Skip invalid objects
+                }
+              }
+              if (validObjects.length > 0) {
+                return validObjects
+              }
+            }
+          } catch (extractError) {
+            // Final fallback
+          }
+
+          // Log the error for debugging but don't crash the build
+          console.warn(
+            `JSON parsing failed for ${columnName} for ${name} (Row ${rowIndex + 2}). ` +
+              `Original length: ${originalString.length}. ` +
+              `Error: ${sanitizedParseError.message}. ` +
+              `Sample: "${originalString.substring(0, 100)}..."`,
           )
-          return [] // Return empty array on final failure
+
+          return []
         }
       }
 
