@@ -1,38 +1,73 @@
+"use client"
+
 import Image from "next/image"
 
 export default function ClientLogos() {
   const clients = [
     {
+      name: "Stanford University",
+      src: "/logos/stanford-university-logo-1024x335-1.png",
+      alt: "Stanford University logo",
+      size: "small",
+    },
+    {
+      name: "Google",
+      src: "/logos/Google_2015_logo.svg.png",
+      alt: "Google logo",
+      size: "small",
+    },
+    {
+      name: "Amazon",
+      src: "/logos/Amazon-Logo-2000.png",
+      alt: "Amazon logo",
+      size: "default",
+    },
+    {
+      name: "Visa",
+      src: "/logos/Visa_Inc._logo.svg",
+      alt: "Visa Inc. logo",
+      size: "small", // Changed to small size
+    },
+    {
       name: "Rio Innovation Week",
       src: "/logos/rio-innovation-week-new.png",
       alt: "Rio Innovation Week - Leading innovation conference in Brazil",
-      featured: true,
+      size: "extra-large",
     },
     {
       name: "NICE",
       src: "/logos/nice-logo.png",
       alt: "NICE - Cloud platform for customer experience and financial crime solutions",
-      featured: false,
+      size: "extra-large",
     },
     {
       name: "ST Engineering",
       src: "/logos/st-engineering-logo.png",
       alt: "ST Engineering - Global technology, defense and engineering group",
-      featured: true,
+      size: "super-large",
     },
     {
       name: "Government of Korea",
       src: "/logos/korea-government-logo.png",
       alt: "Government of the Republic of Korea - Official government emblem",
-      featured: false,
+      size: "extra-large",
     },
     {
       name: "Juniper Networks",
       src: "/logos/juniper-networks-logo.svg",
       alt: "Juniper Networks - AI-driven enterprise networking solutions",
-      featured: false,
+      size: "extra-large",
+    },
+    {
+      name: "KPMG",
+      src: "/logos/KPMG_logo.svg.png",
+      alt: "KPMG logo",
+      size: "default",
     },
   ]
+
+  // Duplicate clients for a seamless looping effect
+  const allClients = [...clients, ...clients]
 
   return (
     <section className="py-16 bg-gray-50">
@@ -43,17 +78,41 @@ export default function ClientLogos() {
             Our speakers have worked with leading organizations around the world for their most important events.
           </p>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 items-center">
-          {clients.map((client, index) => (
-            <div key={index} className="flex items-center justify-center p-4">
+      </div>
+      <div className="relative w-full overflow-hidden py-4">
+        <div className="flex animate-marquee">
+          {allClients.map((client, index) => (
+            <div key={index} className="flex-shrink-0 flex items-center justify-center px-8 py-4">
               <Image
                 src={client.src || "/placeholder.svg"}
                 alt={client.alt}
-                width={client.featured ? 400 : 320}
-                height={client.featured ? 200 : 160}
-                className={`w-auto object-contain hover:scale-105 transition-transform duration-300 opacity-80 hover:opacity-100 ${
-                  client.featured ? "h-32" : "h-24"
+                // Conditionally apply sizes based on the 'size' property
+                width={
+                  client.size === "super-large"
+                    ? 600
+                    : client.size === "extra-large"
+                      ? 400
+                      : client.size === "small"
+                        ? 200
+                        : 320
+                }
+                height={
+                  client.size === "super-large"
+                    ? 300
+                    : client.size === "extra-large"
+                      ? 200
+                      : client.size === "small"
+                        ? 100
+                        : 160
+                }
+                className={`w-auto object-contain opacity-80 hover:opacity-100 transition-opacity duration-300 ${
+                  client.size === "super-large"
+                    ? "h-48"
+                    : client.size === "extra-large"
+                      ? "h-32"
+                      : client.size === "small"
+                        ? "h-16"
+                        : "h-24"
                 }`}
                 loading="lazy"
               />

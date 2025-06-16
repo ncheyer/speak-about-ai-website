@@ -20,7 +20,7 @@ export default function ServicesContact() {
           >
             <Link href="/contact?source=services_page_cta">
               <Calendar className="w-5 h-5 mr-2" />
-              Get Started
+              Book Speaker Today
             </Link>
           </Button>
           <Button

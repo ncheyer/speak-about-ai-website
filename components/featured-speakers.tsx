@@ -273,7 +273,7 @@ function SpeakerCard({ speaker }: { speaker: Speaker }) {
                 href={`/contact?source=featured_speakers&speakerName=${encodeURIComponent(speaker.name)}`}
                 className="text-white no-underline flex items-center justify-center"
               >
-                Check Availability
+                Book Speaker Today
               </Link>
             </Button>
           </div>

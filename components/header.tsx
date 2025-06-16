@@ -63,7 +63,7 @@ export default function Header() {
               }}
             >
               <Link href="/contact" className="text-white no-underline">
-                Contact Us
+                Book Speaker Today
               </Link>
             </button>
           </div>
@@ -104,7 +104,7 @@ export default function Header() {
                   }}
                 >
                   <Link href="/contact" className="text-white no-underline">
-                    Contact Us
+                    Book Speaker Today
                   </Link>
                 </button>
               </div>

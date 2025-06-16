@@ -1,4 +1,4 @@
-import { Users, Award, Calendar, MapPin } from "lucide-react"
+import { Award, MapPin } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -21,7 +21,8 @@ export default function Hero() {
             </h1>
 
             <p className="text-xl text-[#5084C6] mb-8 font-montserrat font-semibold">
-              50+ experts in every industry, from Siri co-founders to Google AI researchers
+              <span className="font-bold">50+ experts in every industry</span>, including the co-author of "Artifical
+              Intelligence: A Modern Approach", Siri Co-Founders, and Google/Amazon Executives.
             </p>
 
             {/* CTA Buttons */}
@@ -37,7 +38,7 @@ export default function Hero() {
                 }}
               >
                 <Link href="/contact" className="text-white no-underline">
-                  Contact Us
+                  Book Speaker Today
                 </Link>
               </button>
               <button
@@ -56,29 +57,16 @@ export default function Hero() {
               </button>
             </div>
 
-            {/* Social Proof Stats */}
-            <div className="grid grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="flex items-center justify-center">
-                  <Users className="w-5 h-5 text-[#1E68C6] mr-2" />
-                  <span className="text-2xl font-bold text-black font-neue-haas">53+</span>
-                </div>
-                <p className="text-gray-600 font-montserrat text-xs">AI Experts</p>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1">
-                  <MapPin className="w-5 h-5 text-[#1E68C6]" />
-                  <span className="text-2xl font-bold text-black font-neue-haas">Silicon Valley</span>
-                </div>
-                <p className="text-gray-600 font-montserrat text-xs">Based</p>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-[#1E68C6] mr-2" />
-                  <span className="text-2xl font-bold text-black font-neue-haas">24hr</span>
-                </div>
-                <p className="text-gray-600 font-montserrat text-xs">Response</p>
-              </div>
+            {/* Social Proof Stat */}
+            <div>
+              {" "}
+              {/* Removed text-center */}
+              <p className="text-2xl font-bold text-black font-neue-haas flex items-center justify-start gap-2">
+                {" "}
+                {/* Changed justify-center to justify-start */}
+                <MapPin className="w-6 h-6 text-[#1E68C6]" />
+                Silicon Valley Based
+              </p>
             </div>
           </div>
 
@@ -86,10 +74,10 @@ export default function Hero() {
           <div className="relative">
             <div className="relative rounded-xl overflow-hidden shadow-2xl">
               <Image
-                src="/hero-image.png"
-                alt="AI Speakers Panel featuring Adam Cheyer (Siri Co-Founder), Peter Norvig (Google & Stanford AI Researcher), and Robert Strong (Speak About AI Co-Founder)"
+                src="/robert-strong-adam-cheyer-peter-norvig-on-stage-at-microsoft.png"
+                alt="Robert Strong, Adam Cheyer (Siri Co-Founder), and Peter Norvig (Google & Stanford AI Researcher) on stage at a Microsoft event"
                 width={700}
-                height={500}
+                height={467}
                 className="w-full h-auto object-cover"
                 priority
               />

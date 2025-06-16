@@ -24,7 +24,7 @@ export default function BookingCTA() {
           >
             <Calendar className="w-5 h-5 mr-2" />
             <Link href="/contact?source=homepage_cta" className="text-white no-underline">
-              Contact Us
+              Book Speaker Today
             </Link>
           </button>
           <button
