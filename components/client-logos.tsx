@@ -70,25 +70,28 @@ export default function ClientLogos() {
   const allClients = [...clients, ...clients]
 
   return (
-    <section className="pt-8 pb-16 bg-gray-50">
+    <section className="pt-4 pb-8 bg-gray-50">
       {" "}
-      {/* Reduced pt-16 to pt-8 */}
+      {/* Further reduced pt-8 to pt-4 and pb-16 to pb-8 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-6">
+        <div className="text-center mb-3">
           {" "}
-          {/* Reduced mb-12 to mb-6 */}
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Trusted by Industry Leaders</h2>
+          {/* Further reduced mb-6 to mb-3 */}
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Trusted by Industry Leaders</h2>{" "}
+          {/* Reduced mb-4 to mb-2 */}
           <p className="text-lg text-gray-600">
             Our speakers have worked with leading organizations around the world for their most important events.
           </p>
         </div>
       </div>
-      <div className="relative w-full overflow-hidden py-2">
+      <div className="relative w-full overflow-hidden py-1">
         {" "}
-        {/* Reduced py-4 to py-2 */}
+        {/* Further reduced py-2 to py-1 */}
         <div className="flex animate-marquee">
           {allClients.map((client, index) => (
-            <div key={index} className="flex-shrink-0 flex items-center justify-center px-8 py-4">
+            <div key={index} className="flex-shrink-0 flex items-center justify-center px-8 py-2">
+              {" "}
+              {/* Reduced py-4 to py-2 */}
               <Image
                 src={client.src || "/placeholder.svg"}
                 alt={client.alt}
