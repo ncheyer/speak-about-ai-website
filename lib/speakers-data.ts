@@ -391,31 +391,43 @@ let lastFetchTime: number | null = null
 // const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 async function fetchAllSpeakersFromSheet(): Promise<Speaker[]> {
-  console.log("Attempting to fetch speakers from Google Sheet...")
+  console.log("Attempting to fetch speakers from Google Sheet using fetch...")
   if (!SPREADSHEET_ID || !API_KEY) {
     console.error("Google Sheets API Key or Spreadsheet ID is not configured.")
-    // Fallback to empty array or throw error, depending on desired behavior
-    // For build stability, returning empty array is safer.
+    // For build stability, returning empty array is safer than throwing an error.
     return []
   }
 
-  try {
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:Z`, // Adjust range as needed
-    })
+  const range = `${SHEET_NAME}!A:Z`
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`
 
-    const values = response.data.values
+  try {
+    // Use fetch, which is available in both server and edge runtimes.
+    // The `next: { revalidate: 300 }` option enables Incremental Static Regeneration,
+    // fetching new data at most once every 5 minutes.
+    const response = await fetch(url, { next: { revalidate: 300 } })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Error fetching from Google Sheets API: ${response.status} ${response.statusText}`, {
+        error: errorText,
+      })
+      return [] // Return empty array on fetch error
+    }
+
+    const data = await response.json()
+    const values = data.values
+
     if (!values || values.length === 0) {
       console.warn("No data returned from Google Sheet.")
       return []
     }
+
     console.log(`Successfully fetched ${values.length - 1} speaker rows from sheet.`)
     return mapGoogleSheetDataToSpeakers(values)
   } catch (error) {
-    console.error("Error fetching data from Google Sheets:", error)
-    // Return empty array on error to prevent build crashes
-    return []
+    console.error("A critical error occurred during the fetch to Google Sheets:", error)
+    return [] // Return empty array on critical error
   }
 }
 
