@@ -79,8 +79,16 @@ function sanitizePotentiallyCorruptJsonString(rawJsonString: string): string {
     s = s.replace(/\s+/g, " ") // Collapse multiple spaces
 
     // Step 3: Handle Google Sheets double-quote escaping
-    // In Google Sheets, quotes are often escaped as ""
-    s = s.replace(/""/g, '\\"')
+    // Google Sheets exports quotes as "" but we need to be careful not to double-process
+    // First, handle the case where the entire JSON is wrapped in quotes with internal escaping
+    if (s.startsWith('""') && s.endsWith('""')) {
+      // Remove outer double quotes and unescape internal quotes
+      s = s.slice(2, -2).replace(/""/g, '"')
+    } else {
+      // Handle normal Google Sheets quote escaping: "" -> "
+      // But only if we're not dealing with already properly escaped quotes
+      s = s.replace(/""/g, '"')
+    }
 
     // Step 4: Remove outer wrapping quotes if present
     let iterations = 0
