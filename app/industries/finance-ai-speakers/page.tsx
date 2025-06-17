@@ -1,9 +1,8 @@
 import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { getSpeakersByIndustry } from "@/lib/speakers-data"
+import { SpeakerCard } from "@/components/speaker-card"
 
 export const metadata: Metadata = {
   title: "Finance AI Speakers | Financial Services AI Keynote Speakers | Speak About AI",
@@ -66,62 +65,12 @@ export default async function FinanceAISpeakersPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {Array.isArray(financeSpeakers) &&
               financeSpeakers.map((speaker) => (
-                <Card
+                <SpeakerCard
                   key={speaker.slug}
-                  className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg"
-                >
-                  <CardContent className="p-0">
-                    <div className="relative">
-                      <img
-                        src={speaker.image || "/placeholder.svg"}
-                        alt={speaker.name}
-                        className="w-full h-64 object-cover rounded-t-lg"
-                      />
-                      <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded text-sm font-semibold text-gray-900">
-                        {speaker.fee}
-                      </div>
-                    </div>
-
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">{speaker.name}</h3>
-                      <p className="text-[#5084C6] font-semibold mb-3">{speaker.title}</p>
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-3">{speaker.bio}</p>
-
-                      <div className="mb-4">
-                        <h4 className="text-sm font-semibold text-gray-900 mb-2">Finance Expertise:</h4>
-                        <div className="flex flex-wrap gap-1">
-                          {speaker.expertise
-                            .filter(
-                              (skill) =>
-                                skill.toLowerCase().includes("finance") ||
-                                skill.toLowerCase().includes("banking") ||
-                                skill.toLowerCase().includes("fintech") ||
-                                skill.toLowerCase().includes("business"),
-                            )
-                            .slice(0, 3)
-                            .map((skill, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {skill}
-                              </Badge>
-                            ))}
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button asChild className="flex-1 bg-[#1E68C6] hover:bg-[#5084C6]">
-                          <Link href={`/speakers/${speaker.slug}`}>View Profile</Link>
-                        </Button>
-                        <Button asChild variant="outline" className="flex-1">
-                          <Link
-                            href={`/contact?source=finance_industry_page&speakerName=${encodeURIComponent(speaker.name)}&industry=Finance`}
-                          >
-                            Book Now
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  speaker={speaker}
+                  contactSource="finance_industry_page"
+                  maxTopicsToShow={3}
+                />
               ))}
           </div>
 

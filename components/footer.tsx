@@ -75,30 +75,43 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Industries</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/industries/healthcare-ai-speakers" className="text-[#EAEAEE] hover:text-white">
+                <Link
+                  href="/industries/healthcare-ai-speakers"
+                  scroll={false}
+                  className="text-[#EAEAEE] hover:text-white"
+                >
                   Healthcare AI
                 </Link>
               </li>
               <li>
-                <Link href="/industries/technology-enterprise-ai-speakers" className="text-[#EAEAEE] hover:text-white">
+                <Link
+                  href="/industries/technology-keynote-speakers"
+                  scroll={false}
+                  className="text-[#EAEAEE] hover:text-white"
+                >
                   Technology & Enterprise
                 </Link>
               </li>
               <li>
-                <Link href="/industries/finance-ai-speakers" className="text-[#EAEAEE] hover:text-white">
+                <Link href="/industries/finance-ai-speakers" scroll={false} className="text-[#EAEAEE] hover:text-white">
                   Financial Services
                 </Link>
               </li>
               <li>
                 <Link
                   href="/industries/leadership-business-strategy-ai-speakers"
+                  scroll={false}
                   className="text-[#EAEAEE] hover:text-white"
                 >
                   Leadership & Business Strategy
                 </Link>
               </li>
               <li>
-                <Link href="/industries/sales-marketing-ai-speakers" className="text-[#EAEAEE] hover:text-white">
+                <Link
+                  href="/industries/sales-marketing-ai-speakers"
+                  scroll={false}
+                  className="text-[#EAEAEE] hover:text-white"
+                >
                   Sales & Marketing
                 </Link>
               </li>

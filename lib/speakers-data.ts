@@ -26,12 +26,11 @@ export interface Speaker {
   testimonials?: {
     quote: string
     author: string
-    position?: string // Added from your example, ensure it's in your actual data/needs
+    position?: string
     company?: string
     event?: string
     date?: string
     logo?: string
-    // title?: string // From your example, if 'position' is not it.
   }[]
   tags?: string[]
   lastUpdated?: string
@@ -50,47 +49,26 @@ const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID
 const API_KEY = process.env.GOOGLE_SHEETS_API_KEY
 const SHEET_NAME = "Speakers"
 
-/**
- * Sanitizes a string that is supposed to be JSON but might be corrupted
- * due to manual entry, copy-pasting, or spreadsheet export issues.
- */
 function sanitizePotentiallyCorruptJsonString(rawJsonString: string): string {
   if (!rawJsonString || typeof rawJsonString !== "string") {
-    return "[]" // Return empty array string for safety
+    return "[]"
   }
-
   let s = rawJsonString.trim()
-
-  // Early return for obviously empty cases
   if (s === "" || s === "null" || s === "undefined") {
     return "[]"
   }
-
   try {
-    // Step 1: Handle common Google Sheets export issues
-    // Remove BOM and other invisible characters
-    s = s.replace(/^\uFEFF/, "") // Remove BOM
-    s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "") // Remove control characters
-
-    // Step 2: Normalize quotes and line breaks
-    s = s.replace(/[""]/g, '"') // Smart quotes to standard
-    s = s.replace(/['']/g, "'") // Smart single quotes
-    s = s.replace(/(\r\n|\n|\r)/g, " ") // Replace line breaks with spaces
-    s = s.replace(/\s+/g, " ") // Collapse multiple spaces
-
-    // Step 3: Handle Google Sheets double-quote escaping
-    // Google Sheets exports quotes as "" but we need to be careful not to double-process
-    // First, handle the case where the entire JSON is wrapped in quotes with internal escaping
+    s = s.replace(/^\uFEFF/, "")
+    s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    s = s.replace(/[""]/g, '"')
+    s = s.replace(/['']/g, "'")
+    s = s.replace(/(\r\n|\n|\r)/g, " ")
+    s = s.replace(/\s+/g, " ")
     if (s.startsWith('""') && s.endsWith('""')) {
-      // Remove outer double quotes and unescape internal quotes
       s = s.slice(2, -2).replace(/""/g, '"')
     } else {
-      // Handle normal Google Sheets quote escaping: "" -> "
-      // But only if we're not dealing with already properly escaped quotes
       s = s.replace(/""/g, '"')
     }
-
-    // Step 4: Remove outer wrapping quotes if present
     let iterations = 0
     while (s.startsWith('"') && s.endsWith('"') && iterations < 5) {
       const inner = s.slice(1, -1)
@@ -101,63 +79,39 @@ function sanitizePotentiallyCorruptJsonString(rawJsonString: string): string {
         break
       }
     }
-
-    // Step 5: Basic structure validation and repair
     if (!s.startsWith("[") && !s.startsWith("{")) {
-      // If it doesn't look like JSON, return empty array
       return "[]"
     }
-
-    // Step 6: Attempt to fix common structural issues
-    // Fix missing commas between objects
     s = s.replace(/}\s*{/g, "},{")
     s = s.replace(/]\s*\[/g, "],[")
-
-    // Fix trailing commas
     s = s.replace(/,\s*}/g, "}")
     s = s.replace(/,\s*]/g, "]")
-
-    // Step 7: Handle truncated JSON by attempting to close it
     if (s.startsWith("[") && !s.endsWith("]")) {
-      // Count open/close brackets to determine how many we need
       const openBrackets = (s.match(/\[/g) || []).length
       const closeBrackets = (s.match(/\]/g) || []).length
       const openBraces = (s.match(/\{/g) || []).length
       const closeBraces = (s.match(/\}/g) || []).length
-
-      // Add missing closing braces first
       for (let i = 0; i < openBraces - closeBraces; i++) {
         s += "}"
       }
-
-      // Add missing closing brackets
       for (let i = 0; i < openBrackets - closeBrackets; i++) {
         s += "]"
       }
     }
-
-    // Step 8: Final validation attempt
     try {
       JSON.parse(s)
       return s
     } catch (parseError) {
-      // If still invalid, try one more repair attempt
-      // Remove any trailing incomplete elements
       const lastCommaIndex = s.lastIndexOf(",")
       if (lastCommaIndex > 0) {
         const beforeComma = s.substring(0, lastCommaIndex)
         const afterComma = s.substring(lastCommaIndex + 1).trim()
-
-        // If what comes after the comma looks incomplete, remove it
         if (!afterComma.includes("}") && !afterComma.includes("]")) {
           s = beforeComma
-
-          // Add proper closing
           if (s.startsWith("[")) s += "]"
           if (s.startsWith("{")) s += "}"
         }
       }
-
       return s
     }
   } catch (error) {
@@ -168,30 +122,22 @@ function sanitizePotentiallyCorruptJsonString(rawJsonString: string): string {
 
 function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
   if (!data || data.length < 2) {
-    // console.warn("mapGoogleSheetDataToSpeakers: No data or only header row found.")
     return []
   }
-
   const headers = data[0].map((header) => header.toLowerCase().trim().replace(/\s+/g, "_"))
   const speakerRows = data.slice(1)
-
   return speakerRows
     .map((row, rowIndex) => {
       const speakerData: any = {}
       headers.forEach((header, index) => {
         speakerData[header] = row[index] !== undefined && row[index] !== null ? String(row[index]) : undefined
       })
-
       const name = speakerData.name?.trim() || `Unnamed Speaker (Row ${rowIndex + 2})`
-
       const processJsonColumn = (columnData: any, columnName: string): any[] => {
         if (!columnData || typeof columnData !== "string" || columnData.trim() === "") {
           return []
         }
-
         const originalString = String(columnData).trim()
-
-        // Skip obviously non-JSON content
         if (
           originalString.length > 0 &&
           !originalString.startsWith("[") &&
@@ -201,23 +147,17 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
         ) {
           return []
         }
-
-        // Handle empty JSON cases
         if (originalString === "[]" || originalString === "{}" || originalString === '""') {
           return []
         }
-
-        // Strategy 1: Try parsing directly
         try {
           const parsed = JSON.parse(originalString)
           if (Array.isArray(parsed)) return parsed
           if (typeof parsed === "object" && parsed !== null) return [parsed]
           return []
         } catch (directParseError) {
-          // Continue to sanitization
+          /* continue */
         }
-
-        // Strategy 2: Sanitize and parse
         try {
           const sanitized = sanitizePotentiallyCorruptJsonString(originalString)
           const parsed = JSON.parse(sanitized)
@@ -225,7 +165,6 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
           if (typeof parsed === "object" && parsed !== null) return [parsed]
           return []
         } catch (sanitizedParseError) {
-          // Strategy 3: Try to extract valid JSON objects manually
           try {
             const objectMatches = originalString.match(/\{[^{}]*\}/g)
             if (objectMatches && objectMatches.length > 0) {
@@ -235,32 +174,25 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
                   const obj = JSON.parse(match)
                   validObjects.push(obj)
                 } catch (objError) {
-                  // Skip invalid objects
+                  /* skip */
                 }
               }
-              if (validObjects.length > 0) {
-                return validObjects
-              }
+              if (validObjects.length > 0) return validObjects
             }
           } catch (extractError) {
-            // Final fallback
+            /* fallback */
           }
-
-          // Log the error for debugging but don't crash the build
           console.warn(
             `JSON parsing failed for ${columnName} for ${name} (Row ${rowIndex + 2}). ` +
               `Original length: ${originalString.length}. ` +
               `Error: ${sanitizedParseError.message}. ` +
               `Sample: "${originalString.substring(0, 100)}..."`,
           )
-
           return []
         }
       }
-
       const videos = processJsonColumn(speakerData.videos, "VIDEOS")
       const testimonials = processJsonColumn(speakerData.testimonials, "TESTIMONIALS")
-
       try {
         return {
           slug:
@@ -278,7 +210,7 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
             ? String(speakerData.programs)
                 .split(",")
                 .map((s: string) => s.trim())
-                .filter((s) => s) // Remove empty strings
+                .filter((s) => s)
             : [],
           industries: speakerData.industries
             ? String(speakerData.industries)
@@ -335,7 +267,6 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
     .filter((speaker): speaker is Speaker => speaker !== null)
 }
 
-// --- Local Speakers (Fallback Data) ---
 const localSpeakers: Speaker[] = [
   {
     slug: "adam-cheyer",
@@ -390,17 +321,13 @@ const localSpeakers: Speaker[] = [
   },
 ]
 
-// --- Data Fetching and Caching Logic (largely unchanged, console logs can be removed if build issues persist) ---
 let allSpeakersCache: Speaker[] | null = null
 let lastFetchTime: number | null = null
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 async function fetchAllSpeakersFromSheet(): Promise<Speaker[]> {
-  // console.log("fetchAllSpeakersFromSheet: Initiating fetch.")
   if (!SPREADSHEET_ID || !API_KEY) {
-    console.error(
-      "fetchAllSpeakersFromSheet: Google Sheets API Key or Spreadsheet ID is not configured. Falling back to local data.",
-    )
+    console.error("Google Sheets API Key or Spreadsheet ID is not configured. Falling back to local data.")
     return localSpeakers
   }
   const range = `${SHEET_NAME}!A:Z`
@@ -409,28 +336,24 @@ async function fetchAllSpeakersFromSheet(): Promise<Speaker[]> {
     const response = await fetch(url, { next: { revalidate: 300 } })
     if (!response.ok) {
       const errorText = await response.text()
-      console.error(
-        `fetchAllSpeakersFromSheet: Error fetching from Google Sheets API: ${response.status} ${response.statusText}`,
-        { error: errorText },
-      )
+      console.error(`Error fetching from Google Sheets API: ${response.status} ${response.statusText}`, {
+        error: errorText,
+      })
       return localSpeakers
     }
     const data = await response.json()
     const values = data.values
     if (!values || values.length < 2) {
-      // console.warn("fetchAllSpeakersFromSheet: No data or only header row returned from Google Sheet. Falling back to local data.")
       return localSpeakers
     }
     const mappedSpeakers = mapGoogleSheetDataToSpeakers(values)
-    // console.log(`fetchAllSpeakersFromSheet: Mapped ${mappedSpeakers.length} speakers from sheet data.`)
     if (mappedSpeakers.length === 0 && values.length > 1) {
-      // console.warn("fetchAllSpeakersFromSheet: Mapping Google Sheet data resulted in zero speakers, though sheet had data. Falling back to local data.")
       return localSpeakers
     }
     return mappedSpeakers
   } catch (error) {
     console.error(
-      "fetchAllSpeakersFromSheet: A critical error occurred during the fetch or mapping from Google Sheets. Falling back to local data.",
+      "A critical error occurred during the fetch or mapping from Google Sheets. Falling back to local data.",
       error,
     )
     return localSpeakers
@@ -439,26 +362,20 @@ async function fetchAllSpeakersFromSheet(): Promise<Speaker[]> {
 
 export async function getAllSpeakers(): Promise<Speaker[]> {
   const now = Date.now()
-  // console.log("getAllSpeakers: Attempting to fetch speakers.")
   if (allSpeakersCache && lastFetchTime && now - lastFetchTime < CACHE_DURATION) {
-    const listedSpeakers = allSpeakersCache
+    return allSpeakersCache
       .filter((speaker) => speaker.listed !== false)
-      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0)) // Sort by ranking descending
-    // console.log(`getAllSpeakers: Cache hit. Returning ${listedSpeakers.length} listed speakers.`)
-    return listedSpeakers
+      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0))
   }
   try {
-    // console.log("getAllSpeakers: Cache miss or expired. Fetching from sheet/fallback.")
     const fetchedSpeakers = await fetchAllSpeakersFromSheet()
     allSpeakersCache = fetchedSpeakers
     lastFetchTime = now
-    const listedSpeakers = allSpeakersCache
+    return allSpeakersCache
       .filter((speaker) => speaker.listed !== false)
-      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0)) // Sort by ranking descending
-    // console.log(`getAllSpeakers: Stored in cache. Returning ${listedSpeakers.length} listed speakers.`)
-    return listedSpeakers
+      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0))
   } catch (error) {
-    console.error("getAllSpeakers: Critical error during fetch. Falling back to local listed speakers:", error)
+    console.error("Critical error during fetch. Falling back to local listed speakers:", error)
     if (!allSpeakersCache) allSpeakersCache = localSpeakers
     return localSpeakers.filter((speaker) => speaker.listed !== false)
   }
@@ -466,14 +383,11 @@ export async function getAllSpeakers(): Promise<Speaker[]> {
 
 export async function getFeaturedSpeakers(limit = 8): Promise<Speaker[]> {
   try {
-    // console.log("getFeaturedSpeakers: Attempting to get all speakers.")
     const speakers = await getAllSpeakers()
-    // console.log(`getFeaturedSpeakers: Received ${speakers.length} speakers.`)
     if (speakers.length === 0) return []
     const featured = speakers
       .filter((speaker) => speaker.featured === true)
-      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0)) // Sort featured speakers by ranking
-    // console.log(`getFeaturedSpeakers: Found ${featured.length} featured speakers before limit.`)
+      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0))
     return featured.slice(0, limit)
   } catch (error) {
     console.error("getFeaturedSpeakers: Error. Returning empty array:", error)
@@ -483,15 +397,11 @@ export async function getFeaturedSpeakers(limit = 8): Promise<Speaker[]> {
 
 export async function getSpeakerBySlug(slug: string): Promise<Speaker | undefined> {
   try {
-    // console.log(`getSpeakerBySlug: Attempting for slug: ${slug}`)
     if (!allSpeakersCache || !(lastFetchTime && Date.now() - lastFetchTime < CACHE_DURATION)) {
       await getAllSpeakers()
     }
     const speaker = allSpeakersCache ? allSpeakersCache.find((s) => s.slug === slug) : undefined
     if (speaker && speaker.listed !== false) return speaker
-    if (speaker && speaker.listed === false) {
-      // console.warn(`getSpeakerBySlug: Speaker found for slug ${slug} but is not listed: ${speaker.name}`)
-    }
     return undefined
   } catch (error) {
     console.error(`getSpeakerBySlug: Failed for slug ${slug}:`, error)
@@ -516,7 +426,7 @@ export async function searchSpeakers(query: string): Promise<Speaker[]> {
           (speaker.expertise && speaker.expertise.some((exp) => exp.toLowerCase().includes(lowerQuery))) ||
           (speaker.tags && speaker.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))),
       )
-      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0)) // Sort search results by ranking
+      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0))
   } catch (error) {
     console.error(`Failed to search speakers with query "${query}":`, error)
     return []
@@ -539,23 +449,87 @@ export async function getSpeakersByIndustry(industry: string): Promise<Speaker[]
   try {
     const allListedSpeakers = await getAllSpeakers()
     if (!industry || industry.trim() === "") return []
-    const lowerIndustry = industry.toLowerCase().trim()
+
+    const normalizedIndustry = industry.toLowerCase().trim()
 
     const filteredSpeakers = allListedSpeakers.filter((speaker) => {
-      const hasIndustry =
-        speaker.industries && speaker.industries.some((ind) => ind.toLowerCase().includes(lowerIndustry))
+      if (!speaker.industries || speaker.industries.length === 0) return false
 
-      // Debug logging to see why certain speakers are included
-      if ((speaker.name.includes("Chris Ategeka") || speaker.name.includes("Ted Selker")) && hasIndustry) {
-        console.log(`DEBUG: ${speaker.name} included for industry "${industry}"`)
-        console.log(`Speaker industries:`, speaker.industries)
-        console.log(
-          `Matching industry found:`,
-          speaker.industries?.find((ind) => ind.toLowerCase().includes(lowerIndustry)),
-        )
+      // Get the primary industry (first tag) - this is what shows in the top-left badge
+      const primaryIndustry = speaker.industries[0].toLowerCase().trim()
+
+      switch (normalizedIndustry) {
+        case "technology":
+          return (
+            primaryIndustry === "technology" ||
+            primaryIndustry === "enterprise technology" ||
+            primaryIndustry === "tech" ||
+            primaryIndustry === "software" ||
+            primaryIndustry === "artificial intelligence" ||
+            primaryIndustry === "ai" ||
+            primaryIndustry.includes("technology") ||
+            primaryIndustry.includes("tech") ||
+            primaryIndustry.includes("software") ||
+            primaryIndustry.includes("ai")
+          )
+
+        case "healthcare":
+          return (
+            primaryIndustry === "healthcare" ||
+            primaryIndustry === "medical" ||
+            primaryIndustry === "health" ||
+            primaryIndustry.includes("healthcare") ||
+            primaryIndustry.includes("medical") ||
+            primaryIndustry.includes("health")
+          )
+
+        case "finance":
+          return (
+            primaryIndustry === "finance" ||
+            primaryIndustry === "financial services" ||
+            primaryIndustry === "banking" ||
+            primaryIndustry === "venture capital" ||
+            primaryIndustry === "vc" ||
+            primaryIndustry === "investment" ||
+            primaryIndustry === "private equity" ||
+            primaryIndustry.includes("finance") ||
+            primaryIndustry.includes("banking") ||
+            primaryIndustry.includes("venture") ||
+            primaryIndustry.includes("investment")
+          )
+
+        case "leadership":
+          return (
+            primaryIndustry === "leadership" ||
+            primaryIndustry === "business strategy" ||
+            primaryIndustry === "executive" ||
+            primaryIndustry === "consulting" ||
+            primaryIndustry === "management consulting" ||
+            primaryIndustry === "strategy consulting" ||
+            primaryIndustry.includes("leadership") ||
+            primaryIndustry.includes("strategy") ||
+            primaryIndustry.includes("consulting") ||
+            primaryIndustry.includes("executive")
+          )
+
+        case "sales":
+          return (
+            primaryIndustry === "sales" ||
+            primaryIndustry === "marketing" ||
+            primaryIndustry === "e-commerce" ||
+            primaryIndustry === "ecommerce" ||
+            primaryIndustry === "online retail" ||
+            primaryIndustry.includes("sales") ||
+            primaryIndustry.includes("marketing") ||
+            primaryIndustry.includes("e-commerce") ||
+            primaryIndustry.includes("ecommerce") ||
+            primaryIndustry.includes("retail")
+          )
+
+        default:
+          // For other industries, use exact match or starts with
+          return primaryIndustry === normalizedIndustry || primaryIndustry.startsWith(normalizedIndustry + " ")
       }
-
-      return hasIndustry
     })
 
     return filteredSpeakers
