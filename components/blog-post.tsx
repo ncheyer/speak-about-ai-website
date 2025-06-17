@@ -13,9 +13,68 @@ interface BlogPostProps {
   relatedPosts: BlogPost[]
 }
 
+// YouTube embed component
+const YouTubeEmbed = ({ videoId, title = "YouTube video" }: { videoId: string; title?: string }) => (
+  <div className="aspect-video w-full max-w-4xl mx-auto my-8">
+    <iframe
+      width="100%"
+      height="100%"
+      src={`https://www.youtube.com/embed/${videoId}`}
+      title={title}
+      frameBorder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowFullScreen
+      className="rounded-lg shadow-lg"
+    />
+  </div>
+)
+
 export function BlogPostComponent({ post, relatedPosts }: BlogPostProps) {
-  // Convert markdown to HTML
-  const contentHtml = marked(post.content)
+  // Function to preprocess content before markdown conversion
+  const preprocessContent = (content: string): string => {
+    // Replace iframe YouTube embeds with placeholder markers
+    const iframePattern = /<iframe[^>]*src="https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]+)"[^>]*><\/iframe>/g
+    let processedContent = content.replace(iframePattern, (match, videoId) => {
+      return `\n\n[YOUTUBE:${videoId}]\n\n`
+    })
+
+    // Also handle embed URLs in case they're formatted differently
+    const embedPattern = /<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([A-Za-z0-9_-]+)"[^>]*><\/iframe>/g
+    processedContent = processedContent.replace(embedPattern, (match, videoId) => {
+      return `\n\n[YOUTUBE:${videoId}]\n\n`
+    })
+
+    // Ensure proper paragraph spacing by adding double line breaks
+    processedContent = processedContent.replace(/\n\n/g, "\n\n\n")
+
+    return processedContent
+  }
+
+  // Function to render content with YouTube embeds
+  const renderContentWithYouTube = (htmlContent: string) => {
+    // Split content by YouTube markers
+    const parts = htmlContent.split(/\[YOUTUBE:([A-Za-z0-9_-]+)\]/g)
+
+    return parts
+      .map((part, index) => {
+        // Every odd index is a YouTube video ID
+        if (index % 2 === 1) {
+          return <YouTubeEmbed key={`youtube-${index}`} videoId={part} />
+        }
+
+        // Even indices are regular HTML content
+        if (part.trim()) {
+          return <div key={`content-${index}`} dangerouslySetInnerHTML={{ __html: part }} />
+        }
+
+        return null
+      })
+      .filter(Boolean)
+  }
+
+  // Convert markdown to HTML with preprocessing
+  const preprocessedContent = preprocessContent(post.content)
+  const contentHtml = marked(preprocessedContent)
 
   // Scroll to top when post changes
   useEffect(() => {
@@ -66,7 +125,10 @@ export function BlogPostComponent({ post, relatedPosts }: BlogPostProps) {
           />
         </div>
 
-        <div className="prose prose-blue max-w-none" dangerouslySetInnerHTML={{ __html: contentHtml }} />
+        {/* Updated content rendering with YouTube support */}
+        <div className="prose prose-blue max-w-none prose-p:mb-6 prose-headings:mt-8 prose-headings:mb-4">
+          {renderContentWithYouTube(contentHtml)}
+        </div>
 
         <div className="mt-12 border-t pt-8">
           <div className="flex items-center gap-4">
