@@ -1,32 +1,23 @@
-import { createClient } from "contentful"
+import { createClient as contentfulCreateClient } from "contentful"
 import type { Document } from "@contentful/rich-text-types"
 import { documentToHtmlString } from "@contentful/rich-text-html-renderer"
 
-// Check if environment variables are present
-// These checks run when the module is imported (e.g., at build time or server start)
+// Standard environment variable checks
 if (!process.env.CONTENTFUL_SPACE_ID) {
-  console.error("CONTENTFUL_SPACE_ID is missing at client initialization time.")
-  // Optionally, throw an error to prevent the app from starting/building
-  // if these are absolutely critical at this stage.
-  // throw new Error("CONTENTFUL_SPACE_ID is required")
+  console.error("CONTENTFUL_SPACE_ID is missing.")
 }
-
 if (!process.env.CONTENTFUL_ACCESS_TOKEN) {
-  console.error("CONTENTFUL_ACCESS_TOKEN is missing at client initialization time.")
-  // throw new Error("CONTENTFUL_ACCESS_TOKEN is required")
+  console.error("CONTENTFUL_ACCESS_TOKEN is missing.")
 }
+// CONTENTFUL_PREVIEW_SECRET is used by the API route, not directly here
 
-export const contentfulClient = createClient({
-  space: process.env.CONTENTFUL_SPACE_ID!, // Added non-null assertion, assuming checks above or runtime handling
-  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN!, // Added non-null assertion
-  // It's good practice to log what's being used for debugging, but remove sensitive parts for production logs
-  // console.log(`Contentful client initialized with Space ID: ${process.env.CONTENTFUL_SPACE_ID?.substring(0,5)}... and Token: ${process.env.CONTENTFUL_ACCESS_TOKEN?.substring(0,5)}...`);
+// Client always uses the standard Delivery API token and CDN
+export const contentfulClient = contentfulCreateClient({
+  space: process.env.CONTENTFUL_SPACE_ID!,
+  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN!,
+  // host defaults to 'cdn.contentful.com'
 })
 
-// ... rest of your Contentful functions (getBlogPostsFromContentful, etc.)
-// These functions will use the `contentfulClient` initialized above.
-
-// Contentful blog post content type interface matching your structure
 export interface ContentfulBlogPost {
   sys: {
     id: string
@@ -46,17 +37,16 @@ export interface ContentfulBlogPost {
       }
     }
     excerpt: string
-    content: Document // Rich text field
+    content: Document
     author: string
     publishedDate: string
     category: string
     tags: string[]
     seoKeywords: string
-    status: string
+    status: string // This field is crucial for our "no preview token" approach
   }
 }
 
-// Helper function to calculate read time from content
 function calculateReadTime(content: string): string {
   const wordsPerMinute = 200
   const wordCount = content.split(/\s+/).length
@@ -64,30 +54,38 @@ function calculateReadTime(content: string): string {
   return `${minutes} min read`
 }
 
-export async function getBlogPostsFromContentful() {
+// Updated to accept an isPreview flag
+export async function getBlogPostsFromContentful(isPreview = false) {
   if (!process.env.CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
     console.error("Contentful credentials missing in getBlogPostsFromContentful.")
     return []
   }
   try {
-    const response = await contentfulClient.getEntries<ContentfulBlogPost["fields"]>({
+    const queryOptions: any = {
       content_type: "blogPost",
-      "fields.status": "Published", // Only get published posts
       order: "-fields.publishedDate",
-    })
+    }
+
+    if (!isPreview) {
+      // For non-preview, only fetch "Published"
+      queryOptions["fields.status"] = "Published"
+    }
+    // For isPreview, we fetch all statuses.
+    // Success depends on CONTENTFUL_ACCESS_TOKEN permissions.
+
+    const response = await contentfulClient.getEntries<ContentfulBlogPost["fields"]>(queryOptions)
 
     return response.items.map((item) => {
       const htmlContent = documentToHtmlString(item.fields.content)
-
       return {
         id: item.sys.id,
         slug: item.fields.slug,
         title: item.fields.title,
         excerpt: item.fields.excerpt,
-        content: htmlContent, // Convert rich text to HTML
+        content: htmlContent,
         author: item.fields.author,
-        authorTitle: undefined, // Not in your Contentful structure
-        authorImage: undefined, // Not in your Contentful structure
+        authorTitle: undefined,
+        authorImage: undefined,
         coverImage: item.fields.featuredImage?.fields.file.url
           ? `https:${item.fields.featuredImage.fields.file.url}`
           : "/placeholder.jpg",
@@ -98,42 +96,55 @@ export async function getBlogPostsFromContentful() {
         }),
         readTime: calculateReadTime(htmlContent),
         tags: item.fields.tags || [],
-        featured: item.fields.category === "Featured" || item.fields.tags?.includes("Featured"), // Determine featured status
+        featured: item.fields.category === "Featured" || item.fields.tags?.includes("Featured"),
         category: item.fields.category,
         metaDescription: item.fields.metaDescription,
         seoKeywords: item.fields.seoKeywords,
+        status: item.fields.status, // Include status
       }
     })
   } catch (error) {
     console.error("Error fetching blog posts from Contentful:", error)
-    // Log more detailed error if available
-    // if (error.response) {
-    //   console.error("Contentful API Error Details:", JSON.stringify(error.response.data, null, 2));
-    // }
     return []
   }
 }
 
-export async function getBlogPostBySlugFromContentful(slug: string) {
+// Updated to accept an isPreview flag
+export async function getBlogPostBySlugFromContentful(slug: string, isPreview = false) {
   if (!process.env.CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
     console.error("Contentful credentials missing in getBlogPostBySlugFromContentful.")
     return null
   }
   try {
-    const response = await contentfulClient.getEntries<ContentfulBlogPost["fields"]>({
+    const queryOptions: any = {
       content_type: "blogPost",
       "fields.slug": slug,
-      "fields.status": "Published",
       limit: 1,
-    })
+    }
+
+    if (!isPreview) {
+      // For non-preview, only fetch "Published"
+      queryOptions["fields.status"] = "Published"
+    }
+    // For isPreview, we fetch by slug regardless of status.
+    // Success depends on CONTENTFUL_ACCESS_TOKEN permissions.
+
+    const response = await contentfulClient.getEntries<ContentfulBlogPost["fields"]>(queryOptions)
 
     if (response.items.length === 0) {
       return null
     }
-
     const item = response.items[0]
-    const htmlContent = documentToHtmlString(item.fields.content)
 
+    // If not in preview mode AND the item fetched (somehow) isn't published, treat as not found.
+    if (!isPreview && item.fields.status !== "Published") {
+      console.warn(
+        `Post with slug '${slug}' found but is not "Published" (status: ${item.fields.status}). Not showing in non-preview mode.`,
+      )
+      return null
+    }
+
+    const htmlContent = documentToHtmlString(item.fields.content)
     return {
       id: item.sys.id,
       slug: item.fields.slug,
@@ -157,6 +168,7 @@ export async function getBlogPostBySlugFromContentful(slug: string) {
       category: item.fields.category,
       metaDescription: item.fields.metaDescription,
       seoKeywords: item.fields.seoKeywords,
+      status: item.fields.status, // Include status
     }
   } catch (error) {
     console.error(`Error fetching blog post by slug (${slug}) from Contentful:`, error)

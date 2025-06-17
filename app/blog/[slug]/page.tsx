@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { BlogPostComponent } from "@/components/blog-post"
 import { getBlogPostBySlug, getRelatedBlogPosts } from "@/lib/blog-data"
+import { draftMode } from "next/headers" // Import draftMode
 
 interface BlogPostPageProps {
   params: {
@@ -9,7 +10,9 @@ interface BlogPostPageProps {
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
-  const post = await getBlogPostBySlug(params.slug)
+  const { isEnabled: isPreview } = draftMode() // Check draft mode
+  // Pass isPreview to your data fetching
+  const post = await getBlogPostBySlug(params.slug, isPreview)
 
   if (!post) {
     return {
@@ -19,45 +22,39 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
   }
 
   return {
-    title: `${post.title} | Speak About AI Blog`,
+    title: `${isPreview ? "[PREVIEW] " : ""}${post.title} | Speak About AI Blog`,
     description: post.metaDescription || post.excerpt,
     keywords: post.seoKeywords || post.tags.join(", "),
-    openGraph: {
-      title: post.title,
-      description: post.metaDescription || post.excerpt,
-      images: [
-        {
-          url: post.coverImage,
-          width: 1200,
-          height: 630,
-          alt: post.title,
-        },
-      ],
-      type: "article",
-      publishedTime: post.date,
-      authors: [post.author],
-      tags: post.tags,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: post.title,
-      description: post.metaDescription || post.excerpt,
-      images: [post.coverImage],
-    },
+    // Add other metadata, potentially indicating preview if desired
   }
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = await getBlogPostBySlug(params.slug)
+  const { isEnabled: isPreview } = draftMode() // Check draft mode
+
+  // Pass isPreview to your data fetching
+  const post = await getBlogPostBySlug(params.slug, isPreview)
 
   if (!post) {
     notFound()
   }
 
-  const relatedPosts = await getRelatedBlogPosts(post.id, 3)
+  // Related posts might also respect preview mode
+  const relatedPosts = await getRelatedBlogPosts(post.id, 3, isPreview)
 
   return (
     <main>
+      {isPreview && (
+        <div className="bg-yellow-200 dark:bg-yellow-700 border-b border-yellow-300 dark:border-yellow-600 p-3 text-center text-sm text-yellow-800 dark:text-yellow-100">
+          <strong>PREVIEW MODE ACTIVE</strong> - You are viewing potentially unpublished content.{" "}
+          <a
+            href={`/api/preview/disable?redirect=/blog/${params.slug}`}
+            className="underline hover:text-yellow-600 dark:hover:text-yellow-300"
+          >
+            Exit Preview Mode
+          </a>
+        </div>
+      )}
       <BlogPostComponent key={params.slug} post={post} relatedPosts={relatedPosts} />
     </main>
   )
