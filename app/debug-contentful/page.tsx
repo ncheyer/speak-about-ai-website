@@ -17,6 +17,12 @@ export default async function DebugContentfulPage() {
   // Test basic connection first
   try {
     console.log("Testing basic Contentful connection...")
+    console.log(
+      `Attempting connection with Space ID: ${process.env.CONTENTFUL_SPACE_ID ? process.env.CONTENTFUL_SPACE_ID.substring(0, 5) + "..." : "NOT SET"}`,
+    )
+    console.log(
+      `Attempting connection with Access Token: ${process.env.CONTENTFUL_ACCESS_TOKEN ? process.env.CONTENTFUL_ACCESS_TOKEN.substring(0, 5) + "..." : "NOT SET"}`,
+    )
 
     // Try the most basic call possible
     const space = await contentfulClient.getSpace()
@@ -26,12 +32,24 @@ export default async function DebugContentfulPage() {
       spaceId: space.sys.id,
     }
   } catch (error: any) {
+    console.error("Contentful connection test FAILED. Raw error object:", error)
+    if (error.response) {
+      console.error("Error response status:", error.response.status)
+      console.error("Error response status text:", error.response.statusText)
+      console.error("Error response data:", JSON.stringify(error.response.data, null, 2))
+    }
+    if (error.request) {
+      console.error("Error request details:", error.request)
+    }
+    console.error("Error message:", error.message)
+
     debugInfo.connectionTest = {
       success: false,
       error: error.message,
       status: error.response?.status,
       statusText: error.response?.statusText,
-      data: error.response?.data,
+      responseData: error.response?.data, // Add this
+      requestId: error.response?.headers?.["x-contentful-request-id"], // Add this if available
     }
     debugInfo.rawError = JSON.stringify(error, null, 2)
   }
@@ -91,6 +109,21 @@ export default async function DebugContentfulPage() {
                     <p>
                       <strong>HTTP Status:</strong> {debugInfo.connectionTest.status} -{" "}
                       {debugInfo.connectionTest.statusText}
+                    </p>
+                  )}
+                  {debugInfo.connectionTest?.responseData && (
+                    <div className="mt-2">
+                      <p>
+                        <strong>Response Data:</strong>
+                      </p>
+                      <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto whitespace-pre-wrap">
+                        {JSON.stringify(debugInfo.connectionTest.responseData, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                  {debugInfo.connectionTest?.requestId && (
+                    <p className="mt-1">
+                      <strong>Contentful Request ID:</strong> {debugInfo.connectionTest.requestId}
                     </p>
                   )}
                 </div>

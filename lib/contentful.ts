@@ -2,18 +2,29 @@ import { createClient } from "contentful"
 import type { Document } from "@contentful/rich-text-types"
 import { documentToHtmlString } from "@contentful/rich-text-html-renderer"
 
+// Check if environment variables are present
+// These checks run when the module is imported (e.g., at build time or server start)
 if (!process.env.CONTENTFUL_SPACE_ID) {
-  throw new Error("CONTENTFUL_SPACE_ID is required")
+  console.error("CONTENTFUL_SPACE_ID is missing at client initialization time.")
+  // Optionally, throw an error to prevent the app from starting/building
+  // if these are absolutely critical at this stage.
+  // throw new Error("CONTENTFUL_SPACE_ID is required")
 }
 
 if (!process.env.CONTENTFUL_ACCESS_TOKEN) {
-  throw new Error("CONTENTFUL_ACCESS_TOKEN is required")
+  console.error("CONTENTFUL_ACCESS_TOKEN is missing at client initialization time.")
+  // throw new Error("CONTENTFUL_ACCESS_TOKEN is required")
 }
 
 export const contentfulClient = createClient({
-  space: process.env.CONTENTFUL_SPACE_ID,
-  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
+  space: process.env.CONTENTFUL_SPACE_ID!, // Added non-null assertion, assuming checks above or runtime handling
+  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN!, // Added non-null assertion
+  // It's good practice to log what's being used for debugging, but remove sensitive parts for production logs
+  // console.log(`Contentful client initialized with Space ID: ${process.env.CONTENTFUL_SPACE_ID?.substring(0,5)}... and Token: ${process.env.CONTENTFUL_ACCESS_TOKEN?.substring(0,5)}...`);
 })
+
+// ... rest of your Contentful functions (getBlogPostsFromContentful, etc.)
+// These functions will use the `contentfulClient` initialized above.
 
 // Contentful blog post content type interface matching your structure
 export interface ContentfulBlogPost {
@@ -54,6 +65,10 @@ function calculateReadTime(content: string): string {
 }
 
 export async function getBlogPostsFromContentful() {
+  if (!process.env.CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
+    console.error("Contentful credentials missing in getBlogPostsFromContentful.")
+    return []
+  }
   try {
     const response = await contentfulClient.getEntries<ContentfulBlogPost["fields"]>({
       content_type: "blogPost",
@@ -91,11 +106,19 @@ export async function getBlogPostsFromContentful() {
     })
   } catch (error) {
     console.error("Error fetching blog posts from Contentful:", error)
+    // Log more detailed error if available
+    // if (error.response) {
+    //   console.error("Contentful API Error Details:", JSON.stringify(error.response.data, null, 2));
+    // }
     return []
   }
 }
 
 export async function getBlogPostBySlugFromContentful(slug: string) {
+  if (!process.env.CONTENTFUL_SPACE_ID || !process.env.CONTENTFUL_ACCESS_TOKEN) {
+    console.error("Contentful credentials missing in getBlogPostBySlugFromContentful.")
+    return null
+  }
   try {
     const response = await contentfulClient.getEntries<ContentfulBlogPost["fields"]>({
       content_type: "blogPost",
@@ -136,7 +159,7 @@ export async function getBlogPostBySlugFromContentful(slug: string) {
       seoKeywords: item.fields.seoKeywords,
     }
   } catch (error) {
-    console.error("Error fetching blog post from Contentful:", error)
+    console.error(`Error fetching blog post by slug (${slug}) from Contentful:`, error)
     return null
   }
 }
