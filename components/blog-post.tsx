@@ -32,21 +32,21 @@ const YouTubeEmbed = ({ videoId, title = "YouTube video" }: { videoId: string; t
 export function BlogPostComponent({ post, relatedPosts }: BlogPostProps) {
   // Function to preprocess content before markdown conversion
   const preprocessContent = (content: string): string => {
-    // Replace iframe YouTube embeds with placeholder markers
-    const iframePattern = /<iframe[^>]*src="https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]+)"[^>]*><\/iframe>/g
-    let processedContent = content.replace(iframePattern, (match, videoId) => {
+    console.log("Original content:", content) // Debug log
+
+    // Target the exact format from your content:
+    // <iframe width="560" height="315" src="https://www.youtube.com/embed/A5sqpI98pJo" frameborder="0" allowfullscreen></iframe>
+    const youtubePattern = /<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([A-Za-z0-9_-]+)"[^>]*><\/iframe>/gi
+
+    let processedContent = content.replace(youtubePattern, (match, videoId) => {
+      console.log("YouTube iframe matched:", match, "Video ID:", videoId) // Debug log
       return `\n\n[YOUTUBE:${videoId}]\n\n`
     })
 
-    // Also handle embed URLs in case they're formatted differently
-    const embedPattern = /<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([A-Za-z0-9_-]+)"[^>]*><\/iframe>/g
-    processedContent = processedContent.replace(embedPattern, (match, videoId) => {
-      return `\n\n[YOUTUBE:${videoId}]\n\n`
-    })
-
-    // Ensure proper paragraph spacing by adding double line breaks
+    // Ensure proper paragraph spacing
     processedContent = processedContent.replace(/\n\n/g, "\n\n\n")
 
+    console.log("Processed content:", processedContent) // Debug log
     return processedContent
   }
 
