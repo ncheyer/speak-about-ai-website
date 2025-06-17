@@ -540,9 +540,25 @@ export async function getSpeakersByIndustry(industry: string): Promise<Speaker[]
     const allListedSpeakers = await getAllSpeakers()
     if (!industry || industry.trim() === "") return []
     const lowerIndustry = industry.toLowerCase().trim()
-    return allListedSpeakers.filter(
-      (speaker) => speaker.industries && speaker.industries.some((ind) => ind.toLowerCase().includes(lowerIndustry)),
-    )
+
+    const filteredSpeakers = allListedSpeakers.filter((speaker) => {
+      const hasIndustry =
+        speaker.industries && speaker.industries.some((ind) => ind.toLowerCase().includes(lowerIndustry))
+
+      // Debug logging to see why certain speakers are included
+      if ((speaker.name.includes("Chris Ategeka") || speaker.name.includes("Ted Selker")) && hasIndustry) {
+        console.log(`DEBUG: ${speaker.name} included for industry "${industry}"`)
+        console.log(`Speaker industries:`, speaker.industries)
+        console.log(
+          `Matching industry found:`,
+          speaker.industries?.find((ind) => ind.toLowerCase().includes(lowerIndustry)),
+        )
+      }
+
+      return hasIndustry
+    })
+
+    return filteredSpeakers
   } catch (error) {
     console.error(`Error in getSpeakersByIndustry for industry "${industry}":`, error)
     return []

@@ -80,23 +80,26 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/industries/technology-enterprise-ai-speakers" className="text-[#EAEAEE] hover:text-white">
+                  Technology & Enterprise
+                </Link>
+              </li>
+              <li>
                 <Link href="/industries/finance-ai-speakers" className="text-[#EAEAEE] hover:text-white">
                   Financial Services
                 </Link>
               </li>
               <li>
-                <Link href="/industries/automotive-ai-speakers" className="text-[#EAEAEE] hover:text-white">
-                  Automotive
+                <Link
+                  href="/industries/leadership-business-strategy-ai-speakers"
+                  className="text-[#EAEAEE] hover:text-white"
+                >
+                  Leadership & Business Strategy
                 </Link>
               </li>
               <li>
-                <Link href="/industries/retail-ai-speakers" className="text-[#EAEAEE] hover:text-white">
-                  Retail & E-commerce
-                </Link>
-              </li>
-              <li>
-                <Link href="/industries/manufacturing-ai-speakers" className="text-[#EAEAEE] hover:text-white">
-                  Manufacturing
+                <Link href="/industries/sales-marketing-ai-speakers" className="text-[#EAEAEE] hover:text-white">
+                  Sales & Marketing
                 </Link>
               </li>
             </ul>
