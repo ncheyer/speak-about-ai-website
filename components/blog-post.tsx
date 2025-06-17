@@ -32,64 +32,85 @@ const YouTubeEmbed = ({ videoId, title = "YouTube video" }: { videoId: string; t
 export function BlogPostComponent({ post, relatedPosts }: BlogPostProps) {
   // Let's see what we're actually getting from Contentful
   console.log("=== DEBUG: Full post object ===")
-  console.log("Post:", post)
-  console.log("Post content type:", typeof post.content)
-  console.log("Post content length:", post.content?.length)
   console.log("Post content preview:", post.content?.substring(0, 500))
   console.log("================================")
 
-  // Function to preprocess content before markdown conversion
-  const preprocessContent = (content: string): string => {
-    console.log("=== PREPROCESSING DEBUG ===")
-    console.log("Input content:", content)
-    console.log('Content includes "iframe":', content.includes("iframe"))
-    console.log('Content includes "youtube":', content.includes("youtube"))
+  // Convert markdown to HTML FIRST - don't preprocess
+  const contentHtmlFromMarked = marked(post.content) // Renamed to avoid conflict
+  console.log("=== MARKED OUTPUT ===")
+  console.log("HTML from marked():", contentHtmlFromMarked)
+  console.log("HTML includes iframe:", contentHtmlFromMarked.includes("iframe"))
+  console.log("HTML includes youtube:", contentHtmlFromMarked.includes("youtube"))
+  console.log("=== END MARKED OUTPUT ===")
 
-    // Target the exact format from your content:
-    // <iframe width="560" height="315" src="https://www.youtube.com/embed/A5sqpI98pJo" frameborder="0" allowfullscreen></iframe>
-    const youtubePattern = /<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([A-Za-z0-9_-]+)"[^>]*><\/iframe>/gi
+  // Function to process HTML content and replace YouTube iframes
+  const processYouTubeInHTML = (htmlInput: string): string => {
+    // Renamed parameter
+    console.log("=== PROCESSING HTML FOR YOUTUBE ===")
+    console.log("Input HTML to processYouTubeInHTML:", htmlInput)
 
-    let processedContent = content.replace(youtubePattern, (match, videoId) => {
-      console.log("✅ YouTube iframe matched!", { match, videoId })
-      return `\n\n[YOUTUBE:${videoId}]\n\n`
+    // Now work with the HTML output from marked()
+    let processedHtml = htmlInput
+
+    // Try multiple patterns for the HTML that marked() produces
+    const patterns = [
+      // Standard iframe in HTML
+      /<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([A-Za-z0-9_-]+)"[^>]*><\/iframe>/gi,
+      // Self-closing iframe (less common but good to check)
+      /<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([A-Za-z0-9_-]+)"[^>]*\/>/gi,
+      // More general pattern that might catch variations iframes are wrapped in paragraphs by marked
+      /<p><iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([A-Za-z0-9_-]+)"[^>]*><\/iframe><\/p>/gi,
+      // General pattern for iframes that might be self-closed or have content, looking for the embed URL
+      /<iframe[^>]*youtube\.com\/embed\/([A-Za-z0-9_-]+)[^>]*>(?:<\/iframe>)?/gis,
+    ]
+
+    patterns.forEach((pattern, index) => {
+      const originalHtml = processedHtml
+      processedHtml = processedHtml.replace(pattern, (match, videoId) => {
+        console.log(`✅ HTML Pattern ${index} matched!`, { match, videoId })
+        // Ensure we only return the placeholder, not surrounding <p> tags if matched by pattern 2
+        return `[YOUTUBE:${videoId}]`
+      })
+      if (originalHtml !== processedHtml) {
+        console.log(`Pattern ${index} made changes`)
+      }
     })
 
-    console.log("After YouTube replacement:", processedContent)
-    console.log("Content changed:", content !== processedContent)
-
-    // Ensure proper paragraph spacing
-    processedContent = processedContent.replace(/\n\n/g, "\n\n\n")
-
-    console.log("Final processed content:", processedContent)
-    console.log("=== END PREPROCESSING ===")
-    return processedContent
+    console.log("Final HTML after YouTube processing:", processedHtml)
+    console.log("=== END HTML PROCESSING ===")
+    return processedHtml
   }
 
   // Function to render content with YouTube embeds
-  const renderContentWithYouTube = (htmlContent: string) => {
+  const renderContentWithYouTube = (htmlWithPlaceholders: string) => {
+    // Renamed parameter
+    console.log("=== RENDERING WITH YOUTUBE COMPONENTS ===")
+    console.log("Input to renderContentWithYouTube:", htmlWithPlaceholders)
     // Split content by YouTube markers
-    const parts = htmlContent.split(/\[YOUTUBE:([A-Za-z0-9_-]+)\]/g)
+    const parts = htmlWithPlaceholders.split(/\[YOUTUBE:([A-Za-z0-9_-]+)\]/g)
+    console.log("Split parts:", parts)
 
     return parts
       .map((part, index) => {
         // Every odd index is a YouTube video ID
         if (index % 2 === 1) {
+          console.log(`Rendering YouTubeEmbed for videoId: ${part}`)
           return <YouTubeEmbed key={`youtube-${index}`} videoId={part} />
         }
 
         // Even indices are regular HTML content
         if (part.trim()) {
+          console.log(`Rendering HTML part: ${part.substring(0, 100)}...`)
           return <div key={`content-${index}`} dangerouslySetInnerHTML={{ __html: part }} />
         }
-
+        console.log(`Skipping empty part at index ${index}`)
         return null
       })
       .filter(Boolean)
   }
 
-  // Convert markdown to HTML with preprocessing
-  const preprocessedContent = preprocessContent(post.content)
-  const contentHtml = marked(preprocessedContent)
+  // Process the HTML to replace YouTube iframes
+  const finalHtmlWithPlaceholders = processYouTubeInHTML(contentHtmlFromMarked)
 
   // Scroll to top when post changes
   useEffect(() => {
@@ -142,7 +163,7 @@ export function BlogPostComponent({ post, relatedPosts }: BlogPostProps) {
 
         {/* Updated content rendering with YouTube support */}
         <div className="prose prose-blue max-w-none prose-p:mb-6 prose-headings:mt-8 prose-headings:mb-4">
-          {renderContentWithYouTube(contentHtml)}
+          {renderContentWithYouTube(finalHtmlWithPlaceholders)}
         </div>
 
         <div className="mt-12 border-t pt-8">
