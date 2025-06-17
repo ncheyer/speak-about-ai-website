@@ -10,6 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-[#1E68C6] text-white hover:bg-[#5084C6]",
+        gold: "bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-lg hover:from-amber-600 hover:to-amber-700",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
@@ -40,25 +41,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, style, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
 
-    // Force brand colors for default variant
-    const forceStyle =
-      variant === "default"
-        ? {
-            backgroundColor: "#1E68C6",
-            color: "white",
-            ...style,
-          }
-        : style
+    // Removed the forceStyle logic that was overriding default variant
+    // The data-button="primary" attribute was also removed as it's no longer needed for global CSS overrides
 
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }), "btn-primary")}
-        style={forceStyle}
-        data-button="primary"
-        ref={ref}
-        {...props}
-      />
-    )
+    return <Comp className={cn(buttonVariants({ variant, size, className }))} style={style} ref={ref} {...props} />
   },
 )
 Button.displayName = "Button"

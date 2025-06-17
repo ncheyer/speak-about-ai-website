@@ -121,21 +121,6 @@ a[class*="bg-[#1E68C6]"]:hover,
   background-image: none !important;
 }
 
-button[class*="from-yellow"],
-a[class*="from-yellow"],
-.btn-yellow,
-[data-button="yellow"] {
-  background: linear-gradient(to right, #f59e0b, #d97706) !important;
-  color: white !important;
-}
-
-button[class*="from-yellow"]:hover,
-a[class*="from-yellow"]:hover,
-.btn-yellow:hover,
-[data-button="yellow"]:hover {
-  background: linear-gradient(to right, #d97706, #b45309) !important;
-}
-
 /* Force all default variant buttons to use brand blue */
 button[class*="bg-primary"],
 a[class*="bg-primary"] {
