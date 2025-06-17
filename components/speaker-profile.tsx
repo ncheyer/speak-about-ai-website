@@ -233,11 +233,11 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                   <div className="space-y-3">
                     <Button
                       asChild
-                      className="w-full font-montserrat shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0"
+                      className="w-full font-montserrat shadow-lg hover:shadow-xl transition-all duration-300 !bg-gradient-to-r !from-amber-500 !to-amber-600 hover:!from-amber-600 hover:!to-amber-700 !text-white !border-0"
                     >
                       <Link
                         href={`/contact?source=speaker_profile&speakerName=${encodeURIComponent(speaker.name)}`}
-                        className="text-white no-underline"
+                        className="!text-white !no-underline hover:!text-white"
                       >
                         Book Speaker Today
                       </Link>
@@ -369,11 +369,11 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
               <Button
                 asChild
                 size="lg"
-                className="font-montserrat shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0"
+                className="font-montserrat shadow-lg hover:shadow-xl transition-all duration-300 !bg-gradient-to-r !from-amber-500 !to-amber-600 hover:!from-amber-600 hover:!to-amber-700 !text-white !border-0"
               >
                 <Link
                   href={`/contact?source=speaker_profile_cta&speakerName=${encodeURIComponent(speaker.name)}`}
-                  className="text-white no-underline"
+                  className="!text-white !no-underline hover:!text-white"
                 >
                   Book Speaker Today
                 </Link>
