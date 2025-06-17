@@ -5,8 +5,83 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Filter } from "lucide-react"
-import { searchSpeakers, type Speaker } from "@/lib/speakers-data"
+import type { Speaker } from "@/lib/speakers-data"
 import { SpeakerCard } from "@/components/speaker-card"
+
+// Define the 7 industry buckets and their associated keywords
+const INDUSTRY_BUCKETS: Record<string, string[]> = {
+  "Technology & AI": [
+    "technology",
+    "ai",
+    "artificial intelligence",
+    "software",
+    "saas",
+    "cybersecurity",
+    "data science",
+    "tech",
+    "enterprise technology",
+    "innovation",
+  ],
+  "Healthcare & Life Sciences": [
+    "healthcare",
+    "medical",
+    "biotech",
+    "pharmaceuticals",
+    "health",
+    "life sciences",
+    "digital health",
+    "wellness",
+  ],
+  "Financial Services": [
+    "finance",
+    "financial services",
+    "fintech",
+    "banking",
+    "venture capital",
+    "vc",
+    "investment",
+    "private equity",
+    "insurance",
+    "wall street",
+  ],
+  "Leadership & Business": [
+    "leadership",
+    "business strategy",
+    "strategy",
+    "management",
+    "consulting",
+    "executive",
+    "corporate culture",
+    "future of work",
+    "entrepreneurship",
+  ],
+  "Sales, Marketing & Retail": [
+    "sales",
+    "marketing",
+    "advertising",
+    "digital marketing",
+    "e-commerce",
+    "ecommerce",
+    "retail",
+    "consumer goods",
+    "cpg",
+    "fashion",
+    "customer experience",
+    "cx",
+  ],
+  "Industrial & Automotive": [
+    "manufacturing",
+    "automotive",
+    "industrial",
+    "supply chain",
+    "logistics",
+    "energy",
+    "aerospace",
+  ],
+  "Government & Education": ["government", "public sector", "policy", "education", "academia", "non-profit"],
+}
+
+const industryBucketKeys = Object.keys(INDUSTRY_BUCKETS)
 
 interface SpeakerDirectoryProps {
   initialSpeakers: Speaker[]
@@ -16,10 +91,12 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedIndustry, setSelectedIndustry] = useState("all")
 
-  const validInitialSpeakers = useMemo(
-    () => (Array.isArray(initialSpeakers) ? initialSpeakers.filter((s) => s && s.slug) : []),
-    [initialSpeakers],
-  )
+  const validInitialSpeakers = useMemo(() => {
+    if (!Array.isArray(initialSpeakers)) {
+      return []
+    }
+    return initialSpeakers.filter((s) => s && s.slug && s.name)
+  }, [initialSpeakers])
 
   const [filteredSpeakers, setFilteredSpeakers] = useState<Speaker[]>(validInitialSpeakers)
   const [displayedSpeakers, setDisplayedSpeakers] = useState<Speaker[]>(validInitialSpeakers.slice(0, 12))
@@ -27,31 +104,82 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(false)
 
-  const industries = useMemo(() => {
-    return Array.from(
-      new Set(
-        validInitialSpeakers.flatMap((speaker) => (Array.isArray(speaker?.industries) ? speaker.industries : [])),
-      ),
-    ).sort()
-  }, [validInitialSpeakers])
-
   useEffect(() => {
-    const applyFilters = async () => {
+    const applyFilters = () => {
       setIsLoading(true)
       setError(false)
+
       try {
-        const baseSpeakersData = await searchSpeakers(searchQuery)
-        // Ensure baseSpeakersData is an array and filter for valid slugs
-        const safeBaseSpeakers = Array.isArray(baseSpeakersData) ? baseSpeakersData.filter((s) => s && s.slug) : []
+        if (searchQuery.trim() === "" && selectedIndustry === "all") {
+          setFilteredSpeakers(validInitialSpeakers)
+          setDisplayedSpeakers(validInitialSpeakers.slice(0, 12))
+          setDisplayCount(12)
+          setIsLoading(false)
+          return
+        }
 
-        let finalFilteredSpeakers = safeBaseSpeakers
+        let searchResults: Speaker[] = []
 
+        if (searchQuery.trim()) {
+          const searchTerm = searchQuery.toLowerCase().trim()
+          const speakersWithScores = validInitialSpeakers.map((speaker) => {
+            let score = 0
+            const matchedFields: string[] = []
+
+            const checkAndScore = (field: string | string[] | undefined, weight: number, fieldName: string) => {
+              if (!field) return
+              let isMatch = false
+              if (typeof field === "string") {
+                if (field.toLowerCase().includes(searchTerm)) isMatch = true
+              } else if (Array.isArray(field)) {
+                if (field.some((item) => typeof item === "string" && item.toLowerCase().includes(searchTerm)))
+                  isMatch = true
+              }
+              if (isMatch) {
+                score += weight
+                if (!matchedFields.includes(fieldName)) {
+                  matchedFields.push(fieldName)
+                }
+              }
+            }
+
+            checkAndScore(speaker.expertise, 4, "expertise")
+            checkAndScore(speaker.industries, 3, "industries")
+            checkAndScore(speaker.programs, 2, "programs")
+            checkAndScore(speaker.name, 1, "name")
+            checkAndScore(speaker.title, 1, "title")
+            checkAndScore(speaker.bio, 1, "bio")
+            checkAndScore(speaker.location, 1, "location")
+            checkAndScore(speaker.tags, 1, "tags")
+
+            return { speaker, score, matchedFields }
+          })
+
+          searchResults = speakersWithScores
+            .filter((item) => item.score > 0)
+            .sort((a, b) => {
+              if (b.score !== a.score) return b.score - a.score
+              return a.speaker.name.localeCompare(b.speaker.name)
+            })
+            .map((item) => item.speaker)
+        } else {
+          searchResults = validInitialSpeakers
+        }
+
+        let finalFilteredSpeakers = searchResults
         if (selectedIndustry !== "all") {
-          finalFilteredSpeakers = safeBaseSpeakers.filter((speaker) =>
-            (Array.isArray(speaker?.industries) ? speaker.industries : []).some((industry) =>
-              industry.toLowerCase().includes(selectedIndustry.toLowerCase()),
-            ),
-          )
+          const keywords = INDUSTRY_BUCKETS[selectedIndustry]
+          if (keywords) {
+            finalFilteredSpeakers = searchResults.filter((speaker) => {
+              if (!speaker.industries) return false
+
+              const speakerIndustries = (
+                typeof speaker.industries === "string" ? speaker.industries.split(",") : speaker.industries
+              ).map((i) => i.trim().toLowerCase())
+
+              return speakerIndustries.some((ind) => keywords.some((kw) => ind.includes(kw)))
+            })
+          }
         }
 
         setFilteredSpeakers(finalFilteredSpeakers)
@@ -60,23 +188,15 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
       } catch (err) {
         console.error("Error applying filters in SpeakerDirectory:", err)
         setError(true)
-        setFilteredSpeakers([]) // Reset on error
-        setDisplayedSpeakers([])
+        setFilteredSpeakers(validInitialSpeakers)
+        setDisplayedSpeakers(validInitialSpeakers.slice(0, 12))
       } finally {
         setIsLoading(false)
       }
     }
 
-    // Initial load uses validInitialSpeakers, subsequent filters use searchSpeakers
-    if (searchQuery === "" && selectedIndustry === "all") {
-      setFilteredSpeakers(validInitialSpeakers)
-      setDisplayedSpeakers(validInitialSpeakers.slice(0, 12))
-      setDisplayCount(12)
-      setIsLoading(false)
-    } else {
-      applyFilters()
-    }
-  }, [searchQuery, selectedIndustry, validInitialSpeakers]) // validInitialSpeakers replaces initialSpeakers here
+    applyFilters()
+  }, [searchQuery, selectedIndustry, validInitialSpeakers])
 
   const handleLoadMore = () => {
     const newCount = displayCount + 12
@@ -119,9 +239,9 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Industries</SelectItem>
-                      {industries.map((industry) => (
-                        <SelectItem key={industry} value={industry.toLowerCase()}>
-                          {industry}
+                      {industryBucketKeys.map((bucket) => (
+                        <SelectItem key={bucket} value={bucket}>
+                          {bucket}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -139,13 +259,7 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {isLoading && <div className="text-center py-12 font-montserrat text-gray-600">Loading speakers...</div>}
-          {!isLoading && error && (
-            <div className="text-center py-12">
-              <p className="text-red-600 mb-4 font-montserrat">
-                An error occurred while loading speakers. Please try again.
-              </p>
-            </div>
-          )}
+
           {!isLoading && !error && filteredSpeakers.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-600 mb-4 font-montserrat">
@@ -156,19 +270,19 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
                   setSearchQuery("")
                   setSelectedIndustry("all")
                 }}
-                className="bg-[#1E68C6] hover:bg-[#5084C6] font-montserrat"
+                className="bg-blue-600 hover:bg-blue-700 font-montserrat"
               >
                 Clear Filters
               </Button>
             </div>
           )}
+
           {!isLoading && !error && filteredSpeakers.length > 0 && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {/* displayedSpeakers array is already filtered to ensure s and s.slug exist */}
                 {displayedSpeakers.map((speaker) => (
                   <SpeakerCard
-                    key={speaker.slug} // slug is guaranteed here
+                    key={speaker.slug}
                     speaker={speaker}
                     contactSource="speaker_directory"
                     maxTopicsToShow={3}
@@ -181,7 +295,7 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
                   <Button
                     onClick={handleLoadMore}
                     variant="outline"
-                    className="border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white font-montserrat"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-montserrat"
                   >
                     Load More Speakers ({filteredSpeakers.length - displayCount} remaining)
                   </Button>

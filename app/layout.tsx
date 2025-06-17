@@ -5,6 +5,7 @@ import "./globals.css"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import PipedriveChat from "@/components/pipedrive-chat"
+import { ScrollToTopProvider } from "@/components/scroll-to-top-provider"
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -73,7 +74,7 @@ export const metadata: Metadata = {
     apple: [{ url: "/hero-image.png", sizes: "180x180", type: "image/png" }],
     shortcut: "/hero-image.png",
   },
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -109,10 +110,12 @@ export default function RootLayout({
         />
       </head>
       <body className={montserrat.className}>
-        <Header />
-        {children}
-        <Footer />
-        <PipedriveChat />
+        <ScrollToTopProvider>
+          <Header />
+          {children}
+          <Footer />
+          <PipedriveChat />
+        </ScrollToTopProvider>
       </body>
     </html>
   )

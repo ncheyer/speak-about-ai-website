@@ -160,7 +160,8 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 1 }: Uni
               <div className="bg-blue-50 p-3 rounded-lg mt-1 border border-blue-200">
                 <div className="text-md font-bold text-[#1E68C6] font-montserrat">{fee}</div>
                 <div className="text-xs text-gray-600 font-montserrat mt-0.5">
-                  Contact us for availability and booking details. Fees may vary.
+                  Fee varies depending on format, location, and commitment. Contact us for a specific quote and to check
+                  availability.
                 </div>
               </div>
             )}
