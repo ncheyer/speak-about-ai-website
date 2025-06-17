@@ -1,3 +1,5 @@
+import { getBlogPostsFromContentful, getBlogPostBySlugFromContentful } from "./contentful"
+
 export type BlogPost = {
   id: string
   slug: string
@@ -12,9 +14,14 @@ export type BlogPost = {
   readTime: string
   tags: string[]
   featured?: boolean
+  // New fields from Contentful
+  category?: string
+  metaDescription?: string
+  seoKeywords?: string
 }
 
-export const blogPosts: BlogPost[] = [
+// Static fallback data (your existing blog posts)
+export const staticBlogPosts: BlogPost[] = [
   {
     id: "1",
     slug: "future-of-ai-keynote-speakers",
@@ -94,6 +101,9 @@ For event planners and organizations looking to book AI speakers who can address
     readTime: "6 min read",
     tags: ["AI Trends", "Keynote Speaking", "Event Planning"],
     featured: true,
+    category: "Featured",
+    metaDescription: "Discover the emerging trends and topics that will define AI keynote speaking in 2025 and beyond.",
+    seoKeywords: "AI keynote speakers, 2025 trends, artificial intelligence speaking",
   },
   {
     id: "2",
@@ -192,6 +202,10 @@ Remember that the most impressive technical credentials don't always translate t
     readTime: "8 min read",
     tags: ["Event Planning", "Speaker Selection", "AI Education"],
     featured: false,
+    category: "Guide",
+    metaDescription:
+      "A comprehensive guide to selecting an AI keynote speaker who will deliver value and impact for your specific audience.",
+    seoKeywords: "AI keynote speaker selection, event planning, speaker booking",
   },
   {
     id: "3",
@@ -304,21 +318,54 @@ In an era where AI systems are increasingly consequential, ethical consideration
     readTime: "7 min read",
     tags: ["AI Ethics", "Responsible AI", "Keynote Content"],
     featured: false,
+    category: "Ethics",
+    metaDescription:
+      "Explore the critical ethical considerations that should be included in any comprehensive AI keynote presentation.",
+    seoKeywords: "AI ethics, responsible AI, keynote topics, artificial intelligence ethics",
   },
 ]
 
-export function getBlogPosts() {
-  return blogPosts
+export async function getBlogPosts() {
+  try {
+    // Try to get posts from Contentful first
+    const contentfulPosts = await getBlogPostsFromContentful()
+
+    // If we have Contentful posts, use them; otherwise fall back to static data
+    if (contentfulPosts.length > 0) {
+      return contentfulPosts
+    }
+
+    return staticBlogPosts
+  } catch (error) {
+    console.error("Error fetching blog posts:", error)
+    // Fallback to static data if Contentful fails
+    return staticBlogPosts
+  }
 }
 
-export function getFeaturedBlogPosts() {
-  return blogPosts.filter((post) => post.featured)
+export async function getFeaturedBlogPosts() {
+  const posts = await getBlogPosts()
+  return posts.filter((post) => post.featured)
 }
 
-export function getBlogPostBySlug(slug: string) {
-  return blogPosts.find((post) => post.slug === slug)
+export async function getBlogPostBySlug(slug: string) {
+  try {
+    // Try Contentful first
+    const contentfulPost = await getBlogPostBySlugFromContentful(slug)
+    if (contentfulPost) {
+      return contentfulPost
+    }
+
+    // Fallback to static data
+    return staticBlogPosts.find((post) => post.slug === slug)
+  } catch (error) {
+    console.error("Error fetching blog post:", error)
+    // Fallback to static data
+    return staticBlogPosts.find((post) => post.slug === slug)
+  }
 }
 
-export function getRelatedBlogPosts(currentPostId: string, limit = 3) {
-  return blogPosts.filter((post) => post.id !== currentPostId).slice(0, limit)
+export async function getRelatedBlogPosts(currentPostId: string, limit = 3) {
+  const posts = await getBlogPosts()
+  return posts.filter((post) => post.id !== currentPostId).slice(0, limit)
 }

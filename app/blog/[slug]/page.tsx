@@ -9,7 +9,7 @@ interface BlogPostPageProps {
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
-  const post = getBlogPostBySlug(params.slug)
+  const post = await getBlogPostBySlug(params.slug)
 
   if (!post) {
     return {
@@ -20,18 +20,41 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
 
   return {
     title: `${post.title} | Speak About AI Blog`,
-    description: post.excerpt,
+    description: post.metaDescription || post.excerpt,
+    keywords: post.seoKeywords || post.tags.join(", "),
+    openGraph: {
+      title: post.title,
+      description: post.metaDescription || post.excerpt,
+      images: [
+        {
+          url: post.coverImage,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+      type: "article",
+      publishedTime: post.date,
+      authors: [post.author],
+      tags: post.tags,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.metaDescription || post.excerpt,
+      images: [post.coverImage],
+    },
   }
 }
 
-export default function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = getBlogPostBySlug(params.slug)
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const post = await getBlogPostBySlug(params.slug)
 
   if (!post) {
     notFound()
   }
 
-  const relatedPosts = getRelatedBlogPosts(post.id, 3)
+  const relatedPosts = await getRelatedBlogPosts(post.id, 3)
 
   return (
     <main>

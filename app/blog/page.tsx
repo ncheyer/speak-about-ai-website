@@ -8,8 +8,8 @@ export const metadata = {
     "Expert perspectives on artificial intelligence, keynote speaking, and event planning from the world's only AI-exclusive speaker bureau.",
 }
 
-export default function BlogPage() {
-  const posts = getBlogPosts()
+export default async function BlogPage() {
+  const posts = await getBlogPosts()
 
   return (
     <main>
