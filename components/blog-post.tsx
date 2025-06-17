@@ -30,23 +30,38 @@ const YouTubeEmbed = ({ videoId, title = "YouTube video" }: { videoId: string; t
 )
 
 export function BlogPostComponent({ post, relatedPosts }: BlogPostProps) {
+  // Let's see what we're actually getting from Contentful
+  console.log("=== DEBUG: Full post object ===")
+  console.log("Post:", post)
+  console.log("Post content type:", typeof post.content)
+  console.log("Post content length:", post.content?.length)
+  console.log("Post content preview:", post.content?.substring(0, 500))
+  console.log("================================")
+
   // Function to preprocess content before markdown conversion
   const preprocessContent = (content: string): string => {
-    console.log("Original content:", content) // Debug log
+    console.log("=== PREPROCESSING DEBUG ===")
+    console.log("Input content:", content)
+    console.log('Content includes "iframe":', content.includes("iframe"))
+    console.log('Content includes "youtube":', content.includes("youtube"))
 
     // Target the exact format from your content:
     // <iframe width="560" height="315" src="https://www.youtube.com/embed/A5sqpI98pJo" frameborder="0" allowfullscreen></iframe>
     const youtubePattern = /<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([A-Za-z0-9_-]+)"[^>]*><\/iframe>/gi
 
     let processedContent = content.replace(youtubePattern, (match, videoId) => {
-      console.log("YouTube iframe matched:", match, "Video ID:", videoId) // Debug log
+      console.log("✅ YouTube iframe matched!", { match, videoId })
       return `\n\n[YOUTUBE:${videoId}]\n\n`
     })
+
+    console.log("After YouTube replacement:", processedContent)
+    console.log("Content changed:", content !== processedContent)
 
     // Ensure proper paragraph spacing
     processedContent = processedContent.replace(/\n\n/g, "\n\n\n")
 
-    console.log("Processed content:", processedContent) // Debug log
+    console.log("Final processed content:", processedContent)
+    console.log("=== END PREPROCESSING ===")
     return processedContent
   }
 
