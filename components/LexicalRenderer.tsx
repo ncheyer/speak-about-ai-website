@@ -6,32 +6,37 @@ interface LexicalNode {
   type: string
   children?: LexicalNode[]
   text?: string
-  tag?: string // e.g., 'h1', 'h2', 'p'
-  format?: string | number // For text formatting (bold, italic, etc.)
-  url?: string // For link nodes
+  tag?: string
+  format?: string | number
+  url?: string // For link nodes AND potentially for iframe src if not nested
   fields?: {
-    // For Payload link fields
     url?: string
     linkType?: "internal" | "custom"
   }
-  // Image node properties from Payload's 'upload' field type
   value?: {
     id: string
-    url?: string // URL of the image
+    url?: string
     filename?: string
     mimeType?: string
     filesize?: number
     width?: number
     height?: number
-    alt?: string // Alt text from Payload media library
-    // You might have other custom fields in your 'upload' collection
+    alt?: string
   }
-  relationTo?: string // Should be your media collection slug, e.g., 'media'
-  // Direct image properties (less common for Payload uploads but good for generic image nodes)
-  src?: string
-  altText?: string // Payload often uses altText for direct image nodes if not from 'upload'
-  width?: number
-  height?: number
+  relationTo?: string
+  src?: string // For direct image src OR iframe src
+  altText?: string
+  width?: string | number // Can be string (e.g., "100%") or number
+  height?: string | number // Can be string (e.g., "auto") or number
+
+  // iFrame specific properties that Payload might add
+  source?: string // Another possible place for iframe src
+  frameBorder?: string | number
+  allowFullScreen?: boolean
+  // Payload's iframe plugin might store URL in a specific field
+  // For example, if you use a custom block or the @payloadcms/plugin-lexical-html
+  // you might have a field like `html` or `embedUrl`.
+  // For now, we'll assume `src` or `url` or `source` might contain the iframe URL.
 }
 
 interface LexicalContent {
@@ -43,6 +48,7 @@ interface LexicalContent {
 const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode => {
   // console.log("Rendering node:", node.type, node); // Temporary debug log
 
+  // ... (other node handlers: text, paragraph, heading, link, image, list, quote remain the same) ...
   // Handle text nodes
   if (node.type === "text" && typeof node.text === "string") {
     const style: React.CSSProperties = {}
@@ -50,7 +56,6 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
       if (node.format & 1) style.fontWeight = "bold"
       if (node.format & 2) style.fontStyle = "italic"
       if (node.format & 8) style.textDecoration = "underline"
-      // Add more formats like strikethrough, code, etc. if needed
     }
     return (
       <span key={index} style={style}>
@@ -63,6 +68,10 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
   if (node.type === "paragraph") {
     if (!node.children || node.children.every((child) => child.type === "text" && !child.text?.trim())) {
       return null
+    }
+    // Check if paragraph only contains an iframe, if so, don't wrap with <p>
+    if (node.children?.length === 1 && node.children[0].type === "iframe") {
+      return renderLexicalNode(node.children[0], 0)
     }
     return (
       <p key={index} className="mb-4 leading-relaxed">
@@ -102,9 +111,8 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
       </a>
     )
   }
-  // Handle generic link nodes (if not using Payload's specific 'fields' structure)
+  // Handle generic link nodes
   if (node.type === "link" && node.url) {
-    // A simple heuristic to check if a URL is external
     const isExternal = /^(https?:|mailto:|tel:)/.test(node.url)
     return (
       <a
@@ -119,17 +127,14 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
     )
   }
 
-  // Handle image nodes (typically 'upload' type from Payload)
+  // Handle image nodes
   if (node.type === "upload" && node.relationTo === "media" && node.value) {
-    // Assuming 'media' is your Payload media collection slug
     const imageUrl = node.value.url
-    const imageAlt = node.value.alt || "Blog image" // Use alt text from Payload media
+    const imageAlt = node.value.alt || "Blog image"
     const imageWidth = node.value.width
     const imageHeight = node.value.height
 
     if (!imageUrl) return null
-
-    // Use Next.js Image component for optimization
     return (
       <div key={index} className="my-6 relative">
         {imageWidth && imageHeight ? (
@@ -139,10 +144,8 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
             width={imageWidth}
             height={imageHeight}
             className="max-w-full h-auto rounded-lg shadow-md object-contain"
-            // Consider adding sizes prop for responsiveness if layout is complex
           />
         ) : (
-          // Fallback for images without width/height (less optimal)
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUrl || "/placeholder.svg"}
@@ -151,6 +154,53 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
             loading="lazy"
           />
         )}
+      </div>
+    )
+  }
+
+  // Handle iframe nodes (e.g., YouTube embeds)
+  if (node.type === "iframe") {
+    const iframeSrc = node.src || node.url || node.source // Check common properties for src
+    if (!iframeSrc) {
+      // console.warn("iframe node is missing src/url/source:", node);
+      return null
+    }
+
+    // Basic validation for YouTube embed URLs
+    let finalSrc = iframeSrc
+    if (iframeSrc.includes("youtube.com/watch?v=")) {
+      finalSrc = iframeSrc.replace("watch?v=", "embed/")
+    } else if (iframeSrc.includes("youtu.be/")) {
+      finalSrc = iframeSrc.replace("youtu.be/", "www.youtube.com/embed/")
+    }
+    // Add more transformations if needed for other video platforms
+
+    // Ensure src is for embedding
+    if (!finalSrc.includes("/embed/")) {
+      // console.warn("iframe src does not look like an embed URL:", finalSrc);
+      // Optionally, try to construct an embed URL if it's a direct video page
+    }
+
+    const aspectRatio = "16/9" // Default to 16:9, common for videos
+    const width = typeof node.width === "string" ? node.width : "100%" // Default to 100% width
+    // Height is often controlled by aspect ratio for responsive embeds
+
+    return (
+      <div
+        key={index}
+        className="my-6 relative w-full overflow-hidden rounded-lg shadow-md"
+        style={{ paddingBottom: `calc(100% / (${aspectRatio}))` }} // Aspect ratio padding trick
+      >
+        <iframe
+          src={finalSrc}
+          width={width}
+          // height is controlled by aspect ratio wrapper
+          className="absolute top-0 left-0 w-full h-full"
+          frameBorder={node.frameBorder || "0"}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen={node.allowFullScreen !== undefined ? node.allowFullScreen : true}
+          title={node.altText || "Embedded content"} // Use altText or a generic title
+        />
       </div>
     )
   }
@@ -180,7 +230,6 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
     )
   }
 
-  // Fallback for unknown node types
   return null
 }
 
@@ -189,6 +238,7 @@ interface LexicalRendererProps {
 }
 
 export const LexicalRenderer: React.FC<LexicalRendererProps> = ({ content }) => {
+  // ... (existing logic for string content and root object handling remains the same) ...
   if (typeof content === "string") {
     return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content }} />
   }
