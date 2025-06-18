@@ -4,15 +4,15 @@ export default function TeamValues() {
   const values = [
     {
       icon: Users,
-      title: "Speaker-First Approach",
+      title: "Speaker & Client First Approach",
       description:
-        "We prioritize our speakers' needs and preferences, ensuring they're matched with events that align with their expertise and values.",
+        "We prioritize both our speakers' needs and our clients' event goals, ensuring perfect alignment that creates exceptional value for all parties involved.",
     },
     {
       icon: Star,
       title: "AI Expertise",
       description:
-        "Our team stays at the cutting edge of AI developments, allowing us to provide informed guidance to both speakers and clients.",
+        "Our team stays at the cutting edge of AI developments and actively uses AI in many of our own workflows, allowing us to provide informed guidance to both speakers and clients.",
     },
     {
       icon: Heart,

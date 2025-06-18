@@ -99,7 +99,7 @@ const ServiceOfferings = () => {
         </div>
 
         {/* SprintAI Featured Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 lg:p-12">
+        <div className="mt-16 bg-white rounded-2xl shadow-xl p-8 lg:p-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
               <div className="flex items-center mb-4">
