@@ -9,14 +9,27 @@ export default async function DebugPayloadPage() {
   let directData = null
   let directError = null
   try {
-    const directTest = await fetch(`${process.env.NEXT_PUBLIC_PAYLOAD_URL}/api/blog-posts?limit=5&depth=1`)
+    const directTest = await fetch(`${process.env.NEXT_PUBLIC_PAYLOAD_URL}/api/blog-posts?limit=5&depth=1`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      cache: "no-store", // Force fresh requests
+    })
+
+    console.log("🔥 Direct API test response status:", directTest.status)
+    console.log("🔥 Direct API test response headers:", Object.fromEntries(directTest.headers.entries()))
+
     if (!directTest.ok) {
-      throw new Error(`Direct API call failed: ${directTest.status} ${directTest.statusText}`)
+      const errorText = await directTest.text()
+      console.error("🔥 Direct API test error response text:", errorText)
+      throw new Error(`Direct API call failed: ${directTest.status} ${errorText || directTest.statusText}`)
     }
     directData = await directTest.json()
     console.log("🔥 Direct API test data:", directData)
   } catch (error: any) {
-    console.error("🔥 Direct API test error:", error.message)
+    console.error("🔥 Direct API test fetch error:", error.message)
     directError = error.message
   }
 
