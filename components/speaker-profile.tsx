@@ -24,14 +24,23 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
   // Use speaker videos or empty array (no samples)
   const videos = speaker.videos || []
 
-  // Log for debugging
-  // Enhanced logging for debugging
-  console.log("Speaker profile data:", {
+  // Enhanced logging for debugging video thumbnails
+  console.log("🎥 Video Debug Info:", {
     name: speaker.name,
     hasVideos: Boolean(speaker.videos),
     videosCount: speaker.videos?.length || 0,
     videosData: speaker.videos || "No videos data",
     rawVideosData: JSON.stringify(speaker.videos),
+    // Log each video's thumbnail specifically
+    videoThumbnails:
+      speaker.videos?.map((video, index) => ({
+        index,
+        id: video.id,
+        title: video.title,
+        thumbnail: video.thumbnail,
+        hasThumbnail: Boolean(video.thumbnail),
+        thumbnailLength: video.thumbnail?.length || 0,
+      })) || [],
   })
 
   // Sample testimonials data if none provided
@@ -302,39 +311,60 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Videos</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {videos.map((video) => (
-                      <a
-                        key={video.id}
-                        href={video.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group block"
-                      >
-                        <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
-                          <div className="aspect-video bg-gray-100 relative">
-                            <img
-                              src={video.thumbnail || "/placeholder.svg"}
-                              alt={video.title}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
-                              <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                <Play className="w-8 h-8 text-[#1E68C6] ml-1" />
+                    {videos.map((video, index) => {
+                      // Log each video as it's being rendered
+                      console.log(`🎬 Rendering video ${index + 1}:`, {
+                        id: video.id,
+                        title: video.title,
+                        thumbnail: video.thumbnail,
+                        hasThumbnail: Boolean(video.thumbnail),
+                        fallbackWillBeUsed: !video.thumbnail,
+                      })
+
+                      return (
+                        <a
+                          key={video.id}
+                          href={video.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group block"
+                        >
+                          <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
+                            <div className="aspect-video bg-gray-100 relative">
+                              <img
+                                src={video.thumbnail || "/placeholder.svg"}
+                                alt={video.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  console.error(`❌ Failed to load thumbnail for "${video.title}":`, {
+                                    originalSrc: video.thumbnail,
+                                    fallbackSrc: "/placeholder.svg",
+                                    error: e,
+                                  })
+                                }}
+                                onLoad={() => {
+                                  console.log(`✅ Successfully loaded thumbnail for "${video.title}"`)
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
+                                <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                  <Play className="w-8 h-8 text-[#1E68C6] ml-1" />
+                                </div>
+                              </div>
+                              <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                                {video.duration}
                               </div>
                             </div>
-                            <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
-                              {video.duration}
+                            <div className="p-4 bg-white">
+                              <h3 className="font-semibold text-gray-900 group-hover:text-[#1E68C6] transition-colors duration-300 font-montserrat">
+                                {video.title}
+                              </h3>
+                              <p className="text-sm text-gray-500 mt-1 font-montserrat">{video.source}</p>
                             </div>
                           </div>
-                          <div className="p-4 bg-white">
-                            <h3 className="font-semibold text-gray-900 group-hover:text-[#1E68C6] transition-colors duration-300 font-montserrat">
-                              {video.title}
-                            </h3>
-                            <p className="text-sm text-gray-500 mt-1 font-montserrat">{video.source}</p>
-                          </div>
-                        </div>
-                      </a>
-                    ))}
+                        </a>
+                      )
+                    })}
                   </div>
                 </div>
 
