@@ -24,25 +24,6 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
   // Use speaker videos or empty array (no samples)
   const videos = speaker.videos || []
 
-  // Enhanced logging for debugging video thumbnails
-  console.log("🎥 Video Debug Info:", {
-    name: speaker.name,
-    hasVideos: Boolean(speaker.videos),
-    videosCount: speaker.videos?.length || 0,
-    videosData: speaker.videos || "No videos data",
-    rawVideosData: JSON.stringify(speaker.videos),
-    // Log each video's thumbnail specifically
-    videoThumbnails:
-      speaker.videos?.map((video, index) => ({
-        index,
-        id: video.id,
-        title: video.title,
-        thumbnail: video.thumbnail,
-        hasThumbnail: Boolean(video.thumbnail),
-        thumbnailLength: video.thumbnail?.length || 0,
-      })) || [],
-  })
-
   // Sample testimonials data if none provided
   const testimonials = speaker.testimonials || [
     {
@@ -312,15 +293,6 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                   <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Videos</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {videos.map((video, index) => {
-                      // Log each video as it's being rendered
-                      console.log(`🎬 Rendering video ${index + 1}:`, {
-                        id: video.id,
-                        title: video.title,
-                        thumbnail: video.thumbnail,
-                        hasThumbnail: Boolean(video.thumbnail),
-                        fallbackWillBeUsed: !video.thumbnail,
-                      })
-
                       return (
                         <a
                           key={video.id}
@@ -335,16 +307,6 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                                 src={video.thumbnail || "/placeholder.svg"}
                                 alt={video.title}
                                 className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  console.error(`❌ Failed to load thumbnail for "${video.title}":`, {
-                                    originalSrc: video.thumbnail,
-                                    fallbackSrc: "/placeholder.svg",
-                                    error: e,
-                                  })
-                                }}
-                                onLoad={() => {
-                                  console.log(`✅ Successfully loaded thumbnail for "${video.title}"`)
-                                }}
                               />
                               <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
                                 <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">

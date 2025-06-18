@@ -138,6 +138,18 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
           return []
         }
         const originalString = String(columnData).trim()
+
+        // Debug logging for Adam Cheyer specifically
+        if (name.toLowerCase().includes("adam cheyer") && columnName === "VIDEOS") {
+          console.log("🔍 Adam Cheyer Video Processing Debug:", {
+            originalLength: originalString.length,
+            originalSample: originalString.substring(0, 200) + "...",
+            startsWithBracket: originalString.startsWith("["),
+            startsWithQuoteBracket: originalString.startsWith('"['),
+            hasDoubleQuotes: originalString.includes('""'),
+          })
+        }
+
         if (
           originalString.length > 0 &&
           !originalString.startsWith("[") &&
@@ -150,21 +162,52 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
         if (originalString === "[]" || originalString === "{}" || originalString === '""') {
           return []
         }
+
+        // Try direct parsing first
         try {
           const parsed = JSON.parse(originalString)
+          if (name.toLowerCase().includes("adam cheyer") && columnName === "VIDEOS") {
+            console.log("✅ Direct parse successful for Adam Cheyer:", {
+              parsedCount: Array.isArray(parsed) ? parsed.length : 1,
+              parsedData: parsed,
+            })
+          }
           if (Array.isArray(parsed)) return parsed
           if (typeof parsed === "object" && parsed !== null) return [parsed]
           return []
         } catch (directParseError) {
-          /* continue */
+          if (name.toLowerCase().includes("adam cheyer") && columnName === "VIDEOS") {
+            console.log("❌ Direct parse failed for Adam Cheyer:", directParseError.message)
+          }
         }
+
+        // Try sanitized parsing
         try {
           const sanitized = sanitizePotentiallyCorruptJsonString(originalString)
+          if (name.toLowerCase().includes("adam cheyer") && columnName === "VIDEOS") {
+            console.log("🧹 Sanitized string for Adam Cheyer:", {
+              sanitizedLength: sanitized.length,
+              sanitizedSample: sanitized.substring(0, 200) + "...",
+              originalVsSanitized:
+                originalString.substring(0, 100) + "..." + " VS " + sanitized.substring(0, 100) + "...",
+            })
+          }
+
           const parsed = JSON.parse(sanitized)
+          if (name.toLowerCase().includes("adam cheyer") && columnName === "VIDEOS") {
+            console.log("✅ Sanitized parse successful for Adam Cheyer:", {
+              parsedCount: Array.isArray(parsed) ? parsed.length : 1,
+              parsedData: parsed,
+            })
+          }
           if (Array.isArray(parsed)) return parsed
           if (typeof parsed === "object" && parsed !== null) return [parsed]
           return []
         } catch (sanitizedParseError) {
+          if (name.toLowerCase().includes("adam cheyer") && columnName === "VIDEOS") {
+            console.log("❌ Sanitized parse also failed for Adam Cheyer:", sanitizedParseError.message)
+          }
+
           try {
             const objectMatches = originalString.match(/\{[^{}]*\}/g)
             if (objectMatches && objectMatches.length > 0) {
@@ -193,19 +236,6 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
       }
       const videos = processJsonColumn(speakerData.videos, "VIDEOS")
       const testimonials = processJsonColumn(speakerData.testimonials, "TESTIMONIALS")
-
-      // Debug logging for Adam Cheyer specifically
-      if (name.toLowerCase().includes("adam cheyer")) {
-        console.log("🔍 Adam Cheyer Debug Info:", {
-          environment: process.env.NODE_ENV,
-          hasApiKey: !!API_KEY,
-          hasSpreadsheetId: !!SPREADSHEET_ID,
-          rawVideosData: speakerData.videos,
-          parsedVideosCount: videos.length,
-          parsedVideos: videos,
-          timestamp: new Date().toISOString(),
-        })
-      }
 
       try {
         return {
@@ -340,13 +370,6 @@ let lastFetchTime: number | null = null
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 async function fetchAllSpeakersFromSheet(): Promise<Speaker[]> {
-  console.log("🔧 Fetch attempt:", {
-    hasApiKey: !!API_KEY,
-    hasSpreadsheetId: !!SPREADSHEET_ID,
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString(),
-  })
-
   if (!SPREADSHEET_ID || !API_KEY) {
     console.error("Google Sheets API Key or Spreadsheet ID is not configured. Falling back to local data.")
     return localSpeakers
@@ -368,14 +391,6 @@ async function fetchAllSpeakersFromSheet(): Promise<Speaker[]> {
       return localSpeakers
     }
     const mappedSpeakers = mapGoogleSheetDataToSpeakers(values)
-
-    console.log("✅ Successfully fetched from Google Sheets:", {
-      totalSpeakers: mappedSpeakers.length,
-      adamCheyerFound: mappedSpeakers.some((s) => s.name.toLowerCase().includes("adam cheyer")),
-      environment: process.env.NODE_ENV,
-      timestamp: new Date().toISOString(),
-    })
-
     if (mappedSpeakers.length === 0 && values.length > 1) {
       return localSpeakers
     }
