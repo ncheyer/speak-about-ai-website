@@ -1,7 +1,7 @@
 // components/LexicalRenderer.tsx
 import type React from "react"
-import NextImage from "next/image" // Import Next.js Image component
-import { getImageUrl } from "@/lib/utils" // Import the helper function
+import NextImage from "next/image"
+import { getImageUrl } from "@/lib/utils"
 
 interface LexicalNode {
   type: string
@@ -9,7 +9,7 @@ interface LexicalNode {
   text?: string
   tag?: string
   format?: string | number
-  url?: string // For link nodes AND potentially for iframe src if not nested
+  url?: string
   fields?: {
     url?: string
     linkType?: "internal" | "custom"
@@ -20,24 +20,18 @@ interface LexicalNode {
     filename?: string
     mimeType?: string
     filesize?: number
-    width?: number
-    height?: number
+    width?: number // Expected to be a number
+    height?: number // Expected to be a number
     alt?: string
   }
   relationTo?: string
-  src?: string // For direct image src OR iframe src
+  src?: string
   altText?: string
-  width?: string | number // Can be string (e.g., "100%") or number
-  height?: string | number // Can be string (e.g., "auto") or number
-
-  // iFrame specific properties that Payload might add
-  source?: string // Another possible place for iframe src
+  width?: string | number
+  height?: string | number
+  source?: string
   frameBorder?: string | number
   allowFullScreen?: boolean
-  // Payload's iframe plugin might store URL in a specific field
-  // For example, if you use a custom block or the @payloadcms/plugin-lexical-html
-  // you might have a field like `html` or `embedUrl`.
-  // For now, we'll assume `src` or `url` or `source` might contain the iframe URL.
 }
 
 interface LexicalContent {
@@ -128,36 +122,57 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
     )
   }
 
-  // Handle image nodes
+  // Handle image nodes - OPTIMIZED VERSION
   if (node.type === "upload" && node.relationTo === "media" && node.value) {
     const rawImageUrl = node.value.url
-    const imageUrl = getImageUrl(rawImageUrl) // Use the helper function
+    const imageUrl = getImageUrl(rawImageUrl)
     const imageAlt = node.value.alt || "Blog image"
-    const imageWidth = node.value.width
-    const imageHeight = node.value.height
+    const imageWidth = typeof node.value.width === "number" ? node.value.width : undefined
+    const imageHeight = typeof node.value.height === "number" ? node.value.height : undefined
 
     if (!imageUrl) return null
-    return (
-      <div key={index} className="my-6 relative">
-        {imageWidth && imageHeight ? (
+
+    if (imageWidth && imageHeight) {
+      return (
+        <div
+          key={index}
+          className="my-6 dynamic-image-container" // Class for CSS styling
+          style={
+            {
+              // Set CSS variable for the max-width logic in global CSS
+              "--original-width": `${imageWidth}px`,
+            } as React.CSSProperties
+          } // Type assertion for CSS custom properties
+        >
           <NextImage
             src={imageUrl}
             alt={imageAlt}
-            width={imageWidth}
-            height={imageHeight}
-            className="max-w-full h-auto rounded-lg shadow-md object-contain"
+            width={imageWidth} // Intrinsic width of the image
+            height={imageHeight} // Intrinsic height of the image
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px" // Responsive sizing hints
+            priority={index < 2} // Prioritize loading for the first two images
+            className="w-full h-auto rounded-lg shadow-md object-contain" // Styling for the image itself
           />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
+        </div>
+      )
+    } else {
+      // Fallback for images without width/height (uses regular <img> tag)
+      // This part remains, as NextImage requires width and height.
+      return (
+        <div key={index} className="my-6 text-center">
+          {" "}
+          {/* Added text-center for mx-auto effect */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl || "/placeholder.svg"}
             alt={imageAlt}
-            className="max-w-full h-auto rounded-lg shadow-md"
+            className="max-w-full h-auto rounded-lg shadow-md inline-block" // inline-block for centering with text-center
+            style={{ maxWidth: "800px" }} // Cap width for non-NextImage fallback
             loading="lazy"
           />
-        )}
-      </div>
-    )
+        </div>
+      )
+    }
   }
 
   // Handle iframe nodes (e.g., YouTube embeds)
