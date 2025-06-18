@@ -6,6 +6,20 @@ export default async function DebugPayloadPage() {
   const publishedPosts = await getBlogPosts(50)
   const allPosts = await getBlogPostsFromPayload(true) // Include unpublished
 
+  let directData = null
+  let directError = null
+  try {
+    const directTest = await fetch(`${process.env.NEXT_PUBLIC_PAYLOAD_URL}/api/blog-posts?limit=5&depth=1`)
+    if (!directTest.ok) {
+      throw new Error(`Direct API call failed: ${directTest.status} ${directTest.statusText}`)
+    }
+    directData = await directTest.json()
+    console.log("🔥 Direct API test data:", directData)
+  } catch (error: any) {
+    console.error("🔥 Direct API test error:", error.message)
+    directError = error.message
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Payload Debug Page</h1>
@@ -20,7 +34,24 @@ export default async function DebugPayloadPage() {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Published Posts ({publishedPosts.length})</h2>
+        <h2 className="text-xl font-semibold mb-4">Direct API Call Test</h2>
+        {directError ? (
+          <div className="bg-red-100 p-4 rounded">
+            <p className="text-red-700 font-semibold">Error:</p>
+            <pre className="text-sm text-red-600 whitespace-pre-wrap">{directError}</pre>
+          </div>
+        ) : directData ? (
+          <div className="bg-green-100 p-4 rounded">
+            <p className="text-green-700 font-semibold">Success! Raw Data:</p>
+            <pre className="text-sm text-green-600 whitespace-pre-wrap">{JSON.stringify(directData, null, 2)}</pre>
+          </div>
+        ) : (
+          <p>Loading direct API test...</p>
+        )}
+      </div>
+
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Published Posts (via getBlogPosts - {publishedPosts.length})</h2>
         {publishedPosts.length > 0 ? (
           <div className="space-y-4">
             {publishedPosts.map((post) => (
@@ -33,12 +64,12 @@ export default async function DebugPayloadPage() {
             ))}
           </div>
         ) : (
-          <p className="text-red-600">No published posts found</p>
+          <p className="text-red-600">No published posts found via getBlogPosts</p>
         )}
       </div>
 
       <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">All Posts (Including Drafts) ({allPosts.length})</h2>
+        <h2 className="text-xl font-semibold mb-4">All Posts (via getBlogPostsFromPayload - {allPosts.length})</h2>
         {allPosts.length > 0 ? (
           <div className="space-y-4">
             {allPosts.map((post) => (
@@ -51,7 +82,7 @@ export default async function DebugPayloadPage() {
             ))}
           </div>
         ) : (
-          <p className="text-red-600">No posts found at all</p>
+          <p className="text-red-600">No posts found at all via getBlogPostsFromPayload</p>
         )}
       </div>
     </div>

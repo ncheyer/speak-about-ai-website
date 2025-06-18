@@ -27,7 +27,7 @@ export interface BlogPost {
 
 async function fetchPayloadAPI(query: string, options: RequestInit = {}) {
   const fullUrl = `${PAYLOAD_URL}/api/${query}`
-  console.log("🔍 Fetching from Payload:", fullUrl) // Uncommented for debugging
+  console.log("🔍 Fetching from Payload:", fullUrl)
 
   try {
     const res = await fetch(fullUrl, {
@@ -39,7 +39,7 @@ async function fetchPayloadAPI(query: string, options: RequestInit = {}) {
       next: { revalidate: 60 }, // Revalidate every 60 seconds
     })
 
-    console.log("📡 Payload API Response Status:", res.status, res.statusText) // Uncommented
+    console.log("📡 Payload API Response Status:", res.status, res.statusText)
 
     if (!res.ok) {
       console.error(`❌ Error fetching from Payload: ${res.status} ${res.statusText}`)
@@ -49,7 +49,7 @@ async function fetchPayloadAPI(query: string, options: RequestInit = {}) {
     }
 
     const data = await res.json()
-    console.log("✅ Payload API Response:", data) // Uncommented
+    console.log("✅ Payload API Response:", data)
     return data
   } catch (error) {
     console.error("🚨 Network error fetching from Payload:", error)
@@ -59,67 +59,70 @@ async function fetchPayloadAPI(query: string, options: RequestInit = {}) {
 
 // Get all published blog posts
 export async function getBlogPosts(limit = 10): Promise<BlogPost[]> {
-  console.log("🔄 getBlogPosts called with limit:", limit) // Uncommented
+  console.log("🚀 STARTING getBlogPosts - This should definitely show") // Added
+  console.log("🌐 PAYLOAD_URL is:", PAYLOAD_URL) // Added
+
+  console.log("🔄 getBlogPosts called with limit:", limit)
   const data = await fetchPayloadAPI(
     `blog-posts?where[status][equals]=published&limit=${limit}&depth=2&sort=-publishedDate`,
   )
 
   const posts = data?.docs || []
-  console.log("📝 Found blog posts:", posts.length) // Uncommented
-  console.log("📋 Posts data:", posts) // Uncommented
+  console.log("📝 Found blog posts:", posts.length)
+  console.log("📋 Posts data:", posts)
 
   return posts
 }
 
 // Get a single blog post by slug
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
-  // console.log("🔄 getBlogPost called with slug:", slug) // Keep commented
+  // console.log("🔄 getBlogPost called with slug:", slug)
   const data = await fetchPayloadAPI(`blog-posts?where[slug][equals]=${slug}&depth=2`)
   const post = data?.docs?.[0] || null
-  // console.log("📄 Found post:", post ? post.title : "No post found") // Keep commented
+  // console.log("📄 Found post:", post ? post.title : "No post found")
   return post
 }
 
 // Get featured posts
 export async function getFeaturedPosts(): Promise<BlogPost[]> {
-  // console.log("🔄 getFeaturedPosts called") // Keep commented
+  // console.log("🔄 getFeaturedPosts called")
   const data = await fetchPayloadAPI(
     `blog-posts?where[featured][equals]=true&where[status][equals]=published&depth=2&sort=-publishedDate`,
   )
   const posts = data?.docs || []
-  // console.log("⭐ Found featured posts:", posts.length) // Keep commented
+  // console.log("⭐ Found featured posts:", posts.length)
   return posts
 }
 
 // Get posts by category slug
 export async function getPostsByCategory(categorySlug: string): Promise<BlogPost[]> {
-  // console.log("🔄 getPostsByCategory called with category:", categorySlug) // Keep commented
+  // console.log("🔄 getPostsByCategory called with category:", categorySlug)
   const data = await fetchPayloadAPI(
     `blog-posts?where[categories.slug][equals]=${categorySlug}&where[status][equals]=published&depth=2&sort=-publishedDate`,
   )
   const posts = data?.docs || []
-  // console.log("🏷️ Found posts in category:", posts.length) // Keep commented
+  // console.log("🏷️ Found posts in category:", posts.length)
   return posts
 }
 
 // Legacy function names for backward compatibility
 export async function getBlogPostsFromPayload(includeUnpublished = false): Promise<BlogPost[]> {
-  // console.log("🔄 getBlogPostsFromPayload called, includeUnpublished:", includeUnpublished) // Keep commented
+  // console.log("🔄 getBlogPostsFromPayload called, includeUnpublished:", includeUnpublished)
   if (includeUnpublished) {
     const data = await fetchPayloadAPI(`blog-posts?depth=2&sort=-publishedDate`)
     const posts = data?.docs || []
-    // console.log("📝 Found all posts (including unpublished):", posts.length) // Keep commented
+    // console.log("📝 Found all posts (including unpublished):", posts.length)
     return posts
   }
   return getBlogPosts()
 }
 
 export async function getBlogPostBySlugFromPayload(slug: string, includeUnpublished = false): Promise<BlogPost | null> {
-  // console.log("🔄 getBlogPostBySlugFromPayload called, slug:", slug, "includeUnpublished:", includeUnpublished) // Keep commented
+  // console.log("🔄 getBlogPostBySlugFromPayload called, slug:", slug, "includeUnpublished:", includeUnpublished)
   if (includeUnpublished) {
     const data = await fetchPayloadAPI(`blog-posts?where[slug][equals]=${slug}&depth=2`)
     const post = data?.docs?.[0] || null
-    // console.log("📄 Found post (including unpublished):", post ? post.title : "No post found") // Keep commented
+    // console.log("📄 Found post (including unpublished):", post ? post.title : "No post found")
     return post
   }
   return getBlogPost(slug)
@@ -130,11 +133,11 @@ export async function getFeaturedBlogPostsFromPayload(): Promise<BlogPost[]> {
 }
 
 export async function getRelatedBlogPostsFromPayload(currentPostId: string, limit = 3): Promise<BlogPost[]> {
-  // console.log("🔄 getRelatedBlogPostsFromPayload called, currentPostId:", currentPostId, "limit:", limit) // Keep commented
+  // console.log("🔄 getRelatedBlogPostsFromPayload called, currentPostId:", currentPostId, "limit:", limit)
   const data = await fetchPayloadAPI(
     `blog-posts?where[id][not_equals]=${currentPostId}&where[status][equals]=published&depth=2&sort=-publishedDate&limit=${limit}`,
   )
   const posts = data?.docs || []
-  // console.log("🔗 Found related posts:", posts.length) // Keep commented
+  // console.log("🔗 Found related posts:", posts.length)
   return posts
 }
