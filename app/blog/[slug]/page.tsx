@@ -1,7 +1,8 @@
 import { getBlogPost, getBlogPosts } from "@/lib/payload-blog"
 import Image from "next/image"
 import { notFound } from "next/navigation"
-import LexicalRenderer from "@/components/LexicalRenderer" // Import the new renderer
+import LexicalRenderer from "@/components/LexicalRenderer"
+import { getImageUrl } from "@/lib/utils" // Import the helper function
 
 type BlogPostPageProps = {
   params: {
@@ -15,6 +16,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   if (!post) {
     notFound()
   }
+
+  const featuredImageUrl = getImageUrl(post.featuredImage?.url) // Use the helper
 
   return (
     <article className="bg-white text-gray-800">
@@ -37,48 +40,26 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </>
           )}
         </div>
-        {post.featuredImage && (
+        {featuredImageUrl && (
           <div className="relative w-full h-80 mb-8 rounded-lg overflow-hidden">
             <Image
-              src={post.featuredImage.url || "/placeholder.svg"}
-              alt={post.featuredImage.alt || post.title}
+              src={featuredImageUrl || "/placeholder.svg"}
+              alt={post.featuredImage?.alt || post.title}
               fill
               className="object-cover"
               priority
             />
           </div>
         )}
-
-        {/* Remove the debug block */}
-        {/* 
-        <div
-          style={{
-            background: "#f0f0f0",
-            padding: "10px",
-            margin: "20px 0",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-all",
-          }}
-        >
-          <p style={{ fontWeight: "bold", marginBottom: "5px" }}>Debug - Content Type:</p>
-          <p style={{ marginBottom: "10px" }}>{typeof post.content}</p>
-          <p style={{ fontWeight: "bold", marginBottom: "5px" }}>Debug - Content Value (JSON Stringified):</p>
-          <pre>{JSON.stringify(post.content, null, 2)}</pre>
-        </div>
-        */}
-
-        {/* Use the LexicalRenderer to display the content */}
         <LexicalRenderer content={post.content} />
       </div>
     </article>
   )
 }
 
-// This function generates the static paths for all blog posts at build time.
+// ... (generateStaticParams remains the same) ...
 export async function generateStaticParams() {
-  const posts = await getBlogPosts(100) // Fetch a large number of posts
+  const posts = await getBlogPosts(100)
   return posts.map((post) => ({
     slug: post.slug,
   }))

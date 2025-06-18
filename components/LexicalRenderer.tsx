@@ -1,6 +1,7 @@
 // components/LexicalRenderer.tsx
 import type React from "react"
 import NextImage from "next/image" // Import Next.js Image component
+import { getImageUrl } from "@/lib/utils" // Import the helper function
 
 interface LexicalNode {
   type: string
@@ -129,7 +130,8 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
 
   // Handle image nodes
   if (node.type === "upload" && node.relationTo === "media" && node.value) {
-    const imageUrl = node.value.url
+    const rawImageUrl = node.value.url
+    const imageUrl = getImageUrl(rawImageUrl) // Use the helper function
     const imageAlt = node.value.alt || "Blog image"
     const imageWidth = node.value.width
     const imageHeight = node.value.height
@@ -139,7 +141,7 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
       <div key={index} className="my-6 relative">
         {imageWidth && imageHeight ? (
           <NextImage
-            src={imageUrl || "/placeholder.svg"}
+            src={imageUrl}
             alt={imageAlt}
             width={imageWidth}
             height={imageHeight}

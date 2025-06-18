@@ -10,8 +10,8 @@
     "start": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts next start"
   },
   "dependencies": {
-    "@contentful/rich-text-html-renderer": "latest",
-    "@contentful/rich-text-types": "latest",
+    "@contentful/rich-text-html-renderer": "^16.6.8",
+    "@contentful/rich-text-types": "^16.8.5",
     "@faceless-ui/modal": "latest",
     "@faceless-ui/scroll-info": "latest",
     "@hookform/resolvers": "^3.9.0",
@@ -30,7 +30,7 @@
     "ajv": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "contentful": "latest",
+    "contentful": "^10.15.0",
     "cross-env": "^7.0.3",
     "graphql": "latest",
     "lucide-react": "^0.454.0",
