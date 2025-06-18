@@ -193,6 +193,20 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
       }
       const videos = processJsonColumn(speakerData.videos, "VIDEOS")
       const testimonials = processJsonColumn(speakerData.testimonials, "TESTIMONIALS")
+
+      // Debug logging for Adam Cheyer specifically
+      if (name.toLowerCase().includes("adam cheyer")) {
+        console.log("🔍 Adam Cheyer Debug Info:", {
+          environment: process.env.NODE_ENV,
+          hasApiKey: !!API_KEY,
+          hasSpreadsheetId: !!SPREADSHEET_ID,
+          rawVideosData: speakerData.videos,
+          parsedVideosCount: videos.length,
+          parsedVideos: videos,
+          timestamp: new Date().toISOString(),
+        })
+      }
+
       try {
         return {
           slug:
@@ -326,6 +340,13 @@ let lastFetchTime: number | null = null
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 async function fetchAllSpeakersFromSheet(): Promise<Speaker[]> {
+  console.log("🔧 Fetch attempt:", {
+    hasApiKey: !!API_KEY,
+    hasSpreadsheetId: !!SPREADSHEET_ID,
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString(),
+  })
+
   if (!SPREADSHEET_ID || !API_KEY) {
     console.error("Google Sheets API Key or Spreadsheet ID is not configured. Falling back to local data.")
     return localSpeakers
@@ -347,6 +368,14 @@ async function fetchAllSpeakersFromSheet(): Promise<Speaker[]> {
       return localSpeakers
     }
     const mappedSpeakers = mapGoogleSheetDataToSpeakers(values)
+
+    console.log("✅ Successfully fetched from Google Sheets:", {
+      totalSpeakers: mappedSpeakers.length,
+      adamCheyerFound: mappedSpeakers.some((s) => s.name.toLowerCase().includes("adam cheyer")),
+      environment: process.env.NODE_ENV,
+      timestamp: new Date().toISOString(),
+    })
+
     if (mappedSpeakers.length === 0 && values.length > 1) {
       return localSpeakers
     }
