@@ -14,7 +14,7 @@ interface UnifiedSpeakerCardProps {
   maxTopicsToShow?: number
 }
 
-export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 1 }: UnifiedSpeakerCardProps) {
+export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: UnifiedSpeakerCardProps) {
   // If speaker prop is somehow null or undefined, render nothing or a placeholder
   // This is an extra layer of defense; parent components should filter out invalid speakers.
   if (!speaker || !speaker.slug) {
@@ -51,6 +51,24 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 1 }: Uni
     }
   }, [image, placeholderImg, currentImageUrl, slug]) // Added slug to dependencies as image might be tied to speaker identity
 
+  // Preload image to improve loading performance
+  useEffect(() => {
+    if (image && image !== placeholderImg) {
+      const img = new Image()
+      img.crossOrigin = "anonymous"
+      img.onload = () => {
+        setImageState("loaded")
+      }
+      img.onerror = () => {
+        setImageState("error")
+        setCurrentImageUrl(placeholderImg)
+      }
+      img.src = image
+    } else {
+      setImageState("loaded") // Placeholder is always "loaded"
+    }
+  }, [image, placeholderImg])
+
   const handleImageError = () => {
     setImageState("error")
     if (currentImageUrl !== placeholderImg) {
@@ -75,47 +93,52 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 1 }: Uni
 
   return (
     <Card className="flex flex-col h-full overflow-hidden rounded-lg shadow-xl hover:shadow-2xl transition-shadow duration-300 border-0 bg-white group">
-      <div className="relative w-full aspect-square sm:aspect-[4/5] md:aspect-[3/4] bg-gray-100 overflow-hidden rounded-t-lg">
-        {imageState === "loading" && currentImageUrl !== placeholderImg && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-            <div className="text-gray-500 text-sm">Loading...</div>
-          </div>
-        )}
-        {imageState === "error" && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
-            <div className="text-gray-400 text-sm text-center px-4">
-              <div className="mb-2">📷</div>
-              <div>Image unavailable</div>
+      <Link href={profileLink} className="block">
+        <div className="relative w-full aspect-square sm:aspect-[4/5] md:aspect-[3/4] bg-gray-100 overflow-hidden rounded-t-lg cursor-pointer">
+          {imageState === "loading" && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+              <div className="animate-pulse flex flex-col items-center">
+                <div className="w-16 h-16 bg-gray-300 rounded-full mb-2"></div>
+                <div className="text-gray-500 text-sm">Loading image...</div>
+              </div>
             </div>
-          </div>
-        )}
-        <img
-          key={currentImageUrl} // Key helps React re-render if src changes between actual and placeholder
-          src={currentImageUrl || "/placeholder.svg"} // Already defaults to placeholder if image is undefined
-          alt={name}
-          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out ${
-            imageState === "loaded" || currentImageUrl === placeholderImg ? "opacity-100" : "opacity-0"
-          }`}
-          style={{ objectPosition: imagePosition === "top" ? `center ${imageOffsetY}` : "center" }}
-          onLoad={handleImageLoad}
-          onError={handleImageError}
-          loading="lazy"
-          crossOrigin="anonymous"
-        />
-        {feeRange && (
-          <Badge
-            variant="secondary"
-            className="absolute top-3 right-3 bg-black/70 text-white backdrop-blur-sm text-xs px-2 py-1 font-montserrat"
-          >
-            {feeRange}
-          </Badge>
-        )}
-        {safeIndustries.length > 0 && safeIndustries[0] && (
-          <Badge className="absolute top-3 left-3 bg-[#1E68C6] text-white font-montserrat text-xs px-2 py-1">
-            {safeIndustries[0]}
-          </Badge>
-        )}
-      </div>
+          )}
+          {imageState === "error" && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
+              <div className="text-gray-400 text-sm text-center px-4">
+                <div className="mb-2">📷</div>
+                <div>Image unavailable</div>
+              </div>
+            </div>
+          )}
+          <img
+            key={currentImageUrl}
+            src={currentImageUrl || "/placeholder.svg"}
+            alt={name}
+            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out ${
+              imageState === "loaded" ? "opacity-100" : "opacity-0"
+            }`}
+            style={{ objectPosition: imagePosition === "top" ? `center ${imageOffsetY}` : "center" }}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+            loading="eager" // Changed from "lazy" to "eager" for featured speakers
+            crossOrigin="anonymous"
+          />
+          {feeRange && (
+            <Badge
+              variant="secondary"
+              className="absolute top-3 right-3 bg-black/70 text-white backdrop-blur-sm text-xs px-2 py-1 font-montserrat"
+            >
+              {feeRange}
+            </Badge>
+          )}
+          {safeIndustries.length > 0 && safeIndustries[0] && (
+            <Badge className="absolute top-3 left-3 bg-[#1E68C6] text-white font-montserrat text-xs px-2 py-1">
+              {safeIndustries[0]}
+            </Badge>
+          )}
+        </div>
+      </Link>
 
       <CardContent className="p-4 sm:p-6 flex flex-col flex-grow">
         <Link href={profileLink} className="block">

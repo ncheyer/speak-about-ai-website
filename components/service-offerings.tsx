@@ -1,90 +1,101 @@
 "use client"
 
 import { Zap } from "lucide-react"
+import { useState, useEffect } from "react"
 
 const ServiceOfferings = () => {
+  // State to track which images have loaded
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set())
+
+  const services = [
+    {
+      id: "keynote",
+      image: "/services/adam-cheyer-stadium.jpg",
+      title: "Keynote Speeches",
+      description: "Inspire your audience with engaging and informative keynote speeches on the future of technology.",
+    },
+    {
+      id: "panel",
+      image: "/services/sharon-zhou-panel.jpg",
+      title: "Panel Discussions",
+      description: "Facilitate insightful and dynamic panel discussions on industry trends and challenges.",
+    },
+    {
+      id: "fireside",
+      image: "/services/allie-k-miller-fireside.jpg",
+      title: "Fireside Chats",
+      description: "Create intimate and engaging conversations with industry leaders in a fireside chat format.",
+    },
+    {
+      id: "workshops",
+      image: "/services/tatyana-mamut-speaking.jpg",
+      title: "Workshops",
+      description:
+        "Provide hands-on learning experiences with interactive workshops tailored to your audience's needs.",
+    },
+    {
+      id: "virtual",
+      image: "/services/sharon-zhou-headshot.png",
+      title: "Virtual Presentations",
+      description: "Reach a global audience with engaging and professional virtual presentations.",
+    },
+    {
+      id: "video",
+      image: "/services/simon-pierro-youtube.jpg",
+      title: "Custom Video Content",
+      description: "Create compelling video content for marketing, training, and internal communications.",
+    },
+  ]
+
+  // Preload images
+  useEffect(() => {
+    const preloadImage = (src: string, id: string) => {
+      const img = new Image()
+      img.onload = () => {
+        setLoadedImages((prev) => new Set([...prev, id]))
+      }
+      img.onerror = () => {
+        console.warn(`Failed to preload image: ${src}`)
+        // Still mark as "loaded" to stop showing loading state
+        setLoadedImages((prev) => new Set([...prev, id]))
+      }
+      img.src = src
+    }
+
+    // Preload all service images
+    services.forEach((service) => {
+      preloadImage(service.image, service.id)
+    })
+  }, [])
+
   return (
     <section className="bg-gray-100 py-12">
       <div className="container mx-auto px-4">
         {/* Service Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Keynote Speeches */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <img src="/services/adam-cheyer-stadium.jpg" alt="Keynote Speeches" className="w-full h-48 object-cover" />
-            <div className="p-4">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Keynote Speeches</h3>
-              <p className="text-gray-700">
-                Inspire your audience with engaging and informative keynote speeches on the future of technology.
-              </p>
+          {services.map((service) => (
+            <div key={service.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="relative w-full h-48 bg-gray-200">
+                {!loadedImages.has(service.id) && (
+                  <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+                    <div className="w-16 h-16 bg-gray-300 rounded-full animate-pulse"></div>
+                  </div>
+                )}
+                <img
+                  src={service.image || "/placeholder.svg"}
+                  alt={service.title}
+                  className={`w-full h-full object-cover transition-opacity duration-300 ${
+                    loadedImages.has(service.id) ? "opacity-100" : "opacity-0"
+                  }`}
+                  loading="eager"
+                />
+              </div>
+              <div className="p-4">
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">{service.title}</h3>
+                <p className="text-gray-700">{service.description}</p>
+              </div>
             </div>
-          </div>
-
-          {/* Panel Discussions */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <img src="/services/sharon-zhou-panel.jpg" alt="Panel Discussions" className="w-full h-48 object-cover" />
-            <div className="p-4">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Panel Discussions</h3>
-              <p className="text-gray-700">
-                Facilitate insightful and dynamic panel discussions on industry trends and challenges.
-              </p>
-            </div>
-          </div>
-
-          {/* Fireside Chats */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <img
-              src="/services/allie-k-miller-fireside.jpg"
-              alt="Fireside Chats"
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-4">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Fireside Chats</h3>
-              <p className="text-gray-700">
-                Create intimate and engaging conversations with industry leaders in a fireside chat format.
-              </p>
-            </div>
-          </div>
-
-          {/* Workshops */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <img src="/services/tatyana-mamut-speaking.jpg" alt="Workshops" className="w-full h-48 object-cover" />
-            <div className="p-4">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Workshops</h3>
-              <p className="text-gray-700">
-                Provide hands-on learning experiences with interactive workshops tailored to your audience's needs.
-              </p>
-            </div>
-          </div>
-
-          {/* Virtual Presentations */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <img
-              src="/services/sharon-zhou-headshot.png"
-              alt="Virtual Presentations"
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-4">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Virtual Presentations</h3>
-              <p className="text-gray-700">
-                Reach a global audience with engaging and professional virtual presentations.
-              </p>
-            </div>
-          </div>
-
-          {/* Custom Video Content */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <img
-              src="/services/simon-pierro-youtube.jpg"
-              alt="Custom Video Content"
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-4">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Custom Video Content</h3>
-              <p className="text-gray-700">
-                Create compelling video content for marketing, training, and internal communications.
-              </p>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* SprintAI Featured Section */}
@@ -154,18 +165,16 @@ const ServiceOfferings = () => {
             </div>
 
             <div className="lg:order-first">
-              <div className="relative">
-                <img
-                  src="/services/sprintai-workshop.png"
-                  alt="Adam Holt SprintAI Workshop"
-                  className="w-full h-auto rounded-lg shadow-lg"
-                />
-              </div>
+              <ServiceImage
+                src="/services/sprintai-workshop.png"
+                alt="Adam Holt SprintAI Workshop"
+                className="w-full h-auto rounded-lg shadow-lg"
+              />
 
               {/* Adam Holt Bio Card */}
               <div className="mt-6 bg-gray-50 rounded-lg p-6">
                 <div className="flex items-center mb-4">
-                  <img
+                  <ServiceImage
                     src="/services/adam-holt-headshot.png"
                     alt="Adam Holt"
                     className="w-16 h-16 rounded-full object-cover mr-4"
@@ -186,6 +195,39 @@ const ServiceOfferings = () => {
         </div>
       </div>
     </section>
+  )
+}
+
+// Separate component for images with loading states
+const ServiceImage = ({ src, alt, className }: { src: string; alt: string; className: string }) => {
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    const img = new Image()
+    img.onload = () => setIsLoaded(true)
+    img.onerror = () => {
+      console.warn(`Failed to preload image: ${src}`)
+      setIsLoaded(true) // Still show the image even if preload fails
+    }
+    img.src = src
+  }, [src])
+
+  return (
+    <div className="relative">
+      {!isLoaded && (
+        <div className={`${className} bg-gray-200 animate-pulse flex items-center justify-center`}>
+          <div className="w-16 h-16 bg-gray-300 rounded-full animate-pulse"></div>
+        </div>
+      )}
+      <img
+        src={src || "/placeholder.svg"}
+        alt={alt}
+        className={`${className} transition-opacity duration-300 ${
+          isLoaded ? "opacity-100" : "opacity-0 absolute inset-0"
+        }`}
+        loading="eager"
+      />
+    </div>
   )
 }
 

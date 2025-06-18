@@ -281,12 +281,7 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {displayedSpeakers.map((speaker) => (
-                  <SpeakerCard
-                    key={speaker.slug}
-                    speaker={speaker}
-                    contactSource="speaker_directory"
-                    maxTopicsToShow={3}
-                  />
+                  <SpeakerCard key={speaker.slug} speaker={speaker} contactSource="speaker_directory" />
                 ))}
               </div>
 
