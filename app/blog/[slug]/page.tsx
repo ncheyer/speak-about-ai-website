@@ -1,6 +1,7 @@
 import { getBlogPost, getBlogPosts } from "@/lib/payload-blog"
 import Image from "next/image"
 import { notFound } from "next/navigation"
+import LexicalRenderer from "@/components/LexicalRenderer" // Import the new renderer
 
 type BlogPostPageProps = {
   params: {
@@ -48,7 +49,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </div>
         )}
 
-        {/* Debug block to inspect post.content */}
+        {/* Remove the debug block */}
+        {/* 
         <div
           style={{
             background: "#f0f0f0",
@@ -65,15 +67,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <p style={{ fontWeight: "bold", marginBottom: "5px" }}>Debug - Content Value (JSON Stringified):</p>
           <pre>{JSON.stringify(post.content, null, 2)}</pre>
         </div>
+        */}
 
-        {/* Original content rendering attempt - we will replace this based on the debug output */}
-        <div className="prose prose-lg max-w-none">
-          {typeof post.content === "string" ? (
-            <div dangerouslySetInnerHTML={{ __html: post.content }} />
-          ) : (
-            <p className="text-red-500">[Content is an object - see debug output above. Needs proper rendering.]</p>
-          )}
-        </div>
+        {/* Use the LexicalRenderer to display the content */}
+        <LexicalRenderer content={post.content} />
       </div>
     </article>
   )
