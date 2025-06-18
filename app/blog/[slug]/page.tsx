@@ -1,61 +1,62 @@
+import { getBlogPost, getBlogPosts } from "@/lib/payload-blog"
+import Image from "next/image"
 import { notFound } from "next/navigation"
-import { BlogPostComponent } from "@/components/blog-post"
-import { getBlogPostBySlug, getRelatedBlogPosts } from "@/lib/blog-data"
-import { draftMode } from "next/headers" // Import draftMode
 
-interface BlogPostPageProps {
+type BlogPostPageProps = {
   params: {
     slug: string
   }
 }
 
-export async function generateMetadata({ params }: BlogPostPageProps) {
-  const { isEnabled: isPreview } = draftMode() // Check draft mode
-  // Pass isPreview to your data fetching
-  const post = await getBlogPostBySlug(params.slug, isPreview)
-
-  if (!post) {
-    return {
-      title: "Post Not Found | Speak About AI",
-      description: "The requested blog post could not be found.",
-    }
-  }
-
-  return {
-    title: `${isPreview ? "[PREVIEW] " : ""}${post.title} | Speak About AI Blog`,
-    description: post.metaDescription || post.excerpt,
-    keywords: post.seoKeywords || post.tags.join(", "),
-    // Add other metadata, potentially indicating preview if desired
-  }
-}
-
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { isEnabled: isPreview } = draftMode() // Check draft mode
-
-  // Pass isPreview to your data fetching
-  const post = await getBlogPostBySlug(params.slug, isPreview)
+  const post = await getBlogPost(params.slug)
 
   if (!post) {
     notFound()
   }
 
-  // Related posts might also respect preview mode
-  const relatedPosts = await getRelatedBlogPosts(post.id, 3, isPreview)
-
   return (
-    <main>
-      {isPreview && (
-        <div className="bg-yellow-200 dark:bg-yellow-700 border-b border-yellow-300 dark:border-yellow-600 p-3 text-center text-sm text-yellow-800 dark:text-yellow-100">
-          <strong>PREVIEW MODE ACTIVE</strong> - You are viewing potentially unpublished content.{" "}
-          <a
-            href={`/api/preview/disable?redirect=/blog/${params.slug}`}
-            className="underline hover:text-yellow-600 dark:hover:text-yellow-300"
-          >
-            Exit Preview Mode
-          </a>
+    <article className="bg-white text-gray-800">
+      <div className="max-w-3xl mx-auto p-6">
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">{post.title}</h1>
+        <div className="text-gray-600 mb-8">
+          <span>By {post.author?.name || "Speak About AI"}</span>
+          <span className="mx-2">•</span>
+          <span>
+            {new Date(post.publishedDate).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
+          {post.readTime && (
+            <>
+              <span className="mx-2">•</span>
+              <span>{post.readTime} min read</span>
+            </>
+          )}
         </div>
-      )}
-      <BlogPostComponent key={params.slug} post={post} relatedPosts={relatedPosts} />
-    </main>
+        {post.featuredImage && (
+          <div className="relative w-full h-80 mb-8 rounded-lg overflow-hidden">
+            <Image
+              src={post.featuredImage.url || "/placeholder.svg"}
+              alt={post.featuredImage.alt || post.title}
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
+        )}
+        <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
+      </div>
+    </article>
   )
+}
+
+// This function generates the static paths for all blog posts at build time.
+export async function generateStaticParams() {
+  const posts = await getBlogPosts(100) // Fetch a large number of posts
+  return posts.map((post) => ({
+    slug: post.slug,
+  }))
 }

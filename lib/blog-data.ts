@@ -1,4 +1,9 @@
-import { getBlogPostsFromContentful, getBlogPostBySlugFromContentful } from "./contentful"
+import {
+  getBlogPostsFromPayload,
+  getBlogPostBySlugFromPayload,
+  getFeaturedBlogPostsFromPayload,
+  getRelatedBlogPostsFromPayload,
+} from "./payload-blog"
 
 export type BlogPost = {
   id: string
@@ -14,13 +19,12 @@ export type BlogPost = {
   readTime: string
   tags: string[]
   featured?: boolean
-  // New fields from Contentful
   category?: string
   metaDescription?: string
   seoKeywords?: string
 }
 
-// Static fallback data (your existing blog posts)
+// Static fallback data (keep for development/fallback)
 export const staticBlogPosts: BlogPost[] = [
   {
     id: "1",
@@ -325,35 +329,45 @@ In an era where AI systems are increasingly consequential, ethical consideration
   },
 ]
 
-export async function getBlogPosts() {
+export async function getBlogPosts(includeUnpublished = false) {
   try {
-    // Try to get posts from Contentful first
-    const contentfulPosts = await getBlogPostsFromContentful()
+    // Try to get posts from Payload first
+    const payloadPosts = await getBlogPostsFromPayload(includeUnpublished)
 
-    // If we have Contentful posts, use them; otherwise fall back to static data
-    if (contentfulPosts.length > 0) {
-      return contentfulPosts
+    // If we have Payload posts, use them; otherwise fall back to static data
+    if (payloadPosts.length > 0) {
+      return payloadPosts
     }
 
     return staticBlogPosts
   } catch (error) {
     console.error("Error fetching blog posts:", error)
-    // Fallback to static data if Contentful fails
+    // Fallback to static data if Payload fails
     return staticBlogPosts
   }
 }
 
 export async function getFeaturedBlogPosts() {
-  const posts = await getBlogPosts()
-  return posts.filter((post) => post.featured)
+  try {
+    const featuredPosts = await getFeaturedBlogPostsFromPayload()
+    if (featuredPosts.length > 0) {
+      return featuredPosts
+    }
+
+    // Fallback to static data
+    return staticBlogPosts.filter((post) => post.featured)
+  } catch (error) {
+    console.error("Error fetching featured blog posts:", error)
+    return staticBlogPosts.filter((post) => post.featured)
+  }
 }
 
-export async function getBlogPostBySlug(slug: string) {
+export async function getBlogPostBySlug(slug: string, includeUnpublished = false) {
   try {
-    // Try Contentful first
-    const contentfulPost = await getBlogPostBySlugFromContentful(slug)
-    if (contentfulPost) {
-      return contentfulPost
+    // Try Payload first
+    const payloadPost = await getBlogPostBySlugFromPayload(slug, includeUnpublished)
+    if (payloadPost) {
+      return payloadPost
     }
 
     // Fallback to static data
@@ -365,7 +379,17 @@ export async function getBlogPostBySlug(slug: string) {
   }
 }
 
-export async function getRelatedBlogPosts(currentPostId: string, limit = 3) {
-  const posts = await getBlogPosts()
-  return posts.filter((post) => post.id !== currentPostId).slice(0, limit)
+export async function getRelatedBlogPosts(currentPostId: string, limit = 3, includeUnpublished = false) {
+  try {
+    const relatedPosts = await getRelatedBlogPostsFromPayload(currentPostId, limit)
+    if (relatedPosts.length > 0) {
+      return relatedPosts
+    }
+
+    // Fallback to static data
+    return staticBlogPosts.filter((post) => post.id !== currentPostId).slice(0, limit)
+  } catch (error) {
+    console.error("Error fetching related blog posts:", error)
+    return staticBlogPosts.filter((post) => post.id !== currentPostId).slice(0, limit)
+  }
 }

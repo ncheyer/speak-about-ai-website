@@ -1,20 +1,54 @@
-import { BlogHero } from "@/components/blog-hero"
-import { BlogList } from "@/components/blog-list"
-import { getBlogPosts } from "@/lib/blog-data"
+import Link from "next/link"
+import Image from "next/image"
+import { getBlogPosts, type BlogPost } from "@/lib/payload-blog"
 
-export const metadata = {
-  title: "AI Blog | Speak About AI",
-  description:
-    "Expert perspectives on artificial intelligence, keynote speaking, and event planning from the world's only AI-exclusive speaker bureau.",
-}
+// Re-export the type for easier access if needed elsewhere
+export type { BlogPost }
 
 export default async function BlogPage() {
   const posts = await getBlogPosts()
 
   return (
-    <main>
-      <BlogHero />
-      <BlogList posts={posts} />
-    </main>
+    <div className="bg-white text-gray-800">
+      <main className="max-w-4xl mx-auto p-6">
+        <h1 className="text-4xl font-bold mb-8 text-center">Blog</h1>
+        <div className="grid gap-12">
+          {posts.map((post) => (
+            <article key={post.id} className="border-b pb-8 last:border-b-0">
+              {post.featuredImage && (
+                <Link href={`/blog/${post.slug}`}>
+                  <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden">
+                    <Image
+                      src={post.featuredImage.url || "/placeholder.svg"}
+                      alt={post.featuredImage.alt || post.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                </Link>
+              )}
+              <h2 className="text-3xl font-bold mb-2 hover:text-blue-600 transition-colors duration-200">
+                <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+              </h2>
+              <div className="text-sm text-gray-500 mb-4">
+                <span>By {post.author?.name || "Speak About AI"}</span>
+                <span className="mx-2">•</span>
+                <span>
+                  {new Date(post.publishedDate).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
+              </div>
+              <p className="text-gray-600 mb-4">{post.excerpt}</p>
+              <Link href={`/blog/${post.slug}`} className="text-blue-600 hover:underline font-semibold">
+                Read more &rarr;
+              </Link>
+            </article>
+          ))}
+        </div>
+      </main>
+    </div>
   )
 }
