@@ -27,7 +27,7 @@ export interface BlogPost {
 
 async function fetchPayloadAPI(query: string, options: RequestInit = {}) {
   const fullUrl = `${PAYLOAD_URL}/api/${query}`
-  // console.log("🔍 Fetching from Payload:", fullUrl) // Keep this commented out unless debugging
+  console.log("🔍 Fetching from Payload:", fullUrl) // Uncommented for debugging
 
   try {
     const res = await fetch(fullUrl, {
@@ -39,34 +39,34 @@ async function fetchPayloadAPI(query: string, options: RequestInit = {}) {
       next: { revalidate: 60 }, // Revalidate every 60 seconds
     })
 
-    // console.log("📡 Payload API Response Status:", res.status, res.statusText) // Keep commented
+    console.log("📡 Payload API Response Status:", res.status, res.statusText) // Uncommented
 
     if (!res.ok) {
-      // console.error(`❌ Error fetching from Payload: ${res.status} ${res.statusText}`) // Keep commented
-      // const errorText = await res.text()
-      // console.error("Error details:", errorText) // Keep commented
+      console.error(`❌ Error fetching from Payload: ${res.status} ${res.statusText}`)
+      const errorText = await res.text()
+      console.error("Error details:", errorText)
       return null
     }
 
     const data = await res.json()
-    // console.log("✅ Payload API Response:", data) // Keep commented
+    console.log("✅ Payload API Response:", data) // Uncommented
     return data
   } catch (error) {
-    // console.error("🚨 Network error fetching from Payload:", error) // Keep commented
+    console.error("🚨 Network error fetching from Payload:", error)
     return null
   }
 }
 
 // Get all published blog posts
 export async function getBlogPosts(limit = 10): Promise<BlogPost[]> {
-  // console.log("🔄 getBlogPosts called with limit:", limit) // Keep commented
+  console.log("🔄 getBlogPosts called with limit:", limit) // Uncommented
   const data = await fetchPayloadAPI(
     `blog-posts?where[status][equals]=published&limit=${limit}&depth=2&sort=-publishedDate`,
   )
 
   const posts = data?.docs || []
-  // console.log("📝 Found blog posts:", posts.length) // Keep commented
-  // console.log("📋 Posts data:", posts) // Keep commented
+  console.log("📝 Found blog posts:", posts.length) // Uncommented
+  console.log("📋 Posts data:", posts) // Uncommented
 
   return posts
 }
