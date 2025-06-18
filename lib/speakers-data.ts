@@ -121,11 +121,17 @@ function sanitizePotentiallyCorruptJsonString(rawJsonString: string): string {
 }
 
 function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
+  console.log("🔧 mapGoogleSheetDataToSpeakers called with data length:", data?.length)
+
   if (!data || data.length < 2) {
     return []
   }
   const headers = data[0].map((header) => header.toLowerCase().trim().replace(/\s+/g, "_"))
+  console.log("📋 Headers found:", headers)
+
   const speakerRows = data.slice(1)
+  console.log("👥 Processing", speakerRows.length, "speaker rows")
+
   return speakerRows
     .map((row, rowIndex) => {
       const speakerData: any = {}
@@ -133,6 +139,18 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
         speakerData[header] = row[index] !== undefined && row[index] !== null ? String(row[index]) : undefined
       })
       const name = speakerData.name?.trim() || `Unnamed Speaker (Row ${rowIndex + 2})`
+
+      // Debug for Adam Cheyer specifically - check raw data
+      if (name.toLowerCase().includes("adam cheyer")) {
+        console.log("🎯 Found Adam Cheyer - Raw sheet data:", {
+          name: speakerData.name,
+          videosRaw: speakerData.videos,
+          videosType: typeof speakerData.videos,
+          videosLength: speakerData.videos?.length,
+          rowIndex: rowIndex + 2,
+          allSpeakerData: Object.keys(speakerData),
+        })
+      }
       const processJsonColumn = (columnData: any, columnName: string): any[] => {
         if (!columnData || typeof columnData !== "string" || columnData.trim() === "") {
           return []
@@ -236,6 +254,18 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
       }
       const videos = processJsonColumn(speakerData.videos, "VIDEOS")
       const testimonials = processJsonColumn(speakerData.testimonials, "TESTIMONIALS")
+
+      // Final debug for Adam Cheyer
+      if (name.toLowerCase().includes("adam cheyer")) {
+        console.log("🎬 Adam Cheyer Final Video Processing Result:", {
+          videosCount: videos.length,
+          videos: videos,
+          hasSecondVideo: videos.length > 1,
+          secondVideoThumbnail: videos[1]?.thumbnail,
+          environment: process.env.NODE_ENV,
+          timestamp: new Date().toISOString(),
+        })
+      }
 
       try {
         return {
@@ -405,16 +435,13 @@ async function fetchAllSpeakersFromSheet(): Promise<Speaker[]> {
 }
 
 export async function getAllSpeakers(): Promise<Speaker[]> {
-  const now = Date.now()
-  if (allSpeakersCache && lastFetchTime && now - lastFetchTime < CACHE_DURATION) {
-    return allSpeakersCache
-      .filter((speaker) => speaker.listed !== false)
-      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0))
-  }
+  // Force fresh fetch for debugging
+  console.log("🔄 getAllSpeakers called - forcing fresh fetch for debugging")
+
   try {
     const fetchedSpeakers = await fetchAllSpeakersFromSheet()
     allSpeakersCache = fetchedSpeakers
-    lastFetchTime = now
+    lastFetchTime = Date.now()
     return allSpeakersCache
       .filter((speaker) => speaker.listed !== false)
       .sort((a, b) => (b.ranking || 0) - (a.ranking || 0))
