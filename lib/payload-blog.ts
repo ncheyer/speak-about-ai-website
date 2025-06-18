@@ -57,11 +57,11 @@ async function fetchPayloadAPI(query: string, options: RequestInit = {}) {
   }
 }
 
-// Get all published blog posts - Updated to use 'BlogPosts' collection
+// Get all published blog posts - Updated to use 'blog-posts' collection
 export async function getBlogPosts(limit = 10): Promise<BlogPost[]> {
   console.log("🔄 getBlogPosts called with limit:", limit)
   const data = await fetchPayloadAPI(
-    `BlogPosts?where[status][equals]=published&limit=${limit}&depth=2&sort=-publishedDate`,
+    `blog-posts?where[status][equals]=published&limit=${limit}&depth=2&sort=-publishedDate`,
   )
 
   const posts = data?.docs || []
@@ -71,42 +71,42 @@ export async function getBlogPosts(limit = 10): Promise<BlogPost[]> {
   return posts
 }
 
-// Get a single blog post by slug - Updated to use 'BlogPosts' collection
+// Get a single blog post by slug - Updated to use 'blog-posts' collection
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   console.log("🔄 getBlogPost called with slug:", slug)
-  const data = await fetchPayloadAPI(`BlogPosts?where[slug][equals]=${slug}&depth=2`)
+  const data = await fetchPayloadAPI(`blog-posts?where[slug][equals]=${slug}&depth=2`)
   const post = data?.docs?.[0] || null
   console.log("📄 Found post:", post ? post.title : "No post found")
   return post
 }
 
-// Get featured posts - Updated to use 'BlogPosts' collection
+// Get featured posts - Updated to use 'blog-posts' collection
 export async function getFeaturedPosts(): Promise<BlogPost[]> {
   console.log("🔄 getFeaturedPosts called")
   const data = await fetchPayloadAPI(
-    `BlogPosts?where[featured][equals]=true&where[status][equals]=published&depth=2&sort=-publishedDate`,
+    `blog-posts?where[featured][equals]=true&where[status][equals]=published&depth=2&sort=-publishedDate`,
   )
   const posts = data?.docs || []
   console.log("⭐ Found featured posts:", posts.length)
   return posts
 }
 
-// Get posts by category slug - Updated to use 'BlogPosts' collection
+// Get posts by category slug - Updated to use 'blog-posts' collection
 export async function getPostsByCategory(categorySlug: string): Promise<BlogPost[]> {
   console.log("🔄 getPostsByCategory called with category:", categorySlug)
   const data = await fetchPayloadAPI(
-    `BlogPosts?where[categories.slug][equals]=${categorySlug}&where[status][equals]=published&depth=2&sort=-publishedDate`,
+    `blog-posts?where[categories.slug][equals]=${categorySlug}&where[status][equals]=published&depth=2&sort=-publishedDate`,
   )
   const posts = data?.docs || []
   console.log("🏷️ Found posts in category:", posts.length)
   return posts
 }
 
-// Legacy function names for backward compatibility - Updated to use 'BlogPosts' collection
+// Legacy function names for backward compatibility - Updated to use 'blog-posts' collection
 export async function getBlogPostsFromPayload(includeUnpublished = false): Promise<BlogPost[]> {
   console.log("🔄 getBlogPostsFromPayload called, includeUnpublished:", includeUnpublished)
   if (includeUnpublished) {
-    const data = await fetchPayloadAPI(`BlogPosts?depth=2&sort=-publishedDate`)
+    const data = await fetchPayloadAPI(`blog-posts?depth=2&sort=-publishedDate`)
     const posts = data?.docs || []
     console.log("📝 Found all posts (including unpublished):", posts.length)
     return posts
@@ -117,7 +117,7 @@ export async function getBlogPostsFromPayload(includeUnpublished = false): Promi
 export async function getBlogPostBySlugFromPayload(slug: string, includeUnpublished = false): Promise<BlogPost | null> {
   console.log("🔄 getBlogPostBySlugFromPayload called, slug:", slug, "includeUnpublished:", includeUnpublished)
   if (includeUnpublished) {
-    const data = await fetchPayloadAPI(`BlogPosts?where[slug][equals]=${slug}&depth=2`)
+    const data = await fetchPayloadAPI(`blog-posts?where[slug][equals]=${slug}&depth=2`)
     const post = data?.docs?.[0] || null
     console.log("📄 Found post (including unpublished):", post ? post.title : "No post found")
     return post
@@ -132,7 +132,7 @@ export async function getFeaturedBlogPostsFromPayload(): Promise<BlogPost[]> {
 export async function getRelatedBlogPostsFromPayload(currentPostId: string, limit = 3): Promise<BlogPost[]> {
   console.log("🔄 getRelatedBlogPostsFromPayload called, currentPostId:", currentPostId, "limit:", limit)
   const data = await fetchPayloadAPI(
-    `BlogPosts?where[id][not_equals]=${currentPostId}&where[status][equals]=published&depth=2&sort=-publishedDate&limit=${limit}`,
+    `blog-posts?where[id][not_equals]=${currentPostId}&where[status][equals]=published&depth=2&sort=-publishedDate&limit=${limit}`,
   )
   const posts = data?.docs || []
   console.log("🔗 Found related posts:", posts.length)
