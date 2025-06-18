@@ -27,28 +27,27 @@ export interface BlogPost {
 
 async function fetchPayloadAPI(query: string, options: RequestInit = {}) {
   const fullUrl = `${PAYLOAD_URL}/api/${query}`
-  console.log("🔍 Fetching from:", fullUrl) // Updated log message
-  console.log("🔍 PAYLOAD_URL is:", PAYLOAD_URL) // Added for clarity
+  console.log("🔍 Fetching from:", fullUrl)
+  console.log("🔍 PAYLOAD_URL is:", PAYLOAD_URL)
 
   try {
     const res = await fetch(fullUrl, {
-      method: "GET", // Explicitly set method
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Accept: "application/json", // Added Accept header
-        ...options.headers, // Allow overriding headers if needed
+        Accept: "application/json",
+        ...options.headers,
       },
-      cache: "no-store", // Force fresh requests, disable caching
-      ...options, // Spread other options like `next` if provided
+      cache: "no-store", // Changed from 'next: { revalidate: 60 }' to force dynamic rendering
+      ...options,
     })
 
     console.log("📡 Response status:", res.status)
-    console.log("📡 Response headers:", Object.fromEntries(res.headers.entries())) // Log response headers
+    console.log("📡 Response headers:", Object.fromEntries(res.headers.entries()))
 
     if (!res.ok) {
       const errorText = await res.text()
-      console.error("❌ Error response text:", errorText) // Log the raw error text
-      // Throw an error to be caught by the calling function or the catch block below
+      console.error("❌ Error response text:", errorText)
       throw new Error(`HTTP error ${res.status}: ${errorText || res.statusText}`)
     }
 
@@ -56,12 +55,8 @@ async function fetchPayloadAPI(query: string, options: RequestInit = {}) {
     console.log("✅ Success data:", data)
     return data
   } catch (error) {
-    console.error("🚨 Fetch error in fetchPayloadAPI:", error) // Log the caught error
-    // Re-throw the error so that calling functions can also handle it if they need to
-    // Or return null/empty array as before if that's the desired behavior for failures
-    // For now, let's re-throw to make failures more visible during debugging
+    console.error("🚨 Fetch error in fetchPayloadAPI:", error)
     throw error
-    // return null; // Previous behavior
   }
 }
 
