@@ -47,7 +47,33 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             />
           </div>
         )}
-        <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
+
+        {/* Debug block to inspect post.content */}
+        <div
+          style={{
+            background: "#f0f0f0",
+            padding: "10px",
+            margin: "20px 0",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-all",
+          }}
+        >
+          <p style={{ fontWeight: "bold", marginBottom: "5px" }}>Debug - Content Type:</p>
+          <p style={{ marginBottom: "10px" }}>{typeof post.content}</p>
+          <p style={{ fontWeight: "bold", marginBottom: "5px" }}>Debug - Content Value (JSON Stringified):</p>
+          <pre>{JSON.stringify(post.content, null, 2)}</pre>
+        </div>
+
+        {/* Original content rendering attempt - we will replace this based on the debug output */}
+        <div className="prose prose-lg max-w-none">
+          {typeof post.content === "string" ? (
+            <div dangerouslySetInnerHTML={{ __html: post.content }} />
+          ) : (
+            <p className="text-red-500">[Content is an object - see debug output above. Needs proper rendering.]</p>
+          )}
+        </div>
       </div>
     </article>
   )
