@@ -30,7 +30,7 @@
     "ajv": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "contentful": "^10.15.0",
+    "contentful": "latest",
     "cross-env": "^7.0.3",
     "graphql": "latest",
     "lucide-react": "^0.454.0",

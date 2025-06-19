@@ -1,54 +1,99 @@
-// Thin abstraction over the underlying CMS (now Contentful)
+import { createClient } from "contentful"
 
-import {
-  getBlogPosts as _getPosts,
-  getBlogPostBySlug as _getPostBySlug,
-  getFeaturedBlogPosts as _getFeatured,
-  getRelatedBlogPosts as _getRelated,
-  type BlogPost,
-} from "./contentful-blog"
+const client = createClient({
+  space: process.env.CONTENTFUL_SPACE_ID || "",
+  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN || "",
+})
 
-export type { BlogPost }
-
-export async function getBlogPosts() {
-  try {
-    return await _getPosts()
-  } catch (err) {
-    console.error("Error fetching posts from Contentful:", err)
-    return []
+export interface BlogPost {
+  title: string
+  slug: string
+  content: string
+  createdAt: string
+  featuredImage: {
+    fields: {
+      file: {
+        url: string
+        details: {
+          image: {
+            width: number
+            height: number
+          }
+        }
+      }
+    }
   }
 }
 
-export async function getFeaturedBlogPosts() {
+export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   try {
-    return await _getFeatured()
-  } catch (err) {
-    console.error("Error fetching featured posts:", err)
-    return []
-  }
-}
+    const response = await client.getEntries({
+      content_type: "blogPost",
+      "fields.slug": slug,
+      limit: 1,
+      include: 3, // This fetches linked entries up to 3 levels deep
+    })
 
-export async function getBlogPostBySlug(slug: string) {
-  try {
-    return await _getPostBySlug(slug)
-  } catch (err) {
-    console.error(`Error fetching post ${slug}:`, err)
+    if (response.items.length > 0) {
+      const item = response.items[0]
+      return {
+        title: item.fields.title as string,
+        slug: item.fields.slug as string,
+        content: item.fields.content as string,
+        createdAt: item.sys.createdAt as string,
+        featuredImage: item.fields.featuredImage as {
+          fields: {
+            file: {
+              url: string
+              details: {
+                image: {
+                  width: number
+                  height: number
+                }
+              }
+            }
+          }
+        },
+      }
+    } else {
+      return null
+    }
+  } catch (error) {
+    console.error("Error fetching blog post:", error)
     return null
   }
 }
 
-export async function getRelatedBlogPosts(currentPostId: string, limit = 3) {
+export async function getBlogPosts(limit = 10): Promise<BlogPost[]> {
   try {
-    return await _getRelated(currentPostId, limit)
-  } catch (err) {
-    console.error("Error fetching related posts:", err)
+    const response = await client.getEntries({
+      content_type: "blogPost",
+      limit,
+      order: "-sys.createdAt",
+      include: 3, // This fetches linked entries up to 3 levels deep
+    })
+
+    return response.items.map((item) => ({
+      title: item.fields.title as string,
+      slug: item.fields.slug as string,
+      content: item.fields.content as string,
+      createdAt: item.sys.createdAt as string,
+      featuredImage: item.fields.featuredImage as {
+        fields: {
+          file: {
+            url: string
+            details: {
+              image: {
+                width: number
+                height: number
+              }
+            }
+          }
+        }
+      },
+    }))
+  } catch (error) {
+    console.error("Error fetching blog posts:", error)
     return []
   }
-}
-
-// --- TEMPORARY ALIAS --------------------------------------------------
-// Keeps older code that calls `getBlogPost()` working.
-// Prefer `getBlogPostBySlug()` in new code.
-export async function getBlogPost(slug: string) {
-  return getBlogPostBySlug(slug)
 }
