@@ -27,66 +27,28 @@ const getEmbedUrl = (url: string): string => {
   return url
 }
 
-// Helper function to render video embed HTML with enhanced debugging
+// Helper function to render video embed HTML
 const renderVideoEmbed = (node: any): string => {
-  console.log("Attempting to render video embed. Node data:", JSON.stringify(node.data, null, 2))
-
-  if (!node.data?.target) {
-    const debugMsg = "Debug: Video embed node found, but 'node.data.target' is missing."
-    console.error(debugMsg, "Full node:", JSON.stringify(node, null, 2))
-    return `<div class="my-4 p-2 bg-red-100 text-red-700 border border-red-300 rounded">${debugMsg}</div>`
+  if (!node.data?.target?.fields) {
+    return ""
   }
-
-  const target = node.data.target
-  console.log("Video embed target:", JSON.stringify(target, null, 2))
-
-  const contentTypeId = target.sys?.contentType?.sys?.id
-  if (!contentTypeId) {
-    const debugMsg = "Debug: Video embed target found, but 'contentTypeId' is missing."
-    console.error(debugMsg, "Target sys:", JSON.stringify(target.sys, null, 2))
-    return `<div class="my-4 p-2 bg-red-100 text-red-700 border border-red-300 rounded">${debugMsg}</div>`
-  }
-  console.log("Video embed contentTypeId:", contentTypeId)
-
-  const fields = target.fields || {}
-  console.log(`Video embed fields for contentType '${contentTypeId}':`, JSON.stringify(fields, null, 2))
-
-  const possibleUrlFields = ["videoUrl", "url", "link", "youtubeUrl", "videoLink", "file"] // Added "file" for potential direct asset links
+  const fields = node.data.target.fields
+  const possibleUrlFields = ["videoUrl", "url", "link", "youtubeUrl", "videoLink"]
   let videoUrl = null
-  let foundFieldName = null
 
   for (const fieldName of possibleUrlFields) {
-    if (fields[fieldName]) {
-      // If it's a direct asset (e.g., from a 'file' field)
-      if (typeof fields[fieldName] === "object" && fields[fieldName].fields?.file?.url) {
-        videoUrl = fields[fieldName].fields.file.url
-      } else if (typeof fields[fieldName] === "object" && fields[fieldName].url) {
-        // For simple link objects
-        videoUrl = fields[fieldName].url
-      }
-      // For simple text fields
-      else if (typeof fields[fieldName] === "string") {
-        videoUrl = fields[fieldName]
-      }
-
-      if (videoUrl) {
-        foundFieldName = fieldName
-        break
-      }
+    if (fields[fieldName] && typeof fields[fieldName] === "string") {
+      videoUrl = fields[fieldName]
+      break
     }
   }
 
-  console.log(`Searched for video URL. Found field: '${foundFieldName}', Value: '${videoUrl}'`)
-
-  if (!videoUrl || typeof videoUrl !== "string") {
-    const debugMsg = `Debug: Video entry (type: ${contentTypeId}) found, but no valid URL field. Looked for: ${possibleUrlFields.join(", ")}. Available fields: ${Object.keys(fields).join(", ")}.`
-    console.error(debugMsg)
-    return `<div class="my-4 p-2 bg-yellow-100 text-yellow-700 border border-yellow-300 rounded">${debugMsg}</div>`
+  if (!videoUrl) {
+    return ""
   }
 
   const embedUrl = getEmbedUrl(videoUrl)
   const title = fields.title || fields.name || "Embedded video"
-  console.log("Final video embed URL:", embedUrl)
 
   return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
             <iframe
@@ -122,6 +84,9 @@ type BlogPostPageProps = {
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const post = await getBlogPost(params.slug)
 
+  // CRITICAL DEBUG LOG: This will show us the entire data structure.
+  console.log("Full post object received from Contentful:", JSON.stringify(post, null, 2))
+
   if (!post) {
     notFound()
   }
@@ -131,22 +96,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   if (post.content) {
     if (typeof post.content === "string") {
-      // Handle Markdown string
       contentHtml = marked(post.content)
       contentHtml = fixYouTubeIframes(contentHtml)
     } else if (typeof post.content === "object" && post.content.nodeType === "document") {
-      // More specific check for Rich Text Document
-      // Handle Contentful Rich Text object
       const renderOptions: Options = {
         renderNode: {
-          [BLOCKS.EMBEDDED_ENTRY]: (node) => {
-            console.log("BLOCKS.EMBEDDED_ENTRY found")
-            return renderVideoEmbed(node)
-          },
-          [INLINES.EMBEDDED_ENTRY]: (node) => {
-            console.log("INLINES.EMBEDDED_ENTRY found")
-            return renderVideoEmbed(node)
-          },
+          [BLOCKS.EMBEDDED_ENTRY]: renderVideoEmbed,
+          [INLINES.EMBEDDED_ENTRY]: renderVideoEmbed,
           [BLOCKS.EMBEDDED_ASSET]: (node) => {
             if (!node.data?.target?.fields?.file) {
               return ""
@@ -164,20 +120,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           },
         },
       }
-
-      try {
-        contentHtml = documentToHtmlString(post.content as Document, renderOptions)
-        contentHtml = fixYouTubeIframes(contentHtml) // In case some iframes are still raw HTML
-      } catch (error) {
-        console.error("Error rendering rich text:", error)
-        contentHtml = "<p>Error rendering content. Please check console.</p>"
-      }
-    } else {
-      console.warn(
-        "Content format not recognized as Markdown string or Contentful Rich Text Document. Content:",
-        post.content,
-      )
-      contentHtml = "<p>Content format not supported or content is empty.</p>"
+      contentHtml = documentToHtmlString(post.content as Document, renderOptions)
+      contentHtml = fixYouTubeIframes(contentHtml)
     }
   }
 
