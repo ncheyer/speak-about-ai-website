@@ -38,6 +38,12 @@ export interface BlogPost {
   categories: { slug: string; name: string }[]
 }
 
+export interface Category {
+  id: string
+  name: string
+  slug: string
+}
+
 type Sys = { id: string }
 type Asset = {
   sys: Sys
@@ -132,6 +138,14 @@ function mapEntryToPost(entry: any, includes?: Includes): BlogPost {
   }
 }
 
+function mapEntryToCategory(entry: any): Category {
+  return {
+    id: entry.sys.id,
+    name: entry.fields.name,
+    slug: entry.fields.slug,
+  }
+}
+
 /* ---------- Public API ---------- */
 const INCLUDE_LEVEL = 10 // Max include level for Contentful
 
@@ -162,4 +176,9 @@ export async function getRelatedBlogPosts(currentPostId: string, limit = 3): Pro
     `entries?content_type=blogPost&sys.id[ne]=${currentPostId}&order=-fields.publishedDate&limit=${limit}&include=${INCLUDE_LEVEL}`,
   )
   return data.items.map((item) => mapEntryToPost(item, data.includes))
+}
+
+export async function getBlogCategories(): Promise<Category[]> {
+  const data = await fetchContentfulAPI<{ items: any[] }>(`entries?content_type=blogCategory&order=fields.name`)
+  return data.items.map(mapEntryToCategory)
 }
