@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@contentful/rich-text-html-renderer':
-        specifier: ^16.6.8
-        version: 16.6.8
+        specifier: latest
+        version: 17.0.1
       '@contentful/rich-text-types':
         specifier: ^16.8.5
         version: 16.8.5
@@ -193,12 +193,16 @@ packages:
   '@contentful/content-source-maps@0.11.20':
     resolution: {integrity: sha512-q1Zp1TZcQEVvJ7qxSnkmhe7JWFXH8EBhIGvtWu8pmAkea9ET5rTM5m2/fiu3nIcKc18pX+iv+Pb1K3UgeHRl8w==}
 
-  '@contentful/rich-text-html-renderer@16.6.8':
-    resolution: {integrity: sha512-o0GCQVHCDtgzZZJvO1qQ6WtFEf0IKe0LhK7qR9eDS/Z5PD/IgtftYDLjsfVcqiMUy8TUCoj/yXP/Iy+15DTAlQ==}
+  '@contentful/rich-text-html-renderer@17.0.1':
+    resolution: {integrity: sha512-/IB90QKyMyJBA8UsSyngN3jbWZcVUNAXH9YwwT03ObJuFju3+l5ZQ17LridHWfX2qp9cBj1cH2WOzws7oFtEFQ==}
     engines: {node: '>=6.0.0'}
 
   '@contentful/rich-text-types@16.8.5':
     resolution: {integrity: sha512-q18RJuJCOuYveGiCIjE5xLCQc5lZ3L2Qgxrlg/H2YEobDFqdtmklazRi1XwEWaK3tMg6yVXBzKKkQfLB4qW14A==}
+    engines: {node: '>=6.0.0'}
+
+  '@contentful/rich-text-types@17.0.1':
+    resolution: {integrity: sha512-T+btHJY9mdLeZ1Sn2GcWLiG93gwBvovBxR73/tjUeIYsosBM3dkOdMRKXzBV9ghcuE1q+QP0TbyxA77hYIF9Jw==}
     engines: {node: '>=6.0.0'}
 
   '@csstools/cascade-layer-name-parser@1.0.13':
@@ -3337,6 +3341,10 @@ packages:
     resolution: {integrity: sha512-Fd4gABb+ycGAmKou8eMftCupSir5lRxqf4aD/vd0cD2qc4HL07OjCeuHMr8Ro4CoMaeCKDB0/ECBOVWjTwUvPQ==}
     engines: {node: '>=8'}
 
+  is-plain-obj@3.0.0:
+    resolution: {integrity: sha512-gwsOE28k+23GP1B6vFl1oVh/WOzmawBrKwo5Ev6wMKzPkaXaCDIQKzLnvsA42DRlbVTWorkgTKIviAKCWkfUwA==}
+    engines: {node: '>=10'}
+
   is-plain-object@2.0.4:
     resolution: {integrity: sha512-h5PpgXkWitc38BBMYawTYMWJHFZJVnBquFE57xFpjB8pJFiF6gZ+bU+WyI/yqXiFR5mdLsgYNaPe8uao6Uv9Og==}
     engines: {node: '>=0.10.0'}
@@ -5299,12 +5307,16 @@ snapshots:
       '@vercel/stega': 0.1.2
       json-pointer: 0.6.2
 
-  '@contentful/rich-text-html-renderer@16.6.8':
+  '@contentful/rich-text-html-renderer@17.0.1':
     dependencies:
-      '@contentful/rich-text-types': 16.8.5
+      '@contentful/rich-text-types': 17.0.1
       escape-html: 1.0.3
 
   '@contentful/rich-text-types@16.8.5': {}
+
+  '@contentful/rich-text-types@17.0.1':
+    dependencies:
+      is-plain-obj: 3.0.0
 
   '@csstools/cascade-layer-name-parser@1.0.13(@csstools/css-parser-algorithms@2.7.1(@csstools/css-tokenizer@2.4.1))(@csstools/css-tokenizer@2.4.1)':
     dependencies:
@@ -8688,6 +8700,8 @@ snapshots:
   is-number@7.0.0: {}
 
   is-path-inside@3.0.3: {}
+
+  is-plain-obj@3.0.0: {}
 
   is-plain-object@2.0.4:
     dependencies:
