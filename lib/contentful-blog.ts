@@ -1,102 +1,122 @@
-import { createClient } from "contentful"
+/**
+ * Lightweight Contentful helper utilities.
+ *
+ * Required env vars (already present in the workspace):
+ * - CONTENTFUL_SPACE_ID
+ * - CONTENTFUL_ACCESS_TOKEN
+ *
+ * NOTE  This uses the Content Delivery API (REST) and maps the response
+ * into the BlogPost shape your components already expect.
+ */
 
-const space = process.env.CONTENTFUL_SPACE_ID
-const accessToken = process.env.CONTENTFUL_ACCESS_TOKEN
+const SPACE_ID = process.env.CONTENTFUL_SPACE_ID
+const ACCESS_TOKEN = process.env.CONTENTFUL_ACCESS_TOKEN
+const ENVIRONMENT = "master" // change if you use multiple environments
 
-if (!space || !accessToken) {
-  throw new Error("CONTENTFUL_SPACE_ID and CONTENTFUL_ACCESS_TOKEN environment variables must be defined.")
+const BASE_URL = `https://cdn.contentful.com/spaces/${SPACE_ID}/environments/${ENVIRONMENT}`
+
+async function fetchContentfulAPI<T>(endpoint: string): Promise<T> {
+  const url = `${BASE_URL}/${endpoint}${endpoint.includes("?") ? "&" : "?"}` + `access_token=${ACCESS_TOKEN}`
+
+  const res = await fetch(url, { next: { revalidate: 60 } })
+
+  if (!res.ok) {
+    throw new Error(`Contentful error ${res.status}: ${await res.text()}`)
+  }
+  return res.json() as Promise<T>
 }
 
-const client = createClient({
-  space: space,
-  accessToken: accessToken,
-})
+/* ---------- Shapes & mappers ---------- */
 
-export async function fetchGraphQL(query: string, preview = false): Promise<any> {
-  try {
-    const result = await fetch(`https://graphql.contentful.com/content/v1/spaces/${space}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${preview ? process.env.CONTENTFUL_PREVIEW_ACCESS_TOKEN : accessToken}`,
-      },
-      body: JSON.stringify({ query }),
-    }).then((response) => response.json())
-    return result
-  } catch (error) {
-    console.error("Error fetching GraphQL:", error)
-    throw error
+export interface BlogPost {
+  id: string
+  title: string
+  slug: string
+  excerpt: string
+  content: string
+  publishedDate: string
+  readTime?: number
+  featured: boolean
+  author: { name: string }
+  featuredImage?: { url: string; alt: string }
+  categories: { slug: string; name: string }[]
+}
+
+type Sys = { id: string }
+type Asset = {
+  sys: Sys
+  fields: { title: string; file: { url: string } }
+}
+
+function extractAsset(assets: Asset[] | undefined, id: string | undefined) {
+  if (!assets || !id) return undefined
+  const asset = assets.find((a) => a.sys.id === id)
+  if (!asset) return undefined
+  return {
+    url: "https:" + asset.fields.file.url,
+    alt: asset.fields.title,
   }
 }
 
-function parsePost({ fields }: any): BlogPost {
+function mapEntryToPost(entry: any, includes?: { Asset: Asset[] }): BlogPost {
+  const {
+    sys: { id },
+    fields,
+  } = entry
+
+  const asset = includes && includes.Asset ? extractAsset(includes.Asset, fields.featuredImage?.sys?.id) : undefined
+
   return {
+    id,
     title: fields.title,
     slug: fields.slug,
-    date: fields.date,
-    content: fields.content,
-    excerpt: fields.excerpt,
-    coverImage: fields.coverImage?.fields?.file?.url || null,
+    excerpt: fields.excerpt ?? "",
+    content: fields.content ?? "",
+    publishedDate: fields.publishedDate,
+    readTime: fields.readTime,
+    featured: fields.featured ?? false,
+    author: { name: fields.author?.fields?.name ?? "Speak About AI" },
+    featuredImage: asset,
+    categories:
+      fields.categories?.map((c: any) => ({
+        slug: c.fields.slug,
+        name: c.fields.name,
+      })) ?? [],
   }
 }
 
-function parsePostEntries(entries: any[] = [], locale = "en-US") {
-  return entries?.map((entry: any) => {
-    if (entry?.fields) {
-      return {
-        ...entry.fields,
-        date: entry.fields.date,
-        slug: entry.fields.slug,
-        title: entry.fields.title,
-        content: entry.fields.content,
-        excerpt: entry.fields.excerpt,
-        coverImage: entry.fields.coverImage?.fields?.file?.url || null,
-      }
-    }
-    return null
-  })
+/* ---------- Public API ---------- */
+
+export async function getBlogPosts(limit = 10): Promise<BlogPost[]> {
+  const data = await fetchContentfulAPI<{
+    items: any[]
+    includes?: { Asset: Asset[] }
+  }>(`entries?content_type=blogPost&order=-fields.publishedDate&limit=${limit}&include=3`)
+
+  return data.items.map((item) => mapEntryToPost(item, data.includes))
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  try {
-    const response = await client.getEntries({
-      content_type: "blogPost",
-      "fields.slug": slug,
-      limit: 1,
-      include: 3,
-    })
-
-    if (response.items.length === 0) {
-      return null
-    }
-
-    return parsePost(response.items[0])
-  } catch (error) {
-    console.error("Error fetching blog post by slug:", error)
-    return null
-  }
+  const data = await fetchContentfulAPI<{
+    items: any[]
+    includes?: { Asset: Asset[] }
+  }>(`entries?content_type=blogPost&fields.slug=${slug}&limit=1&include=3`)
+  if (!data.items.length) return null
+  return mapEntryToPost(data.items[0], data.includes)
 }
 
-export async function getBlogPosts(): Promise<BlogPost[]> {
-  try {
-    const response = await client.getEntries({
-      content_type: "blogPost",
-      order: "-fields.date",
-      include: 3,
-    })
-
-    return response.items.map((item: any) => parsePost(item))
-  } catch (error) {
-    console.error("Error fetching blog posts:", error)
-    return []
-  }
+export async function getFeaturedBlogPosts(): Promise<BlogPost[]> {
+  const data = await fetchContentfulAPI<{
+    items: any[]
+    includes?: { Asset: Asset[] }
+  }>(`entries?content_type=blogPost&fields.featured=true&order=-fields.publishedDate&include=3`)
+  return data.items.map((item) => mapEntryToPost(item, data.includes))
 }
 
-export interface BlogPost {
-  title: string
-  slug: string
-  date: string
-  content: string
-  excerpt: string
-  coverImage: string | null
+export async function getRelatedBlogPosts(currentPostId: string, limit = 3): Promise<BlogPost[]> {
+  const data = await fetchContentfulAPI<{
+    items: any[]
+    includes?: { Asset: Asset[] }
+  }>(`entries?content_type=blogPost&sys.id[ne]=${currentPostId}&order=-fields.publishedDate&limit=${limit}&include=3`)
+  return data.items.map((item) => mapEntryToPost(item, data.includes))
 }
