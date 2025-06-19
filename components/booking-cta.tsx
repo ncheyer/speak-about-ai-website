@@ -1,63 +1,48 @@
-import { Phone, Mail, Calendar } from "lucide-react"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { ArrowRight, Calendar, Phone } from "lucide-react"
 
 export default function BookingCTA() {
   return (
-    <section className="py-20 bg-[#1E68C6]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-4xl font-bold text-white mb-6 font-neue-haas">Ready to Book Your AI Keynote Speaker?</h2>
-        <p className="text-xl text-white text-opacity-90 mb-10 max-w-3xl mx-auto font-montserrat">
-          Join Fortune 500 companies who trust us to deliver world-class AI expertise. Get personalized speaker
-          recommendations and availability within 24 hours.
+    <section className="bg-gradient-to-r from-blue-600 to-blue-800 py-20 text-white">
+      <div className="container mx-auto max-w-4xl px-4 text-center">
+        <h2 className="text-4xl font-bold mb-6 font-neue-haas leading-tight">Ready to Book Your AI Keynote Speaker?</h2>
+        <p className="text-xl mb-10 text-blue-100 max-w-2xl mx-auto font-montserrat">
+          Connect with our expert team to find the perfect AI speaker for your event. We make the booking process
+          seamless and efficient.
         </p>
-
-        <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
-          <button
-            className="btn-yellow inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-medium px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat"
-            data-button="yellow"
-            style={{
-              background: "linear-gradient(to right, #F59E0B, #D97706)",
-              color: "white",
-              border: "none",
-              height: "44px",
-            }}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+          <Button
+            asChild
+            size="lg"
+            className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-lg px-8 py-4 font-montserrat group"
           >
-            <Calendar className="w-5 h-5 mr-2" />
-            <Link href="/contact?source=homepage_cta" className="text-white no-underline">
-              Book Speaker Today
+            <Link href="/contact?source=home_page_cta_main">
+              <Calendar className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:rotate-12" />
+              Get Speaker Recommendations
             </Link>
-          </button>
-          <button
-            className="btn-primary inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-medium px-8 py-4 border font-montserrat"
-            data-button="primary"
-            style={{
-              backgroundColor: "#1E68C6",
-              color: "white",
-              borderColor: "white",
-              height: "44px",
-            }}
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="lg"
+            className="border-white text-white hover:bg-white hover:text-blue-700 transition-all duration-300 text-lg px-8 py-4 font-montserrat group"
           >
-            <Phone className="w-5 h-5 mr-2" />
-            <a href="tel:+1-510-435-3947" className="text-white no-underline">
-              Call Now: (510) 435-3947
-            </a>
-          </button>
-          <button
-            className="btn-primary inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-medium px-8 py-4 border font-montserrat"
-            data-button="primary"
-            style={{
-              backgroundColor: "#1E68C6",
-              color: "white",
-              borderColor: "white",
-              height: "44px",
-            }}
-          >
-            <Mail className="w-5 h-5 mr-2" />
-            <a href="mailto:human@speakabout.ai" className="text-white no-underline">
-              Email Us
-            </a>
-          </button>
+            <Link href="/speakers">
+              Explore All Speakers
+              <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
+          </Button>
         </div>
+        <p className="mt-8 text-sm text-blue-200 font-montserrat">
+          Or call us directly:{" "}
+          <a
+            href="tel:+1-510-435-3947"
+            className="font-semibold hover:underline flex items-center justify-center sm:inline-flex"
+          >
+            <Phone className="w-4 h-4 mr-1" /> (510) 435-3947
+          </a>
+        </p>
       </div>
     </section>
   )

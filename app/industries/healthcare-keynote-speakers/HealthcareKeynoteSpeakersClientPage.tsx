@@ -207,14 +207,17 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
 
   return (
     <div className="min-h-screen bg-white text-gray-800">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-100 via-blue-50 to-slate-100 py-20 md:py-28">
+      {/* Hero Section - Styled like Home Hero */}
+      <section className="bg-gradient-to-br from-[#EAEAEE] to-white py-20 md:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+            <div className="inline-flex items-center px-4 py-2 bg-[#1E68C6] bg-opacity-10 text-[#1E68C6] rounded-full text-sm font-medium mb-6 font-montserrat">
+              Healthcare AI Experts
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-6">
               Top Healthcare Keynote Speakers
             </h1>
-            <p className="text-lg md:text-xl text-gray-700 mb-10 max-w-4xl mx-auto">
+            <p className="text-lg md:text-xl text-[#5084C6] mb-10 max-w-4xl mx-auto">
               Transform your medical conference with leading healthcare keynote speakers specializing in AI and digital
               health innovation. Our experts are changing patient care through artificial intelligence and emerging
               medical technologies. They work across top hospitals and healthcare systems worldwide.
@@ -223,7 +226,7 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
               <Button
                 asChild
                 size="lg"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-base md:text-lg"
+                className="bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-300 px-8 py-4 text-lg"
               >
                 <Link href="/contact?source=healthcare_keynote_speakers_hero_book">
                   Book Healthcare Keynote Speakers
@@ -231,9 +234,8 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
               </Button>
               <Button
                 asChild
-                variant="outline"
                 size="lg"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700 px-8 py-3 text-base md:text-lg"
+                className="bg-[#1E68C6] text-white border border-[#1E68C6] hover:bg-[#1A5AAD] hover:border-[#1A5AAD] transition-colors duration-300 px-8 py-4 text-lg"
               >
                 <Link href="/speakers">View All Speakers</Link>
               </Button>
@@ -242,11 +244,11 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
         </div>
       </section>
 
-      {/* Featured Speakers Grid */}
-      <section className="py-16 md:py-24 bg-gray-50">
+      {/* Featured Speakers Grid - Styled like Home Featured Speakers */}
+      <section className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Featured Healthcare Keynote Speakers</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">Featured Healthcare Keynote Speakers</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Our healthcare keynote speakers are top medical professionals, researchers, and AI thought leaders. They
               lead healthcare innovation at top medical institutions, universities, and healthcare organizations. Many
@@ -273,8 +275,8 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
         </div>
       </section>
 
-      {/* Healthcare Keynote Speaking Topics */}
-      <section className="py-16 md:py-24">
+      {/* Healthcare Keynote Speaking Topics - Styled like Home Why Choose Us */}
+      <section className="py-16 md:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Healthcare Keynote Speaking Topics</h2>
@@ -285,9 +287,11 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {speakingTopics.map((topic, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow duration-300 bg-white">
+              <Card key={index} className="bg-white hover:shadow-lg transition-shadow duration-300">
                 <CardContent className="p-6 flex flex-col items-center text-center md:items-start md:text-left">
-                  <topic.icon className="w-12 h-12 text-blue-600 mb-4" />
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-0 md:mr-4 mb-4 md:mb-0 self-center md:self-start">
+                    <topic.icon className="w-6 h-6 text-[#1E68C6]" />
+                  </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{topic.title}</h3>
                   <p className="text-gray-600 text-sm">{topic.description}</p>
                 </CardContent>
@@ -297,8 +301,8 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
         </div>
       </section>
 
-      {/* Healthcare Organizations We Serve */}
-      <section className="py-16 md:py-24 bg-gray-50">
+      {/* Healthcare Organizations We Serve - Consistent light gray background */}
+      <section className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Healthcare Organizations We Serve</h2>
@@ -310,7 +314,7 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-6">
             {organizationsServed.map((org, index) => (
               <div key={index} className="text-center p-4 rounded-lg hover:bg-blue-50 transition-colors duration-300">
-                <org.icon className="w-10 h-10 text-blue-600 mx-auto mb-3" />
+                <org.icon className="w-10 h-10 text-[#1E68C6] mx-auto mb-3" />
                 <p className="text-sm font-medium text-gray-700">{org.name}</p>
               </div>
             ))}
@@ -318,16 +322,21 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
         </div>
       </section>
 
-      {/* Why Choose Our Healthcare Keynote Speakers? */}
-      <section className="py-16 md:py-24">
+      {/* Why Choose Our Healthcare Keynote Speakers? - Styled like Home Why Choose Us */}
+      <section className="py-16 md:py-24 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-center">
             Why Choose Our Healthcare Keynote Speakers?
           </h2>
           <div className="space-y-8">
             {whyChooseUsPoints.map((point, index) => (
-              <div key={index} className="flex items-start space-x-4">
-                <point.icon className="w-8 h-8 text-blue-600 flex-shrink-0 mt-1" />
+              <div
+                key={index}
+                className="flex items-start space-x-4 p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+              >
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                  <point.icon className="w-5 h-5 text-[#1E68C6]" />
+                </div>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-1">{point.title}</h3>
                   <p className="text-gray-600">{point.description}</p>
@@ -338,15 +347,15 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
         </div>
       </section>
 
-      {/* Text Sections Container */}
-      <div className="bg-gradient-to-b from-blue-800 to-blue-900 py-16 md:py-24">
+      {/* Text Sections Container - Styled like Home Booking CTA */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 py-16 md:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
           {/* The Value of Expert Healthcare Keynote Speakers */}
           <section>
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-6 text-center">
               The Value of Expert Healthcare Keynote Speakers
             </h2>
-            <div className="prose prose-lg max-w-none text-blue-50 space-y-4">
+            <div className="prose prose-lg max-w-none text-blue-100 prose-headings:text-white prose-strong:text-white space-y-4">
               <p>
                 Healthcare events require speakers who understand both the science and the business of medicine. The
                 right healthcare keynote speaker can transform your conference from an ordinary gathering into a
@@ -375,7 +384,7 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-6 text-center">
               What Makes Our Healthcare AI Keynote Speakers Unique
             </h2>
-            <div className="prose prose-lg max-w-none text-blue-50 space-y-4">
+            <div className="prose prose-lg max-w-none text-blue-100 prose-headings:text-white prose-strong:text-white space-y-4">
               <p>
                 As the only speaker bureau focused exclusively on AI expertise, we connect you with healthcare speakers
                 who understand both medical practice and artificial intelligence applications. Our speakers don&apos;t
@@ -400,7 +409,7 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-6 text-center">
               What Makes Healthcare Keynote Speakers Effective
             </h2>
-            <div className="prose prose-lg max-w-none text-blue-50 space-y-4">
+            <div className="prose prose-lg max-w-none text-blue-100 prose-headings:text-white prose-strong:text-white space-y-4">
               <p>
                 Healthcare audiences respect speakers with active clinical practice or recent medical research
                 experience. They want to hear from peers who understand their daily challenges, not just theoretical
@@ -426,8 +435,8 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
         </div>
       </div>
 
-      {/* Healthcare Speaking Topics That Drive Results */}
-      <section className="py-16 md:py-24">
+      {/* Healthcare Speaking Topics That Drive Results - Styled like Home Why Choose Us */}
+      <section className="py-16 md:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -436,10 +445,12 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {topicsThatDriveResults.map((topic, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow duration-300 bg-white">
+              <Card key={index} className="bg-white hover:shadow-lg transition-shadow duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-center mb-3">
-                    <topic.icon className="w-8 h-8 text-blue-600 mr-3" />
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                      <topic.icon className="w-5 h-5 text-[#1E68C6]" />
+                    </div>
                     <h3 className="text-xl font-semibold text-gray-900">{topic.title}</h3>
                   </div>
                   <p className="text-gray-600 text-sm">{topic.description}</p>
@@ -450,7 +461,7 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
         </div>
       </section>
 
-      {/* Healthcare Industry Trends Shaping Speaker Demand */}
+      {/* Healthcare Industry Trends Shaping Speaker Demand - Consistent light gray background */}
       <section className="py-16 md:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
@@ -460,10 +471,12 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {industryTrends.map((trend, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow duration-300 bg-white">
+              <Card key={index} className="bg-white hover:shadow-lg transition-shadow duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-center mb-3">
-                    <trend.icon className="w-8 h-8 text-blue-600 mr-3" />
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                      <trend.icon className="w-5 h-5 text-[#1E68C6]" />
+                    </div>
                     <h3 className="text-xl font-semibold text-gray-900">{trend.title}</h3>
                   </div>
                   <p className="text-gray-600 text-sm">{trend.description}</p>
@@ -474,8 +487,8 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 md:py-28 bg-gradient-to-b from-blue-700 to-blue-800">
+      {/* CTA Section - Styled like Home Booking CTA */}
+      <section className="py-20 md:py-28 bg-gradient-to-r from-blue-600 to-blue-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Ready to Transform Your Healthcare Event?</h2>
           <p className="text-lg md:text-xl text-blue-100 mb-10 max-w-3xl mx-auto">
@@ -486,7 +499,7 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
             <Button
               asChild
               size="lg"
-              className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-base md:text-lg"
+              className="bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-300 px-8 py-4 text-lg"
             >
               <Link href="/contact?source=healthcare_keynote_speakers_cta_recommendations">
                 Get Speaker Recommendations Today
@@ -496,7 +509,7 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
               asChild
               variant="outline"
               size="lg"
-              className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-base md:text-lg"
+              className="border-white text-white hover:bg-white hover:text-[#1E68C6] transition-colors duration-300 px-8 py-4 text-lg"
             >
               <Link href="/contact?source=healthcare_keynote_speakers_cta_contact">Contact Us</Link>
             </Button>
@@ -504,14 +517,14 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
         </div>
       </section>
 
-      {/* Final Paragraph */}
-      <section className="py-12 md:py-16 bg-gray-100">
+      {/* Final Paragraph - Consistent light gray background */}
+      <section className="py-12 md:py-16 bg-gray-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-md text-gray-700">
-            Our healthcare speakers bureau specializes in connecting organizations with top healthcare keynote speakers
-            who deliver insights on medical AI innovation, patient care technology, and the future of artificial
-            intelligence in healthcare. From AI implementation experts to digital health pioneers, our speakers inspire
-            and educate healthcare professionals across all medical specialties.
+          <p className="text-md text-gray-700 italic">
+            Our speaker bureau specializes in connecting organizations with top healthcare keynote speakers who deliver
+            insights on medical AI innovation, patient care technology, and the future of artificial intelligence in
+            healthcare. From AI implementation experts to digital health pioneers, our speakers inspire and educate
+            healthcare professionals across all medical specialties.
           </p>
         </div>
       </section>
