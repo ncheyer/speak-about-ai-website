@@ -20,7 +20,7 @@ export default function Hero() {
               Book Top AI Keynote Speakers
             </h1>
 
-            <p className="text-xl text-[#5084C6] mb-8 font-montserrat font-semibold">
+            <p className="text-xl text-black mb-8 font-montserrat font-semibold">
               <span className="font-bold">50+ experts in every industry</span>, including the co-author of "Artifical
               Intelligence: A Modern Approach", Siri Co-Founders, and Google/Amazon Executives.
             </p>

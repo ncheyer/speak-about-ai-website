@@ -217,7 +217,7 @@ export default function HealthcareKeynoteSpeakersClientPage({ speakers }: Health
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-6">
               Top Healthcare Keynote Speakers
             </h1>
-            <p className="text-lg md:text-xl text-[#5084C6] mb-10 max-w-4xl mx-auto">
+            <p className="text-lg md:text-xl text-black mb-10 max-w-4xl mx-auto">
               Transform your medical conference with leading healthcare keynote speakers specializing in AI and digital
               health innovation. Our experts are changing patient care through artificial intelligence and emerging
               medical technologies. They work across top hospitals and healthcare systems worldwide.
