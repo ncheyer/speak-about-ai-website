@@ -71,57 +71,51 @@ export default function ClientLogos() {
 
   return (
     <section className="pt-4 pb-8 bg-gray-50">
-      {" "}
-      {/* Further reduced pt-8 to pt-4 and pb-16 to pb-8 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-3">
-          {" "}
-          {/* Further reduced mb-6 to mb-3 */}
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Trusted by Industry Leaders</h2>{" "}
-          {/* Reduced mb-4 to mb-2 */}
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Trusted by Industry Leaders</h2>
           <p className="text-lg text-gray-600">
             Our speakers have worked with leading organizations around the world for their most important events.
           </p>
         </div>
       </div>
       <div className="relative w-full overflow-hidden py-1">
-        {" "}
-        {/* Further reduced py-2 to py-1 */}
-        <div className="flex animate-marquee">
+        {/* Added gap-x-16 for spacing between logos */}
+        <div className="flex animate-marquee gap-x-16">
           {allClients.map((client, index) => (
-            <div key={index} className="flex-shrink-0 flex items-center justify-center px-8 py-2">
-              {" "}
-              {/* Reduced py-4 to py-2 */}
+            // Removed px-8 from here
+            <div key={index} className="flex-shrink-0 flex items-center justify-center py-2">
               <Image
                 src={client.src || "/placeholder.svg"}
                 alt={client.alt}
-                // Conditionally apply sizes based on the 'size' property
+                // Increased width and height for larger logos
                 width={
                   client.size === "super-large"
-                    ? 600
+                    ? 800 // Increased from 600
                     : client.size === "extra-large"
-                      ? 400
+                      ? 500 // Increased from 400
                       : client.size === "small"
-                        ? 200
-                        : 320
+                        ? 250 // Increased from 200
+                        : 400 // Increased from 320
                 }
                 height={
                   client.size === "super-large"
-                    ? 300
+                    ? 400 // Increased from 300
                     : client.size === "extra-large"
-                      ? 200
+                      ? 250 // Increased from 200
                       : client.size === "small"
-                        ? 100
-                        : 160
+                        ? 120 // Increased from 100
+                        : 200 // Increased from 160
                 }
                 className={`w-auto object-contain opacity-80 hover:opacity-100 transition-opacity duration-300 ${
+                  // Increased h-* classes for larger logos
                   client.size === "super-large"
-                    ? "h-48"
+                    ? "h-64" // Increased from h-48
                     : client.size === "extra-large"
-                      ? "h-32"
+                      ? "h-40" // Increased from h-32
                       : client.size === "small"
-                        ? "h-16"
-                        : "h-24"
+                        ? "h-24" // Increased from h-16
+                        : "h-32" // Increased from h-24
                 }`}
                 loading="lazy"
               />

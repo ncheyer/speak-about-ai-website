@@ -6,12 +6,11 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "*.{js,ts,jsx,tsx,mdx}", // Ensure this covers your project structure
+    "*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
-        // Your existing colors...
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -53,7 +52,6 @@ const config: Config = {
           "5": "hsl(var(--chart-5))",
         },
         sidebar: {
-          // Your existing sidebar colors...
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
           primary: "hsl(var(--sidebar-primary))",
@@ -65,13 +63,11 @@ const config: Config = {
         },
       },
       borderRadius: {
-        // Your existing borderRadius...
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
-        // Your existing keyframes...
         "accordion-down": {
           from: {
             height: "0",
@@ -88,19 +84,18 @@ const config: Config = {
             height: "0",
           },
         },
+        marquee: {
+          "0%": { transform: "translateX(0%)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
-        // Your existing animation...
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        marquee: "marquee 60s linear infinite", // Adjust duration as needed
       },
-      // Ensure the typography key is NOT inside extend, but at the theme root if you want to customize prose defaults
-      // typography: (theme) => ({ ... }), // For customizing prose styles
     },
   },
-  plugins: [
-    require("tailwindcss-animate"),
-    require("@tailwindcss/typography"), // <<< THIS IS THE IMPORTANT LINE
-  ],
+  plugins: [require("tailwindcss-animate")],
 }
 export default config
