@@ -27,58 +27,33 @@ const getEmbedUrl = (url: string): string => {
   return url
 }
 
-// Helper function to render video embed HTML with debugging
+// Helper function to render video embed HTML
 const renderVideoEmbed = (node: any): string => {
-  console.log("=== VIDEO EMBED DEBUG ===")
-  console.log("Full node:", JSON.stringify(node, null, 2))
-
   if (!node.data?.target) {
-    console.log("No target found in node.data")
-    return `<div class="my-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">Debug: No target found in embedded entry</div>`
+    return ""
   }
 
   const target = node.data.target
-  console.log("Target:", JSON.stringify(target, null, 2))
-
   const contentTypeId = target.sys?.contentType?.sys?.id
-  console.log("Content Type ID:", contentTypeId)
-
-  if (!contentTypeId) {
-    return `<div class="my-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">Debug: No content type ID found</div>`
-  }
-
-  // Check all possible field names for the video URL
   const fields = target.fields || {}
-  console.log("Available fields:", Object.keys(fields))
 
-  // Try different possible field names
+  // Try different possible field names for video URL
   const possibleUrlFields = ["videoUrl", "url", "link", "youtubeUrl", "videoLink"]
   let videoUrl = null
-  let usedFieldName = null
 
   for (const fieldName of possibleUrlFields) {
     if (fields[fieldName]) {
       videoUrl = fields[fieldName]
-      usedFieldName = fieldName
       break
     }
   }
 
-  console.log("Found video URL:", videoUrl, "using field:", usedFieldName)
-
   if (!videoUrl || typeof videoUrl !== "string") {
-    return `<div class="my-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
-              Debug: Video entry found but no URL field. 
-              <br>Content Type: ${contentTypeId}
-              <br>Available fields: ${Object.keys(fields).join(", ")}
-              <br>Looking for: ${possibleUrlFields.join(", ")}
-            </div>`
+    return ""
   }
 
   const embedUrl = getEmbedUrl(videoUrl)
   const title = fields.title || fields.name || "Embedded video"
-
-  console.log("Final embed URL:", embedUrl)
 
   return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
             <iframe
@@ -118,7 +93,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound()
   }
 
-  const featuredImageUrl = getImageUrl(post.featuredImage?.url)
+  const featuredImageUrl = post.featuredImage?.url ? getImageUrl(post.featuredImage.url) : null
   let contentHtml = ""
 
   if (post.content) {
@@ -126,20 +101,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       // Handle Markdown string
       contentHtml = marked(post.content)
       contentHtml = fixYouTubeIframes(contentHtml)
-    } else if (typeof post.content === "object") {
+    } else if (typeof post.content === "object" && post.content.nodeType) {
       // Handle Contentful Rich Text object
-      const richTextDocument = (post.content as any).json ?? post.content
-
       const renderOptions: Options = {
         renderNode: {
           // Handle block-level embedded entries
           [BLOCKS.EMBEDDED_ENTRY]: (node) => {
-            console.log("Block embedded entry found")
             return renderVideoEmbed(node)
           },
           // Handle inline embedded entries
           [INLINES.EMBEDDED_ENTRY]: (node) => {
-            console.log("Inline embedded entry found")
             return renderVideoEmbed(node)
           },
           // Handle embedded assets (images)
@@ -149,7 +120,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             }
             const file = node.data.target.fields.file
             if (file?.contentType?.startsWith("image/")) {
-              const imageUrl = getImageUrl(file.url)
+              let imageUrl = file.url
+              if (imageUrl.startsWith("//")) {
+                imageUrl = `https:${imageUrl}`
+              }
               const altText = node.data.target.fields.title || ""
               return `<div class="my-6"><img src="${imageUrl}" alt="${altText}" class="w-full h-auto rounded-lg shadow-md object-contain" loading="lazy" /></div>`
             }
@@ -158,11 +132,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         },
       }
 
-      if (richTextDocument) {
-        console.log("Processing rich text document:", JSON.stringify(richTextDocument, null, 2))
-        contentHtml = documentToHtmlString(richTextDocument as Document, renderOptions)
+      try {
+        contentHtml = documentToHtmlString(post.content as Document, renderOptions)
         contentHtml = fixYouTubeIframes(contentHtml)
+      } catch (error) {
+        console.error("Error rendering rich text:", error)
+        contentHtml = "<p>Error rendering content</p>"
       }
+    } else {
+      // Fallback for other content types
+      contentHtml = "<p>Content format not supported</p>"
     }
   }
 
@@ -174,7 +153,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <span>By {post.author?.name || "Speak About AI"}</span>
           <span className="mx-2">•</span>
           <span>
-            {new Date(post.publishedDate).toLocaleDateString("en-US", {
+            {new Date(post.publishedDate || post.createdAt).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
               day: "numeric",
@@ -208,9 +187,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 }
 
 export async function generateStaticParams() {
-  // Grab a generous number of posts so ISR picks up new ones later
   const posts = await getBlogPosts(200)
-
   return posts
     .filter((post) => typeof post.slug === "string" && post.slug.trim().length > 0)
     .map((post) => ({ slug: post.slug }))
