@@ -27,34 +27,69 @@ const getEmbedUrl = (url: string): string => {
   return url
 }
 
-// Helper function to render video embed HTML
+// Helper function to render video embed HTML with debugging
 const renderVideoEmbed = (node: any): string => {
-  if (!node.data?.target?.sys?.contentType?.sys?.id) {
-    return ""
+  console.log("=== VIDEO EMBED DEBUG ===")
+  console.log("Full node:", JSON.stringify(node, null, 2))
+
+  if (!node.data?.target) {
+    console.log("No target found in node.data")
+    return `<div class="my-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">Debug: No target found in embedded entry</div>`
   }
 
-  const contentType = node.data.target.sys.contentType.sys.id
+  const target = node.data.target
+  console.log("Target:", JSON.stringify(target, null, 2))
 
-  // Handle both 'video' and 'videoEmbed' content types
-  if (contentType === "video" || contentType === "videoEmbed") {
-    const videoUrl = node.data.target.fields?.videoUrl
-    const title = node.data.target.fields?.title || "Embedded video"
+  const contentTypeId = target.sys?.contentType?.sys?.id
+  console.log("Content Type ID:", contentTypeId)
 
-    if (typeof videoUrl === "string") {
-      const embedUrl = getEmbedUrl(videoUrl)
-      return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
-                <iframe
-                    src="${embedUrl}"
-                    class="absolute top-0 left-0 w-full h-full"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowfullscreen
-                    title="${title}"
-                ></iframe>
-            </div>`
+  if (!contentTypeId) {
+    return `<div class="my-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">Debug: No content type ID found</div>`
+  }
+
+  // Check all possible field names for the video URL
+  const fields = target.fields || {}
+  console.log("Available fields:", Object.keys(fields))
+
+  // Try different possible field names
+  const possibleUrlFields = ["videoUrl", "url", "link", "youtubeUrl", "videoLink"]
+  let videoUrl = null
+  let usedFieldName = null
+
+  for (const fieldName of possibleUrlFields) {
+    if (fields[fieldName]) {
+      videoUrl = fields[fieldName]
+      usedFieldName = fieldName
+      break
     }
   }
-  return ""
+
+  console.log("Found video URL:", videoUrl, "using field:", usedFieldName)
+
+  if (!videoUrl || typeof videoUrl !== "string") {
+    return `<div class="my-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
+              Debug: Video entry found but no URL field. 
+              <br>Content Type: ${contentTypeId}
+              <br>Available fields: ${Object.keys(fields).join(", ")}
+              <br>Looking for: ${possibleUrlFields.join(", ")}
+            </div>`
+  }
+
+  const embedUrl = getEmbedUrl(videoUrl)
+  const title = fields.title || fields.name || "Embedded video"
+
+  console.log("Final embed URL:", embedUrl)
+
+  return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
+            <iframe
+                src="${embedUrl}"
+                class="absolute top-0 left-0 w-full h-full"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+                title="${title}"
+            ></iframe>
+        </div>`
 }
 
 // Helper function to fix YouTube URLs in iframe src attributes (for raw HTML)
@@ -98,9 +133,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       const renderOptions: Options = {
         renderNode: {
           // Handle block-level embedded entries
-          [BLOCKS.EMBEDDED_ENTRY]: renderVideoEmbed,
-          // Handle inline embedded entries (this is what you're using)
-          [INLINES.EMBEDDED_ENTRY]: renderVideoEmbed,
+          [BLOCKS.EMBEDDED_ENTRY]: (node) => {
+            console.log("Block embedded entry found")
+            return renderVideoEmbed(node)
+          },
+          // Handle inline embedded entries
+          [INLINES.EMBEDDED_ENTRY]: (node) => {
+            console.log("Inline embedded entry found")
+            return renderVideoEmbed(node)
+          },
           // Handle embedded assets (images)
           [BLOCKS.EMBEDDED_ASSET]: (node) => {
             if (!node.data?.target?.fields?.file) {
@@ -118,6 +159,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       }
 
       if (richTextDocument) {
+        console.log("Processing rich text document:", JSON.stringify(richTextDocument, null, 2))
         contentHtml = documentToHtmlString(richTextDocument as Document, renderOptions)
         contentHtml = fixYouTubeIframes(contentHtml)
       }
