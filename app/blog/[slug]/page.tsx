@@ -208,8 +208,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 }
 
 export async function generateStaticParams() {
-  const posts = await getBlogPosts(100)
-  return posts.map((post) => ({
-    slug: post.slug,
-  }))
+  // Grab a generous number of posts so ISR picks up new ones later
+  const posts = await getBlogPosts(200)
+
+  return posts
+    .filter((post) => typeof post.slug === "string" && post.slug.trim().length > 0)
+    .map((post) => ({ slug: post.slug }))
 }
