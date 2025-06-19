@@ -43,7 +43,15 @@ const renderVideoEmbed = (node: Block | Inline): string => {
   console.log(`EMBEDDED_ENTRY: contentType='${contentType}', fields:`, JSON.stringify(fields, null, 2))
 
   // Adapt this to your Contentful Video content type ID and URL field ID
-  if ((contentType === "video" || contentType === "videoEmbed" || contentType === "youtubeVideo") && fields) {
+  if (
+    (contentType === "video" || contentType === "videoEmbed" || contentType === "youtubeVideo") &&
+    fields &&
+    typeof fields === "object"
+  ) {
+    if (!fields) {
+      console.error(`EMBEDDED_ENTRY: Fields are unexpectedly missing for contentType '${contentType}'.`)
+      return `<div class="my-2 p-2 bg-red-100 text-red-700">Error: Video data fields missing.</div>`
+    }
     const videoUrlField = fields.videoUrl || fields.url || fields.youtubeUrl || fields.file?.url
     const title = fields.title || fields.name || "Embedded video"
 
