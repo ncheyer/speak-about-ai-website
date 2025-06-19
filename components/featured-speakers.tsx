@@ -1,115 +1,63 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
-import { SpeakerCard } from "@/components/speaker-card"
-
-interface FeaturedSpeakersProps {
-  initialSpeakers?: Speaker[]
-}
-
-export default function FeaturedSpeakers({ initialSpeakers }: FeaturedSpeakersProps) {
-  const [speakers, setSpeakers] = useState<Speaker[]>(
-    Array.isArray(initialSpeakers) ? initialSpeakers.filter((s) => s && s.slug) : [], // Filter on init
-  )
-  const [loading, setLoading] = useState(!initialSpeakers)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    if (!initialSpeakers) {
-      getFeaturedSpeakers(8)
-        .then((data) => {
-          // Filter out speakers without a slug or that are null/undefined
-          const validSpeakers = Array.isArray(data) ? data.filter((s) => s && s.slug) : []
-          setSpeakers(validSpeakers)
-          setLoading(false)
-        })
-        .catch((err) => {
-          console.error("Failed to load featured speakers:", err)
-          setError(true)
-          setSpeakers([])
-          setLoading(false)
-        })
-    } else {
-      // Ensure initialSpeakers are also filtered if provided directly
-      setSpeakers(Array.isArray(initialSpeakers) ? initialSpeakers.filter((s) => s && s.slug) : [])
-      setLoading(false)
-    }
-  }, [initialSpeakers])
-
-  if (loading) {
-    return (
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold text-black mb-4 font-neue-haas">Featured AI Keynote Speakers</h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat mb-8">
-            Loading our world-class speakers...
-          </p>
-        </div>
-      </section>
-    )
-  }
-
-  if (error || speakers.length === 0) {
-    // speakers is now guaranteed to be an array of valid items or empty
-    return (
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold text-black mb-4 font-neue-haas">Featured AI Keynote Speakers</h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat mb-8">
-            {error
-              ? "Unable to load speakers at the moment. Please try again later."
-              : "No featured speakers available at this time."}
-          </p>
-          {error && ( // Only show "View All" if it was an error, not if there are just no featured speakers
-            <Link
-              href="/speakers"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-11 px-8 border border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white transition-colors mt-4"
-            >
-              View All Speakers
-            </Link>
-          )}
-        </div>
-      </section>
-    )
-  }
+const FeaturedSpeakers = () => {
+  // Dummy data for featured speakers
+  const speakers = [
+    {
+      name: "Dr. Jane Doe",
+      title: "CEO, Tech Innovations Inc.",
+      imageUrl: "https://via.placeholder.com/150", // Replace with actual image URL
+      bio: "A visionary leader in the tech industry, Dr. Doe has revolutionized...",
+    },
+    {
+      name: "John Smith",
+      title: "Lead Developer, Open Source Project",
+      imageUrl: "https://via.placeholder.com/150", // Replace with actual image URL
+      bio: "John is a passionate open-source advocate and a skilled software engineer...",
+    },
+    {
+      name: "Emily White",
+      title: "Marketing Director, Global Corp",
+      imageUrl: "https://via.placeholder.com/150", // Replace with actual image URL
+      bio: "Emily is an expert in digital marketing and brand strategy...",
+    },
+  ]
 
   return (
-    <section className="py-20 bg-white">
+    <div className="bg-gray-100 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-black mb-4 font-neue-haas">Featured AI Keynote Speakers</h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat">
-            World-class artificial intelligence experts, machine learning pioneers, and tech visionaries who are shaping
-            the future of AI across every industry.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {/* speakers array is already filtered to ensure s and s.slug exist */}
+        <h2 className="text-3xl font-extrabold text-gray-900 text-center">Featured Speakers</h2>
+        <div className="mt-6 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
           {speakers.map((speaker) => (
-            <SpeakerCard
-              key={speaker.slug} // slug is guaranteed here
-              speaker={speaker}
-              contactSource="featured_speakers"
-              maxTopicsToShow={2}
-            />
+            <div key={speaker.name} className="group relative">
+              <div className="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none">
+                <img
+                  src={speaker.imageUrl || "/placeholder.svg"}
+                  alt={speaker.name}
+                  className="w-full h-full object-center object-cover lg:w-full lg:h-full"
+                />
+              </div>
+              <div className="mt-4 flex justify-between">
+                <div>
+                  <h3 className="text-sm text-gray-700">
+                    <a href="#">
+                      <span aria-hidden="true" className="absolute inset-0" />
+                      {speaker.name}
+                    </a>
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">{speaker.title}</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500">{speaker.bio}</p>
+            </div>
           ))}
         </div>
-
-        <div className="text-center">
-          <Button
-            asChild
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-11 px-8 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat"
-          >
-            <Link href="/speakers" className="text-white no-underline">
-              View All AI Speakers
-            </Link>
-          </Button>
+        <div className="mt-6 text-center">
+          <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            View All Speakers
+          </button>
         </div>
       </div>
-    </section>
+    </div>
   )
 }
+
+export default FeaturedSpeakers
