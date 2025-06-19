@@ -76,7 +76,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/industries/healthcare-ai-speakers"
+                  href="/industries/healthcare-keynote-speakers"
                   scroll={false}
                   className="text-[#EAEAEE] hover:text-white"
                 >
