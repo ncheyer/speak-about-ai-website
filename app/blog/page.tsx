@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { getBlogPosts, type BlogPost } from "@/lib/payload-blog"
+import { getBlogPosts, type BlogPost } from "@/lib/blog-data"
 import { getImageUrl } from "@/lib/utils" // Import the helper function
 
 export type { BlogPost }

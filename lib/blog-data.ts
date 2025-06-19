@@ -1,54 +1,54 @@
+// Thin abstraction over the underlying CMS (now Contentful)
+
 import {
-  getBlogPostsFromPayload,
-  getBlogPostBySlugFromPayload,
-  getFeaturedBlogPostsFromPayload,
-  getRelatedBlogPostsFromPayload,
-  type BlogPost as PayloadBlogPost, // Use the type from payload-blog
-} from "./payload-blog"
+  getBlogPosts as _getPosts,
+  getBlogPostBySlug as _getPostBySlug,
+  getFeaturedBlogPosts as _getFeatured,
+  getRelatedBlogPosts as _getRelated,
+  type BlogPost,
+} from "./contentful-blog"
 
-// Re-export the BlogPost type from payload-blog for consistency if other parts of the app use it from here
-export type BlogPost = PayloadBlogPost
+export type { BlogPost }
 
-// No more static fallback data needed here if Payload is the single source of truth.
-// If you still want static data for local development when Payload isn't running,
-// you can re-add it, but ensure its structure matches PayloadBlogPost.
-// For now, we'll assume Payload is always available or errors are handled.
-
-export async function getBlogPosts(includeUnpublished = false) {
+export async function getBlogPosts() {
   try {
-    return await getBlogPostsFromPayload(includeUnpublished)
-  } catch (error) {
-    console.error("Error fetching blog posts from Payload in blog-data.ts:", error)
-    return [] // Fallback to empty array on error
+    return await _getPosts()
+  } catch (err) {
+    console.error("Error fetching posts from Contentful:", err)
+    return []
   }
 }
 
 export async function getFeaturedBlogPosts() {
   try {
-    return await getFeaturedBlogPostsFromPayload()
-  } catch (error) {
-    console.error("Error fetching featured blog posts from Payload in blog-data.ts:", error)
+    return await _getFeatured()
+  } catch (err) {
+    console.error("Error fetching featured posts:", err)
     return []
   }
 }
 
-export async function getBlogPostBySlug(slug: string, includeUnpublished = false) {
+export async function getBlogPostBySlug(slug: string) {
   try {
-    return await getBlogPostBySlugFromPayload(slug, includeUnpublished)
-  } catch (error) {
-    console.error(`Error fetching blog post by slug "${slug}" from Payload in blog-data.ts:`, error)
+    return await _getPostBySlug(slug)
+  } catch (err) {
+    console.error(`Error fetching post ${slug}:`, err)
     return null
   }
 }
 
-export async function getRelatedBlogPosts(currentPostId: string, limit = 3, includeUnpublished = false) {
+export async function getRelatedBlogPosts(currentPostId: string, limit = 3) {
   try {
-    // Note: getRelatedBlogPostsFromPayload in payload-blog.ts already filters by published status
-    // unless includeUnpublished is explicitly handled there.
-    // For simplicity, we're not passing includeUnpublished to it here, assuming default behavior.
-    return await getRelatedBlogPostsFromPayload(currentPostId, limit)
-  } catch (error) {
-    console.error(`Error fetching related blog posts for ID "${currentPostId}" from Payload in blog-data.ts:`, error)
+    return await _getRelated(currentPostId, limit)
+  } catch (err) {
+    console.error("Error fetching related posts:", err)
     return []
   }
+}
+
+// --- TEMPORARY ALIAS --------------------------------------------------
+// Keeps older code that calls `getBlogPost()` working.
+// Prefer `getBlogPostBySlug()` in new code.
+export async function getBlogPost(slug: string) {
+  return getBlogPostBySlug(slug)
 }

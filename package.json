@@ -10,8 +10,8 @@
     "start": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts next start"
   },
   "dependencies": {
-    "@contentful/rich-text-html-renderer": "^16.6.8",
-    "@contentful/rich-text-types": "^16.8.5",
+    "@contentful/rich-text-html-renderer": "latest",
+    "@contentful/rich-text-types": "latest",
     "@faceless-ui/modal": "latest",
     "@faceless-ui/scroll-info": "latest",
     "@hookform/resolvers": "^3.9.0",
@@ -26,6 +26,7 @@
     "@radix-ui/react-select": "latest",
     "@radix-ui/react-slot": "latest",
     "@radix-ui/react-tabs": "latest",
+    "@tailwindcss/typography": "latest",
     "@vercel/blob": "latest",
     "ajv": "latest",
     "class-variance-authority": "^0.7.1",
