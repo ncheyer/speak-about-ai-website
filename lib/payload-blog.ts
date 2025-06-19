@@ -1,21 +1,26 @@
 /**
- * TEMPORARY shim so legacy imports like
- *   import { getBlogPosts } from "@/lib/payload-blog"
- * keep working while everything has moved to Contentful.
+ * TEMPORARY SHIM - keeps old imports working.
+ * -------------------------------------------------
+ *   •  getBlogPosts() – delegates to the Contentful version
+ *   •  getBlogPostsFromPayload() – alias, maintained for older code
  *
- * Delete this file once all code has switched to "@/lib/blog-data".
+ * Delete this file once every import uses "@/lib/blog-data" directly.
  */
-import { getBlogPosts as getBlogPostsFromContentful } from "./contentful-blog"
+
+import { getBlogPosts as getBlogPostsFromContentful, type BlogPost } from "./blog-data"
 
 /**
- * Legacy alias – returns all blog posts
+ * Legacy name expected by older components/tests.
  */
-export async function getBlogPosts() {
+export async function getBlogPosts(): Promise<BlogPost[]> {
   return getBlogPostsFromContentful()
 }
 
 /**
- * Historical name used by a few pages;
- * just call the alias above.
+ * Older codepath that used to hit Payload CMS.
+ * For now we call the same Contentful helper.
+ * Remove when no longer referenced.
  */
-export const getBlogPostsFromPayload = getBlogPosts
+export async function getBlogPostsFromPayload(): Promise<BlogPost[]> {
+  return getBlogPostsFromContentful()
+}

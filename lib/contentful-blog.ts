@@ -91,7 +91,7 @@ export async function getBlogPosts(limit = 10): Promise<BlogPost[]> {
   const data = await fetchContentfulAPI<{
     items: any[]
     includes?: { Asset: Asset[] }
-  }>(`entries?content_type=blogPost&order=-fields.publishedDate&limit=${limit}&include=3`)
+  }>(`entries?content_type=blogPost&order=-fields.publishedDate&limit=${limit}&include=2`)
 
   return data.items.map((item) => mapEntryToPost(item, data.includes))
 }
@@ -100,7 +100,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
   const data = await fetchContentfulAPI<{
     items: any[]
     includes?: { Asset: Asset[] }
-  }>(`entries?content_type=blogPost&fields.slug=${slug}&limit=1&include=3`)
+  }>(`entries?content_type=blogPost&fields.slug=${slug}&limit=1&include=2`)
   if (!data.items.length) return null
   return mapEntryToPost(data.items[0], data.includes)
 }
@@ -109,7 +109,7 @@ export async function getFeaturedBlogPosts(): Promise<BlogPost[]> {
   const data = await fetchContentfulAPI<{
     items: any[]
     includes?: { Asset: Asset[] }
-  }>(`entries?content_type=blogPost&fields.featured=true&order=-fields.publishedDate&include=3`)
+  }>(`entries?content_type=blogPost&fields.featured=true&order=-fields.publishedDate&include=2`)
   return data.items.map((item) => mapEntryToPost(item, data.includes))
 }
 
@@ -117,6 +117,6 @@ export async function getRelatedBlogPosts(currentPostId: string, limit = 3): Pro
   const data = await fetchContentfulAPI<{
     items: any[]
     includes?: { Asset: Asset[] }
-  }>(`entries?content_type=blogPost&sys.id[ne]=${currentPostId}&order=-fields.publishedDate&limit=${limit}&include=3`)
+  }>(`entries?content_type=blogPost&sys.id[ne]=${currentPostId}&order=-fields.publishedDate&limit=${limit}&include=2`)
   return data.items.map((item) => mapEntryToPost(item, data.includes))
 }
