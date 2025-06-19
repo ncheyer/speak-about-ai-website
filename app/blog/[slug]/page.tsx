@@ -1,7 +1,7 @@
 import { getBlogPost, getBlogPosts } from "@/lib/blog-data"
 import Image from "next/image"
 import { notFound } from "next/navigation"
-import LexicalRenderer from "@/components/LexicalRenderer"
+import { marked } from "marked"
 import { getImageUrl } from "@/lib/utils" // Import the helper function
 
 type BlogPostPageProps = {
@@ -18,6 +18,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   const featuredImageUrl = getImageUrl(post.featuredImage?.url) // Use the helper
+  const contentHtml = post.content ? marked(post.content) : ""
 
   return (
     <article className="bg-white text-gray-800">
@@ -51,7 +52,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             />
           </div>
         )}
-        <LexicalRenderer content={post.content} />
+        <div
+          className="prose prose-lg max-w-none text-gray-800 prose-headings:text-gray-900 prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-strong:text-gray-800"
+          dangerouslySetInnerHTML={{ __html: contentHtml }}
+        />
       </div>
     </article>
   )
