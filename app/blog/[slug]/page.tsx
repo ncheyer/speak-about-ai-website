@@ -7,26 +7,18 @@ import { documentToHtmlString, type Options } from "@contentful/rich-text-html-r
 import { BLOCKS } from "@contentful/rich-text-types"
 import type { Document } from "@contentful/rich-text-types"
 
-// Helper function to create embed URLs for videos
-const getEmbedUrl = (url: string): string => {
-  if (!url) return ""
-  try {
-    const urlObj = new URL(url)
-    if (urlObj.hostname.includes("youtube.com") || urlObj.hostname.includes("youtu.be")) {
-      const videoId = urlObj.hostname.includes("youtu.be") ? urlObj.pathname.slice(1) : urlObj.searchParams.get("v")
-      // Using rel=0 to prevent related videos from other channels after the video finishes.
-      return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0` : url
-    }
-    if (urlObj.hostname.includes("vimeo.com")) {
-      const videoId = urlObj.pathname.split("/").pop()
-      return videoId ? `https://player.vimeo.com/video/${videoId}` : url
-    }
-  } catch (e) {
-    // Invalid URL, return original
-    console.error("Error parsing video URL:", e)
-    return url
-  }
-  return url // Fallback for other video services
+// Helper function to fix YouTube URLs in iframe src attributes
+const fixYouTubeIframes = (html: string): string => {
+  return html.replace(
+    /<iframe([^>]*)\ssrc=["']https:\/\/www\.youtube\.com\/watch\?v=([^"'&]+)[^"']*["']([^>]*)>/gi,
+    (match, beforeSrc, videoId, afterSrc) => {
+      // Convert watch URL to embed URL and make it responsive
+      const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`
+      return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
+                <iframe${beforeSrc} src="${embedUrl}"${afterSrc} class="absolute top-0 left-0 w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+              </div>`
+    },
+  )
 }
 
 type BlogPostPageProps = {
@@ -49,6 +41,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     if (typeof post.content === "string") {
       // Handle Markdown string
       contentHtml = marked(post.content)
+      // Fix any YouTube iframes in the markdown-generated HTML
+      contentHtml = fixYouTubeIframes(contentHtml)
     } else if (typeof post.content === "object") {
       // Handle Contentful Rich Text object
       const richTextDocument = (post.content as any).json ?? post.content
@@ -56,35 +50,39 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       const renderOptions: Options = {
         renderNode: {
           [BLOCKS.EMBEDDED_ENTRY]: (node) => {
-            // Ensure node.data.target and its properties exist
             if (!node.data?.target?.sys?.contentType?.sys?.id) {
               return ""
             }
             const contentType = node.data.target.sys.contentType.sys.id
 
-            // Assumes your Contentful content type for videos has the ID 'videoEmbed'
-            // and it has a field with the ID 'videoUrl'.
             if (contentType === "videoEmbed") {
               const videoUrl = node.data.target.fields?.videoUrl
               if (typeof videoUrl === "string") {
-                const embedUrl = getEmbedUrl(videoUrl)
-                // Responsive iframe wrapper
-                return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
-                          <iframe
-                              src="${embedUrl}"
-                              class="absolute top-0 left-0 w-full h-full"
-                              frameborder="0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                              allowfullscreen
-                              title="Embedded video"
-                          ></iframe>
-                      </div>`
+                const videoId =
+                  videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")
+                    ? videoUrl.includes("youtu.be")
+                      ? videoUrl.split("/").pop()
+                      : new URL(videoUrl).searchParams.get("v")
+                    : null
+
+                if (videoId) {
+                  const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`
+                  return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
+                            <iframe
+                                src="${embedUrl}"
+                                class="absolute top-0 left-0 w-full h-full"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen
+                                title="Embedded video"
+                            ></iframe>
+                        </div>`
+                }
               }
             }
-            return "" // Don't render other unhandled embedded entries
+            return ""
           },
           [BLOCKS.EMBEDDED_ASSET]: (node) => {
-            // Ensure node.data.target and its properties exist
             if (!node.data?.target?.fields?.file) {
               return ""
             }
@@ -98,11 +96,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           },
         },
       }
-      // Ensure richTextDocument is not null or undefined before passing
+
       if (richTextDocument) {
         contentHtml = documentToHtmlString(richTextDocument as Document, renderOptions)
-      } else {
-        contentHtml = "" // Or some fallback message
+        // Fix any YouTube iframes in the rich text HTML
+        contentHtml = fixYouTubeIframes(contentHtml)
       }
     }
   }
