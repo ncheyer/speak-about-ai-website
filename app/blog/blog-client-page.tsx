@@ -1,102 +1,96 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import Image from "next/image"
-import type { BlogPost, Category } from "@/lib/contentful-blog"
-import { getImageUrl } from "@/lib/utils"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Link from "next/link"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { BlogPost } from "@/lib/contentful-blog"
+import { cn } from "@/lib/utils"
+
+interface Category {
+  slug: string
+  name: string
+}
 
 interface BlogClientPageProps {
   posts: BlogPost[]
   categories: Category[]
 }
 
-export function BlogClientPage({ posts, categories }: BlogClientPageProps) {
-  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>(posts)
+export default function BlogClientPage({ posts, categories }: BlogClientPageProps) {
+  // "all" = show everything
+  const [active, setActive] = useState<string>("all")
 
-  const handleTabChange = (categorySlug: string) => {
-    if (categorySlug === "all") {
-      setFilteredPosts(posts)
-    } else {
-      const newFilteredPosts = posts.filter((post) => post.categories.some((cat) => cat.slug === categorySlug))
-      setFilteredPosts(newFilteredPosts)
-    }
-  }
+  const filtered = active === "all" ? posts : posts.filter((p) => p.categories.some((c) => c.slug === active))
 
   return (
-    <div className="bg-white text-gray-800">
-      <main className="max-w-4xl mx-auto p-6">
-        <h1 className="text-4xl font-bold mb-8 text-center">Blog</h1>
-        <Tabs defaultValue="all" onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 mb-8">
-            <TabsTrigger value="all">All</TabsTrigger>
-            {categories.map((category) => (
-              <TabsTrigger key={category.id} value={category.slug}>
-                {category.name}
+    <div className="bg-white text-gray-800 px-4 pb-12">
+      <main className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mt-8 mb-6 text-center">Blog</h1>
+
+        {/* Category Tabs */}
+        <Tabs value={active} onValueChange={setActive} className="w-full overflow-x-auto">
+          <TabsList className="flex flex-wrap gap-2 justify-center">
+            <TabsTrigger value="all" className="capitalize">
+              All
+            </TabsTrigger>
+            {categories.map((cat) => (
+              <TabsTrigger key={cat.slug} value={cat.slug} className="capitalize">
+                {cat.name}
               </TabsTrigger>
             ))}
           </TabsList>
-          <TabsContent value="all">
-            <PostGrid posts={filteredPosts} />
-          </TabsContent>
-          {categories.map((category) => (
-            <TabsContent key={category.id} value={category.slug}>
-              <PostGrid posts={filteredPosts} />
-            </TabsContent>
-          ))}
         </Tabs>
+
+        {/* Posts */}
+        <section className="grid gap-12 mt-10">
+          {filtered.map((post) => {
+            const imgUrl = post.featuredImage?.url?.startsWith("//")
+              ? `https:${post.featuredImage.url}`
+              : post.featuredImage?.url
+
+            return (
+              <article key={post.id} className="border-b pb-8 last:border-b-0">
+                {imgUrl && (
+                  <Link href={`/blog/${post.slug}`} className="block mb-4">
+                    <div className="relative w-full h-64 rounded-lg overflow-hidden">
+                      <Image
+                        src={imgUrl || "/placeholder.svg"}
+                        fill
+                        priority
+                        alt={post.featuredImage?.alt || post.title}
+                        className="object-cover"
+                      />
+                    </div>
+                  </Link>
+                )}
+
+                <h2 className={cn("text-3xl font-bold mb-2", "hover:text-blue-600 transition-colors")}>
+                  <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+                </h2>
+
+                <div className="text-sm text-gray-500 mb-4">
+                  <span>By {post.author?.name || "Speak About AI"}</span>
+                  <span className="mx-2">•</span>
+                  <span>
+                    {new Date(post.publishedDate).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </span>
+                </div>
+
+                <p className="text-gray-600 mb-4">{post.excerpt}</p>
+                <Link href={`/blog/${post.slug}`} className="text-blue-600 hover:underline font-semibold">
+                  Read more &rarr;
+                </Link>
+              </article>
+            )
+          })}
+          {filtered.length === 0 && <p className="text-center text-gray-500">No posts in this category.</p>}
+        </section>
       </main>
     </div>
   )
 }
-
-function PostGrid({ posts }: { posts: BlogPost[] }) {
-  if (posts.length === 0) {
-    return <p className="text-center text-gray-500">No posts found in this category.</p>
-  }
-
-  return (
-    <div className="grid gap-12">
-      {posts.map((post) => {
-        const featuredImageUrl = getImageUrl(post.featuredImage?.url)
-        return (
-          <article key={post.id} className="border-b pb-8 last:border-b-0">
-            {featuredImageUrl && (
-              <Link href={`/blog/${post.slug}`}>
-                <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden">
-                  <Image
-                    src={featuredImageUrl || "/placeholder.svg"}
-                    alt={post.featuredImage?.alt || post.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              </Link>
-            )}
-            <h2 className="text-3xl font-bold mb-2 hover:text-blue-600 transition-colors duration-200">
-              <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-            </h2>
-            <div className="text-sm text-gray-500 mb-4">
-              <span>By {post.author?.name || "Speak About AI"}</span>
-              <span className="mx-2">•</span>
-              <span>
-                {new Date(post.publishedDate).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </span>
-            </div>
-            <p className="text-gray-600 mb-4">{post.excerpt}</p>
-            <Link href={`/blog/${post.slug}`} className="text-blue-600 hover:underline font-semibold">
-              Read more &rarr;
-            </Link>
-          </article>
-        )
-      })}
-    </div>
-  )
-}
-
-export default BlogClientPage
