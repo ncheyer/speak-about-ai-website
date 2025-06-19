@@ -3,16 +3,60 @@ import type React from "react"
 import NextImage from "next/image"
 import { getImageUrl } from "@/lib/utils"
 
+// Helper function to construct embed URLs for videos
+const getEmbedUrl = (url: string, videoType: string, autoplay = false): string => {
+  if (!url) return "" // Return empty string if URL is not provided
+  const autoplayParam = autoplay ? (videoType === "youtube" ? "&autoplay=1&mute=1" : "?autoplay=1&muted=1") : "" // Mute for autoplay
+
+  switch (videoType) {
+    case "youtube":
+      let videoId = ""
+      if (url.includes("youtube.com/watch?v=")) {
+        videoId = url.split("watch?v=")[1]?.split("&")[0]
+      } else if (url.includes("youtu.be/")) {
+        videoId = url.split("youtu.be/")[1]?.split("?")[0]
+      } else if (url.includes("youtube.com/embed/")) {
+        // If it's already an embed URL, just add autoplay if needed
+        const baseUrl = url.split("?")[0]
+        return `${baseUrl}?rel=0${autoplayParam}`
+      }
+      if (!videoId) return url // Fallback to original URL if ID parsing fails
+      return `https://www.youtube.com/embed/${videoId}?rel=0${autoplayParam}`
+
+    case "vimeo":
+      let vimeoId = ""
+      if (url.includes("vimeo.com/")) {
+        // Handles URLs like vimeo.com/12345678 or vimeo.com/event/12345/videos/67890
+        const parts = url.split("vimeo.com/")[1]?.split("?")[0].split("/")
+        vimeoId = parts[parts.length - 1] // Get the last segment as ID
+      }
+      if (!vimeoId) return url // Fallback
+      return `https://player.vimeo.com/video/${vimeoId}${autoplay ? (url.includes("?") ? "&autoplay=1&muted=1" : "?autoplay=1&muted=1") : ""}`
+
+    case "custom":
+    default:
+      return url // For custom URLs, assume they are already embeddable
+  }
+}
+
 interface LexicalNode {
   type: string
   children?: LexicalNode[]
   text?: string
   tag?: string
   format?: string | number
-  url?: string
+  url?: string // For link nodes AND potentially for iframe src if not nested
   fields?: {
+    // Link fields
     url?: string
     linkType?: "internal" | "custom"
+    // Video block fields
+    blockType?: string // e.g., 'video'
+    videoUrl?: string
+    videoType?: "youtube" | "vimeo" | "custom" | string // Allow string for future types
+    title?: string
+    aspectRatio?: string // e.g., '16/9', '4/3'
+    autoplay?: boolean
   }
   value?: {
     id: string
@@ -25,7 +69,7 @@ interface LexicalNode {
     alt?: string
   }
   relationTo?: string
-  src?: string
+  src?: string // For direct image src OR iframe src
   altText?: string
   width?: string | number
   height?: string | number
@@ -43,7 +87,6 @@ interface LexicalContent {
 const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode => {
   // console.log("Rendering node:", node.type, node); // Temporary debug log
 
-  // ... (other node handlers: text, paragraph, heading, link, image, list, quote remain the same) ...
   // Handle text nodes
   if (node.type === "text" && typeof node.text === "string") {
     const style: React.CSSProperties = {}
@@ -64,8 +107,12 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
     if (!node.children || node.children.every((child) => child.type === "text" && !child.text?.trim())) {
       return null
     }
-    // Check if paragraph only contains an iframe, if so, don't wrap with <p>
-    if (node.children?.length === 1 && node.children[0].type === "iframe") {
+    // Check if paragraph only contains an iframe or video block, if so, don't wrap with <p>
+    if (
+      node.children?.length === 1 &&
+      (node.children[0].type === "iframe" ||
+        (node.children[0].type === "block" && node.children[0].fields?.blockType === "video"))
+    ) {
       return renderLexicalNode(node.children[0], 0)
     }
     return (
@@ -91,7 +138,7 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
   }
 
   // Handle link nodes (Payload specific structure)
-  if (node.type === "link" && node.fields) {
+  if (node.type === "link" && node.fields && node.fields.linkType) {
     const url = node.fields.url || "#"
     const isExternal = node.fields.linkType === "custom"
     return (
@@ -106,7 +153,7 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
       </a>
     )
   }
-  // Handle generic link nodes
+  // Handle generic link nodes (if not caught by Payload specific one)
   if (node.type === "link" && node.url) {
     const isExternal = /^(https?:|mailto:|tel:)/.test(node.url)
     return (
@@ -139,35 +186,30 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
           className="my-6 dynamic-image-container" // Class for CSS styling
           style={
             {
-              // Set CSS variable for the max-width logic in global CSS
               "--original-width": `${imageWidth}px`,
             } as React.CSSProperties
-          } // Type assertion for CSS custom properties
+          }
         >
           <NextImage
             src={imageUrl}
             alt={imageAlt}
-            width={imageWidth} // Intrinsic width of the image
-            height={imageHeight} // Intrinsic height of the image
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px" // Responsive sizing hints
-            priority={index < 2} // Prioritize loading for the first two images
-            className="w-full h-auto rounded-lg shadow-md object-contain" // Styling for the image itself
+            width={imageWidth}
+            height={imageHeight}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
+            priority={index < 2}
+            className="w-full h-auto rounded-lg shadow-md object-contain"
           />
         </div>
       )
     } else {
-      // Fallback for images without width/height (uses regular <img> tag)
-      // This part remains, as NextImage requires width and height.
       return (
         <div key={index} className="my-6 text-center">
-          {" "}
-          {/* Added text-center for mx-auto effect */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl || "/placeholder.svg"}
             alt={imageAlt}
-            className="max-w-full h-auto rounded-lg shadow-md inline-block" // inline-block for centering with text-center
-            style={{ maxWidth: "800px" }} // Cap width for non-NextImage fallback
+            className="max-w-full h-auto rounded-lg shadow-md inline-block"
+            style={{ maxWidth: "800px" }}
             loading="lazy"
           />
         </div>
@@ -175,48 +217,78 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
     }
   }
 
-  // Handle iframe nodes (e.g., YouTube embeds)
+  // Handle video blocks
+  if (node.type === "block" && node.fields?.blockType === "video") {
+    const { videoUrl, videoType, title, aspectRatio, autoplay } = node.fields
+    // Ensure videoUrl and videoType are strings, provide defaults
+    const currentVideoUrl = typeof videoUrl === "string" ? videoUrl : ""
+    const currentVideoType = typeof videoType === "string" ? videoType : "youtube" // Default to youtube
+    const currentAutoplay = typeof autoplay === "boolean" ? autoplay : false
+
+    if (!currentVideoUrl) return null
+
+    const embedUrl = getEmbedUrl(currentVideoUrl, currentVideoType, currentAutoplay)
+
+    if (!embedUrl) return null // If getEmbedUrl returns empty (e.g. bad URL), don't render
+
+    return (
+      <div key={index} className="my-8">
+        {title && <h4 className="text-lg font-semibold mb-3 text-center">{title}</h4>}
+        <div
+          className="relative w-full overflow-hidden rounded-lg shadow-lg mx-auto"
+          style={{
+            aspectRatio: typeof aspectRatio === "string" && aspectRatio.includes("/") ? aspectRatio : "16/9",
+            maxWidth: "800px",
+          }}
+        >
+          <iframe
+            src={embedUrl}
+            className="absolute top-0 left-0 w-full h-full"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            title={title || "Video content"}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  // Handle generic iframe nodes (e.g., YouTube embeds not using the video block)
   if (node.type === "iframe") {
-    const iframeSrc = node.src || node.url || node.source // Check common properties for src
+    const iframeSrc = node.src || node.url || node.source
     if (!iframeSrc) {
-      // console.warn("iframe node is missing src/url/source:", node);
       return null
     }
 
-    // Basic validation for YouTube embed URLs
     let finalSrc = iframeSrc
+    // Attempt to convert to embed URL if it's a watch URL
     if (iframeSrc.includes("youtube.com/watch?v=")) {
       finalSrc = iframeSrc.replace("watch?v=", "embed/")
     } else if (iframeSrc.includes("youtu.be/")) {
       finalSrc = iframeSrc.replace("youtu.be/", "www.youtube.com/embed/")
     }
-    // Add more transformations if needed for other video platforms
 
-    // Ensure src is for embedding
-    if (!finalSrc.includes("/embed/")) {
-      // console.warn("iframe src does not look like an embed URL:", finalSrc);
-      // Optionally, try to construct an embed URL if it's a direct video page
-    }
-
-    const aspectRatio = "16/9" // Default to 16:9, common for videos
-    const width = typeof node.width === "string" ? node.width : "100%" // Default to 100% width
-    // Height is often controlled by aspect ratio for responsive embeds
+    const defaultAspectRatio = "16/9"
+    const currentWidth = typeof node.width === "string" ? node.width : "100%"
 
     return (
       <div
         key={index}
-        className="my-6 relative w-full overflow-hidden rounded-lg shadow-md"
-        style={{ paddingBottom: `calc(100% / (${aspectRatio}))` }} // Aspect ratio padding trick
+        className="my-6 relative w-full overflow-hidden rounded-lg shadow-md mx-auto"
+        style={{
+          paddingBottom: `calc(100% / (${defaultAspectRatio}))`, // Aspect ratio padding trick
+          maxWidth: "800px", // Cap width for generic iframes too
+        }}
       >
         <iframe
           src={finalSrc}
-          width={width}
-          // height is controlled by aspect ratio wrapper
+          width={currentWidth}
           className="absolute top-0 left-0 w-full h-full"
           frameBorder={node.frameBorder || "0"}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen={node.allowFullScreen !== undefined ? node.allowFullScreen : true}
-          title={node.altText || "Embedded content"} // Use altText or a generic title
+          title={node.altText || "Embedded content"}
         />
       </div>
     )
@@ -255,7 +327,6 @@ interface LexicalRendererProps {
 }
 
 export const LexicalRenderer: React.FC<LexicalRendererProps> = ({ content }) => {
-  // ... (existing logic for string content and root object handling remains the same) ...
   if (typeof content === "string") {
     return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content }} />
   }
