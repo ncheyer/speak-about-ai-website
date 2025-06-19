@@ -27,33 +27,66 @@ const getEmbedUrl = (url: string): string => {
   return url
 }
 
-// Helper function to render video embed HTML
+// Helper function to render video embed HTML with enhanced debugging
 const renderVideoEmbed = (node: any): string => {
+  console.log("Attempting to render video embed. Node data:", JSON.stringify(node.data, null, 2))
+
   if (!node.data?.target) {
-    return ""
+    const debugMsg = "Debug: Video embed node found, but 'node.data.target' is missing."
+    console.error(debugMsg, "Full node:", JSON.stringify(node, null, 2))
+    return `<div class="my-4 p-2 bg-red-100 text-red-700 border border-red-300 rounded">${debugMsg}</div>`
   }
 
   const target = node.data.target
-  const contentTypeId = target.sys?.contentType?.sys?.id
-  const fields = target.fields || {}
+  console.log("Video embed target:", JSON.stringify(target, null, 2))
 
-  // Try different possible field names for video URL
-  const possibleUrlFields = ["videoUrl", "url", "link", "youtubeUrl", "videoLink"]
+  const contentTypeId = target.sys?.contentType?.sys?.id
+  if (!contentTypeId) {
+    const debugMsg = "Debug: Video embed target found, but 'contentTypeId' is missing."
+    console.error(debugMsg, "Target sys:", JSON.stringify(target.sys, null, 2))
+    return `<div class="my-4 p-2 bg-red-100 text-red-700 border border-red-300 rounded">${debugMsg}</div>`
+  }
+  console.log("Video embed contentTypeId:", contentTypeId)
+
+  const fields = target.fields || {}
+  console.log(`Video embed fields for contentType '${contentTypeId}':`, JSON.stringify(fields, null, 2))
+
+  const possibleUrlFields = ["videoUrl", "url", "link", "youtubeUrl", "videoLink", "file"] // Added "file" for potential direct asset links
   let videoUrl = null
+  let foundFieldName = null
 
   for (const fieldName of possibleUrlFields) {
     if (fields[fieldName]) {
-      videoUrl = fields[fieldName]
-      break
+      // If it's a direct asset (e.g., from a 'file' field)
+      if (typeof fields[fieldName] === "object" && fields[fieldName].fields?.file?.url) {
+        videoUrl = fields[fieldName].fields.file.url
+      } else if (typeof fields[fieldName] === "object" && fields[fieldName].url) {
+        // For simple link objects
+        videoUrl = fields[fieldName].url
+      }
+      // For simple text fields
+      else if (typeof fields[fieldName] === "string") {
+        videoUrl = fields[fieldName]
+      }
+
+      if (videoUrl) {
+        foundFieldName = fieldName
+        break
+      }
     }
   }
 
+  console.log(`Searched for video URL. Found field: '${foundFieldName}', Value: '${videoUrl}'`)
+
   if (!videoUrl || typeof videoUrl !== "string") {
-    return ""
+    const debugMsg = `Debug: Video entry (type: ${contentTypeId}) found, but no valid URL field. Looked for: ${possibleUrlFields.join(", ")}. Available fields: ${Object.keys(fields).join(", ")}.`
+    console.error(debugMsg)
+    return `<div class="my-4 p-2 bg-yellow-100 text-yellow-700 border border-yellow-300 rounded">${debugMsg}</div>`
   }
 
   const embedUrl = getEmbedUrl(videoUrl)
   const title = fields.title || fields.name || "Embedded video"
+  console.log("Final video embed URL:", embedUrl)
 
   return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
             <iframe
@@ -101,19 +134,19 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       // Handle Markdown string
       contentHtml = marked(post.content)
       contentHtml = fixYouTubeIframes(contentHtml)
-    } else if (typeof post.content === "object" && post.content.nodeType) {
+    } else if (typeof post.content === "object" && post.content.nodeType === "document") {
+      // More specific check for Rich Text Document
       // Handle Contentful Rich Text object
       const renderOptions: Options = {
         renderNode: {
-          // Handle block-level embedded entries
           [BLOCKS.EMBEDDED_ENTRY]: (node) => {
+            console.log("BLOCKS.EMBEDDED_ENTRY found")
             return renderVideoEmbed(node)
           },
-          // Handle inline embedded entries
           [INLINES.EMBEDDED_ENTRY]: (node) => {
+            console.log("INLINES.EMBEDDED_ENTRY found")
             return renderVideoEmbed(node)
           },
-          // Handle embedded assets (images)
           [BLOCKS.EMBEDDED_ASSET]: (node) => {
             if (!node.data?.target?.fields?.file) {
               return ""
@@ -134,14 +167,17 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       try {
         contentHtml = documentToHtmlString(post.content as Document, renderOptions)
-        contentHtml = fixYouTubeIframes(contentHtml)
+        contentHtml = fixYouTubeIframes(contentHtml) // In case some iframes are still raw HTML
       } catch (error) {
         console.error("Error rendering rich text:", error)
-        contentHtml = "<p>Error rendering content</p>"
+        contentHtml = "<p>Error rendering content. Please check console.</p>"
       }
     } else {
-      // Fallback for other content types
-      contentHtml = "<p>Content format not supported</p>"
+      console.warn(
+        "Content format not recognized as Markdown string or Contentful Rich Text Document. Content:",
+        post.content,
+      )
+      contentHtml = "<p>Content format not supported or content is empty.</p>"
     }
   }
 
