@@ -14,6 +14,7 @@ const getEmbedUrl = (url: string): string => {
     const urlObj = new URL(url)
     if (urlObj.hostname.includes("youtube.com") || urlObj.hostname.includes("youtu.be")) {
       const videoId = urlObj.hostname.includes("youtu.be") ? urlObj.pathname.slice(1) : urlObj.searchParams.get("v")
+      // Using rel=0 to prevent related videos from other channels after the video finishes.
       return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0` : url
     }
     if (urlObj.hostname.includes("vimeo.com")) {
@@ -22,6 +23,7 @@ const getEmbedUrl = (url: string): string => {
     }
   } catch (e) {
     // Invalid URL, return original
+    console.error("Error parsing video URL:", e)
     return url
   }
   return url // Fallback for other video services
@@ -54,13 +56,19 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       const renderOptions: Options = {
         renderNode: {
           [BLOCKS.EMBEDDED_ENTRY]: (node) => {
-            const contentType = node.data.target?.sys?.contentType?.sys?.id
-            // This assumes you have a Contentful content type with the ID 'videoEmbed'
+            // Ensure node.data.target and its properties exist
+            if (!node.data?.target?.sys?.contentType?.sys?.id) {
+              return ""
+            }
+            const contentType = node.data.target.sys.contentType.sys.id
+
+            // Assumes your Contentful content type for videos has the ID 'videoEmbed'
             // and it has a field with the ID 'videoUrl'.
             if (contentType === "videoEmbed") {
-              const videoUrl = node.data.target?.fields?.videoUrl
+              const videoUrl = node.data.target.fields?.videoUrl
               if (typeof videoUrl === "string") {
                 const embedUrl = getEmbedUrl(videoUrl)
+                // Responsive iframe wrapper
                 return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
                           <iframe
                               src="${embedUrl}"
@@ -76,19 +84,26 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             return "" // Don't render other unhandled embedded entries
           },
           [BLOCKS.EMBEDDED_ASSET]: (node) => {
-            const file = node.data.target?.fields?.file
-            if (file?.contentType.startsWith("image/")) {
+            // Ensure node.data.target and its properties exist
+            if (!node.data?.target?.fields?.file) {
+              return ""
+            }
+            const file = node.data.target.fields.file
+            if (file?.contentType?.startsWith("image/")) {
               const imageUrl = getImageUrl(file.url)
               const altText = node.data.target.fields.title || ""
-              // Note: We can't use Next/Image here because we're generating a raw HTML string.
               return `<div class="my-6"><img src="${imageUrl}" alt="${altText}" class="w-full h-auto rounded-lg shadow-md object-contain" loading="lazy" /></div>`
             }
             return ""
           },
         },
       }
-
-      contentHtml = documentToHtmlString(richTextDocument as Document, renderOptions)
+      // Ensure richTextDocument is not null or undefined before passing
+      if (richTextDocument) {
+        contentHtml = documentToHtmlString(richTextDocument as Document, renderOptions)
+      } else {
+        contentHtml = "" // Or some fallback message
+      }
     }
   }
 
