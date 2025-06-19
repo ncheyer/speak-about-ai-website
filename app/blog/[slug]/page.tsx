@@ -1,4 +1,4 @@
-import { getBlogPost, getBlogPosts } from "@/lib/payload-blog"
+import { getBlogPost, getBlogPosts } from "@/lib/blog-data"
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import LexicalRenderer from "@/components/LexicalRenderer"

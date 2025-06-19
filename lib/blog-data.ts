@@ -45,3 +45,10 @@ export async function getRelatedBlogPosts(currentPostId: string, limit = 3) {
     return []
   }
 }
+
+// --- TEMPORARY ALIAS --------------------------------------------------
+// Keeps older code that calls `getBlogPost()` working.
+// Prefer `getBlogPostBySlug()` in new code.
+export async function getBlogPost(slug: string) {
+  return getBlogPostBySlug(slug)
+}
