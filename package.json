@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@contentful/rich-text-html-renderer": "latest",
-    "@contentful/rich-text-types": "^16.8.5",
+    "@contentful/rich-text-types": "latest",
     "@faceless-ui/modal": "latest",
     "@faceless-ui/scroll-info": "latest",
     "@hookform/resolvers": "^3.9.0",

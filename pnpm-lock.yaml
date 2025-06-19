@@ -12,8 +12,8 @@ importers:
         specifier: latest
         version: 17.0.1
       '@contentful/rich-text-types':
-        specifier: ^16.8.5
-        version: 16.8.5
+        specifier: latest
+        version: 17.0.1
       '@faceless-ui/modal':
         specifier: latest
         version: 3.0.0-beta.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
