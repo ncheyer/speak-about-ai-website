@@ -47,7 +47,28 @@ const healthcareSpeakers: स्पीकर[] = [
     languages: ["English"],
     feeRange: "$10,000 - $20,000",
   },
-  // Add more speakers as needed
+  {
+    id: "3",
+    name: "Dr. Shafi Ahmed",
+    slug: "dr-shafi-ahmed",
+    title: "Global Surgeon, Futurist & Innovator",
+    bio: "Dr. Ahmed is a multi-award-winning surgeon and a global advocate for accessible and affordable healthcare through technology. He is renowned for performing the world's first virtual reality surgery.",
+    imageUrl: "/speakers/dr-shafi-ahmed-headshot.jpg",
+    tags: ["Surgical Innovation", "Virtual Reality", "Medical Education"],
+    speakingTopics: [
+      "The Future of Surgery: AI, VR, and Robotics",
+      "Democratizing Medical Education with Technology",
+      "Innovation in Healthcare Delivery",
+    ],
+    featured: true,
+    socialMedia: {
+      linkedin: "https://www.linkedin.com/in/shafiahmed/",
+      twitter: "https://twitter.com/ShafiAhmed5",
+    },
+    location: "London, UK",
+    languages: ["English"],
+    feeRange: "$20,000 - $30,000",
+  },
 ]
 
 export const metadata: Metadata = {
@@ -62,7 +83,7 @@ export const metadata: Metadata = {
       "Discover and book influential healthcare keynote speakers who are experts in artificial intelligence, medical technology, and the future of digital health.",
     images: [
       {
-        url: "/placeholder.svg?width=1200&height=630",
+        url: "/og-image-healthcare.png",
         width: 1200,
         height: 630,
         alt: "Healthcare Keynote Speakers on AI",
@@ -74,12 +95,11 @@ export const metadata: Metadata = {
     title: "Top Healthcare Keynote Speakers | AI Experts for Medical Events",
     description:
       "Find the perfect AI in healthcare keynote speaker for your event. Experts in medical innovation, digital health, and AI applications in medicine.",
-    images: ["/placeholder.svg?width=1200&height=630"],
+    images: ["/og-image-healthcare.png"],
   },
 }
 
 export default function HealthcareKeynoteSpeakersPage() {
-  // In a real app, you'd fetch speakers dynamically
-  const featuredSpeakers = healthcareSpeakers.filter((s) => s.featured).slice(0, 3)
+  const featuredSpeakers = healthcareSpeakers.filter((s) => s.featured)
   return <HealthcareKeynoteSpeakersClientPage initialSpeakers={featuredSpeakers} />
 }

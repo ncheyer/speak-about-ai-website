@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SpeakerCard } from "@/components/speaker-card"
 import { Brain, Stethoscope, ShieldCheck } from "lucide-react"
-import type { स्पीकर } from "@/lib/speakers-data" // Assuming this type is available
+import type { स्पीकर } from "@/lib/speakers-data"
 
 interface HealthcareKeynoteSpeakersClientPageProps {
   initialSpeakers: स्पीकर[]
@@ -50,16 +50,13 @@ const textSections = [
 export default function HealthcareKeynoteSpeakersClientPage({
   initialSpeakers,
 }: HealthcareKeynoteSpeakersClientPageProps) {
-  const [speakers, setSpeakers] = useState<स्पीकर[]>(initialSpeakers || [])
-  // Add loading/error states if fetching speakers client-side
+  const [speakers] = useState<स्पीकर[]>(initialSpeakers || [])
 
   return (
     <div className="bg-white text-gray-800">
       {/* Hero Section */}
       <section className="relative py-20 md:py-32 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div className="absolute inset-0 opacity-50">
-          {/* Optional: Add a subtle background pattern or image here */}
-        </div>
+        <div className="absolute inset-0 opacity-50" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">AI in Healthcare Keynote Speakers</h1>
           <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto mb-10">
@@ -86,8 +83,8 @@ export default function HealthcareKeynoteSpeakersClientPage({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
             {benefits.map((benefit) => (
-              <div key={benefit.title} className="bg-white p-6 rounded-lg shadow-lg">
-                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-4">
+              <div key={benefit.title} className="bg-white p-6 rounded-lg shadow-lg text-center">
+                <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 mx-auto">
                   {benefit.icon}
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{benefit.title}</h3>
@@ -98,7 +95,7 @@ export default function HealthcareKeynoteSpeakersClientPage({
         </div>
       </section>
 
-      {/* Text Sections Container - Muted Blue Gradient */}
+      {/* Text Sections Container */}
       <section className="py-16 md:py-24 bg-gradient-to-b from-blue-800 to-blue-950 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 md:space-y-16">
           {textSections.map((section, index) => (
@@ -126,7 +123,12 @@ export default function HealthcareKeynoteSpeakersClientPage({
               ))}
             </div>
             <div className="text-center mt-12 md:mt-16">
-              <Button size="lg" variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50" asChild>
+              <Button
+                size="lg"
+                variant="outline"
+                className="bg-white text-blue-600 border-blue-600 hover:bg-blue-50"
+                asChild
+              >
                 <Link href="/speakers?industry=healthcare">View All Healthcare AI Speakers</Link>
               </Button>
             </div>
@@ -134,7 +136,7 @@ export default function HealthcareKeynoteSpeakersClientPage({
         </section>
       )}
 
-      {/* CTA Section - Muted Blue Gradient */}
+      {/* CTA Section */}
       <section className="py-16 md:py-24 bg-gradient-to-r from-blue-700 to-blue-900 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Transform Your Healthcare Event?</h2>
