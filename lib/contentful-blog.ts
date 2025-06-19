@@ -38,6 +38,12 @@ export interface BlogPost {
   categories: { slug: string; name: string }[]
 }
 
+// Interface for derived categories, used by BlogClientPage
+export interface DerivedCategory {
+  slug: string
+  name: string
+}
+
 type Sys = { id: string }
 type Asset = {
   sys: Sys
@@ -59,13 +65,6 @@ function extractAsset(assets: Asset[] | undefined, id: string | undefined) {
   }
 }
 
-/**
- * Traverses a Rich Text object and replaces link nodes with the full
- * entry or asset objects from the 'includes' array.
- * @param content The Rich Text JSON object.
- * @param includes The 'includes' object from the Contentful API response.
- * @returns A new Rich Text object with resolved links.
- */
 function resolveRichTextLinks(content: any, includes: Includes | undefined): any {
   if (!content?.content || !includes) {
     return content
@@ -74,7 +73,6 @@ function resolveRichTextLinks(content: any, includes: Includes | undefined): any
   const entryMap = new Map(includes.Entry?.map((e) => [e.sys.id, e]) || [])
   const assetMap = new Map(includes.Asset?.map((a) => [a.sys.id, a]) || [])
 
-  // Create a deep copy to avoid mutating the original data
   const newContent = JSON.parse(JSON.stringify(content))
 
   function traverse(node: any) {
@@ -82,16 +80,15 @@ function resolveRichTextLinks(content: any, includes: Includes | undefined): any
     if (nodeType === "embedded-entry-block" || nodeType === "embedded-entry-inline") {
       const id = node.data?.target?.sys?.id
       if (id && entryMap.has(id)) {
-        node.data.target = entryMap.get(id) // Replace link with full entry
+        node.data.target = entryMap.get(id)
       }
     } else if (nodeType === "embedded-asset-block") {
       const id = node.data?.target?.sys?.id
       if (id && assetMap.has(id)) {
-        node.data.target = assetMap.get(id) // Replace link with full asset
+        node.data.target = assetMap.get(id)
       }
     }
 
-    // Recursively traverse children
     if (node.content && Array.isArray(node.content)) {
       node.content.forEach(traverse)
     }
@@ -108,34 +105,38 @@ function mapEntryToPost(entry: any, includes?: Includes): BlogPost {
   } = entry
 
   const featuredImageAsset = includes?.Asset ? extractAsset(includes.Asset, fields.featuredImage?.sys?.id) : undefined
-
-  // *** THIS IS THE FIX ***
-  // Resolve links within the main content field before returning
   const resolvedContent = resolveRichTextLinks(fields.content, includes)
+
+  // Ensure categories are mapped correctly and filter out any malformed ones
+  const categories = (fields.categories || [])
+    .map((c: any) => {
+      if (c && c.fields && c.fields.slug && c.fields.name) {
+        return { slug: c.fields.slug, name: c.fields.name }
+      }
+      return null // Invalid category structure
+    })
+    .filter((cat: any): cat is { slug: string; name: string } => cat !== null) // Type guard to filter out nulls
 
   return {
     id,
-    title: fields.title,
-    slug: fields.slug,
+    title: fields.title || "Untitled Post",
+    slug: fields.slug || `post-${id}`,
     excerpt: fields.excerpt ?? "",
-    content: resolvedContent, // Use the resolved content
+    content: resolvedContent,
     publishedDate: fields.publishedDate || entry.sys.createdAt,
     readTime: fields.readTime,
     featured: fields.featured ?? false,
     author: { name: fields.author?.fields?.name ?? "Speak About AI" },
     featuredImage: featuredImageAsset,
-    categories:
-      fields.categories?.map((c: any) => ({
-        slug: c.fields.slug,
-        name: c.fields.name,
-      })) ?? [],
+    categories: categories,
   }
 }
 
 /* ---------- Public API ---------- */
-const INCLUDE_LEVEL = 10 // Max include level for Contentful
+const INCLUDE_LEVEL = 10
 
-export async function getBlogPosts(limit = 10): Promise<BlogPost[]> {
+export async function getBlogPosts(limit = 1000): Promise<BlogPost[]> {
+  // Increased limit for category derivation
   const data = await fetchContentfulAPI<{ items: any[]; includes?: Includes }>(
     `entries?content_type=blogPost&order=-fields.publishedDate&limit=${limit}&include=${INCLUDE_LEVEL}`,
   )
@@ -150,6 +151,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
   return mapEntryToPost(data.items[0], data.includes)
 }
 
+// getFeaturedBlogPosts and getRelatedBlogPosts remain the same as your last synced version
 export async function getFeaturedBlogPosts(): Promise<BlogPost[]> {
   const data = await fetchContentfulAPI<{ items: any[]; includes?: Includes }>(
     `entries?content_type=blogPost&fields.featured=true&order=-fields.publishedDate&include=${INCLUDE_LEVEL}`,

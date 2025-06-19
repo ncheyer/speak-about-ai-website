@@ -1,57 +1,28 @@
-import Link from "next/link"
-import Image from "next/image"
-import { getBlogPosts, type BlogPost } from "@/lib/blog-data"
-import { getImageUrl } from "@/lib/utils" // Import the helper function
+import { getBlogPosts, type BlogPost, type DerivedCategory } from "@/lib/contentful-blog"
+import BlogClientPage from "./blog-client-page"
 
-export type { BlogPost }
+// Helper to collect and deduplicate categories from posts
+function deriveCategories(posts: BlogPost[]): DerivedCategory[] {
+  const categoryMap = new Map<string, DerivedCategory>()
+  posts.forEach((post) => {
+    if (post.categories && Array.isArray(post.categories)) {
+      post.categories.forEach((cat) => {
+        if (cat && cat.slug && cat.name && !categoryMap.has(cat.slug)) {
+          categoryMap.set(cat.slug, { slug: cat.slug, name: cat.name })
+        }
+      })
+    }
+  })
+  return Array.from(categoryMap.values()).sort((a, b) => a.name.localeCompare(b.name))
+}
 
 export default async function BlogPage() {
-  const posts = await getBlogPosts()
+  const allPosts = await getBlogPosts() // already sorted newest→oldest
 
-  return (
-    <div className="bg-white text-gray-800">
-      <main className="max-w-4xl mx-auto p-6">
-        <h1 className="text-4xl font-bold mb-8 text-center">Blog</h1>
-        <div className="grid gap-12">
-          {posts.map((post) => {
-            const featuredImageUrl = getImageUrl(post.featuredImage?.url) // Use the helper
-            return (
-              <article key={post.id} className="border-b pb-8 last:border-b-0">
-                {featuredImageUrl && (
-                  <Link href={`/blog/${post.slug}`}>
-                    <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden">
-                      <Image
-                        src={featuredImageUrl || "/placeholder.svg"}
-                        alt={post.featuredImage?.alt || post.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  </Link>
-                )}
-                <h2 className="text-3xl font-bold mb-2 hover:text-blue-600 transition-colors duration-200">
-                  <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-                </h2>
-                <div className="text-sm text-gray-500 mb-4">
-                  <span>By {post.author?.name || "Speak About AI"}</span>
-                  <span className="mx-2">•</span>
-                  <span>
-                    {new Date(post.publishedDate).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
-                <p className="text-gray-600 mb-4">{post.excerpt}</p>
-                <Link href={`/blog/${post.slug}`} className="text-blue-600 hover:underline font-semibold">
-                  Read more &rarr;
-                </Link>
-              </article>
-            )
-          })}
-        </div>
-      </main>
-    </div>
-  )
+  const categories = deriveCategories(allPosts)
+
+  const featuredPosts = allPosts.slice(0, 3) // top 3 newest
+  const nonFeaturedPosts = allPosts.slice(3) // everything else
+
+  return <BlogClientPage posts={nonFeaturedPosts} featuredPosts={featuredPosts} categories={categories} />
 }
