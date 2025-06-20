@@ -1,4 +1,4 @@
-import { Award, MapPin } from "lucide-react"
+import { Award, MapPin, Globe } from "lucide-react" // Added Globe
 import Link from "next/link"
 import Image from "next/image"
 
@@ -59,14 +59,22 @@ export default function Hero() {
 
             {/* Social Proof Stat */}
             <div>
-              {" "}
-              {/* Removed text-center */}
-              <p className="text-2xl font-bold text-black font-neue-haas flex items-center justify-start gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
                 {" "}
-                {/* Changed justify-center to justify-start */}
-                <MapPin className="w-6 h-6 text-[#1E68C6]" />
-                Silicon Valley Based
-              </p>
+                {/* Wrapper for layout */}
+                <p className="text-xl font-bold text-black font-neue-haas flex items-center justify-start gap-2 mb-2 sm:mb-0">
+                  {" "}
+                  {/* Reduced text size from text-2xl to text-xl */}
+                  <MapPin className="w-5 h-5 text-[#1E68C6]" /> {/* Adjusted icon size slightly */}
+                  Silicon Valley Based
+                </p>
+                <p className="text-xl font-bold text-black font-neue-haas flex items-center justify-start gap-2">
+                  {" "}
+                  {/* Reduced text size */}
+                  <Globe className="w-5 h-5 text-[#1E68C6]" /> {/* Added Globe icon and adjusted size */}
+                  Books Internationally
+                </p>
+              </div>
             </div>
           </div>
 
