@@ -30,7 +30,7 @@ const getEmbedUrl = (url: string): string => {
 // Helper function to render video embed HTML
 const renderVideoEmbed = (node: Block | Inline): string => {
   // Critical Debugging for Video Embeds:
-  console.log("Attempting to render EMBEDDED_ENTRY. Node:", JSON.stringify(node, null, 2))
+  // console.log("Attempting to render EMBEDDED_ENTRY. Node:", JSON.stringify(node, null, 2))
 
   if (!node.data?.target?.sys?.contentType?.sys?.id) {
     console.error("EMBEDDED_ENTRY: Missing target, sys, contentType, or id.", node.data)
@@ -40,7 +40,7 @@ const renderVideoEmbed = (node: Block | Inline): string => {
   const contentType = node.data.target.sys.contentType.sys.id
   const fields = node.data.target.fields
 
-  console.log(`EMBEDDED_ENTRY: contentType='${contentType}', fields:`, JSON.stringify(fields, null, 2))
+  // console.log(`EMBEDDED_ENTRY: contentType='${contentType}', fields:`, JSON.stringify(fields, null, 2))
 
   // Adapt this to your Contentful Video content type ID and URL field ID
   if (
@@ -57,7 +57,7 @@ const renderVideoEmbed = (node: Block | Inline): string => {
 
     if (typeof videoUrlField === "string") {
       const embedUrl = getEmbedUrl(videoUrlField)
-      console.log(`EMBEDDED_ENTRY: Rendering video with URL: ${embedUrl}`)
+      // console.log(`EMBEDDED_ENTRY: Rendering video with URL: ${embedUrl}`)
       return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
                 <iframe
                     src="${embedUrl}"
@@ -73,7 +73,7 @@ const renderVideoEmbed = (node: Block | Inline): string => {
       return `<div class="my-2 p-2 bg-yellow-100 text-yellow-700">Warning: Video URL not found or invalid for contentType '${contentType}'.</div>`
     }
   }
-  console.warn(`EMBEDDED_ENTRY: Unhandled content type '${contentType}'.`)
+  // console.warn(`EMBEDDED_ENTRY: Unhandled content type '${contentType}'.`)
   return "" // Return empty string for unhandled embedded entries
 }
 
@@ -101,7 +101,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const post = await getBlogPost(params.slug)
 
   // CRITICAL DEBUG LOG:
-  console.log("Full post object received from Contentful for slug", params.slug, ":", JSON.stringify(post, null, 2))
+  // console.log("Full post object received from Contentful for slug", params.slug, ":", JSON.stringify(post, null, 2))
 
   if (!post) {
     notFound()
@@ -113,13 +113,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   if (post.content) {
     // Check if content is a string (potential Markdown) or an object (Rich Text)
     if (typeof post.content === "string") {
-      console.log("Rendering content as Markdown string.")
+      // console.log("Rendering content as Markdown string.")
       contentHtml = marked(post.content)
       contentHtml = fixYouTubeIframes(contentHtml) // Fallback for raw iframes in markdown
     } else if (typeof post.content === "object" && post.content.nodeType === "document") {
-      console.log("Rendering content as Contentful Rich Text Document.")
+      // Handles Contentful Rich Text
       const richTextDocument = post.content as Document
-
       const renderOptions: Options = {
         renderMark: {
           [MARKS.BOLD]: (text) => `<strong>${text}</strong>`,
@@ -128,10 +127,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           [MARKS.CODE]: (text) => `<code class="bg-gray-100 p-1 rounded text-sm">${text}</code>`,
         },
         renderNode: {
-          [BLOCKS.EMBEDDED_ENTRY]: renderVideoEmbed,
-          [INLINES.EMBEDDED_ENTRY]: renderVideoEmbed,
+          [BLOCKS.EMBEDDED_ENTRY]: renderVideoEmbed, // For videos
+          [INLINES.EMBEDDED_ENTRY]: renderVideoEmbed, // For inline videos
           [BLOCKS.EMBEDDED_ASSET]: (node) => {
-            console.log("Attempting to render EMBEDDED_ASSET. Node:", JSON.stringify(node, null, 2))
+            // console.log("Attempting to render EMBEDDED_ASSET. Node:", JSON.stringify(node, null, 2))
             if (!node.data?.target?.fields?.file) {
               console.error("EMBEDDED_ASSET: Missing target or file data.", node.data)
               return ""
@@ -140,36 +139,30 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             if (file?.contentType?.startsWith("image/")) {
               const imageUrl = getImageUrl(file.url) // Ensure getImageUrl handles Contentful's // protocol
               const altText = node.data.target.fields.description || node.data.target.fields.title || ""
-              console.log(`EMBEDDED_ASSET: Rendering image with URL: ${imageUrl}`)
+              // console.log(`EMBEDDED_ASSET: Rendering image with URL: ${imageUrl}`)
               return `<div class="my-6"><img src="${imageUrl}" alt="${altText}" class="w-full h-auto rounded-lg shadow-md object-contain" loading="lazy" /></div>`
             }
-            console.warn("EMBEDDED_ASSET: Unhandled asset content type:", file?.contentType)
+            // console.warn("EMBEDDED_ASSET: Unhandled asset content type:", file?.contentType)
             return ""
           },
-          // Add more renderers for other BLOCKS (PARAGRAPH, HEADING_1, etc.) if default isn't enough
-          // or if you want to add specific classes.
-          // Example:
-          // [BLOCKS.PARAGRAPH]: (node, next) => `<p class="my-4">${next(node.content)}</p>`,
-          // [BLOCKS.HEADING_1]: (node, next) => `<h1 class="text-3xl font-bold my-6">${next(node.content)}</h1>`,
+          // Removing custom renderers for basic blocks to rely on prose defaults
+          // [BLOCKS.PARAGRAPH]: (node, next) => `<p class="my-4 text-base leading-relaxed">${next(node.content)}</p>`,
+          // [BLOCKS.HEADING_1]: (node, next) => `<h1 class="text-4xl font-bold my-6">${next(node.content)}</h1>`,
+          // ... other heading levels
+          // [BLOCKS.UL_LIST]: (node, next) => `<ul class="list-disc pl-5 my-4 space-y-1">${next(node.content)}</ul>`,
+          // [BLOCKS.OL_LIST]: (node, next) => `<ol class="list-decimal pl-5 my-4 space-y-1">${next(node.content)}</ol>`,
+          // [BLOCKS.LIST_ITEM]: (node, next) => `<li class="text-base">${next(node.content)}</li>`,
         },
       }
-
-      try {
-        contentHtml = documentToHtmlString(richTextDocument, renderOptions)
-        // The fixYouTubeIframes might not be necessary if all videos are embedded entries
-        // but can be kept as a fallback if some raw HTML iframes might still exist.
-        contentHtml = fixYouTubeIframes(contentHtml)
-      } catch (error) {
-        console.error("Error rendering Contentful Rich Text:", error)
-        contentHtml = "<p>Error displaying content. Please check the console.</p>"
-      }
+      contentHtml = documentToHtmlString(richTextDocument, renderOptions)
+      contentHtml = fixYouTubeIframes(contentHtml) // Fallback
     } else {
-      console.warn(
-        "Post content is not a string (Markdown) or a Rich Text Document object. Content type:",
-        typeof post.content,
-        "Value:",
-        post.content,
-      )
+      // console.warn(
+      //   "Post content is not a string (Markdown) or a Rich Text Document object. Content type:",
+      //   typeof post.content,
+      //   "Value:",
+      //   post.content,
+      // )
       contentHtml = "<p>Content is in an unexpected format.</p>"
     }
   } else {
