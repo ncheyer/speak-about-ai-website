@@ -1,11 +1,13 @@
 import { getBlogPost, getBlogPosts } from "@/lib/blog-data"
 import Image from "next/image"
+import Link from "next/link"
 import { notFound } from "next/navigation"
-import { marked } from "marked" // Keep for potential Markdown fallback
-import { getImageUrl } from "@/lib/utils" // Ensure this handles Contentful URLs correctly
+import { marked } from "marked"
+import { getImageUrl } from "@/lib/utils"
 import { documentToHtmlString, type Options } from "@contentful/rich-text-html-renderer"
-import { BLOCKS, INLINES, MARKS } from "@contentful/rich-text-types" // Added MARKS
+import { BLOCKS, INLINES, MARKS } from "@contentful/rich-text-types"
 import type { Document, Block, Inline } from "@contentful/rich-text-types"
+import { Badge } from "@/components/ui/badge"
 
 // Helper function to create embed URLs for videos
 const getEmbedUrl = (url: string): string => {
@@ -22,62 +24,40 @@ const getEmbedUrl = (url: string): string => {
     }
   } catch (e) {
     console.error("Error parsing video URL:", e, "URL was:", url)
-    return url // Return original URL on error
+    return url
   }
   return url
 }
 
 // Helper function to render video embed HTML
 const renderVideoEmbed = (node: Block | Inline): string => {
-  // Critical Debugging for Video Embeds:
-  // console.log("Attempting to render EMBEDDED_ENTRY. Node:", JSON.stringify(node, null, 2))
-
   if (!node.data?.target?.sys?.contentType?.sys?.id) {
     console.error("EMBEDDED_ENTRY: Missing target, sys, contentType, or id.", node.data)
     return `<div class="my-2 p-2 bg-red-100 text-red-700">Error: Video data missing.</div>`
   }
-
   const contentType = node.data.target.sys.contentType.sys.id
   const fields = node.data.target.fields
-
-  // console.log(`EMBEDDED_ENTRY: contentType='${contentType}', fields:`, JSON.stringify(fields, null, 2))
-
-  // Adapt this to your Contentful Video content type ID and URL field ID
   if (
     (contentType === "video" || contentType === "videoEmbed" || contentType === "youtubeVideo") &&
     fields &&
     typeof fields === "object"
   ) {
-    if (!fields) {
-      console.error(`EMBEDDED_ENTRY: Fields are unexpectedly missing for contentType '${contentType}'.`)
-      return `<div class="my-2 p-2 bg-red-100 text-red-700">Error: Video data fields missing.</div>`
-    }
     const videoUrlField = fields.videoUrl || fields.url || fields.youtubeUrl || fields.file?.url
     const title = fields.title || fields.name || "Embedded video"
-
     if (typeof videoUrlField === "string") {
       const embedUrl = getEmbedUrl(videoUrlField)
-      // console.log(`EMBEDDED_ENTRY: Rendering video with URL: ${embedUrl}`)
       return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
-                <iframe
-                    src="${embedUrl}"
-                    class="absolute top-0 left-0 w-full h-full"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowfullscreen
-                    title="${title}"
-                ></iframe>
-            </div>`
+              <iframe src="${embedUrl}" class="absolute top-0 left-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen title="${title}"></iframe>
+          </div>`
     } else {
       console.error("EMBEDDED_ENTRY: Video URL field is not a string or not found.", videoUrlField)
-      return `<div class="my-2 p-2 bg-yellow-100 text-yellow-700">Warning: Video URL not found or invalid for contentType '${contentType}'.</div>`
+      return `<div class="my-2 p-2 bg-yellow-100 text-yellow-700">Warning: Video URL not found or invalid.</div>`
     }
   }
-  // console.warn(`EMBEDDED_ENTRY: Unhandled content type '${contentType}'.`)
-  return "" // Return empty string for unhandled embedded entries
+  return ""
 }
 
-// Helper function to fix YouTube URLs in iframe src attributes (for raw HTML fallback)
+// Helper function to fix YouTube URLs in iframe src attributes
 const fixYouTubeIframes = (html: string): string => {
   if (!html || typeof html !== "string") return ""
   return html.replace(
@@ -85,8 +65,8 @@ const fixYouTubeIframes = (html: string): string => {
     (match, beforeSrc, videoId, afterSrc) => {
       const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`
       return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
-                <iframe${beforeSrc} src="${embedUrl}"${afterSrc} class="absolute top-0 left-0 w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-              </div>`
+              <iframe${beforeSrc} src="${embedUrl}"${afterSrc} class="absolute top-0 left-0 w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>`
     },
   )
 }
@@ -100,9 +80,6 @@ type BlogPostPageProps = {
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const post = await getBlogPost(params.slug)
 
-  // CRITICAL DEBUG LOG:
-  // console.log("Full post object received from Contentful for slug", params.slug, ":", JSON.stringify(post, null, 2))
-
   if (!post) {
     notFound()
   }
@@ -111,13 +88,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   let contentHtml = ""
 
   if (post.content) {
-    // Check if content is a string (potential Markdown) or an object (Rich Text)
     if (typeof post.content === "string") {
-      // console.log("Rendering content as Markdown string.")
       contentHtml = marked(post.content)
-      contentHtml = fixYouTubeIframes(contentHtml) // Fallback for raw iframes in markdown
+      contentHtml = fixYouTubeIframes(contentHtml)
     } else if (typeof post.content === "object" && post.content.nodeType === "document") {
-      // Handles Contentful Rich Text
       const richTextDocument = post.content as Document
       const renderOptions: Options = {
         renderMark: {
@@ -127,42 +101,56 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           [MARKS.CODE]: (text) => `<code class="bg-gray-100 p-1 rounded text-sm">${text}</code>`,
         },
         renderNode: {
-          [BLOCKS.EMBEDDED_ENTRY]: renderVideoEmbed, // For videos
-          [INLINES.EMBEDDED_ENTRY]: renderVideoEmbed, // For inline videos
+          [BLOCKS.EMBEDDED_ENTRY]: renderVideoEmbed,
+          [INLINES.EMBEDDED_ENTRY]: renderVideoEmbed,
           [BLOCKS.EMBEDDED_ASSET]: (node) => {
-            // console.log("Attempting to render EMBEDDED_ASSET. Node:", JSON.stringify(node, null, 2))
-            if (!node.data?.target?.fields?.file) {
-              console.error("EMBEDDED_ASSET: Missing target or file data.", node.data)
-              return ""
+            console.log("--- EMBEDDED ASSET RENDERER ---")
+            console.log("Full Node Object:", JSON.stringify(node.data?.target?.fields, null, 2))
+
+            if (!node.data?.target?.fields?.file?.url || typeof node.data.target.fields.file.url !== "string") {
+              console.error(
+                "EMBEDDED_ASSET_ERROR: 'node.data.target.fields.file.url' is missing or not a string. Asset ID:",
+                node.data?.target?.sys?.id,
+              )
+              return `<p style='color:red; border: 1px solid red; padding: 5px;'>Error: Embedded asset (ID: ${node.data?.target?.sys?.id || "unknown"}) is missing 'file.url' or it's not a string. Is the asset published in Contentful and linked correctly?</p>`
             }
+
             const file = node.data.target.fields.file
-            if (file?.contentType?.startsWith("image/")) {
-              const imageUrl = getImageUrl(file.url) // Ensure getImageUrl handles Contentful's // protocol
-              const altText = node.data.target.fields.description || node.data.target.fields.title || ""
-              // console.log(`EMBEDDED_ASSET: Rendering image with URL: ${imageUrl}`)
-              return `<div class="my-6"><img src="${imageUrl}" alt="${altText}" class="w-full h-auto rounded-lg shadow-md object-contain" loading="lazy" /></div>`
+            const assetFields = node.data.target.fields
+
+            if (file.contentType && typeof file.contentType === "string" && file.contentType.startsWith("image/")) {
+              const imageUrl = getImageUrl(file.url) // Now uses the updated lib/utils.ts version
+              const altText = assetFields.description || assetFields.title || "Embedded image"
+
+              if (!imageUrl) {
+                console.error("EMBEDDED_ASSET_ERROR: getImageUrl returned null for URL:", file.url)
+                return `<p style='color:red; border: 1px solid red; padding: 5px;'>Error: Could not construct valid image URL for asset (ID: ${node.data?.target?.sys?.id}).</p>`
+              }
+
+              console.log(
+                `EMBEDDED_ASSET_SUCCESS: Rendering image. Original URL: ${file.url}, Processed URL: ${imageUrl}, Alt: ${altText}`,
+              )
+              // Change the wrapper to center the image, and set a max-width on the image itself
+              return `<div class="my-6 flex justify-center">
+                <img src="${imageUrl}" alt="${altText}" 
+                     class="max-w-[75%] h-auto rounded-lg shadow-md object-contain" 
+                     loading="lazy" />
+              </div>`
             }
-            // console.warn("EMBEDDED_ASSET: Unhandled asset content type:", file?.contentType)
-            return ""
+
+            console.warn(
+              "EMBEDDED_ASSET_WARN: Asset is not an image. ContentType:",
+              file.contentType,
+              "Asset ID:",
+              node.data?.target?.sys?.id,
+            )
+            return `<p style='color:orange; border: 1px solid orange; padding: 5px;'>Warning: Embedded asset (ID: ${node.data?.target?.sys?.id}) is not an image. ContentType: ${file.contentType || "unknown"}</p>`
           },
-          // Removing custom renderers for basic blocks to rely on prose defaults
-          // [BLOCKS.PARAGRAPH]: (node, next) => `<p class="my-4 text-base leading-relaxed">${next(node.content)}</p>`,
-          // [BLOCKS.HEADING_1]: (node, next) => `<h1 class="text-4xl font-bold my-6">${next(node.content)}</h1>`,
-          // ... other heading levels
-          // [BLOCKS.UL_LIST]: (node, next) => `<ul class="list-disc pl-5 my-4 space-y-1">${next(node.content)}</ul>`,
-          // [BLOCKS.OL_LIST]: (node, next) => `<ol class="list-decimal pl-5 my-4 space-y-1">${next(node.content)}</ol>`,
-          // [BLOCKS.LIST_ITEM]: (node, next) => `<li class="text-base">${next(node.content)}</li>`,
         },
       }
       contentHtml = documentToHtmlString(richTextDocument, renderOptions)
-      contentHtml = fixYouTubeIframes(contentHtml) // Fallback
+      contentHtml = fixYouTubeIframes(contentHtml)
     } else {
-      // console.warn(
-      //   "Post content is not a string (Markdown) or a Rich Text Document object. Content type:",
-      //   typeof post.content,
-      //   "Value:",
-      //   post.content,
-      // )
       contentHtml = "<p>Content is in an unexpected format.</p>"
     }
   } else {
@@ -173,12 +161,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     <article className="bg-white text-gray-800">
       <div className="max-w-3xl mx-auto p-6">
         <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">{post.title}</h1>
-        <div className="text-gray-600 mb-8">
+        <div className="text-gray-600 mb-2">
           <span>By {post.author?.name || "Speak About AI"}</span>
           <span className="mx-2">•</span>
           <span>
             {new Date(post.publishedDate || post.createdAt).toLocaleDateString("en-US", {
-              // Added fallback for publishedDate
               year: "numeric",
               month: "long",
               day: "numeric",
@@ -191,10 +178,23 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </>
           )}
         </div>
+
+        {post.categories && post.categories.length > 0 && (
+          <div className="mb-8 flex flex-wrap gap-2">
+            {post.categories.map((category) => (
+              <Link href={`/blog/category/${category.slug}`} key={category.slug}>
+                <Badge variant="secondary" className="hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                  {category.name}
+                </Badge>
+              </Link>
+            ))}
+          </div>
+        )}
+
         {featuredImageUrl && (
           <div className="relative w-full h-80 mb-8 rounded-lg overflow-hidden">
             <Image
-              src={featuredImageUrl || "/placeholder.svg"}
+              src={featuredImageUrl || "/placeholder.svg"} // Already processed by getImageUrl
               alt={post.featuredImage?.alt || post.title}
               fill
               className="object-cover"
@@ -202,7 +202,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             />
           </div>
         )}
-        {/* Ensure prose classes are applied for Tailwind Typography */}
         <div
           className="prose prose-lg max-w-none text-gray-800 prose-headings:text-gray-900 prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-strong:text-gray-800 prose-code:bg-gray-100 prose-code:p-1 prose-code:rounded"
           dangerouslySetInnerHTML={{ __html: contentHtml }}
@@ -213,7 +212,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 }
 
 export async function generateStaticParams() {
-  const posts = await getBlogPosts(200) // Fetch more posts for static generation if needed
+  const posts = await getBlogPosts(200)
   return posts
     .filter((post) => typeof post.slug === "string" && post.slug.trim().length > 0)
     .map((post) => ({ slug: post.slug }))

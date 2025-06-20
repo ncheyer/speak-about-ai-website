@@ -1,36 +1,23 @@
+// This component is now significantly simplified.
+// It just takes a list of posts and renders them in a grid.
+// The BlogClientPage handles featured posts, titles, and overall layout.
 import { BlogCard } from "@/components/blog-card"
-import type { BlogPost } from "@/lib/blog-data"
+import type { BlogPost } from "@/lib/contentful-blog"
 
 interface BlogListProps {
   posts: BlogPost[]
-  showFeatured?: boolean
 }
 
-export function BlogList({ posts, showFeatured = true }: BlogListProps) {
-  // If showFeatured is true, find the featured post (if any)
-  const featuredPost = showFeatured ? posts.find((post) => post.featured) : undefined
-
-  // Filter out the featured post from the regular posts list if we're showing it separately
-  const regularPosts = featuredPost ? posts.filter((post) => post.id !== featuredPost.id) : posts
+export function BlogList({ posts }: BlogListProps) {
+  if (!posts || posts.length === 0) {
+    return <p className="text-center text-gray-500 py-10">No articles to display.</p>
+  }
 
   return (
-    <div className="container px-4 py-12 md:px-6 md:py-16">
-      {featuredPost && (
-        <div className="mb-10">
-          <h2 className="text-2xl font-bold mb-6">Featured Article</h2>
-          <BlogCard post={featuredPost} featured={true} />
-        </div>
-      )}
-
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Latest Articles</h2>
-      </div>
-
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {regularPosts.map((post) => (
-          <BlogCard key={post.id} post={post} />
-        ))}
-      </div>
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {posts.map((post) => (
+        <BlogCard key={post.id} post={post} />
+      ))}
     </div>
   )
 }

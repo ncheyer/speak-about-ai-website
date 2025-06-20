@@ -6,7 +6,18 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote } from "lucide-react"
+import {
+  MapPin,
+  Linkedin,
+  Globe,
+  Mail,
+  ArrowLeft,
+  Play,
+  Quote,
+  CalendarDays,
+  Building,
+  MessageSquareText,
+} from "lucide-react" // Added MessageSquareText
 import type { Speaker } from "@/lib/speakers-data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -21,35 +32,16 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
   const maxRetries = 3
   const [activeTab, setActiveTab] = useState("about")
 
-  // Use speaker videos or empty array (no samples)
   const videos = speaker.videos || []
 
-  // Sample testimonials data if none provided
-  const testimonials = speaker.testimonials || [
-    {
-      quote: `${speaker.name}'s keynote was the highlight of our conference. Their insights on AI were both profound and practical.`,
-      author: "Jane Smith",
-      position: "Event Director",
-      company: "Tech Innovation Summit",
-      event: "Annual Technology Conference 2024",
-    },
-    {
-      quote:
-        "Our audience was captivated from start to finish. The presentation perfectly balanced technical depth with accessibility.",
-      author: "Michael Johnson",
-      position: "CEO",
-      company: "Future Technologies Inc.",
-      event: "Executive Leadership Forum",
-    },
-    {
-      quote:
-        "We've received overwhelmingly positive feedback from attendees. The practical takeaways were exactly what our organization needed.",
-      author: "Sarah Williams",
-      position: "Head of Learning & Development",
-      company: "Global Enterprises",
-      event: "Digital Transformation Workshop",
-    },
-  ]
+  // This is the key change:
+  // We only use speaker.testimonials if it exists and has items.
+  // Otherwise, 'testimonialsToDisplay' will be an empty array, leading to no testimonials being rendered (or a "no testimonials" message).
+  const testimonialsToDisplay = speaker.testimonials && speaker.testimonials.length > 0 ? speaker.testimonials : []
+
+  // The defaultTestimonials are removed from this direct rendering logic.
+  // They could be used for a completely different fallback scenario if needed,
+  // e.g., if the entire `speaker` prop was undefined, but that's not the case here.
 
   const handleImageError = () => {
     if (retryCount < maxRetries && speaker.image) {
@@ -289,67 +281,123 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
 
               <TabsContent value="media" className="space-y-8">
                 {/* Videos Section */}
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Videos</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {videos.map((video, index) => {
-                      return (
-                        <a
-                          key={video.id}
-                          href={video.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group block"
-                        >
-                          <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
-                            <div className="aspect-video bg-gray-100 relative">
-                              <img
-                                src={video.thumbnail || "/placeholder.svg"}
-                                alt={video.title}
-                                className="w-full h-full object-cover"
-                              />
-                              <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
-                                <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                  <Play className="w-8 h-8 text-[#1E68C6] ml-1" />
+                {videos && videos.length > 0 ? (
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Videos</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {videos.map((video) => {
+                        // Removed index as key, using video.id
+                        return (
+                          <a
+                            key={video.id} // Use video.id if available and unique
+                            href={video.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group block"
+                          >
+                            <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
+                              <div className="aspect-video bg-gray-100 relative">
+                                <img
+                                  src={video.thumbnail || "/placeholder.svg?width=300&height=160&text=Video+Thumbnail"}
+                                  alt={video.title}
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
+                                  <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                    <Play className="w-8 h-8 text-[#1E68C6] ml-1" />
+                                  </div>
                                 </div>
+                                {video.duration && (
+                                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                                    {video.duration}
+                                  </div>
+                                )}
                               </div>
-                              <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
-                                {video.duration}
+                              <div className="p-4 bg-white">
+                                <h3 className="font-semibold text-gray-900 group-hover:text-[#1E68C6] transition-colors duration-300 font-montserrat">
+                                  {video.title}
+                                </h3>
+                                {video.source && (
+                                  <p className="text-sm text-gray-500 mt-1 font-montserrat">{video.source}</p>
+                                )}
                               </div>
                             </div>
-                            <div className="p-4 bg-white">
-                              <h3 className="font-semibold text-gray-900 group-hover:text-[#1E68C6] transition-colors duration-300 font-montserrat">
-                                {video.title}
-                              </h3>
-                              <p className="text-sm text-gray-500 mt-1 font-montserrat">{video.source}</p>
-                            </div>
-                          </div>
-                        </a>
-                      )
-                    })}
+                          </a>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Videos</h2>
+                    <div className="text-center py-8 px-4 bg-gray-50 rounded-lg">
+                      <Play size={48} className="mx-auto text-gray-400 mb-3" />
+                      <p className="text-gray-600 font-montserrat">No videos available for this speaker yet.</p>
+                      <p className="text-sm text-gray-500 font-montserrat mt-1">
+                        Check back soon or contact us for more information.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Testimonials Section */}
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Testimonials</h2>
-                  <div className="space-y-6">
-                    {testimonials.map((testimonial, index) => (
-                      <div key={index} className="bg-gray-50 p-6 rounded-lg border-l-4 border-[#1E68C6] relative">
-                        <Quote className="absolute top-4 right-4 w-8 h-8 text-gray-200" />
-                        <p className="text-gray-700 italic mb-4 font-montserrat relative z-10">"{testimonial.quote}"</p>
-                        <div>
-                          <p className="font-semibold text-gray-900 font-montserrat">{testimonial.author}</p>
-                          <p className="text-sm text-gray-600 font-montserrat">
-                            {testimonial.position}, {testimonial.company}
+                  {testimonialsToDisplay.length > 0 ? (
+                    <div className="space-y-6">
+                      {testimonialsToDisplay.map((testimonial, index) => (
+                        <div key={index} className="bg-gray-50 p-6 rounded-lg border-l-4 border-[#1E68C6] relative">
+                          <Quote className="absolute top-4 right-4 w-8 h-8 text-gray-200" />
+                          <p className="text-gray-700 italic mb-4 font-montserrat relative z-10">
+                            "{testimonial.quote}"
                           </p>
-                          {testimonial.event && (
-                            <p className="text-xs text-gray-500 mt-1 font-montserrat">{testimonial.event}</p>
-                          )}
+                          <div className="space-y-1">
+                            <p className="font-semibold text-gray-900 font-montserrat">{testimonial.author}</p>
+                            {(testimonial.position || testimonial.company) && (
+                              <p className="text-sm text-gray-600 font-montserrat">
+                                {testimonial.position}
+                                {testimonial.position && testimonial.company ? ", " : ""}
+                                {testimonial.company}
+                              </p>
+                            )}
+                            {testimonial.event && (
+                              <p className="text-xs text-gray-500 font-montserrat flex items-center">
+                                <Building size={14} className="mr-1.5 text-gray-400" />
+                                {testimonial.event}
+                              </p>
+                            )}
+                            {testimonial.date && (
+                              <p className="text-xs text-gray-500 font-montserrat flex items-center">
+                                <CalendarDays size={14} className="mr-1.5 text-gray-400" />
+                                {new Date(testimonial.date).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })}
+                              </p>
+                            )}
+                            {testimonial.logo && (
+                              <div className="mt-3">
+                                <img
+                                  src={testimonial.logo || "/placeholder.svg"} // Removed placeholder fallback here, assuming valid URL if present
+                                  alt={`${testimonial.company || testimonial.author} logo`}
+                                  className="max-h-10 opacity-75"
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 px-4 bg-gray-50 rounded-lg">
+                      <MessageSquareText size={48} className="mx-auto text-gray-400 mb-3" />
+                      <p className="text-gray-600 font-montserrat">No testimonials available for this speaker yet.</p>
+                      <p className="text-sm text-gray-500 font-montserrat mt-1">
+                        We are gathering feedback and will update this section soon.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>
