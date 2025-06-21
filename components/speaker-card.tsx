@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -15,6 +15,11 @@ interface UnifiedSpeakerCardProps {
 }
 
 export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: UnifiedSpeakerCardProps) {
+  const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading")
+  const [currentImageUrl, setCurrentImageUrl] = useState<string>("")
+  const [showFeeDetail, setShowFeeDetail] = useState(false)
+  const isInitialMount = useRef(true)
+
   if (!speaker || !speaker.slug) {
     return null
   }
@@ -33,32 +38,32 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
   } = speaker
 
   const placeholderImg = `/placeholder.svg?width=400&height=300&text=${encodeURIComponent(name)}`
-  const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading")
-  const [currentImageUrl, setCurrentImageUrl] = useState<string>(image || placeholderImg)
-  const [showFeeDetail, setShowFeeDetail] = useState(false)
 
   useEffect(() => {
-    const newImageUrl = image || placeholderImg
-    if (newImageUrl !== currentImageUrl) {
-      setCurrentImageUrl(newImageUrl)
-      setImageState("loading")
-    }
-  }, [image, placeholderImg, currentImageUrl, slug])
-
-  useEffect(() => {
-    if (image && image !== placeholderImg) {
-      const img = new Image()
-      img.crossOrigin = "anonymous"
-      img.onload = () => setImageState("loaded")
-      img.onerror = () => {
-        setImageState("error")
-        setCurrentImageUrl(placeholderImg)
-      }
-      img.src = image
-    } else {
-      setImageState("loaded")
-    }
+    setCurrentImageUrl(image || placeholderImg)
   }, [image, placeholderImg])
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+    } else {
+      if (currentImageUrl && currentImageUrl !== placeholderImg) {
+        setImageState("loading")
+        const img = new Image()
+        img.crossOrigin = "anonymous"
+        img.onload = () => setImageState("loaded")
+        img.onerror = () => {
+          setImageState("error")
+          if (currentImageUrl !== placeholderImg) {
+            setCurrentImageUrl(placeholderImg)
+          }
+        }
+        img.src = currentImageUrl
+      } else if (currentImageUrl === placeholderImg) {
+        setImageState("loaded")
+      }
+    }
+  }, [currentImageUrl, placeholderImg])
 
   const handleImageError = () => {
     setImageState("error")
@@ -83,7 +88,6 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
     <Card className="flex flex-col h-full overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out border-0 bg-white group transform hover:-translate-y-1.5">
       <Link href={profileLink} className="block">
         <div className="relative w-full aspect-square sm:aspect-[4/5] md:aspect-[3/4] bg-gray-100 overflow-hidden rounded-t-xl cursor-pointer">
-          {/* Subtle gradient accent line */}
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-blue-600 to-sky-500 z-20 group-hover:opacity-100 opacity-75 transition-opacity duration-300"></div>
           {imageState === "loading" && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
@@ -93,7 +97,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
               </div>
             </div>
           )}
-          {imageState === "error" && (
+          {imageState === "error" && currentImageUrl === placeholderImg && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
               <div className="text-gray-400 text-sm text-center px-4">
                 <div className="mb-2">📷</div>
@@ -131,11 +135,8 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
       </Link>
 
       <CardContent className="p-4 sm:p-5 flex flex-col flex-grow relative">
-        {/* Subtle gradient background on hover for content */}
         <div className="absolute inset-0 bg-gradient-to-br from-sky-50 via-blue-50 to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-300 rounded-b-xl -z-1"></div>
         <div className="relative z-0">
-          {" "}
-          {/* Ensure content is above the gradient */}
           <Link href={profileLink} className="block">
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 font-neue-haas leading-tight mb-1 group-hover:text-blue-600 transition-colors duration-300">
               {name}
@@ -144,21 +145,21 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
           <p className="text-xs sm:text-sm text-blue-700 font-semibold font-montserrat mb-3.5 leading-snug">{title}</p>
           {safePrograms.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-xs font-semibold text-gray-600 mb-1.5 font-montserrat">Keynote Topics:</h4>
+              <h4 className="text-xs font-semibold text-gray-600 mb-1.5 font-montserrat">Keynote Options:</h4>
               <div className="flex flex-wrap gap-1.5">
                 {safePrograms.slice(0, maxTopicsToShow).map((topic, index) => (
                   <Badge
                     key={`${slug}-topic-${index}`}
-                    variant="outline"
-                    className="text-xs font-montserrat border-blue-300 text-blue-800 bg-blue-100/70 px-2 py-0.5 rounded-full"
+                    // Removed variant="outline" to use custom background and text color
+                    className="text-xs font-montserrat text-white bg-blue-600 px-2 py-0.5 rounded-full"
                   >
                     {topic}
                   </Badge>
                 ))}
                 {safePrograms.length > maxTopicsToShow && (
                   <Badge
-                    variant="outline"
-                    className="text-xs font-montserrat border-blue-300 text-blue-800 bg-blue-100/70 px-2 py-0.5 rounded-full"
+                    // Removed variant="outline"
+                    className="text-xs font-montserrat text-white bg-blue-600 px-2 py-0.5 rounded-full"
                   >
                     +{safePrograms.length - maxTopicsToShow} more
                   </Badge>
