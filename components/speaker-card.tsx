@@ -19,6 +19,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
   const [currentImageUrl, setCurrentImageUrl] = useState<string>("")
   const [showFeeDetail, setShowFeeDetail] = useState(false)
   const isInitialMount = useRef(true)
+  const [didCancelRef, setDidCancelRef] = useState(false)
 
   if (!speaker || !speaker.slug) {
     return null
@@ -45,84 +46,52 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
 
   useEffect(() => {
     let didCancel = false
+    setDidCancelRef(false)
 
-    // Skip the effect on the initial mount if currentImageUrl is already set (e.g. from props)
-    // and only run if currentImageUrl changes *after* the initial setup.
-    if (isInitialMount.current) {
-      isInitialMount.current = false
-      // Determine initial image state based on currentImageUrl
+    const loadImage = async () => {
       if (currentImageUrl && currentImageUrl !== placeholderImg) {
-        setImageState("loading") // Assume loading if it's a real image
+        setImageState("loading")
         const img = new Image()
         img.crossOrigin = "anonymous"
+
         img.onload = () => {
-          if (!didCancel) {
+          if (!didCancelRef) {
             setImageState("loaded")
           }
         }
+
         img.onerror = () => {
-          if (!didCancel) {
+          if (!didCancelRef) {
             setImageState("error")
             if (currentImageUrl !== placeholderImg) {
-              // Avoid loop if placeholder itself fails
               setCurrentImageUrl(placeholderImg)
             }
           }
         }
+
         img.src = currentImageUrl
       } else if (currentImageUrl === placeholderImg) {
-        setImageState("loaded") // Placeholder is considered loaded
-      }
-      return () => {
-        didCancel = true
+        setImageState("loaded")
       }
     }
 
-    // Subsequent runs when currentImageUrl changes
-    if (currentImageUrl && currentImageUrl !== placeholderImg) {
-      setImageState("loading")
-      const img = new Image()
-      img.crossOrigin = "anonymous"
-      img.onload = () => {
-        if (!didCancel) {
-          setImageState("loaded")
-        }
-      }
-      img.onerror = () => {
-        if (!didCancel) {
-          setImageState("error")
-          if (currentImageUrl !== placeholderImg) {
-            setCurrentImageUrl(placeholderImg)
-          }
-        }
-      }
-      img.src = currentImageUrl
-    } else if (currentImageUrl === placeholderImg) {
-      setImageState("loaded")
-    }
+    loadImage()
 
     return () => {
+      setDidCancelRef(true)
       didCancel = true
     }
-  }, [currentImageUrl, placeholderImg])
+  }, [currentImageUrl, placeholderImg, didCancelRef])
 
   const handleImageError = () => {
-    // This can be a fallback if the useEffect's onerror doesn't catch something
-    // or if an error occurs outside that flow.
-    if (imageState !== "error") {
-      // Prevent potential loops
+    if (imageState !== "error" && currentImageUrl !== placeholderImg) {
       setImageState("error")
-      if (currentImageUrl !== placeholderImg) {
-        setCurrentImageUrl(placeholderImg)
-      }
+      setCurrentImageUrl(placeholderImg)
     }
   }
 
   const handleImageLoad = () => {
-    if (imageState !== "loaded") {
-      // Prevent potential loops
-      setImageState("loaded")
-    }
+    if (imageState !== "loaded") setImageState("loaded")
   }
 
   const profileLink = `/speakers/${slug}`
@@ -139,7 +108,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
     <Card className="flex flex-col h-full overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out border-0 bg-white group transform hover:-translate-y-1.5">
       <Link href={profileLink} className="block">
         <div className="relative w-full aspect-square sm:aspect-[4/5] md:aspect-[3/4] bg-gray-100 overflow-hidden rounded-t-xl cursor-pointer">
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-blue-600 to-sky-500 z-20 group-hover:opacity-100 opacity-75 transition-opacity duration-300"></div>
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-[#1E68C6] z-20 group-hover:opacity-100 opacity-75 transition-opacity duration-300"></div>
           {imageState === "loading" && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
               <div className="animate-pulse flex flex-col items-center">
@@ -178,7 +147,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
             </Badge>
           )}
           {safeIndustries.length > 0 && safeIndustries[0] && (
-            <Badge className="absolute top-3 left-3 bg-gradient-to-r from-blue-600 to-sky-500 text-white font-montserrat text-xs px-2.5 py-1.5 rounded-md shadow-md">
+            <Badge className="absolute top-3 left-3 bg-[#1E68C6] text-white font-montserrat text-xs px-2.5 py-1.5 rounded-md shadow-md">
               {safeIndustries[0]}
             </Badge>
           )}
@@ -189,11 +158,11 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
         <div className="absolute inset-0 bg-gradient-to-br from-sky-50 via-blue-50 to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-300 rounded-b-xl -z-1"></div>
         <div className="relative z-0">
           <Link href={profileLink} className="block">
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 font-neue-haas leading-tight mb-1 group-hover:text-blue-600 transition-colors duration-300">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 font-neue-haas leading-tight mb-1 group-hover:text-[#1E68C6] transition-colors duration-300">
               {name}
             </h3>
           </Link>
-          <p className="text-xs sm:text-sm text-blue-700 font-semibold font-montserrat mb-3.5 leading-snug">{title}</p>
+          <p className="text-xs sm:text-sm text-[#1E68C6] font-semibold font-montserrat mb-3.5 leading-snug">{title}</p>
           {safePrograms.length > 0 && (
             <div className="mb-4">
               <h4 className="text-xs font-semibold text-gray-600 mb-1.5 font-montserrat">Keynote Options:</h4>
@@ -201,13 +170,13 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
                 {safePrograms.slice(0, maxTopicsToShow).map((topic, index) => (
                   <Badge
                     key={`${slug}-topic-${index}`}
-                    className="text-xs font-montserrat text-white bg-blue-600 px-2 py-0.5 rounded-md"
+                    className="text-xs font-montserrat text-white bg-[#1E68C6] px-2 py-0.5 rounded-md"
                   >
                     {topic}
                   </Badge>
                 ))}
                 {safePrograms.length > maxTopicsToShow && (
-                  <Badge className="text-xs font-montserrat text-white bg-blue-600 px-2 py-0.5 rounded-md">
+                  <Badge className="text-xs font-montserrat text-white bg-[#1E68C6] px-2 py-0.5 rounded-md">
                     +{safePrograms.length - maxTopicsToShow} more
                   </Badge>
                 )}
@@ -218,14 +187,14 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
             <div className="mb-4">
               <button
                 onClick={() => setShowFeeDetail(!showFeeDetail)}
-                className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-800 mb-1 font-montserrat hover:text-blue-600 transition-colors"
+                className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-800 mb-1 font-montserrat hover:text-[#1E68C6] transition-colors"
               >
                 Speaker Fee
                 {showFeeDetail ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
               </button>
               {showFeeDetail && (
                 <div className="bg-sky-50/70 p-3 rounded-lg mt-1 border border-sky-200 shadow-sm">
-                  <div className="text-md font-bold text-blue-700 font-montserrat">{fee}</div>
+                  <div className="text-md font-bold text-[#1E68C6] font-montserrat">{fee}</div>
                   <div className="text-xs text-gray-600 font-montserrat mt-0.5">
                     Fee varies depending on format, location, and commitment. Contact us for a specific quote and to
                     check availability.
