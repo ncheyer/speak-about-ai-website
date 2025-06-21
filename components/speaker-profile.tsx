@@ -6,18 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import {
-  MapPin,
-  Linkedin,
-  Globe,
-  Mail,
-  ArrowLeft,
-  Play,
-  Quote,
-  CalendarDays,
-  Building,
-  MessageSquareText,
-} from "lucide-react" // Added MessageSquareText
+import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, CalendarDays, Building } from "lucide-react" // Added MessageSquareText
 import type { Speaker } from "@/lib/speakers-data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -340,10 +329,10 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                   </div>
                 )}
 
-                {/* Testimonials Section */}
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Testimonials</h2>
-                  {testimonialsToDisplay.length > 0 ? (
+                {/* Testimonials Section - Only show if testimonials exist */}
+                {testimonialsToDisplay.length > 0 && (
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Testimonials</h2>
                     <div className="space-y-6">
                       {testimonialsToDisplay.map((testimonial, index) => (
                         <div key={index} className="bg-gray-50 p-6 rounded-lg border-l-4 border-[#1E68C6] relative">
@@ -389,16 +378,8 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <div className="text-center py-8 px-4 bg-gray-50 rounded-lg">
-                      <MessageSquareText size={48} className="mx-auto text-gray-400 mb-3" />
-                      <p className="text-gray-600 font-montserrat">No testimonials available for this speaker yet.</p>
-                      <p className="text-sm text-gray-500 font-montserrat mt-1">
-                        We are gathering feedback and will update this section soon.
-                      </p>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
 
