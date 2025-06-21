@@ -222,11 +222,17 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
 
           <div className="lg:col-span-2">
             <Tabs defaultValue="about" className="w-full" onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 mb-8">
-                <TabsTrigger value="about" className="text-base font-montserrat">
+              <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100">
+                <TabsTrigger
+                  value="about"
+                  className="text-base font-montserrat data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white data-[state=inactive]:text-gray-600"
+                >
                   Biography & Programs
                 </TabsTrigger>
-                <TabsTrigger value="media" className="text-base font-montserrat">
+                <TabsTrigger
+                  value="media"
+                  className="text-base font-montserrat data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white data-[state=inactive]:text-gray-600"
+                >
                   Videos & Testimonials
                 </TabsTrigger>
               </TabsList>
@@ -245,11 +251,44 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
 
                 {speaker.programs && speaker.programs.length > 0 && (
                   <div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Speaking Programs</h2>
-                    <div className="space-y-4">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Keynote Options</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {speaker.programs.map((program, index) => (
-                        <div key={index} className="bg-blue-50 p-6 rounded-lg border-l-4 border-[#1E68C6]">
-                          <h3 className="text-xl font-semibold text-gray-900 mb-2 font-neue-haas">{program}</h3>
+                        <div
+                          key={index}
+                          className="group relative bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl hover:border-[#1E68C6]/20 transition-all duration-300 transform hover:-translate-y-1"
+                        >
+                          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#1E68C6] to-[#5084C6] rounded-t-xl"></div>
+                          <div className="flex items-start space-x-4">
+                            <div className="flex-shrink-0">
+                              <div className="w-12 h-12 bg-gradient-to-br from-[#1E68C6] to-[#5084C6] rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <svg
+                                  className="w-6 h-6 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                                  />
+                                </svg>
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-lg font-bold text-gray-900 mb-2 font-neue-haas group-hover:text-[#1E68C6] transition-colors duration-300">
+                                {program}
+                              </h3>
+                              <div className="flex items-center text-sm text-gray-500">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1E68C6]/10 text-[#1E68C6]">
+                                  Available
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-r from-[#1E68C6]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
                         </div>
                       ))}
                     </div>
