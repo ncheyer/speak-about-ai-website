@@ -2,6 +2,7 @@
 
 import { Zap } from "lucide-react"
 import { useState, useEffect } from "react"
+import Link from "next/link"
 
 const ServiceOfferings = () => {
   // State to track which images have loaded
@@ -145,8 +146,8 @@ const ServiceOfferings = () => {
                 deck, innovation metrics, team alignment, and an executive summary.
               </p>
 
-              <a
-                href="mailto:human@speakabout.ai"
+              <Link
+                href="/contact?sprintAI=inquiry"
                 className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 font-montserrat"
                 style={{
                   backgroundColor: "#ea580c",
@@ -161,7 +162,7 @@ const ServiceOfferings = () => {
                 }}
               >
                 Inquire About SprintAI
-              </a>
+              </Link>
             </div>
 
             <div className="lg:order-first">
