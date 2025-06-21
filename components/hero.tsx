@@ -1,6 +1,7 @@
 import { Award, MapPin, Globe } from "lucide-react" // Added Globe
 import Link from "next/link"
 import Image from "next/image"
+import { Button } from "@/components/ui/button" // Import the Button component
 
 export default function Hero() {
   return (
@@ -27,34 +28,28 @@ export default function Hero() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <button
-                className="btn-yellow inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-medium px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat"
-                data-button="yellow"
-                style={{
-                  background: "linear-gradient(to right, #F59E0B, #D97706)",
-                  color: "white",
-                  border: "none",
-                  height: "44px",
-                }}
+              {/* "Book Speaker Today" button using the Button component with 'gold' variant */}
+              <Button
+                asChild // Use asChild to render the Link component as the button's child
+                variant="gold"
+                size="lg"
+                className="shadow-lg hover:shadow-xl transition-all duration-300 font-montserrat"
               >
                 <Link href="/contact" className="text-white no-underline">
                   Book Speaker Today
                 </Link>
-              </button>
-              <button
-                className="btn-primary inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-medium px-8 py-4 border font-montserrat"
-                data-button="primary"
-                style={{
-                  backgroundColor: "#1E68C6",
-                  color: "white",
-                  borderColor: "#1E68C6",
-                  height: "44px",
-                }}
+              </Button>
+              {/* "Browse Speakers" button using the Button component with 'default' variant */}
+              <Button
+                asChild // Use asChild to render the Link component as the button's child
+                variant="default" // The default variant is blue
+                size="lg"
+                className="font-montserrat"
               >
                 <Link href="/speakers" className="text-white no-underline">
                   Browse Speakers
                 </Link>
-              </button>
+              </Button>
             </div>
 
             {/* Social Proof Stat */}
