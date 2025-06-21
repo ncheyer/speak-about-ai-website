@@ -44,35 +44,86 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
   }, [image, placeholderImg])
 
   useEffect(() => {
+    let didCancel = false
+
+    // Skip the effect on the initial mount if currentImageUrl is already set (e.g. from props)
+    // and only run if currentImageUrl changes *after* the initial setup.
     if (isInitialMount.current) {
       isInitialMount.current = false
-    } else {
+      // Determine initial image state based on currentImageUrl
       if (currentImageUrl && currentImageUrl !== placeholderImg) {
-        setImageState("loading")
+        setImageState("loading") // Assume loading if it's a real image
         const img = new Image()
         img.crossOrigin = "anonymous"
-        img.onload = () => setImageState("loaded")
+        img.onload = () => {
+          if (!didCancel) {
+            setImageState("loaded")
+          }
+        }
         img.onerror = () => {
+          if (!didCancel) {
+            setImageState("error")
+            if (currentImageUrl !== placeholderImg) {
+              // Avoid loop if placeholder itself fails
+              setCurrentImageUrl(placeholderImg)
+            }
+          }
+        }
+        img.src = currentImageUrl
+      } else if (currentImageUrl === placeholderImg) {
+        setImageState("loaded") // Placeholder is considered loaded
+      }
+      return () => {
+        didCancel = true
+      }
+    }
+
+    // Subsequent runs when currentImageUrl changes
+    if (currentImageUrl && currentImageUrl !== placeholderImg) {
+      setImageState("loading")
+      const img = new Image()
+      img.crossOrigin = "anonymous"
+      img.onload = () => {
+        if (!didCancel) {
+          setImageState("loaded")
+        }
+      }
+      img.onerror = () => {
+        if (!didCancel) {
           setImageState("error")
           if (currentImageUrl !== placeholderImg) {
             setCurrentImageUrl(placeholderImg)
           }
         }
-        img.src = currentImageUrl
-      } else if (currentImageUrl === placeholderImg) {
-        setImageState("loaded")
       }
+      img.src = currentImageUrl
+    } else if (currentImageUrl === placeholderImg) {
+      setImageState("loaded")
+    }
+
+    return () => {
+      didCancel = true
     }
   }, [currentImageUrl, placeholderImg])
 
   const handleImageError = () => {
-    setImageState("error")
-    if (currentImageUrl !== placeholderImg) {
-      setCurrentImageUrl(placeholderImg)
+    // This can be a fallback if the useEffect's onerror doesn't catch something
+    // or if an error occurs outside that flow.
+    if (imageState !== "error") {
+      // Prevent potential loops
+      setImageState("error")
+      if (currentImageUrl !== placeholderImg) {
+        setCurrentImageUrl(placeholderImg)
+      }
     }
   }
 
-  const handleImageLoad = () => setImageState("loaded")
+  const handleImageLoad = () => {
+    if (imageState !== "loaded") {
+      // Prevent potential loops
+      setImageState("loaded")
+    }
+  }
 
   const profileLink = `/speakers/${slug}`
   const safeContactSource = contactSource || "unknown_source"
@@ -150,17 +201,13 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
                 {safePrograms.slice(0, maxTopicsToShow).map((topic, index) => (
                   <Badge
                     key={`${slug}-topic-${index}`}
-                    // Removed variant="outline" to use custom background and text color
-                    className="text-xs font-montserrat text-white bg-blue-600 px-2 py-0.5 rounded-full"
+                    className="text-xs font-montserrat text-white bg-blue-600 px-2 py-0.5 rounded-md"
                   >
                     {topic}
                   </Badge>
                 ))}
                 {safePrograms.length > maxTopicsToShow && (
-                  <Badge
-                    // Removed variant="outline"
-                    className="text-xs font-montserrat text-white bg-blue-600 px-2 py-0.5 rounded-full"
-                  >
+                  <Badge className="text-xs font-montserrat text-white bg-blue-600 px-2 py-0.5 rounded-md">
                     +{safePrograms.length - maxTopicsToShow} more
                   </Badge>
                 )}

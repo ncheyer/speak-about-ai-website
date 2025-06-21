@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Calendar, Phone } from "lucide-react"
+import { ArrowRight, Calendar, Phone } from "lucide-react" // Assuming Calendar is the correct icon, not CalendarDays
 
 export default function BookingCTA() {
   return (
@@ -14,21 +14,22 @@ export default function BookingCTA() {
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
           <Button
             asChild
+            variant="gold"
             size="lg"
-            className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-lg px-8 py-4 font-montserrat group"
+            className="font-montserrat font-bold transition-all duration-300 ease-in-out transform hover:scale-105 group"
           >
-            <Link href="/contact?source=home_page_cta_main">
+            <Link href="/contact?source=home_page_cta_main" className="flex items-center">
               <Calendar className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:rotate-12" />
               Get Speaker Recommendations
             </Link>
           </Button>
           <Button
             asChild
-            variant="outline"
+            variant="outline" // Assuming this button should remain an outline style
             size="lg"
-            className="border-white text-white hover:bg-white hover:text-blue-700 transition-all duration-300 text-lg px-8 py-4 font-montserrat group"
+            className="border-white text-white hover:bg-white hover:text-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105 group font-montserrat"
           >
-            <Link href="/speakers">
+            <Link href="/speakers" className="flex items-center">
               Explore All Speakers
               <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
