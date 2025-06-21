@@ -74,7 +74,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
   const contactLink = `/contact?source=${safeContactSource}&speakerName=${encodeURIComponent(name)}`
 
   const commonButtonClasses =
-    "w-full text-xs sm:text-sm px-3 h-auto py-3 whitespace-normal rounded-lg font-semibold transition-all duration-300 ease-in-out flex items-center justify-center gap-2 transform hover:scale-105"
+    "w-full text-xs sm:text-sm px-3 h-auto py-3 whitespace-normal flex items-center justify-center gap-2"
 
   const safePrograms = Array.isArray(programs) ? programs : []
   const safeIndustries = Array.isArray(industries) ? industries : []
@@ -188,20 +188,13 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
           )}
           <div className="mt-auto pt-4">
             <div className="w-full flex flex-col space-y-3">
-              <Button
-                asChild
-                className={`${commonButtonClasses} bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 shadow-md hover:shadow-lg`}
-              >
+              <Button asChild variant="gold" className={commonButtonClasses}>
                 <Link href={contactLink}>
                   <CalendarCheck size={16} />
                   <span>Book Speaker Today</span>
                 </Link>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                className={`${commonButtonClasses} border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white bg-white shadow-sm hover:shadow-md`}
-              >
+              <Button asChild variant="outline" className={commonButtonClasses}>
                 <Link href={profileLink}>
                   <User size={16} />
                   <span>View Profile</span>
