@@ -30,10 +30,10 @@ const TabsTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-      // Default (inactive) state - brand blue:
-      "bg-[#1E68C6] text-white hover:bg-[#5084C6]",
-      // Active state - force white background and dark text with !important-like specificity:
-      "data-[state=active]:!bg-white data-[state=active]:!text-gray-900 data-[state=active]:shadow-sm data-[state=active]:hover:!bg-white data-[state=active]:hover:!text-gray-900",
+      // Default (inactive) state - white background with dark text:
+      "bg-white text-gray-900 hover:bg-gray-50",
+      // Active state - brand blue background with white text:
+      "data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:hover:bg-[#1E68C6] data-[state=active]:hover:text-white",
       className,
     )}
     {...props}
