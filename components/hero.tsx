@@ -22,8 +22,8 @@ export default function Hero() {
             </h1>
 
             <p className="text-xl text-black mb-8 font-montserrat font-semibold">
-              <span className="font-bold">50+ experts in every industry</span>, including the co-author of "Artifical
-              Intelligence: A Modern Approach", Siri Co-Founders, and Google/Amazon Executives.
+              50+ AI experts in every industry, including Siri Co-Founders, Stanford Doctors, and{" "}
+              <span className="font-bold">Google/Amazon Executives.</span>
             </p>
 
             {/* CTA Buttons */}
