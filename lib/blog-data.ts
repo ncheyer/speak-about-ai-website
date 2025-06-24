@@ -32,7 +32,21 @@ export async function getFeaturedBlogPosts() {
 
 export async function getBlogPostBySlug(slug: string) {
   try {
-    return await _getPostBySlug(slug)
+    // 1️⃣ normal lookup
+    const direct = await _getPostBySlug(slug)
+    if (direct) return direct
+
+    // 2️⃣ fallback – fetch all, then match
+    const all = await _getPosts()
+    const decoded = decodeURIComponent(slug).toLowerCase()
+
+    return (
+      all.find(
+        (p) =>
+          p.slug?.toLowerCase() === decoded || // exact match
+          decodeURIComponent(p.slug || "").toLowerCase() === decoded,
+      ) || null
+    )
   } catch (err) {
     console.error(`Error fetching post ${slug}:`, err)
     return null
