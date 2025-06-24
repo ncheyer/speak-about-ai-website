@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Phone, Mail, MapPin, Linkedin } from "lucide-react"
+import { Phone, Mail, Linkedin } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -30,10 +30,6 @@ export default function Footer() {
               <div className="flex items-center">
                 <Mail className="w-4 h-4 mr-3 text-[#1E68C6]" />
                 <span className="text-[#EAEAEE]">human@speakabout.ai</span>
-              </div>
-              <div className="flex items-center">
-                <MapPin className="w-4 h-4 mr-3 text-[#1E68C6]" />
-                <span className="text-[#EAEAEE]">Palo Alto, CA</span>
               </div>
             </div>
           </div>
