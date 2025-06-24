@@ -8,6 +8,8 @@ import { documentToHtmlString, type Options } from "@contentful/rich-text-html-r
 import { BLOCKS, INLINES, MARKS } from "@contentful/rich-text-types"
 import type { Document, Block, Inline } from "@contentful/rich-text-types"
 import { Badge } from "@/components/ui/badge"
+import type { Metadata, ResolvingMetadata } from "next"
+import { ArrowLeft } from "lucide-react"
 
 // Helper function to create embed URLs for videos
 const getEmbedUrl = (url: string): string => {
@@ -77,6 +79,44 @@ type BlogPostPageProps = {
   }
 }
 
+export async function generateMetadata({ params }: BlogPostPageProps, parent: ResolvingMetadata): Promise<Metadata> {
+  const post = await getBlogPost(params.slug)
+
+  if (!post) {
+    return {
+      title: "Post Not Found | Speak About AI",
+      description: "The requested blog post could not be found.",
+    }
+  }
+
+  const previousImages = (await parent).openGraph?.images || []
+  const featuredImageUrl = post.featuredImage?.url ? getImageUrl(post.featuredImage.url) : null
+
+  let description =
+    post.excerpt ||
+    `Read "${post.title}" on the Speak About AI blog. Discover insights on AI trends, keynote speaking, and more.`
+  if (description.length > 160) {
+    description = description.substring(0, 157) + "..."
+  }
+
+  return {
+    title: `${post.title} | Speak About AI Blog`,
+    description: description,
+    keywords: post.categories?.map((cat) => cat.name).join(", "),
+    alternates: {
+      canonical: `/blog/${post.slug}`,
+    },
+    openGraph: {
+      title: post.title,
+      description: description,
+      type: "article",
+      publishedTime: post.publishedDate, // Assuming publishedDate is always available
+      authors: [post.author?.name || "Speak About AI"],
+      images: featuredImageUrl ? [featuredImageUrl, ...previousImages] : previousImages,
+    },
+  }
+}
+
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const post = await getBlogPost(params.slug)
 
@@ -89,67 +129,55 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   if (post.content) {
     if (typeof post.content === "string") {
+      // Fallback for plain markdown string content
       contentHtml = marked(post.content)
-      contentHtml = fixYouTubeIframes(contentHtml)
+      contentHtml = fixYouTubeIframes(contentHtml) // Apply YouTube fix if needed
     } else if (typeof post.content === "object" && post.content.nodeType === "document") {
+      // Preferred: Contentful Rich Text
       const richTextDocument = post.content as Document
       const renderOptions: Options = {
         renderMark: {
           [MARKS.BOLD]: (text) => `<strong>${text}</strong>`,
           [MARKS.ITALIC]: (text) => `<em>${text}</em>`,
           [MARKS.UNDERLINE]: (text) => `<u>${text}</u>`,
-          [MARKS.CODE]: (text) => `<code class="bg-gray-100 p-1 rounded text-sm">${text}</code>`,
+          [MARKS.CODE]: (text) =>
+            `<code class="bg-gray-100 dark:bg-gray-800 p-1 rounded text-sm font-mono">${text}</code>`,
         },
         renderNode: {
           [BLOCKS.EMBEDDED_ENTRY]: renderVideoEmbed,
-          [INLINES.EMBEDDED_ENTRY]: renderVideoEmbed,
+          [INLINES.EMBEDDED_ENTRY]: renderVideoEmbed, // Handle inline video embeds too
           [BLOCKS.EMBEDDED_ASSET]: (node) => {
-            console.log("--- EMBEDDED ASSET RENDERER ---")
-            console.log("Full Node Object:", JSON.stringify(node.data?.target?.fields, null, 2))
-
             if (!node.data?.target?.fields?.file?.url || typeof node.data.target.fields.file.url !== "string") {
-              console.error(
-                "EMBEDDED_ASSET_ERROR: 'node.data.target.fields.file.url' is missing or not a string. Asset ID:",
-                node.data?.target?.sys?.id,
-              )
-              return `<p style='color:red; border: 1px solid red; padding: 5px;'>Error: Embedded asset (ID: ${node.data?.target?.sys?.id || "unknown"}) is missing 'file.url' or it's not a string. Is the asset published in Contentful and linked correctly?</p>`
+              return `<p class="text-red-500">Error: Embedded asset is missing 'file.url'.</p>`
             }
-
             const file = node.data.target.fields.file
             const assetFields = node.data.target.fields
-
             if (file.contentType && typeof file.contentType === "string" && file.contentType.startsWith("image/")) {
-              const imageUrl = getImageUrl(file.url) // Now uses the updated lib/utils.ts version
+              const imageUrl = getImageUrl(file.url)
               const altText = assetFields.description || assetFields.title || "Embedded image"
-
-              if (!imageUrl) {
-                console.error("EMBEDDED_ASSET_ERROR: getImageUrl returned null for URL:", file.url)
-                return `<p style='color:red; border: 1px solid red; padding: 5px;'>Error: Could not construct valid image URL for asset (ID: ${node.data?.target?.sys?.id}).</p>`
-              }
-
-              console.log(
-                `EMBEDDED_ASSET_SUCCESS: Rendering image. Original URL: ${file.url}, Processed URL: ${imageUrl}, Alt: ${altText}`,
-              )
-              // Change the wrapper to center the image, and set a max-width on the image itself
+              if (!imageUrl) return `<p class="text-red-500">Error: Could not construct image URL.</p>`
               return `<div class="my-6 flex justify-center">
-                <img src="${imageUrl}" alt="${altText}" 
-                     class="max-w-[75%] h-auto rounded-lg shadow-md object-contain" 
-                     loading="lazy" />
-              </div>`
+                        <img src="${imageUrl}" alt="${altText}" class="max-w-full md:max-w-[80%] h-auto rounded-lg shadow-md object-contain" loading="lazy" />
+                      </div>`
             }
-
-            console.warn(
-              "EMBEDDED_ASSET_WARN: Asset is not an image. ContentType:",
-              file.contentType,
-              "Asset ID:",
-              node.data?.target?.sys?.id,
-            )
-            return `<p style='color:orange; border: 1px solid orange; padding: 5px;'>Warning: Embedded asset (ID: ${node.data?.target?.sys?.id}) is not an image. ContentType: ${file.contentType || "unknown"}</p>`
+            return `<p class="text-yellow-500">Warning: Embedded asset is not an image.</p>`
+          },
+          [BLOCKS.PARAGRAPH]: (node, next) => `<p class="mb-4 leading-relaxed">${next(node.content)}</p>`,
+          [BLOCKS.HEADING_2]: (node, next) => `<h2 class="text-2xl font-semibold mt-8 mb-3">${next(node.content)}</h2>`,
+          [BLOCKS.HEADING_3]: (node, next) => `<h3 class="text-xl font-semibold mt-6 mb-2">${next(node.content)}</h3>`,
+          [BLOCKS.UL_LIST]: (node, next) => `<ul class="list-disc list-inside mb-4 pl-4">${next(node.content)}</ul>`,
+          [BLOCKS.OL_LIST]: (node, next) => `<ol class="list-decimal list-inside mb-4 pl-4">${next(node.content)}</ol>`,
+          [BLOCKS.LIST_ITEM]: (node, next) => `<li class="mb-1">${next(node.content)}</li>`,
+          [BLOCKS.QUOTE]: (node, next) =>
+            `<blockquote class="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic my-4">${next(node.content)}</blockquote>`,
+          [INLINES.HYPERLINK]: (node, next) => {
+            const href = typeof node.data.uri === "string" ? node.data.uri : "#"
+            return `<a href="${href}" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">${next(node.content)}</a>`
           },
         },
       }
       contentHtml = documentToHtmlString(richTextDocument, renderOptions)
-      contentHtml = fixYouTubeIframes(contentHtml)
+      contentHtml = fixYouTubeIframes(contentHtml) // Apply YouTube fix after Rich Text processing
     } else {
       contentHtml = "<p>Content is in an unexpected format.</p>"
     }
@@ -158,14 +186,24 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   return (
-    <article className="bg-white text-gray-800">
-      <div className="max-w-3xl mx-auto p-6">
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">{post.title}</h1>
-        <div className="text-gray-600 mb-2">
+    <article className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Link
+          href="/blog"
+          className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline mb-6 group"
+        >
+          <ArrowLeft className="mr-2 h-5 w-5 transition-transform group-hover:-translate-x-1" />
+          Back to Blog
+        </Link>
+
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-3 leading-tight text-gray-900 dark:text-white">
+          {post.title}
+        </h1>
+        <div className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
           <span>By {post.author?.name || "Speak About AI"}</span>
           <span className="mx-2">•</span>
           <span>
-            {new Date(post.publishedDate || post.createdAt).toLocaleDateString("en-US", {
+            {new Date(post.publishedDate).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
               day: "numeric",
@@ -180,10 +218,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </div>
 
         {post.categories && post.categories.length > 0 && (
-          <div className="mb-8 flex flex-wrap gap-2">
+          <div className="mb-6 flex flex-wrap gap-2">
             {post.categories.map((category) => (
               <Link href={`/blog/category/${category.slug}`} key={category.slug}>
-                <Badge variant="secondary" className="hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <Badge
+                  variant="secondary"
+                  className="bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
                   {category.name}
                 </Badge>
               </Link>
@@ -192,18 +233,26 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         )}
 
         {featuredImageUrl && (
-          <div className="relative w-full h-80 mb-8 rounded-lg overflow-hidden">
+          <div className="relative w-full aspect-[16/9] mb-8 rounded-lg overflow-hidden shadow-lg">
             <Image
-              src={featuredImageUrl || "/placeholder.svg"} // Already processed by getImageUrl
+              src={featuredImageUrl || "/placeholder.svg"}
               alt={post.featuredImage?.alt || post.title}
               fill
               className="object-cover"
               priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 60vw"
             />
           </div>
         )}
         <div
-          className="prose prose-lg max-w-none text-gray-800 prose-headings:text-gray-900 prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-strong:text-gray-800 prose-code:bg-gray-100 prose-code:p-1 prose-code:rounded"
+          className="prose prose-lg max-w-none 
+                     text-gray-700 dark:text-gray-300 
+                     prose-headings:text-gray-900 dark:prose-headings:text-white
+                     prose-a:text-blue-600 dark:prose-a:text-blue-400 hover:prose-a:underline
+                     prose-strong:text-gray-800 dark:prose-strong:text-white
+                     prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:p-1 prose-code:rounded prose-code:font-mono
+                     prose-blockquote:border-gray-300 dark:prose-blockquote:border-gray-600
+                     prose-li:marker:text-gray-500 dark:prose-li:marker:text-gray-400"
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
       </div>
@@ -212,7 +261,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 }
 
 export async function generateStaticParams() {
-  const posts = await getBlogPosts(200)
+  const posts = await getBlogPosts(200) // Fetch a reasonable number for static generation
   return posts
     .filter((post) => typeof post.slug === "string" && post.slug.trim().length > 0)
     .map((post) => ({ slug: post.slug }))

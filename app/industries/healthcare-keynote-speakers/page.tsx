@@ -5,7 +5,7 @@ import HealthcareKeynoteSpeakersClientPage from "./HealthcareKeynoteSpeakersClie
 export const metadata: Metadata = {
   title: "Top Healthcare Keynote Speakers | Medical Conference Experts", // Updated title
   description:
-    "Book top healthcare keynote speakers for medical conferences. Experts in medical innovation, patient care, and healthcare technology.", // Updated description
+    "Book top healthcare AI keynote speakers for medical conferences. Experts in medical innovation, patient care, and AI in healthcare.", // 130 chars
   keywords: [
     "healthcare keynote speakers",
     "medical keynote speakers",

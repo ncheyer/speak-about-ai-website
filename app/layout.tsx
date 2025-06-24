@@ -14,9 +14,9 @@ const montserrat = Montserrat({
 })
 
 export const metadata: Metadata = {
-  title: "Speak About AI | Book Top AI Keynote Speakers 2025",
+  title: "Book AI Keynote Speakers | Speak About AI", // Updated: 44 chars
   description:
-    "The world's only AI-exclusive speaker bureau. Book top artificial intelligence experts, machine learning pioneers, and tech visionaries for your next event.",
+    "Book top AI keynote speakers & tech visionaries with Speak About AI, the world's only AI-exclusive speaker bureau. Find experts for your event.", // 147 chars
   keywords:
     "AI keynote speakers, book AI speakers, artificial intelligence speakers, AI conference speakers, machine learning speakers, tech keynote speakers",
   authors: [{ name: "Speak About AI" }],
@@ -28,13 +28,10 @@ export const metadata: Metadata = {
     telephone: false,
   },
   metadataBase: new URL("https://speakabout.ai"),
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
-    title: "Book Top AI Keynote Speakers 2025 | Speak About AI",
+    title: "Book AI Keynote Speakers | Speak About AI", // Updated
     description:
-      "The world's only AI-exclusive speaker bureau. Book top artificial intelligence experts for your next event.",
+      "Book top AI keynote speakers & tech visionaries with Speak About AI, the AI-exclusive bureau. Find experts for your event.", // 126 chars
     url: "https://speakabout.ai",
     siteName: "Speak About AI",
     images: [
@@ -50,9 +47,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Book Top AI Keynote Speakers 2025 | Speak About AI",
+    title: "Book AI Keynote Speakers | Speak About AI", // Updated
     description:
-      "The world's only AI-exclusive speaker bureau. Book top artificial intelligence experts for your next event.",
+      "Book top AI keynote speakers & tech visionaries with Speak About AI, the AI-exclusive bureau. Find experts for your event.", // 126 chars
     images: ["/og-image.jpg"],
   },
   robots: {

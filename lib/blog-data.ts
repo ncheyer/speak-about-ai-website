@@ -3,16 +3,17 @@
 import {
   getBlogPosts as _getPosts,
   getBlogPostBySlug as _getPostBySlug,
-  getFeaturedBlogPosts as _getFeatured,
+  getFeaturedBlogPosts as _getFeatured, // Ensure this is exported
   getRelatedBlogPosts as _getRelated,
   type BlogPost,
 } from "./contentful-blog"
 
 export type { BlogPost }
 
-export async function getBlogPosts() {
+export async function getBlogPosts(limit?: number) {
+  // Added optional limit parameter
   try {
-    return await _getPosts()
+    return await _getPosts(limit)
   } catch (err) {
     console.error("Error fetching posts from Contentful:", err)
     return []
@@ -20,6 +21,7 @@ export async function getBlogPosts() {
 }
 
 export async function getFeaturedBlogPosts() {
+  // Ensure this function exists and is exported
   try {
     return await _getFeatured()
   } catch (err) {

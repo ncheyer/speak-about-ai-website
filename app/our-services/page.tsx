@@ -7,11 +7,14 @@ import FAQSection from "@/components/faq-section"
 import ServicesContact from "@/components/services-contact"
 
 export const metadata: Metadata = {
-  title: "Our Services | AI Speaker Bureau Services | Speak About AI",
+  title: "AI Speaker Services | Speak About AI", // Updated: 36 chars
   description:
-    "Comprehensive AI speaker services including keynotes, panels, fireside chats, workshops, and our flagship SprintAI innovation accelerator. Connect with world-class AI experts.",
+    "Discover AI speaker services from Speak About AI: keynotes, panels, workshops & SprintAI. Connect with world-class AI experts for your event.", // 146 chars
   keywords:
     "AI speaker services, AI keynote speakers, AI panel discussions, AI fireside chats, SprintAI workshop, artificial intelligence speaking bureau",
+  alternates: {
+    canonical: "/our-services",
+  },
 }
 
 export default function OurServicesPage() {

@@ -3,11 +3,14 @@ import SpeakerDirectory from "@/components/speaker-directory"
 import { getAllSpeakers, type Speaker } from "@/lib/speakers-data" // Ensure Speaker type is imported
 
 export const metadata: Metadata = {
-  title: "All AI Keynote Speakers | Browse World-Class AI Experts",
+  title: "See Our AI Keynote Speakers | Speak About AI", // Updated: 46 chars
   description:
-    "Browse our complete directory of world-class artificial intelligence experts, tech visionaries, and industry practitioners. Book the perfect AI speaker for your event.",
+    "Explore our AI speaker directory. Find world-class artificial intelligence experts, tech visionaries & practitioners. Book the perfect AI speaker for your event.", // 159 chars
   keywords:
     "AI keynote speakers, artificial intelligence experts, tech visionaries, AI conference speakers, machine learning speakers, AI industry practitioners",
+  alternates: {
+    canonical: "/speakers",
+  },
 }
 
 export default async function SpeakersPage() {

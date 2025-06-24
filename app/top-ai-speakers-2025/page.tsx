@@ -7,7 +7,7 @@ import Link from "next/link"
 export const metadata: Metadata = {
   title: "Top AI Speakers 2025 | Book the Best Artificial Intelligence Keynote Speakers",
   description:
-    "Discover the top AI keynote speakers for 2025. From Siri co-founders to Google executives, book the world's leading artificial intelligence experts for your event.",
+    "Discover 2025's top AI keynote speakers. Book leading artificial intelligence experts, from Siri co-founders to Google execs, for your event.", // 144 chars
   keywords:
     "top AI speakers 2025, best AI keynote speakers, artificial intelligence speakers 2025, AI conference speakers, machine learning speakers",
 }

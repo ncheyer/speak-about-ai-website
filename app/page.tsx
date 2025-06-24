@@ -7,16 +7,19 @@ import BookingCTA from "@/components/booking-cta"
 import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data" // Ensure Speaker type is imported
 
 export const metadata: Metadata = {
-  title: "Book Top AI Keynote Speakers 2025 | The Only AI-Exclusive Speaker Bureau",
+  title: "Top AI Keynote Speakers for Hire | Speak About AI", // Updated: 50 chars
   description:
-    "Book world-class AI keynote speakers for your next event. The only speaker bureau exclusively focused on artificial intelligence experts. Trusted by Fortune 500 companies.",
+    "Book world-class AI keynote speakers for your event. Speak About AI is the only AI-exclusive bureau, trusted by Fortune 500s. Find your expert today.", // 151 chars
   keywords:
     "AI keynote speakers, book AI speakers, artificial intelligence speakers, AI conference speakers, machine learning speakers, tech keynote speakers",
   openGraph: {
-    title: "Book Top AI Keynote Speakers 2025 | Speak About AI",
+    title: "Top AI Keynote Speakers for Hire | Speak About AI", // Updated
     description:
-      "The world's only AI-exclusive speaker bureau. Book top artificial intelligence experts for your next event.",
+      "Book world-class AI keynote speakers with Speak About AI, the AI-exclusive bureau trusted by Fortune 500s. Find your expert for your next event.", // 147 chars
     type: "website",
+  },
+  alternates: {
+    canonical: "/",
   },
 }
 

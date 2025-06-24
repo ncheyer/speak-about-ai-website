@@ -3,10 +3,13 @@ import { Suspense } from "react"
 import ContactForm from "@/components/contact-form"
 
 export const metadata: Metadata = {
-  title: "Contact Us | Book AI Keynote Speakers | Speak About AI",
+  title: "Contact Us | Speak About AI", // Updated: 28 chars
   description:
-    "Contact Speak About AI to book top artificial intelligence keynote speakers for your event. Get personalized speaker recommendations and check availability.",
+    "Contact Speak About AI to book top AI keynote speakers. Get personalized recommendations and check availability for your event. Reach out today.", // 140 chars
   keywords: "contact AI speakers, book AI keynote speakers, AI speaker availability, AI speaker bureau contact",
+  alternates: {
+    canonical: "/contact",
+  },
 }
 
 export default function ContactPage() {

@@ -8,13 +8,13 @@ import { TrendingUp, Target, BarChart3, Users, MessageSquare, Zap, DollarSign, H
 export const metadata: Metadata = {
   title: "Sales & Marketing AI Keynote Speakers | Expert Revenue Growth Speakers",
   description:
-    "Book top sales and marketing AI keynote speakers who have driven billions in revenue growth. Expert speakers for sales conferences, marketing events, and corporate training.",
+    "Book sales & marketing AI keynote speakers who've driven billions in revenue. Experts for sales conferences, marketing events & corporate training.", // 148 chars
   keywords:
     "sales keynote speaker, marketing keynote speaker, AI sales speaker, marketing AI expert, revenue growth speaker, sales automation speaker, digital marketing speaker",
   openGraph: {
     title: "Sales & Marketing AI Keynote Speakers | Expert Revenue Growth Speakers",
     description:
-      "Book top sales and marketing AI keynote speakers who have driven billions in revenue growth. Expert speakers for sales conferences, marketing events, and corporate training.",
+      "Book sales & marketing AI keynote speakers who've driven billions in revenue. Experts for sales conferences, marketing events & corporate training.", // 148 chars
     type: "website",
   },
 }

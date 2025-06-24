@@ -47,11 +47,11 @@ export interface Speaker {
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID
 const API_KEY = process.env.GOOGLE_SHEETS_API_KEY
-const SHEET_NAME = "Speakers"
+const SHEET_NAME = "Speakers" // The name of the sheet/tab within your spreadsheet
 
 function sanitizePotentiallyCorruptJsonString(rawJsonString: string): string {
   if (!rawJsonString || typeof rawJsonString !== "string") {
-    return "[]"
+    return "[]" // Default to empty array string if input is invalid
   }
   let s = rawJsonString.trim()
   if (s === "" || s === "null" || s === "undefined") {
@@ -99,7 +99,7 @@ function sanitizePotentiallyCorruptJsonString(rawJsonString: string): string {
       }
     }
     try {
-      JSON.parse(s)
+      JSON.parse(s) // Tries to parse the sanitized string
       return s
     } catch (parseError) {
       const lastCommaIndex = s.lastIndexOf(",")
@@ -112,7 +112,7 @@ function sanitizePotentiallyCorruptJsonString(rawJsonString: string): string {
           if (s.startsWith("{")) s += "}"
         }
       }
-      return s
+      return s // Returns the string even if still unparsable, relying on caller's error handling
     }
   } catch (error) {
     console.warn("Error in JSON sanitization:", error)
@@ -400,51 +400,46 @@ let lastFetchTime: number | null = null
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 async function fetchAllSpeakersFromSheet(): Promise<Speaker[]> {
-  if (!SPREADSHEET_ID || !API_KEY) {
-    console.error("Google Sheets API Key or Spreadsheet ID is not configured. Falling back to local data.")
+  if (!SPREADSHEET_ID || !API_KEY || !SHEET_NAME) {
+    console.warn(
+      "Missing required environment variables (SPREADSHEET_ID, API_KEY, SHEET_NAME). " +
+        "Falling back to local speakers.",
+    )
     return localSpeakers
   }
-  const range = `${SHEET_NAME}!A:Z`
+
+  const range = SHEET_NAME // e.g., 'Sheet1'
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`
+
   try {
-    const response = await fetch(url, { next: { revalidate: 300 } })
+    const response = await fetch(url)
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Error fetching from Google Sheets API: ${response.status} ${response.statusText}`, {
-        error: errorText,
-      })
+      console.error("Failed to fetch data from Google Sheets. " + `Status: ${response.status}, ${response.statusText}.`)
       return localSpeakers
     }
     const data = await response.json()
-    const values = data.values
-    if (!values || values.length < 2) {
+    const rows = data.values as any[][]
+    if (!rows || rows.length === 0) {
+      console.warn("No data found in the Google Sheet. Falling back to local speakers.")
       return localSpeakers
     }
-    const mappedSpeakers = mapGoogleSheetDataToSpeakers(values)
-    if (mappedSpeakers.length === 0 && values.length > 1) {
-      return localSpeakers
-    }
-    return mappedSpeakers
+    return mapGoogleSheetDataToSpeakers(rows)
   } catch (error) {
-    console.error(
-      "A critical error occurred during the fetch or mapping from Google Sheets. Falling back to local data.",
-      error,
-    )
+    console.error("Error fetching or processing data from Google Sheets:", error)
     return localSpeakers
   }
 }
 
 export async function getAllSpeakers(): Promise<Speaker[]> {
-  // Force fresh fetch for debugging
-  console.log("🔄 getAllSpeakers called - forcing fresh fetch for debugging")
+  console.log("🔄 getAllSpeakers called - forcing fresh fetch for debugging") // Currently forces fresh fetch
 
   try {
     const fetchedSpeakers = await fetchAllSpeakersFromSheet()
     allSpeakersCache = fetchedSpeakers
-    lastFetchTime = Date.now()
+    lastFetchTime = Date.now() // Related to the commented-out cache logic
     return allSpeakersCache
-      .filter((speaker) => speaker.listed !== false)
-      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0))
+      .filter((speaker) => speaker.listed !== false) // Filters out unlisted speakers
+      .sort((a, b) => (b.ranking || 0) - (a.ranking || 0)) // Sorts by ranking
   } catch (error) {
     console.error("Critical error during fetch. Falling back to local listed speakers:", error)
     if (!allSpeakersCache) allSpeakersCache = localSpeakers
