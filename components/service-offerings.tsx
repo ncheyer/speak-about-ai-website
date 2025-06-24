@@ -92,7 +92,7 @@ const ServiceOfferings = () => {
                 />
               </div>
               <div className="p-4">
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">{service.title}</h3>
+                <h2 className="text-xl font-semibold text-gray-800 mb-2">{service.title}</h2>
                 <p className="text-gray-700">{service.description}</p>
               </div>
             </div>
@@ -107,9 +107,9 @@ const ServiceOfferings = () => {
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
                   <Zap className="w-6 h-6 text-orange-600" />
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 font-neue-haas">
+                <h2 className="text-3xl font-bold text-gray-900 font-neue-haas">
                   SprintAI: One-Day Generative AI Innovation Accelerator
-                </h3>
+                </h2>
               </div>
 
               <p className="text-gray-600 mb-6 font-montserrat">
@@ -119,7 +119,7 @@ const ServiceOfferings = () => {
               </p>
 
               <div className="mb-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-3 font-neue-haas">Key Benefits:</h4>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 font-neue-haas">Key Benefits:</h3>
                 <ul className="space-y-2">
                   <li className="text-gray-600 flex items-start font-montserrat">
                     <span className="flex-shrink-0 text-orange-600 mr-2">•</span>
@@ -181,7 +181,7 @@ const ServiceOfferings = () => {
                     className="w-16 h-16 rounded-full object-cover mr-4"
                   />
                   <div>
-                    <h4 className="text-xl font-bold text-gray-900 font-neue-haas">Adam Holt</h4>
+                    <h3 className="text-xl font-bold text-gray-900 font-neue-haas">Adam Holt</h3>
                     <p className="text-[#1E68C6] font-semibold font-montserrat">Innovation Leader</p>
                   </div>
                 </div>
