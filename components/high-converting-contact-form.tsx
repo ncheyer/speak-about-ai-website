@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Star, Sparkles } from "lucide-react"
+import { submitContactForm } from "@/app/actions/submit-contact-form"
 
-interface FormData {
+interface FormDataState {
   name: string
   email: string
   phone: string
@@ -20,13 +21,15 @@ interface FormData {
   eventLocation: string
   eventBudget: string
   additionalInfo: string
-  newsletterOptOut: boolean // Changed from newsletterSignup to newsletterOptOut
+  newsletterOptOut: boolean
 }
 
 export default function HighConvertingContactForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [isSubmitted, setIsSubmitted] = useState(false)
-  const [formData, setFormData] = useState<FormData>({
+  const [submissionError, setSubmissionError] = useState<string | null>(null)
+
+  const [formData, setFormData] = useState<FormDataState>({
     name: "",
     email: "",
     phone: "",
@@ -36,64 +39,40 @@ export default function HighConvertingContactForm() {
     eventLocation: "",
     eventBudget: "",
     additionalInfo: "",
-    newsletterOptOut: false, // Default to false, meaning they are opted-IN unless they check the box
+    newsletterOptOut: false,
   })
 
-  const updateFormData = (field: keyof FormData, value: string | boolean) => {
+  const updateFormData = (field: keyof FormDataState, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
+    setSubmissionError(null)
 
-    // Interpret newsletterOptOut: if false (box unchecked), they want the newsletter.
-    // If true (box checked), they want to be taken off.
-    // For Zapier, you might want to send a clear "subscribed_to_newsletter: true/false"
-    const wantsNewsletter = !formData.newsletterOptOut
-
-    try {
-      const response = await fetch("https://hooks.zapier.com/hooks/catch/23536588/ubtw516/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formData,
-          wantsNewsletter,
-          submittedAt: new Date().toISOString(),
-          source: "contact-2-single-step-form-v3-opt-out",
-        }),
-      })
-
-      console.log("Zapier response status:", response.status)
-      console.log("Zapier response status text:", response.statusText)
-      // Try to clone the response before reading the body, so it can be read again if needed
-      // or handle cases where it might not be readable as text.
-      let responseBody = ""
+    startTransition(async () => {
       try {
-        responseBody = await response.clone().text() // Clone to read body safely
-      } catch (e) {
-        console.warn("Could not clone or read response body as text:", e)
-      }
-      console.log("Zapier response body:", responseBody)
+        const result = await submitContactForm(formData)
 
-      if (response.ok) {
-        setIsSubmitted(true)
-      } else {
-        console.error("Zapier submission failed. Status:", response.status, "Response Body:", responseBody)
-        throw new Error(`Failed to submit form. Status: ${response.status}. Response: ${responseBody}`)
+        if (result.success) {
+          setIsSubmitted(true)
+        } else {
+          console.error("Client: Server action submission failed.", result.message)
+          setSubmissionError(result.message || "Submission failed. Please try again.")
+          alert(
+            `There was an error submitting your request: ${result.message || "Unknown error"}. Please try again or call us directly at (510) 435-3947.`,
+          )
+        }
+      } catch (error: any) {
+        console.error("Client: Error calling server action:", {
+          errorMessage: error.message,
+          errorStack: error.stack,
+          errorObject: error,
+        })
+        setSubmissionError("An unexpected error occurred. Please try again.")
+        alert("There was an error submitting your request. Please try again or call us directly at (510) 435-3947.")
       }
-    } catch (error: any) {
-      console.error("Detailed error submitting form to Zapier:", {
-        errorMessage: error.message,
-        errorStack: error.stack,
-        errorObject: error,
-      })
-      alert("There was an error submitting your request. Please try again or call us directly at (510) 435-3947.")
-    } finally {
-      setIsSubmitting(false)
-    }
+    })
   }
 
   if (isSubmitted) {
@@ -125,7 +104,6 @@ export default function HighConvertingContactForm() {
               </div>
             </div>
           </div>
-          {/* Logic for displaying newsletter status on success page */}
           {!formData.newsletterOptOut ? (
             <p className="text-sm text-gray-600 mb-4">
               You're subscribed to our newsletter for updates on new speakers and AI trends!
@@ -144,7 +122,6 @@ export default function HighConvertingContactForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#EAEAEE] to-white py-12 px-4">
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-10">
           <div className="flex items-center justify-center mb-4">
             <Badge
@@ -163,10 +140,8 @@ export default function HighConvertingContactForm() {
           </p>
         </div>
 
-        {/* Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Personal & Organization Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -227,7 +202,6 @@ export default function HighConvertingContactForm() {
               </div>
             </div>
 
-            {/* Event Details */}
             <div>
               <label htmlFor="specificSpeaker" className="block text-sm font-medium text-gray-700 mb-1">
                 Do you have a specific speaker in mind?
@@ -293,7 +267,6 @@ export default function HighConvertingContactForm() {
               </Select>
             </div>
 
-            {/* Additional Information */}
             <div>
               <label htmlFor="additionalInfo" className="block text-sm font-medium text-gray-700 mb-1">
                 What additional information would you like us to know about your organization, industry, or event? *
@@ -308,11 +281,10 @@ export default function HighConvertingContactForm() {
               />
             </div>
 
-            {/* Newsletter Opt-Out */}
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="newsletterOptOut"
-                checked={formData.newsletterOptOut} // Checked means they want to opt OUT
+                checked={formData.newsletterOptOut}
                 onCheckedChange={(checked) => updateFormData("newsletterOptOut", Boolean(checked))}
               />
               <label
@@ -322,8 +294,7 @@ export default function HighConvertingContactForm() {
                 Take me off Speak About AI's newsletter for updates on new speakers and AI trends.
               </label>
             </div>
-
-            {/* Value Proposition & Submit */}
+            {submissionError && <p className="text-sm text-red-600">{submissionError}</p>}
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mt-4">
               <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
                 <Star className="h-5 w-5 text-orange-600 mr-2" />
@@ -340,7 +311,7 @@ export default function HighConvertingContactForm() {
             <Button
               type="submit"
               disabled={
-                isSubmitting ||
+                isPending ||
                 !formData.name ||
                 !formData.email ||
                 !formData.organizationName ||
@@ -349,7 +320,7 @@ export default function HighConvertingContactForm() {
               }
               className="w-full h-12 text-lg font-semibold bg-orange-600 hover:bg-orange-700 text-white transition-all duration-300"
             >
-              {isSubmitting ? (
+              {isPending ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                   Submitting...
@@ -361,7 +332,6 @@ export default function HighConvertingContactForm() {
           </form>
         </div>
 
-        {/* Trust Signals - Styled to match site */}
         <div className="text-center mt-8">
           <p className="text-gray-600 text-sm mb-3">Speak About AI: Your Premier Bureau for AI Keynote Speakers</p>
           <div className="flex items-center justify-center space-x-4 text-xs text-gray-500">
