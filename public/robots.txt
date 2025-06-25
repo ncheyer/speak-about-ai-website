@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.speakabout.ai/sitemap.xml
+# If your domain is different, please update the Sitemap URL above.
+# For example, if you are testing on a Vercel deployment, 
+# it might be https://your-project-name.vercel.app/sitemap.xml
