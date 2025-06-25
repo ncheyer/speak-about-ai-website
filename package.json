@@ -52,7 +52,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "latest",
-    "contentful": "^10.15.0",
+    "contentful": "latest",
     "cross-env": "^7.0.3",
     "embla-carousel-react": "latest",
     "graphql": "latest",

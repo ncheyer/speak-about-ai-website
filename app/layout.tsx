@@ -14,9 +14,9 @@ const montserrat = Montserrat({
 })
 
 export const metadata: Metadata = {
-  title: "Book AI Keynote Speakers | Speak About AI", // Updated: 44 chars
+  title: "Book AI Keynote Speakers | Speak About AI",
   description:
-    "Book top AI keynote speakers & tech visionaries with Speak About AI, the world's only AI-exclusive speaker bureau. Find experts for your event.", // 147 chars
+    "Book top AI keynote speakers & tech visionaries with Speak About AI, the world's only AI-exclusive speaker bureau. Find experts for your event.",
   keywords:
     "AI keynote speakers, book AI speakers, artificial intelligence speakers, AI conference speakers, machine learning speakers, tech keynote speakers",
   authors: [{ name: "Speak About AI" }],
@@ -27,16 +27,16 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://speakabout.ai"),
+  metadataBase: new URL("https://www.speakabout.ai"), // Ensure this is your production URL
   openGraph: {
-    title: "Book AI Keynote Speakers | Speak About AI", // Updated
+    title: "Book AI Keynote Speakers | Speak About AI",
     description:
-      "Book top AI keynote speakers & tech visionaries with Speak About AI, the AI-exclusive bureau. Find experts for your event.", // 126 chars
-    url: "https://speakabout.ai",
+      "Book top AI keynote speakers & tech visionaries with Speak About AI, the AI-exclusive bureau. Find experts for your event.",
+    url: "https://www.speakabout.ai",
     siteName: "Speak About AI",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/og-image.jpg", // Make sure this image exists in your public folder
         width: 1200,
         height: 630,
         alt: "Speak About AI - Book Top AI Keynote Speakers",
@@ -47,10 +47,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Book AI Keynote Speakers | Speak About AI", // Updated
+    title: "Book AI Keynote Speakers | Speak About AI",
     description:
-      "Book top AI keynote speakers & tech visionaries with Speak About AI, the AI-exclusive bureau. Find experts for your event.", // 126 chars
-    images: ["/og-image.jpg"],
+      "Book top AI keynote speakers & tech visionaries with Speak About AI, the AI-exclusive bureau. Find experts for your event.",
+    images: ["/og-image.jpg"], // Make sure this image exists
   },
   robots: {
     index: true,
@@ -93,16 +93,33 @@ export default function RootLayout({
               "@type": "Organization",
               name: "Speak About AI",
               description: "The world's only AI-exclusive speaker bureau",
-              url: "https://speakabout.ai",
-              logo: "https://speakabout.ai/hero-image.png",
+              url: "https://www.speakabout.ai",
+              logo: "https://www.speakabout.ai/hero-image.png",
               contactPoint: {
                 "@type": "ContactPoint",
-                telephone: "+1-555-012-3456",
+                telephone: "+1-415-860-1799", // Updated phone number
                 contactType: "customer service",
                 email: "booking@speakabout.ai",
               },
               sameAs: ["https://linkedin.com/company/speakaboutai", "https://twitter.com/speakaboutai"],
             }),
+          }}
+        />
+        {/* Hotjar Tracking Code - Placed in head as per Hotjar's recommendation */}
+        {/* Using dangerouslySetInnerHTML for the inline script part */}
+        <script
+          id="hotjar-init"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(h,o,t,j,a,r){
+                  h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+                  h._hjSettings={hjid:6446085,hjsv:6};
+                  a=o.getElementsByTagName('head')[0];
+                  r=o.createElement('script');r.async=1;
+                  r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+                  a.appendChild(r);
+              })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+            `,
           }}
         />
       </head>
