@@ -16,6 +16,12 @@ export default async function BlogPage() {
   try {
     // Fetch a generous number of posts; pagination can come later.
     allPosts = await getBlogPosts(100)
+    console.log("[app/blog/page.tsx] All posts count:", allPosts.length)
+    if (allPosts.length > 0) {
+      console.log("[app/blog/page.tsx] First post title from allPosts:", allPosts[0].title)
+    } else {
+      console.log("[app/blog/page.tsx] No posts received from getBlogPosts.")
+    }
   } catch (err) {
     console.error("BlogPage: failed to load posts:", err)
   }
@@ -23,6 +29,9 @@ export default async function BlogPage() {
   // Split the list: first 3 as “featured”, remainder as “regular”.
   const featuredPosts = allPosts.slice(0, 3)
   const regularPosts = allPosts.slice(3)
+
+  console.log("[app/blog/page.tsx] Featured posts count:", featuredPosts.length)
+  console.log("[app/blog/page.tsx] Regular posts count:", regularPosts.length)
 
   return (
     <div className="min-h-screen bg-white">

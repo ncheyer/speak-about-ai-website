@@ -1,193 +1,141 @@
 /**
- * Lightweight Contentful helper utilities.
- *
- * This version includes a resolver to correctly process Rich Text fields
- * by stitching in linked entries and assets from the 'includes' payload.
- * This is the key to fixing embedded videos and images.
+ * Corrected and streamlined Contentful helper utilities with ENHANCED LOGGING for troubleshooting.
+ * This version consistently uses a robust mapping function (`mapEntryToPost`)
+ * that properly resolves all linked entries and assets, including those
+ * embedded in Rich Text fields.
  */
+import { createClient, type Entry, type Asset } from "contentful"
 
-import { createClient, type Entry } from "contentful"
+// --- Client Initialization & Credential Check ---
+const CONTENTFUL_SPACE_ID = process.env.CONTENTFUL_SPACE_ID
+const CONTENTFUL_ACCESS_TOKEN = process.env.CONTENTFUL_ACCESS_TOKEN
+
+console.log("------------------------------------------------------------")
+console.log("[Contentful Setup] Attempting to initialize Contentful client...")
+console.log(
+  `[Contentful Setup] Using Space ID: ${CONTENTFUL_SPACE_ID ? `******** (Length: ${CONTENTFUL_SPACE_ID.length})` : "!!! MISSING OR EMPTY SPACE ID !!!"}`,
+)
+console.log(
+  `[Contentful Setup] Using Access Token: ${CONTENTFUL_ACCESS_TOKEN ? `******** (Length: ${CONTENTFUL_ACCESS_TOKEN.length})` : "!!! MISSING OR EMPTY ACCESS TOKEN !!!"}`,
+)
+
+if (!CONTENTFUL_SPACE_ID || !CONTENTFUL_ACCESS_TOKEN) {
+  console.error(
+    "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" +
+      "[Contentful Setup] FATAL: Contentful Space ID or Access Token is missing or empty.\n" +
+      "Blog posts WILL NOT LOAD. Please check your environment variables.\n" +
+      "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+  )
+}
 
 const client = createClient({
-  space: process.env.CONTENTFUL_SPACE_ID!,
-  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN!,
+  space: CONTENTFUL_SPACE_ID!, // Still pass them, SDK might have its own errors
+  accessToken: CONTENTFUL_ACCESS_TOKEN!,
 })
+console.log("[Contentful Setup] Contentful client initialized (or attempted).")
+console.log("------------------------------------------------------------")
 
-const SPACE_ID = process.env.CONTENTFUL_SPACE_ID
-const ACCESS_TOKEN = process.env.CONTENTFUL_ACCESS_TOKEN
-const ENVIRONMENT = "master" // change if you use multiple environments
-
-const BASE_URL = `https://cdn.contentful.com/spaces/${SPACE_ID}/environments/${ENVIRONMENT}`
-
-async function fetchContentfulAPI<T>(endpoint: string): Promise<T> {
-  const url = `${BASE_URL}/${endpoint}${endpoint.includes("?") ? "&" : "?"}` + `access_token=${ACCESS_TOKEN}`
-  const res = await fetch(url, { next: { revalidate: 60 } })
-
-  if (!res.ok) {
-    throw new Error(`Contentful error ${res.status}: ${await res.text()}`)
-  }
-  return res.json() as Promise<T>
-}
-
-/* ---------- Shapes & Mappers ---------- */
-
-export interface Author {
-  name?: string
-  picture?: {
-    url: string
-    description?: string
-  }
-}
-
-export interface Category {
-  slug: string
-  name: string
-}
-
+// --- Type Definitions ---
+// A single, consistent type for a blog post used throughout the app.
 export interface BlogPost {
   id: string
   slug: string
   title: string
-  summary?: string
-  body?: any // Rich text JSON
-  author?: Author
-  tags?: string[]
-  publishedDate?: string // This is derived from Contentful fields or sys dates
-  coverImage?: {
-    url: string
-    description?: string
-  }
-  relatedPosts?: BlogPost[]
-  sys: {
-    // Ensure sys object is part of the interface
-    id: string
-    contentType: {
-      sys: {
-        id: string
-      }
-    }
-    createdAt?: string
-    updatedAt?: string
-    firstPublishedAt?: string // Available from Contentful
-    publishedAt?: string // Available from Contentful
-    // Add other sys properties if needed
-  }
-}
-
-// Interface for derived categories, used by BlogClientPage
-export interface DerivedCategory {
-  slug: string
-  name: string
-}
-
-type Sys = { id: string; contentType?: { sys: { id: string } } } // Added contentType to Sys for better typing
-type AuthorEntry = {
-  sys: Sys
-  fields: {
+  excerpt?: string
+  content?: any // Rich Text JSON object
+  author?: {
     name: string
-    picture?: any // Renamed Asset to any to avoid redeclaration
-    // add other author fields here if needed, e.g., title, bio
+    picture?: { url: string; description?: string }
   }
+  categories?: { slug: string; name: string }[]
+  publishedDate: string
+  featuredImage?: { url: string; alt: string }
+  readTime?: number
+  featured?: boolean
+  sys: any
 }
-type CategoryEntry = {
-  sys: Sys
-  fields: {
-    name: string
-    slug: string
-  }
-}
-type ContentfulAsset = {
-  sys: Sys
-  fields: {
-    title: string
-    description?: string
-    file: { url: string; details: { image?: { width: number; height: number } } }
-  }
-}
-type Includes = { Asset?: ContentfulAsset[]; Entry?: (AuthorEntry | CategoryEntry | any)[] } // Renamed Asset to ContentfulAsset
 
-function extractAsset(assets: ContentfulAsset[] | undefined, id: string | undefined) {
-  if (!assets || !id) return undefined
-  const asset = assets.find((a) => a.sys.id === id)
+// Type for the `includes` object from a Contentful API response.
+type ContentfulIncludes = {
+  Asset?: Asset[]
+  Entry?: Entry<any>[]
+}
+
+// --- Data Mapping and Resolution ---
+
+/**
+ * Extracts and formats an asset (like an image) from the `includes` object.
+ */
+function extractAsset(assets: Asset[] | undefined, assetId: string | undefined) {
+  if (!assets || !assetId) return undefined
+  const asset = assets.find((a) => a.sys.id === assetId)
   if (!asset) return undefined
   return {
-    url: asset.fields.file.url.startsWith("//") ? `https:${asset.fields.file.url}` : asset.fields.file.url,
-    alt: asset.fields.description || asset.fields.title || "",
+    url: asset.fields.file?.url ? `https:${asset.fields.file.url}` : "",
+    alt: (asset.fields.description as string) || (asset.fields.title as string) || "",
   }
 }
 
-function extractAuthor(
-  entries: (AuthorEntry | CategoryEntry | any)[] | undefined,
-  authorFieldSysId: string | undefined,
-): { name: string; picture?: { url: string; description?: string } } {
+/**
+ * Extracts and formats an author from the `includes` object.
+ */
+function extractAuthor(entries: Entry<any>[] | undefined, authorId: string | undefined) {
   const fallback = { name: "Speak About AI" }
-  if (!entries || !authorFieldSysId) return fallback
+  if (!entries || !authorId) return fallback
 
-  const authorEntry = entries.find(
-    (e) => e.sys.id === authorFieldSysId && e.sys.contentType?.sys?.id === "author", // Ensure it's an author entry
-  )
+  const authorEntry = entries.find((e) => e.sys.id === authorId && e.sys.contentType.sys.id === "author")
+  if (!authorEntry) return fallback
 
-  if (authorEntry && (authorEntry as AuthorEntry).fields?.name) {
-    const pictureAsset = (authorEntry as AuthorEntry).fields?.picture as ContentfulAsset | undefined
-    return {
-      name: (authorEntry as AuthorEntry).fields.name,
-      picture: pictureAsset?.fields?.file
-        ? {
-            url: "https:" + pictureAsset.fields.file.url,
-            description: pictureAsset.fields.description,
-          }
-        : undefined,
-    }
+  const pictureAsset = authorEntry.fields.picture as Asset | undefined
+  return {
+    name: (authorEntry.fields.name as string) || "Speak About AI",
+    picture: pictureAsset?.fields?.file
+      ? {
+          url: `https:${pictureAsset.fields.file.url}`,
+          description: pictureAsset.fields.description as string,
+        }
+      : undefined,
   }
-  console.warn(
-    `Author with ID ${authorFieldSysId} not found or 'name' field missing in includes.Entry. Defaulting author.`,
-  )
-  return fallback
 }
 
-function extractCategories(
-  entries: (AuthorEntry | CategoryEntry | any)[] | undefined,
-  categoryLinks: { sys: { id: string } }[] | undefined,
-): Category[] {
-  if (!entries || !categoryLinks || categoryLinks.length === 0) return []
-
-  const resolvedCategories: Category[] = []
-  for (const link of categoryLinks) {
-    const categoryEntry = entries.find(
-      (e) => e.sys.id === link.sys.id && e.sys.contentType?.sys?.id === "category", // Ensure it's a category entry (adjust "category" if your ID is different)
-    )
-    if (categoryEntry) {
-      const cat = categoryEntry as CategoryEntry
-      if (cat.fields?.name && cat.fields?.slug) {
-        resolvedCategories.push({ name: cat.fields.name, slug: cat.fields.slug })
-      } else {
-        console.warn(`Category with ID ${link.sys.id} found but missing 'name' or 'slug' field.`)
+/**
+ * Extracts and formats categories from the `includes` object.
+ */
+function extractCategories(entries: Entry<any>[] | undefined, categoryLinks: Entry<any>[] | undefined) {
+  if (!entries || !categoryLinks) return []
+  return categoryLinks
+    .map((link) => {
+      const categoryEntry = entries.find((e) => e.sys.id === link.sys.id && e.sys.contentType.sys.id === "category")
+      if (categoryEntry && categoryEntry.fields.name && categoryEntry.fields.slug) {
+        return {
+          name: categoryEntry.fields.name as string,
+          slug: categoryEntry.fields.slug as string,
+        }
       }
-    } else {
-      console.warn(`Category with ID ${link.sys.id} not found in includes.Entry.`)
-    }
-  }
-  return resolvedCategories
+      return null
+    })
+    .filter(Boolean) as { slug: string; name: string }[]
 }
 
-function resolveRichTextLinks(content: any, includes: Includes | undefined): any {
-  if (!content?.content || !includes) {
-    return content
-  }
+/**
+ * Recursively traverses a Rich Text object and resolves any linked entries/assets.
+ */
+function resolveRichTextLinks(content: any, includes: ContentfulIncludes | undefined): any {
+  if (!content?.content || !includes) return content
 
-  const entryMap = new Map(includes.Entry?.map((e) => [e.sys.id, e]) || [])
-  const assetMap = new Map(includes.Asset?.map((a) => [a.sys.id, a]) || [])
+  const entryMap = new Map(includes.Entry?.map((e) => [e.sys.id, e]))
+  const assetMap = new Map(includes.Asset?.map((a) => [a.sys.id, a]))
 
+  // Deep copy to avoid mutating the original object
   const newContent = JSON.parse(JSON.stringify(content))
 
   function traverse(node: any) {
-    const nodeType = node.nodeType
-    if (nodeType === "embedded-entry-block" || nodeType === "embedded-entry-inline") {
+    if (node.nodeType === "embedded-entry-block" || node.nodeType === "embedded-entry-inline") {
       const id = node.data?.target?.sys?.id
       if (id && entryMap.has(id)) {
         node.data.target = entryMap.get(id)
       }
-    } else if (nodeType === "embedded-asset-block") {
+    } else if (node.nodeType === "embedded-asset-block") {
       const id = node.data?.target?.sys?.id
       if (id && assetMap.has(id)) {
         node.data.target = assetMap.get(id)
@@ -203,146 +151,113 @@ function resolveRichTextLinks(content: any, includes: Includes | undefined): any
   return newContent
 }
 
-function mapEntryToPost(entry: any, includes?: Includes): BlogPost {
-  const {
-    sys: { id },
-    fields,
-  } = entry
-
-  // --- DEBUGGING LOGS ---
-  console.log(`--- DEBUGGING AUTHOR & CATEGORIES FOR POST: "${fields.title}" (ID: ${id}) ---`)
-  if (fields.author) {
-    console.log("Found 'fields.author' (link object):", JSON.stringify(fields.author, null, 2))
-  } else {
-    console.log("❌ 'fields.author' is MISSING from the post entry.")
-  }
-  if (fields.categories) {
-    console.log("Found 'fields.categories' (array of link objects):", JSON.stringify(fields.categories, null, 2))
-  } else {
-    console.log("ℹ️ 'fields.categories' is MISSING or empty for this post.")
-  }
-  if (includes?.Entry) {
-    // console.log("Full includes.Entry array:", JSON.stringify(includes.Entry, null, 2));
-  }
-  // --- END DEBUGGING ---
-
-  const featuredImageAsset = includes?.Asset ? extractAsset(includes.Asset, fields.featuredImage?.sys?.id) : undefined
+/**
+ * The main function to map a Contentful entry to our clean BlogPost type.
+ */
+function mapEntryToPost(entry: Entry<any>, includes?: ContentfulIncludes): BlogPost {
+  const { sys, fields } = entry
+  const featuredImageAsset = extractAsset(includes?.Asset, (fields.featuredImage as Asset)?.sys.id)
   const resolvedContent = resolveRichTextLinks(fields.content, includes)
-
-  const author = extractAuthor(includes?.Entry, fields.author?.sys?.id)
-  const categories = extractCategories(includes?.Entry, fields.categories)
+  const author = extractAuthor(includes?.Entry, (fields.author as Entry<any>)?.sys.id)
+  const categories = extractCategories(includes?.Entry, fields.categories as Entry<any>[])
 
   return {
-    id,
-    title: fields.title || "Untitled Post",
-    slug: fields.slug || `post-${id}`,
-    excerpt: fields.excerpt ?? "",
+    id: sys.id,
+    title: (fields.title as string) || "Untitled Post",
+    slug: (fields.slug as string) || `post-${sys.id}`,
+    excerpt: (fields.excerpt as string) ?? "",
     content: resolvedContent,
-    publishedDate: fields.publishedDate || entry.sys.createdAt,
-    readTime: fields.readTime,
-    featured: fields.featured ?? false,
-    author: author,
+    publishedDate: (fields.publishedDate as string) || sys.createdAt,
+    readTime: fields.readTime as number,
+    featured: (fields.featured as boolean) ?? false,
+    author,
     featuredImage: featuredImageAsset,
-    categories: categories,
-    sys: entry.sys,
+    categories,
+    sys,
   }
 }
 
-function mapAuthorFields(entry: Entry<any> | undefined): Author | undefined {
-  if (!entry || !entry.fields) return undefined
-  const pictureAsset = entry.fields.picture as any | undefined // Renamed Asset to any
-  return {
-    name: entry.fields.name as string | undefined,
-    picture: pictureAsset?.fields?.file
-      ? {
-          url: "https:" + pictureAsset.fields.file.url,
-          description: pictureAsset.fields.description as string | undefined,
-        }
-      : undefined,
-  }
-}
+// --- Public API Functions ---
+const INCLUDE_LEVEL = 10 // Set a high include level to get all nested data
 
-function mapContentfulFields(entry: Entry<any>): BlogPost {
-  const authorEntry = entry.fields.author as Entry<any> | undefined
-  const coverImageAsset = entry.fields.coverImage as any | undefined // Renamed Asset to any
-
-  return {
-    id: entry.sys.id,
-    slug: (entry.fields.slug as string) || "",
-    title: (entry.fields.title as string) || "Untitled Post",
-    summary: (entry.fields.summary as string) || "",
-    body: entry.fields.body, // Assuming body is rich text JSON
-    author: mapAuthorFields(authorEntry),
-    tags: (entry.fields.tags as string[]) || [],
-    publishedDate:
-      (entry.fields.publishedDate as string) || // Prefer explicit publishedDate field
-      entry.sys.firstPublishedAt || // Fallback to Contentful's firstPublishedAt
-      entry.sys.createdAt, // Further fallback
-    coverImage: coverImageAsset?.fields?.file
-      ? {
-          url: "https:" + coverImageAsset.fields.file.url,
-          description: coverImageAsset.fields.description as string | undefined,
-        }
-      : undefined,
-    sys: {
-      // Pass through the sys object, or relevant parts of it
-      id: entry.sys.id,
-      contentType: entry.sys.contentType,
-      createdAt: entry.sys.createdAt,
-      updatedAt: entry.sys.updatedAt,
-      firstPublishedAt: entry.sys.firstPublishedAt,
-      publishedAt: entry.sys.publishedAt,
-    },
-  }
-}
-
-/* ---------- Public API ---------- */
-const INCLUDE_LEVEL = 10 // This should be high enough to get linked authors and categories
-
+/**
+ * Fetches a list of all blog posts.
+ */
 export async function getBlogPosts(limit?: number): Promise<BlogPost[]> {
+  console.log(`[getBlogPosts] Called. Limit: ${limit ?? "not set"}.`)
+
+  if (!CONTENTFUL_SPACE_ID || !CONTENTFUL_ACCESS_TOKEN) {
+    console.error("[getBlogPosts] ABORTING: Contentful credentials missing at time of call.")
+    return []
+  }
+
+  const queryParams = {
+    content_type: "blogPost", // IMPORTANT: Ensure this ID matches your Contentful model
+    order: ["-fields.publishedDate", "-sys.createdAt"],
+    limit: limit,
+    include: INCLUDE_LEVEL,
+  }
+  console.log("[getBlogPosts] Query parameters:", JSON.stringify(queryParams))
+
   try {
-    const entries = await client.getEntries({
-      content_type: "blogPost", // Replace with your actual blog post content type ID
-      order: ["-fields.publishedDate", "-sys.firstPublishedAt", "-sys.createdAt"], // Ensure proper ordering
-      limit: limit,
-    })
-    return entries.items.map(mapContentfulFields)
+    console.log("[getBlogPosts] Attempting client.getEntries()...")
+    const response = await client.getEntries(queryParams)
+    console.log("[getBlogPosts] client.getEntries() call completed.")
+
+    console.log(
+      `[getBlogPosts] Raw Contentful Response: Total items in space matching query: ${response.total}, ` +
+        `Items in this batch: ${response.items.length}, Skip: ${response.skip}, Limit: ${response.limit}`,
+    )
+
+    if (response.items.length > 0) {
+      // console.log("[getBlogPosts] First raw item from Contentful:", JSON.stringify(response.items[0], null, 2));
+      console.log("[getBlogPosts] First raw item title from Contentful:", response.items[0]?.fields?.title)
+    } else {
+      console.warn(
+        "[getBlogPosts] Contentful returned 0 items. Potential issues:\n" +
+          "1. Incorrect `content_type` ID (expected 'blogPost'). Check your Contentful model.\n" +
+          "2. No posts are PUBLISHED in the 'master' environment (or the one your token targets).\n" +
+          "3. Access token lacks permissions for 'blogPost' or is for a different space/environment.\n" +
+          "4. Incorrect Space ID or Access Token environment variables.",
+      )
+      return []
+    }
+
+    const includes = { Asset: response.includes?.Asset, Entry: response.includes?.Entry }
+    const mappedPosts = response.items.map((item) => mapEntryToPost(item, includes))
+    console.log(`[getBlogPosts] Successfully mapped ${mappedPosts.length} posts.`)
+    return mappedPosts
   } catch (error) {
-    console.error("Contentful getBlogPosts error:", error)
+    console.error("[getBlogPosts] CRITICAL ERROR during client.getEntries() or mapping:", error)
+    if (error.message) console.error("[getBlogPosts] Error message:", error.message)
+    if (error.details) console.error("[getBlogPosts] Error details:", JSON.stringify(error.details, null, 2))
+    if (error.response?.data)
+      console.error("[getBlogPosts] Error response data:", JSON.stringify(error.response.data, null, 2))
     return []
   }
 }
 
-export async function getFeaturedBlogPosts(limit = 3): Promise<BlogPost[]> {
-  // This function might need adjustment if "featured" is a specific field in Contentful
-  // For now, let's assume it fetches posts that have a 'featured' boolean field set to true
-  // Or, if you don't have a featured field, it could fetch the latest N posts.
-  // The current implementation in app/blog/page.tsx takes the first few from getBlogPosts.
-  // If you want a dedicated "featured" query, you'd add:
-  // 'fields.featured': true, (assuming 'featured' is a boolean field in Contentful)
-  try {
-    const entries = await client.getEntries({
-      content_type: "blogPost",
-      order: ["-fields.publishedDate", "-sys.firstPublishedAt", "-sys.createdAt"],
-      limit: limit,
-      // 'fields.featured': true, // Example if you have a 'featured' field
-    })
-    return entries.items.map(mapContentfulFields)
-  } catch (error) {
-    console.error("Contentful getFeaturedBlogPosts error:", error)
-    return []
-  }
-}
-
+/**
+ * Fetches a single blog post by its slug.
+ */
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  console.log(`[getBlogPostBySlug] Called. Slug: ${slug}.`)
+  if (!CONTENTFUL_SPACE_ID || !CONTENTFUL_ACCESS_TOKEN) {
+    console.error("[getBlogPostBySlug] ABORTING: Contentful credentials missing.")
+    return null
+  }
+  // ... (similar detailed logging for this function)
   try {
-    const entries = await client.getEntries({
-      content_type: "blogPost", // Replace with your blog post content type ID
+    const response = await client.getEntries({
+      content_type: "blogPost",
       "fields.slug": slug,
       limit: 1,
+      include: INCLUDE_LEVEL,
     })
-    if (entries.items.length > 0) {
-      return mapContentfulFields(entries.items[0])
+    console.log(`[getBlogPostBySlug] Raw response for slug '${slug}'. Items: ${response.items.length}`)
+    if (response.items.length > 0) {
+      const includes = { Asset: response.includes?.Asset, Entry: response.includes?.Entry }
+      return mapEntryToPost(response.items[0], includes)
     }
     return null
   } catch (error) {
@@ -351,20 +266,49 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
   }
 }
 
-export async function getRelatedBlogPosts(currentPostId: string, limit = 3): Promise<BlogPost[]> {
-  // This is a simplified related posts logic (e.g., latest posts excluding current)
-  // For true related posts, you might query by tags or categories.
+/**
+ * Fetches featured blog posts.
+ * Assumes a boolean field with ID 'featured' exists in your Contentful model.
+ * Falls back to latest posts if the query fails.
+ */
+export async function getFeaturedBlogPosts(limit = 3): Promise<BlogPost[]> {
   try {
-    const entries = await client.getEntries({
+    const response = await client.getEntries({
       content_type: "blogPost",
-      order: ["-fields.publishedDate", "-sys.firstPublishedAt", "-sys.createdAt"],
-      limit: limit + 1, // Fetch one extra to filter out current post if it appears
-      "sys.id[ne]": currentPostId, // Exclude the current post
+      "fields.featured": true,
+      order: ["-fields.publishedDate", "-sys.createdAt"],
+      limit: limit,
+      include: INCLUDE_LEVEL,
     })
-    return entries.items
-      .filter((item) => item.sys.id !== currentPostId) // Ensure current post is excluded
-      .slice(0, limit) // Take the desired limit
-      .map(mapContentfulFields)
+    if (response.items.length > 0) {
+      const includes = { Asset: response.includes?.Asset, Entry: response.includes?.Entry }
+      return response.items.map((item) => mapEntryToPost(item, includes))
+    }
+    // If no featured posts, fall back to latest
+    return getBlogPosts(limit)
+  } catch (error) {
+    console.warn("Could not fetch featured posts (maybe 'featured' field is missing). Falling back to latest posts.")
+    return getBlogPosts(limit)
+  }
+}
+
+/**
+ * Fetches related blog posts, excluding the current one.
+ */
+export async function getRelatedBlogPosts(currentPostId: string, limit = 3): Promise<BlogPost[]> {
+  try {
+    const response = await client.getEntries({
+      content_type: "blogPost",
+      order: ["-fields.publishedDate", "-sys.createdAt"],
+      limit: limit + 1,
+      "sys.id[ne]": currentPostId,
+      include: INCLUDE_LEVEL,
+    })
+    const includes = { Asset: response.includes?.Asset, Entry: response.includes?.Entry }
+    return response.items
+      .filter((item) => item.sys.id !== currentPostId)
+      .slice(0, limit)
+      .map((item) => mapEntryToPost(item, includes))
   } catch (error) {
     console.error("Contentful getRelatedBlogPosts error:", error)
     return []

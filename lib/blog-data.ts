@@ -13,7 +13,12 @@ export type { BlogPost }
 export async function getBlogPosts(limit?: number) {
   // Added optional limit parameter
   try {
-    return await _getPosts(limit)
+    const posts = await _getPosts(limit)
+    console.log("[lib/blog-data.ts] Fetched posts count:", posts.length)
+    if (posts.length > 0) {
+      console.log("[lib/blog-data.ts] First post title:", posts[0].title)
+    }
+    return posts
   } catch (err) {
     console.error("Error fetching posts from Contentful:", err)
     return []
@@ -34,11 +39,26 @@ export async function getBlogPostBySlug(slug: string) {
   try {
     // 1️⃣ normal lookup
     const direct = await _getPostBySlug(slug)
+    console.log(`[lib/blog-data.ts] Attempting to fetch post by slug: ${slug}`)
+    if (direct) {
+      console.log("[lib/blog-data.ts] Found post by slug (direct):", direct.title)
+    } else {
+      console.log("[lib/blog-data.ts] No direct match for slug, will try fetching all.")
+    }
     if (direct) return direct
 
     // 2️⃣ fallback – fetch all, then match
     const all = await _getPosts()
     const decoded = decodeURIComponent(slug).toLowerCase()
+
+    const foundPost = all.find(
+      (p) => p.slug?.toLowerCase() === decoded || decodeURIComponent(p.slug || "").toLowerCase() === decoded,
+    )
+    if (foundPost) {
+      console.log("[lib/blog-data.ts] Found post after fetching all:", foundPost.title)
+    } else {
+      console.log("[lib/blog-data.ts] Post not found even after fetching all for slug:", slug)
+    }
 
     return (
       all.find(
