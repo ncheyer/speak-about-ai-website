@@ -126,14 +126,14 @@ export default function TermsOfServicePage() {
             <ul>
               <li>
                 Email:{" "}
-                <a href="mailto:human@speakabout.ai" className="text-blue-600 dark:text-blue-400 hover:underline">
-                  human@speakabout.ai
+                <a href="mailto:info@speakabout.ai" className="text-blue-600 dark:text-blue-400 hover:underline">
+                  info@speakabout.ai
                 </a>
               </li>
               <li>
                 Phone:{" "}
-                <a href="tel:+15104353947" className="text-blue-600 dark:text-blue-400 hover:underline">
-                  (510) 435-3947
+                <a href="tel:+14155693732" className="text-blue-600 dark:text-blue-400 hover:underline">
+                  (415) 569-3732
                 </a>
               </li>
             </ul>
