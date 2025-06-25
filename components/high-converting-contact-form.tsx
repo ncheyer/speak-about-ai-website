@@ -60,19 +60,36 @@ export default function HighConvertingContactForm() {
         },
         body: JSON.stringify({
           ...formData,
-          wantsNewsletter, // Send the interpreted value
+          wantsNewsletter,
           submittedAt: new Date().toISOString(),
           source: "contact-2-single-step-form-v3-opt-out",
         }),
       })
 
+      console.log("Zapier response status:", response.status)
+      console.log("Zapier response status text:", response.statusText)
+      // Try to clone the response before reading the body, so it can be read again if needed
+      // or handle cases where it might not be readable as text.
+      let responseBody = ""
+      try {
+        responseBody = await response.clone().text() // Clone to read body safely
+      } catch (e) {
+        console.warn("Could not clone or read response body as text:", e)
+      }
+      console.log("Zapier response body:", responseBody)
+
       if (response.ok) {
         setIsSubmitted(true)
       } else {
-        throw new Error("Failed to submit form")
+        console.error("Zapier submission failed. Status:", response.status, "Response Body:", responseBody)
+        throw new Error(`Failed to submit form. Status: ${response.status}. Response: ${responseBody}`)
       }
-    } catch (error) {
-      console.error("Error submitting form:", error)
+    } catch (error: any) {
+      console.error("Detailed error submitting form to Zapier:", {
+        errorMessage: error.message,
+        errorStack: error.stack,
+        errorObject: error,
+      })
       alert("There was an error submitting your request. Please try again or call us directly at (510) 435-3947.")
     } finally {
       setIsSubmitting(false)
