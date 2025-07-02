@@ -21,7 +21,7 @@ export interface FaqItem {
 }
 
 // Main landing page type
-export interface LandingPageEventChecklist {
+export interface LandingPage {
   pageTitle: string
   metaDescription: string
   slug: string

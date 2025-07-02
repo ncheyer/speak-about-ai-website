@@ -1,12 +1,15 @@
 import { documentToReactComponents, type Options } from "@contentful/rich-text-react-renderer"
 import { BLOCKS, INLINES } from "@contentful/rich-text-types"
-import type { LandingPageEventChecklist } from "@/types/contentful-checklist"
+import type { Document } from "@contentful/rich-text-types"
 
-const richTextOptions: Options = {
+const renderOptions: Options = {
   renderNode: {
-    [BLOCKS.HEADING_2]: (node, children) => <h2 className="text-3xl font-bold text-gray-900 mb-4">{children}</h2>,
-    [BLOCKS.PARAGRAPH]: (node, children) => <p className="text-lg text-gray-700 mb-4">{children}</p>,
-    [BLOCKS.UL_LIST]: (node, children) => <ul className="list-disc list-inside space-y-2 mb-4 pl-4">{children}</ul>,
+    [BLOCKS.HEADING_2]: (node, children) => (
+      <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-6 text-center">{children}</h2>
+    ),
+    [BLOCKS.HEADING_3]: (node, children) => <h3 className="text-xl font-bold text-gray-800 mt-6 mb-2">{children}</h3>,
+    [BLOCKS.UL_LIST]: (node, children) => <ul className="list-disc list-inside space-y-2 text-gray-700">{children}</ul>,
+    [BLOCKS.PARAGRAPH]: (node, children) => <p className="text-lg text-gray-600 mb-4">{children}</p>,
     [INLINES.HYPERLINK]: (node, children) => (
       <a href={node.data.uri} className="text-blue-600 hover:underline">
         {children}
@@ -15,11 +18,13 @@ const richTextOptions: Options = {
   },
 }
 
-export function BenefitsSection({ content }: Pick<LandingPageEventChecklist, "benefitsSection">) {
+export default function BenefitsSection({ content }: { content: Document }) {
+  if (!content) return null
+
   return (
-    <section className="bg-white py-20 sm:py-28">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 prose lg:prose-xl">
-        {documentToReactComponents(content, richTextOptions)}
+    <section className="py-16 sm:py-24 bg-gray-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="prose prose-lg max-w-4xl mx-auto">{documentToReactComponents(content, renderOptions)}</div>
       </div>
     </section>
   )
