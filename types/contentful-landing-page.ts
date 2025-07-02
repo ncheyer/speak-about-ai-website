@@ -1,7 +1,8 @@
-import type { Asset, Entry, RichTextContent } from "contentful"
+import type { Asset, Entry } from "contentful"
 import type { Document } from "@contentful/rich-text-types"
 
-// Basic linked entry types
+// --- Sub-Types for Linked Entries ---
+
 export interface FormField {
   label: string
   placeholder: string
@@ -11,33 +12,46 @@ export interface FormField {
 
 export interface ProcessStep {
   title: string
-  description: string
-  icon: string // Assuming icon is a string name from lucide-react
+  description: Document
+  icon: string
 }
 
 export interface FaqItem {
   question: string
-  answer: RichTextContent
+  answer: Document
 }
 
-// Main landing page type
+// --- Main Landing Page Type ---
+
 export interface LandingPage {
+  // SEO & Metadata
   pageTitle: string
   metaDescription: string
-  slug: string
+  urlSlug: string // Corrected from 'slug'
+  schemaMarkup?: Record<string, any>
+  trackingCodes?: {
+    head?: string
+    bodyStart?: string
+    bodyEnd?: string
+  }
+
+  // Hero Section
   heroHeadline: string
   heroSubheadline: Document
-  heroBulletPoints: string[]
-  heroImage: Asset
-  formFields: Entry<FormField>[]
-  formSettings: {
+  heroBulletPoints?: string[]
+  heroImage?: Asset
+
+  // Form
+  formFields?: Entry<FormField>[]
+  formSettings?: {
     submitButtonText: string
     successMessage: string
     privacyText: string
   }
-  howItWorksSteps: Entry<ProcessStep>[]
-  benefitsSection: Document
-  faqSection: Entry<FaqItem>[]
-  seoContent: Document
-  schemaMarkup: Record<string, any>
+
+  // Page Content Sections
+  howItWorksSteps?: Entry<ProcessStep>[]
+  benefitsSection?: Document
+  faqSection?: Entry<FaqItem>[]
+  seoContent?: Document
 }

@@ -1,12 +1,11 @@
 import { createClient, type Entry, type EntryCollection } from "contentful"
 import type { LandingPage } from "@/types/contentful-landing-page"
 
-// Ensure environment variables are present, otherwise the client will fail silently.
 const space = process.env.CONTENTFUL_SPACE_ID
 const accessToken = process.env.CONTENTFUL_ACCESS_TOKEN
 
 if (!space || !accessToken) {
-  throw new Error("Contentful Space ID and Access Token must be provided.")
+  throw new Error("Contentful Space ID and Access Token must be provided in environment variables.")
 }
 
 const client = createClient({
@@ -15,13 +14,14 @@ const client = createClient({
 })
 
 /**
- * Fetches a single landing page by its slug.
+ * Fetches a single landing page by its URL slug.
+ * @param slug The URL slug of the page to fetch.
  */
 export async function getLandingPageBySlug(slug: string): Promise<LandingPage | null> {
   try {
     const entries: EntryCollection<LandingPage> = await client.getEntries({
-      content_type: "landingPage", // CORRECTED CONTENT TYPE
-      "fields.slug": slug,
+      content_type: "landingPage",
+      "fields.urlSlug": slug, // CORRECTED: Using 'urlSlug' for the query
       limit: 1,
       include: 10, // Include linked entries up to 10 levels deep
     })
@@ -30,29 +30,28 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
       return entries.items[0].fields
     }
 
-    console.warn(`No landing page found with slug: ${slug}`)
+    console.warn(`[Contentful] No landing page found with slug: ${slug}`)
     return null
   } catch (error) {
-    console.error(`Error fetching Contentful landing page with slug ${slug}:`, error)
+    console.error(`[Contentful] Error fetching landing page with slug ${slug}:`, error)
     return null
   }
 }
 
 /**
- * Fetches all entries of the landingPage content type.
- * This is useful for creating a directory or for debugging.
+ * Fetches all entries of the landingPage content type for a directory.
  */
 export async function getAllLandingPages(): Promise<Entry<LandingPage>[]> {
   try {
     const entries: EntryCollection<LandingPage> = await client.getEntries({
-      content_type: "landingPage", // CORRECTED CONTENT TYPE
-      include: 1, // We only need shallow data for a list
+      content_type: "landingPage",
+      select: ["sys.id", "fields.pageTitle", "fields.urlSlug"], // Only fetch necessary fields
       order: ["fields.pageTitle"],
     })
 
     return entries.items || []
   } catch (error) {
-    console.error("Error fetching all Contentful landing pages:", error)
+    console.error("[Contentful] Error fetching all landing pages:", error)
     return []
   }
 }
