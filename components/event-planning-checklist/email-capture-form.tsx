@@ -7,49 +7,65 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import type { Entry } from "contentful"
-import type { FormField as FormFieldType, LandingPage } from "@/types/contentful-landing-page"
+import { Loader2, Mail } from "lucide-react"
 
-type EmailFormData = {
-  email: string
+/* ------------------------------------------------------------------ */
+/*  Types – kept minimal so the component compiles even if the full   */
+/*  Contentful types are not present.                                 */
+/* ------------------------------------------------------------------ */
+export interface MinimalFormSettings {
+  submitButtonText: string
+  successMessage: string
+  privacyText: string
 }
 
-const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
+export interface EmailCaptureFormProps {
+  /** Render-time settings coming from Contentful */
+  formSettings: MinimalFormSettings
+  /** Optional: placeholder text for the single e-mail field            */
+  placeholder?: string
+}
+
+/* ------------------------------------------------------------------ */
+/*  Validation schema                                                 */
+/* ------------------------------------------------------------------ */
+const schema = z.object({
+  email: z.string().email({ message: "Please enter a valid e-mail address." }),
 })
 
-interface EmailCaptureFormProps {
-  formFields: Entry<FormFieldType>[]
-  formSettings: LandingPage["formSettings"]
-}
+type FormValues = z.infer<typeof schema>
 
-export function EmailCaptureForm({ formFields, formSettings }: EmailCaptureFormProps) {
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const emailField = formFields.find((f) => f.fields.type === "email")
+/* ------------------------------------------------------------------ */
+/*  Component                                                         */
+/* ------------------------------------------------------------------ */
+export function EmailCaptureForm({ formSettings, placeholder = "you@example.com" }: EmailCaptureFormProps) {
+  const [sent, setSent] = useState(false)
 
-  const form = useForm<EmailFormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-    },
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: "" },
   })
 
-  const onSubmit: SubmitHandler<EmailFormData> = async (data) => {
-    // Here you would typically send the data to your backend/API
-    console.log("Form submitted:", data)
-    // For demonstration, we'll just show the success message
-    setIsSubmitted(true)
+  const onSubmit: SubmitHandler<FormValues> = async (values) => {
+    try {
+      /* -------------------------------------------------------------- */
+      /*  TODO: replace this timeout with a real API call (Zapier,     */
+      /*  HubSpot, etc.).                                              */
+      /* -------------------------------------------------------------- */
+      await new Promise((r) => setTimeout(r, 1200))
+      console.info("Email captured:", values.email)
+      setSent(true)
+    } catch {
+      form.setError("email", { message: "Something went wrong. Please try again." })
+    }
   }
 
-  if (isSubmitted) {
+  if (sent)
     return (
-      <div className="text-center p-4 bg-green-100 text-green-800 border border-green-200 rounded-lg">
-        <p className="font-semibold">{formSettings.successMessage}</p>
+      <div className="rounded-xl border border-green-300 bg-green-50 p-6 text-center">
+        <p className="text-green-700">{formSettings.successMessage}</p>
       </div>
     )
-  }
-
-  if (!emailField) return null
 
   return (
     <Form {...form}>
@@ -59,35 +75,36 @@ export function EmailCaptureForm({ formFields, formSettings }: EmailCaptureFormP
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="email" className="sr-only">
-                {emailField.fields.label}
-              </FormLabel>
+              <FormLabel className="sr-only">E-mail address</FormLabel>
               <FormControl>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder={emailField.fields.placeholder}
-                    {...field}
-                    className="flex-grow text-base p-6"
-                    required={emailField.fields.required}
-                  />
-                  <Button
-                    type="submit"
-                    size="lg"
-                    className="bg-gradient-to-r from-blue-600 to-purple-700 hover:from-blue-700 hover:to-purple-800 text-white font-bold text-base px-8 py-6"
-                    disabled={form.formState.isSubmitting}
-                  >
-                    {form.formState.isSubmitting ? "Submitting..." : formSettings.submitButtonText}
-                  </Button>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <Input type="email" placeholder={placeholder} {...field} className="pl-11 h-12 text-base" />
                 </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <p className="text-xs text-gray-500 text-center sm:text-left">{formSettings.privacyText}</p>
+
+        <Button
+          type="submit"
+          disabled={form.formState.isSubmitting}
+          className="h-12 w-full bg-gradient-to-r from-blue-600 to-purple-700 text-lg font-semibold text-white hover:from-blue-700 hover:to-purple-800"
+        >
+          {form.formState.isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : formSettings.submitButtonText}
+        </Button>
+
+        <p className="text-center text-xs text-gray-500">{formSettings.privacyText}</p>
       </form>
     </Form>
   )
 }
+
+/* ------------------------------------------------------------------ */
+/*  Default export so it works with                                   */
+/*        import EmailCaptureForm from "…"                            */
+/*  as well as                                                        */
+/*        import { EmailCaptureForm } from "…"                        */
+/* ------------------------------------------------------------------ */
+export default EmailCaptureForm

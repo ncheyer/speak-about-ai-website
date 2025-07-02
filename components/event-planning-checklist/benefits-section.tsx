@@ -1,31 +1,35 @@
 import { documentToReactComponents, type Options } from "@contentful/rich-text-react-renderer"
-import { BLOCKS, INLINES } from "@contentful/rich-text-types"
+import { BLOCKS } from "@contentful/rich-text-types"
+import { CheckCircle } from "lucide-react"
 import type { Document } from "@contentful/rich-text-types"
+
+interface BenefitsSectionProps {
+  content: Document | undefined
+}
 
 const renderOptions: Options = {
   renderNode: {
     [BLOCKS.HEADING_2]: (node, children) => (
-      <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-6 text-center">{children}</h2>
+      <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl text-center mb-12">{children}</h2>
     ),
-    [BLOCKS.HEADING_3]: (node, children) => <h3 className="text-xl font-bold text-gray-800 mt-6 mb-2">{children}</h3>,
-    [BLOCKS.UL_LIST]: (node, children) => <ul className="list-disc list-inside space-y-2 text-gray-700">{children}</ul>,
-    [BLOCKS.PARAGRAPH]: (node, children) => <p className="text-lg text-gray-600 mb-4">{children}</p>,
-    [INLINES.HYPERLINK]: (node, children) => (
-      <a href={node.data.uri} className="text-blue-600 hover:underline">
-        {children}
-      </a>
+    [BLOCKS.UL_LIST]: (node, children) => <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">{children}</div>,
+    [BLOCKS.LIST_ITEM]: (node, children) => (
+      <div className="flex items-start">
+        <CheckCircle className="h-6 w-6 text-blue-500 mr-3 flex-shrink-0 mt-1" />
+        <span className="text-gray-700">{children}</span>
+      </div>
     ),
   },
 }
 
-export default function BenefitsSection({ content }: { content: Document }) {
-  if (!content) return null
+export default function BenefitsSection({ content }: BenefitsSectionProps) {
+  if (!content) {
+    return null
+  }
 
   return (
-    <section className="py-16 sm:py-24 bg-gray-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="prose prose-lg max-w-4xl mx-auto">{documentToReactComponents(content, renderOptions)}</div>
-      </div>
+    <section className="bg-blue-50 py-16 sm:py-24">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">{documentToReactComponents(content, renderOptions)}</div>
     </section>
   )
 }

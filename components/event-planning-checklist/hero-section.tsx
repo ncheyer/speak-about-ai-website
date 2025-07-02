@@ -1,49 +1,59 @@
 import Image from "next/image"
-import { CheckCircle } from "lucide-react"
-import { EmailCaptureForm } from "./email-capture-form"
 import { documentToReactComponents } from "@contentful/rich-text-react-renderer"
+import { CheckCircle } from "lucide-react"
 import type { LandingPage } from "@/types/contentful-landing-page"
+import EmailCaptureForm from "./email-capture-form"
 
-export default function HeroSection({ data }: { data: LandingPage }) {
+interface HeroSectionProps {
+  data: LandingPage
+}
+
+export default function HeroSection({ data }: HeroSectionProps) {
   const { heroHeadline, heroSubheadline, heroBulletPoints, heroImage, formFields, formSettings } = data
 
   const imageUrl = heroImage?.fields?.file?.url
-    ? `https:${heroImage.fields.file.url}`
-    : "/placeholder.svg?width=600&height=600"
+  const imageAlt = heroImage?.fields?.description || heroHeadline
 
   return (
-    <section className="relative bg-gradient-to-br from-blue-50 via-purple-50 to-white overflow-hidden">
+    <section className="relative bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="text-center md:text-left">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight">
-              {heroHeadline}
+          <div className="z-10">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
+              {heroHeadline || "Event Planning, Simplified"}
             </h1>
-            <div className="mt-6 text-lg text-gray-600 prose lg:prose-xl">
-              {documentToReactComponents(heroSubheadline)}
-            </div>
-            <ul className="mt-8 space-y-3">
-              {heroBulletPoints.map((point, index) => (
-                <li key={index} className="flex items-center">
-                  <CheckCircle className="h-6 w-6 text-green-500 mr-3 flex-shrink-0" />
-                  <span className="text-gray-700">{point}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-10">
-              <EmailCaptureForm formFields={formFields} formSettings={formSettings} />
-            </div>
+            {heroSubheadline && (
+              <div className="mt-4 text-lg text-gray-600 prose max-w-none">
+                {documentToReactComponents(heroSubheadline)}
+              </div>
+            )}
+            {heroBulletPoints && heroBulletPoints.length > 0 && (
+              <ul className="mt-6 space-y-3">
+                {heroBulletPoints.map((point, index) => (
+                  <li key={index} className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-blue-500 mr-3 flex-shrink-0 mt-1" />
+                    <span className="text-gray-700">{point}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {formFields && formSettings && (
+              <div className="mt-8">
+                <EmailCaptureForm formFields={formFields} formSettings={formSettings} />
+              </div>
+            )}
           </div>
-          <div className="hidden md:block relative">
-            <div className="absolute inset-0 bg-gradient-to-tr from-purple-400 to-blue-500 rounded-full blur-3xl opacity-30"></div>
-            <Image
-              src={imageUrl || "/placeholder.svg"}
-              alt={heroImage?.fields?.description || "Event planning illustration"}
-              width={600}
-              height={600}
-              className="rounded-lg shadow-2xl relative z-10"
-              priority
-            />
+          <div className="relative h-80 md:h-full">
+            {imageUrl && (
+              <Image
+                src={`https:${imageUrl}`}
+                alt={imageAlt}
+                fill
+                className="object-cover rounded-lg shadow-2xl"
+                priority
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            )}
           </div>
         </div>
       </div>

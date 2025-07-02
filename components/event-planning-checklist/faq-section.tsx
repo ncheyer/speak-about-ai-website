@@ -1,29 +1,39 @@
 "use client"
-
-import type { Entry } from "contentful"
-import type { FaqItem } from "@/types/contentful-landing-page"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { documentToReactComponents } from "@contentful/rich-text-react-renderer"
+import type { Entry } from "contentful"
+import type { FaqItem } from "@/types/contentful-landing-page"
 
-export default function FaqSection({ items }: { items: Entry<FaqItem>[] }) {
-  if (!items || items.length === 0) return null
+interface FaqSectionProps {
+  items: Entry<FaqItem>[] | undefined
+}
+
+export default function FaqSection({ items }: FaqSectionProps) {
+  if (!items || items.length === 0) {
+    return null
+  }
 
   return (
-    <section className="py-16 sm:py-24 bg-white">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-center text-3xl font-extrabold text-gray-900 sm:text-4xl">Frequently Asked Questions</h2>
-          <Accordion type="single" collapsible className="w-full mt-12">
-            {items.map((item) => (
+    <section className="bg-white py-16 sm:py-24">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">Frequently Asked Questions</h2>
+        </div>
+        <Accordion type="single" collapsible className="w-full">
+          {items.map((item) => {
+            const { question, answer } = item.fields
+            if (!question || !answer) return null
+
+            return (
               <AccordionItem key={item.sys.id} value={item.sys.id}>
-                <AccordionTrigger className="text-lg font-medium text-left">{item.fields.question}</AccordionTrigger>
-                <AccordionContent className="text-base text-gray-600 prose">
-                  {documentToReactComponents(item.fields.answer)}
+                <AccordionTrigger className="text-lg font-semibold text-left">{question}</AccordionTrigger>
+                <AccordionContent className="text-base text-gray-600 prose max-w-none">
+                  {documentToReactComponents(answer)}
                 </AccordionContent>
               </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
+            )
+          })}
+        </Accordion>
       </div>
     </section>
   )
