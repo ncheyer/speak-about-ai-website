@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, CalendarDays, Building } from "lucide-react" // Added MessageSquareText
+import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, CalendarDays, Building } from "lucide-react"
 import type { Speaker } from "@/lib/speakers-data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -22,15 +22,7 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
   const [activeTab, setActiveTab] = useState("about")
 
   const videos = speaker.videos || []
-
-  // This is the key change:
-  // We only use speaker.testimonials if it exists and has items.
-  // Otherwise, 'testimonialsToDisplay' will be an empty array, leading to no testimonials being rendered (or a "no testimonials" message).
   const testimonialsToDisplay = speaker.testimonials && speaker.testimonials.length > 0 ? speaker.testimonials : []
-
-  // The defaultTestimonials are removed from this direct rendering logic.
-  // They could be used for a completely different fallback scenario if needed,
-  // e.g., if the entire `speaker` prop was undefined, but that's not the case here.
 
   const handleImageError = () => {
     if (retryCount < maxRetries && speaker.image) {
@@ -74,8 +66,38 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
     } else {
       setImageState("error")
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [speaker.image])
+
+  // Better bio formatting function
+  const formatBio = (bio: string) => {
+    if (!bio) return null
+
+    // Split by double line breaks first (paragraph breaks)
+    const paragraphs = bio.split(/\n\s*\n/).filter((p) => p.trim())
+
+    if (paragraphs.length > 1) {
+      // Multiple paragraphs detected
+      return paragraphs.map((paragraph, index) => (
+        <p key={index} className="mb-4 text-gray-600 leading-relaxed">
+          {paragraph.trim()}
+        </p>
+      ))
+    } else {
+      // Single paragraph or simple line breaks
+      const lines = bio.split("\n").filter((line) => line.trim())
+      if (lines.length > 1) {
+        // Multiple lines, treat as separate paragraphs
+        return lines.map((line, index) => (
+          <p key={index} className="mb-4 text-gray-600 leading-relaxed">
+            {line.trim()}
+          </p>
+        ))
+      } else {
+        // Single line/paragraph
+        return <p className="mb-4 text-gray-600 leading-relaxed">{bio.trim()}</p>
+      }
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -240,13 +262,7 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
               <TabsContent value="about" className="space-y-8">
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas">Biography</h2>
-                  <div className="prose prose-lg max-w-none font-montserrat">
-                    {speaker.bio.split("\n").map((paragraph, index) => (
-                      <p key={index} className="mb-4 text-gray-600 leading-relaxed">
-                        {paragraph}
-                      </p>
-                    ))}
-                  </div>
+                  <div className="prose prose-lg max-w-none font-montserrat">{formatBio(speaker.bio || "")}</div>
                 </div>
 
                 {speaker.programs && speaker.programs.length > 0 && (
@@ -308,16 +324,14 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
               </TabsContent>
 
               <TabsContent value="media" className="space-y-8">
-                {/* Videos Section */}
                 {videos && videos.length > 0 ? (
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Videos</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {videos.map((video) => {
-                        // Removed index as key, using video.id
                         return (
                           <a
-                            key={video.id} // Use video.id if available and unique
+                            key={video.id}
                             href={video.url}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -368,7 +382,6 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                   </div>
                 )}
 
-                {/* Testimonials Section - Only show if testimonials exist */}
                 {testimonialsToDisplay.length > 0 && (
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Testimonials</h2>
@@ -407,7 +420,7 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                             {testimonial.logo && (
                               <div className="mt-3">
                                 <img
-                                  src={testimonial.logo || "/placeholder.svg"} // Removed placeholder fallback here, assuming valid URL if present
+                                  src={testimonial.logo || "/placeholder.svg"}
                                   alt={`${testimonial.company || testimonial.author} logo`}
                                   className="max-h-10 opacity-75"
                                 />
