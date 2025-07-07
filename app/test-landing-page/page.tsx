@@ -4,8 +4,8 @@ import { LexicalRenderer } from "@/components/LexicalRenderer"
 import Image from "next/image"
 import { getImageUrl } from "@/lib/utils"
 
-// Test with a specific slug - you can change this to test different landing pages
-const TEST_SLUG = "test-landing-page"
+// Test with the actual slug from Contentful
+const TEST_SLUG = "event-planning-checklist"
 
 export async function generateMetadata(): Promise<Metadata> {
   const pageData = await getLandingPageBySlug(TEST_SLUG)
