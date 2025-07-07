@@ -5,9 +5,9 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "Top AI Speakers 2025 | Book the Best Artificial Intelligence Keynote Speakers",
+  title: "Top AI Speakers 2025 | Best AI Keynote Speakers", // 50 chars
   description:
-    "Discover 2025's top AI keynote speakers. Book leading artificial intelligence experts, from Siri co-founders to Google execs, for your event.", // 144 chars
+    "Discover 2025's top AI keynote speakers. Book leading artificial intelligence experts, from Siri co-founders to Google execs, for your event.",
   keywords:
     "top AI speakers 2025, best AI keynote speakers, artificial intelligence speakers 2025, AI conference speakers, machine learning speakers",
 }
@@ -114,7 +114,7 @@ export default function TopAISpeakers2025() {
                       <Button asChild className="flex-1 bg-blue-600 hover:bg-blue-700">
                         <Link href={`/speakers/${speaker.slug}`}>View Profile</Link>
                       </Button>
-                      <Button asChild variant="outline" className="flex-1">
+                      <Button asChild variant="outline" className="flex-1 bg-transparent">
                         <Link
                           href={`/contact?source=top_speakers_2025_page&speakerName=${encodeURIComponent(speaker.name)}`}
                         >

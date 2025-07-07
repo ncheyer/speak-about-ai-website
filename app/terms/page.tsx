@@ -4,7 +4,7 @@ import Link from "next/link"
 export const metadata: Metadata = {
   title: "Terms of Service | Speak About AI",
   description:
-    "Read the terms and conditions for using the Speak About AI website and services. Understand your rights and obligations when engaging with our platform.",
+    "Read the terms and conditions for using Speak About AI website and services. Understand your rights and obligations.", // 119 chars
   alternates: {
     canonical: "/terms",
   },

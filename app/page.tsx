@@ -4,18 +4,18 @@ import ClientLogos from "@/components/client-logos"
 import FeaturedSpeakers from "@/components/featured-speakers"
 import WhyChooseUs from "@/components/why-choose-us"
 import BookingCTA from "@/components/booking-cta"
-import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data" // Ensure Speaker type is imported
+import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
 
 export const metadata: Metadata = {
-  title: "Top AI Keynote Speakers for Hire | Speak About AI", // Updated: 50 chars
+  title: "Book Top AI Keynote Speakers | Speak About AI",
   description:
-    "Book world-class AI keynote speakers for your event. Speak About AI is the only AI-exclusive bureau, trusted by Fortune 500s. Find your expert today.", // 151 chars
+    "Book world-class AI keynote speakers for your event. Speak About AI is the only AI-exclusive bureau, trusted by Fortune 500s.", // 128 chars
   keywords:
     "AI keynote speakers, book AI speakers, artificial intelligence speakers, AI conference speakers, machine learning speakers, tech keynote speakers",
   openGraph: {
-    title: "Top AI Keynote Speakers for Hire | Speak About AI", // Updated
+    title: "Book Top AI Keynote Speakers | Speak About AI",
     description:
-      "Book world-class AI keynote speakers with Speak About AI, the AI-exclusive bureau trusted by Fortune 500s. Find your expert for your next event.", // 147 chars
+      "Book world-class AI keynote speakers with Speak About AI, the AI-exclusive bureau trusted by Fortune 500s. Find your expert for your next event.",
     type: "website",
   },
   alternates: {
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 }
 
 export default async function HomePage() {
-  let featuredSpeakers: Speaker[] = [] // Default to empty array
+  let featuredSpeakers: Speaker[] = []
   try {
     featuredSpeakers = await getFeaturedSpeakers(6)
     if (featuredSpeakers.length === 0) {
@@ -34,7 +34,6 @@ export default async function HomePage() {
     }
   } catch (error) {
     console.error("HomePage: Failed to load featured speakers:", error)
-    // featuredSpeakers remains an empty array, FeaturedSpeakers component should handle this
   }
 
   return (

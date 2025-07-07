@@ -63,6 +63,11 @@ export default function Footer() {
                   Blog
                 </Link>
               </li>
+              <li>
+                <Link href="/sitemap.xml" className="text-[#EAEAEE] hover:text-white">
+                  Sitemap
+                </Link>
+              </li>
             </ul>
           </div>
 

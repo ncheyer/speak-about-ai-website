@@ -6,15 +6,15 @@ import Link from "next/link"
 import { TrendingUp, Target, BarChart3, Users, MessageSquare, Zap, DollarSign, Heart, Brain } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Sales & Marketing AI Keynote Speakers | Expert Revenue Growth Speakers",
+  title: "Sales & Marketing AI Speakers | Revenue Growth Experts", // 57 chars
   description:
-    "Book sales & marketing AI keynote speakers who've driven billions in revenue. Experts for sales conferences, marketing events & corporate training.", // 148 chars
+    "Book sales & marketing AI keynote speakers who've driven billions in revenue. Experts for sales conferences, marketing events & corporate training.",
   keywords:
     "sales keynote speaker, marketing keynote speaker, AI sales speaker, marketing AI expert, revenue growth speaker, sales automation speaker, digital marketing speaker",
   openGraph: {
     title: "Sales & Marketing AI Keynote Speakers | Expert Revenue Growth Speakers",
     description:
-      "Book sales & marketing AI keynote speakers who've driven billions in revenue. Experts for sales conferences, marketing events & corporate training.", // 148 chars
+      "Book sales & marketing AI keynote speakers who've driven billions in revenue. Experts for sales conferences, marketing events & corporate training.",
     type: "website",
   },
 }
@@ -44,7 +44,7 @@ export default async function SalesMarketingAISpeakersPage() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white px-8 py-4 text-lg"
+                className="border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white px-8 py-4 text-lg bg-transparent"
               >
                 <Link href="/contact?source=sales_marketing_hero">Book Marketing AI Speaker</Link>
               </Button>
@@ -211,7 +211,7 @@ export default async function SalesMarketingAISpeakersPage() {
               asChild
               variant="outline"
               size="lg"
-              className="border-white text-white hover:bg-white hover:text-[#1E68C6] px-8 py-4 text-lg"
+              className="border-white text-white hover:bg-white hover:text-[#1E68C6] px-8 py-4 text-lg bg-transparent"
             >
               <Link href="/speakers">Browse All Speakers</Link>
             </Button>

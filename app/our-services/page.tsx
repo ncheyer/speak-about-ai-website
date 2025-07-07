@@ -7,9 +7,9 @@ import FAQSection from "@/components/faq-section"
 import ServicesContact from "@/components/services-contact"
 
 export const metadata: Metadata = {
-  title: "AI Speaker Services | Speak About AI", // Updated: 36 chars
+  title: "AI Speaker Services & Workshops | Speak About AI", // 49 chars
   description:
-    "Discover AI speaker services from Speak About AI: keynotes, panels, workshops & SprintAI. Connect with world-class AI experts for your event.", // 146 chars
+    "Discover AI speaker services from Speak About AI: keynotes, panels, workshops & SprintAI. Connect with world-class AI experts for your event.",
   keywords:
     "AI speaker services, AI keynote speakers, AI panel discussions, AI fireside chats, SprintAI workshop, artificial intelligence speaking bureau",
   alternates: {

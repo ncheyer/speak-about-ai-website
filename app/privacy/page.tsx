@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Speak About AI",
+  title: "Privacy Policy | Speak About AI", // 33 chars
   description:
     "Learn how Speak About AI collects, uses, and protects your personal information. Our privacy policy explains our data practices and your rights.",
   alternates: {

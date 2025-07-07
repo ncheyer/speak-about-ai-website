@@ -24,11 +24,14 @@ import {
 } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Technology Keynote Speakers | AI & Enterprise Technology Experts",
+  title: "Technology AI Keynote Speakers | Tech Experts", // 47 chars
   description:
-    "Book top technology keynote speakers & AI experts for corporate events & tech summits. Leading voices in enterprise AI and digital transformation.", // 146 chars
+    "Book top technology keynote speakers & AI experts for corporate events & tech summits. Leading voices in enterprise AI and digital transformation.",
   keywords:
     "technology keynote speakers, tech keynote speaker, ai keynote speaker, enterprise technology speakers, digital transformation speakers, artificial intelligence experts",
+  alternates: {
+    canonical: "/industries/technology-ai-keynote-speakers",
+  },
 }
 
 export default async function TechnologyKeynoteSpeakersPage() {
@@ -53,7 +56,7 @@ export default async function TechnologyKeynoteSpeakersPage() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-3"
+                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-3 bg-transparent"
               >
                 <Link href="/speakers">View All Speakers</Link>
               </Button>
@@ -216,7 +219,7 @@ export default async function TechnologyKeynoteSpeakersPage() {
               asChild
               variant="outline"
               size="lg"
-              className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3"
+              className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 bg-transparent"
             >
               <Link href="/speakers">Browse All Technology Speakers</Link>
             </Button>

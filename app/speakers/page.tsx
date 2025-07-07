@@ -1,20 +1,20 @@
 import type { Metadata } from "next"
 import SpeakerDirectory from "@/components/speaker-directory"
-import { getAllSpeakers, type Speaker } from "@/lib/speakers-data" // Ensure Speaker type is imported
+import { getAllSpeakers, type Speaker } from "@/lib/speakers-data"
 
 export const metadata: Metadata = {
-  title: "See Our AI Keynote Speakers | Speak About AI", // Updated: 46 chars
+  title: "AI Keynote Speakers Directory | Speak About AI",
   description:
-    "Explore our AI speaker directory. Find world-class artificial intelligence experts, tech visionaries & practitioners. Book the perfect AI speaker for your event.", // 159 chars
+    "Browse our directory of top AI keynote speakers. Find artificial intelligence experts and technology leaders for your event.", // 127 chars
   keywords:
-    "AI keynote speakers, artificial intelligence experts, tech visionaries, AI conference speakers, machine learning speakers, AI industry practitioners",
+    "AI speakers directory, keynote speakers, artificial intelligence experts, machine learning speakers, technology speakers, AI conference speakers",
   alternates: {
     canonical: "/speakers",
   },
 }
 
 export default async function SpeakersPage() {
-  let allSpeakers: Speaker[] = [] // Default to empty array
+  let allSpeakers: Speaker[] = []
   try {
     allSpeakers = await getAllSpeakers()
     if (allSpeakers.length === 0) {
@@ -24,7 +24,6 @@ export default async function SpeakersPage() {
     }
   } catch (error) {
     console.error("SpeakersPage: Failed to load speakers:", error)
-    // allSpeakers remains an empty array, SpeakerDirectory should handle this
   }
 
   return (
