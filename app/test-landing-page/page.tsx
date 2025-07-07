@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { LexicalRenderer } from "@/components/LexicalRenderer"
 import Image from "next/image"
 import { getImageUrl } from "@/lib/utils"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 // Test with the actual slug from Contentful
 const TEST_SLUG = "event-planning-checklist"
@@ -38,7 +39,7 @@ export default async function TestLandingPage() {
             Could not find a landing page with slug: <code className="bg-red-100 px-2 py-1 rounded">{TEST_SLUG}</code>
           </p>
           <p className="text-sm text-red-600">
-            Make sure you have created a landing page in Contentful with this URL slug.
+            Make sure you have created a landing page in Contentful with this URL slug and that it is published.
           </p>
         </div>
       </div>
@@ -47,27 +48,16 @@ export default async function TestLandingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Debug Info */}
-      <div className="bg-blue-50 border-b border-blue-200 p-4">
-        <div className="container mx-auto">
-          <h2 className="text-sm font-semibold text-blue-800 mb-2">🧪 Test Landing Page Debug Info</h2>
-          <p className="text-xs text-blue-600">
-            Testing slug: <code className="bg-blue-100 px-1 rounded">{TEST_SLUG}</code> | Page Title:{" "}
-            {pageData.pageTitle} | Fields loaded: {Object.keys(pageData).length}
-          </p>
-        </div>
-      </div>
-
       {/* Hero Section */}
-      <section className="py-12 lg:py-20">
+      <section className="py-12 lg:py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">{pageData.heroHeadline}</h1>
+              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">{pageData.heroHeadline}</h1>
 
               {pageData.heroSubheadline && (
-                <div className="text-xl text-gray-600 mb-8">
-                  <LexicalRenderer content={pageData.heroSubheadline} />
+                <div className="text-lg text-gray-600 mb-8 prose max-w-none">
+                  <p>{pageData.heroSubheadline}</p>
                 </div>
               )}
 
@@ -94,34 +84,26 @@ export default async function TestLandingPage() {
 
               {/* Form Fields Preview */}
               {pageData.formFields && pageData.formFields.length > 0 && (
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="font-semibold mb-4">Contact Form</h3>
+                <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+                  <h3 className="font-semibold mb-4 text-lg">Get Your Custom Checklist</h3>
                   <div className="space-y-4">
                     {pageData.formFields.map((field, index) => (
                       <div key={index}>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          {field.fields?.label || `Field ${index + 1}`}
-                          {field.fields?.required && <span className="text-red-500 ml-1">*</span>}
+                          {field.fields.fieldLabel}
+                          {field.fields.validations?.required && <span className="text-red-500 ml-1">*</span>}
                         </label>
-                        {field.fields?.type === "textarea" ? (
-                          <textarea
-                            placeholder={field.fields?.placeholder || ""}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                            rows={3}
-                            disabled
-                          />
-                        ) : (
-                          <input
-                            type={field.fields?.type || "text"}
-                            placeholder={field.fields?.placeholder || ""}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                            disabled
-                          />
-                        )}
+                        <input
+                          type={field.fields.fieldType.startsWith("email") ? "email" : "text"}
+                          placeholder={field.fields.placeholderText || ""}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                          disabled
+                        />
+                        {field.fields.helpText && <p className="text-xs text-gray-500 mt-1">{field.fields.helpText}</p>}
                       </div>
                     ))}
-                    <button className="bg-blue-600 text-white px-6 py-2 rounded-md font-medium" disabled>
-                      {pageData.formSettings?.submitButtonText || "Submit"}
+                    <button className="w-full bg-blue-600 text-white px-6 py-3 rounded-md font-medium" disabled>
+                      Generate Checklist
                     </button>
                   </div>
                 </div>
@@ -132,11 +114,11 @@ export default async function TestLandingPage() {
               {pageData.heroImage ? (
                 <div className="relative">
                   <Image
-                    src={getImageUrl(pageData.heroImage.fields?.file?.url) || "/placeholder.svg"}
-                    alt={pageData.heroImage.fields?.title || "Hero image"}
-                    width={600}
-                    height={400}
-                    className="rounded-lg shadow-lg"
+                    src={getImageUrl(pageData.heroImage.fields.file.url) || "/placeholder.svg"}
+                    alt={pageData.heroImage.fields.title || "Hero image"}
+                    width={pageData.heroImage.fields.file.details.image.width}
+                    height={pageData.heroImage.fields.file.details.image.height}
+                    className="rounded-lg shadow-lg w-full h-auto"
                     priority
                   />
                 </div>
@@ -152,21 +134,17 @@ export default async function TestLandingPage() {
 
       {/* How It Works Section */}
       {pageData.howItWorksSteps && pageData.howItWorksSteps.length > 0 && (
-        <section className="py-16 bg-gray-50">
+        <section className="py-16">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
             <div className="grid md:grid-cols-3 gap-8">
               {pageData.howItWorksSteps.map((step, index) => (
-                <div key={index} className="text-center">
+                <div key={index} className="text-center p-6 bg-gray-50 rounded-lg">
                   <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                    {step.fields?.icon || index + 1}
+                    {step.fields.stepNumber}
                   </div>
-                  <h3 className="text-xl font-semibold mb-3">{step.fields?.title}</h3>
-                  {step.fields?.description && (
-                    <div className="text-gray-600">
-                      <LexicalRenderer content={step.fields.description} />
-                    </div>
-                  )}
+                  <h3 className="text-xl font-semibold mb-3">{step.fields.stepTitle}</h3>
+                  <p className="text-gray-600">{step.fields.stepDescription}</p>
                 </div>
               ))}
             </div>
@@ -176,9 +154,9 @@ export default async function TestLandingPage() {
 
       {/* Benefits Section */}
       {pageData.benefitsSection && (
-        <section className="py-16">
+        <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto prose lg:prose-xl">
               <LexicalRenderer content={pageData.benefitsSection} />
             </div>
           </div>
@@ -187,20 +165,22 @@ export default async function TestLandingPage() {
 
       {/* FAQ Section */}
       {pageData.faqSection && pageData.faqSection.length > 0 && (
-        <section className="py-16 bg-gray-50">
+        <section className="py-16">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
-            <div className="max-w-3xl mx-auto space-y-6">
-              {pageData.faqSection.map((faq, index) => (
-                <div key={index} className="bg-white rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-semibold mb-3">{faq.fields?.question}</h3>
-                  {faq.fields?.answer && (
-                    <div className="text-gray-600">
+            <div className="max-w-3xl mx-auto">
+              <Accordion type="single" collapsible className="w-full">
+                {pageData.faqSection.map((faq, index) => (
+                  <AccordionItem value={`item-${index}`} key={index}>
+                    <AccordionTrigger className="text-lg font-semibold text-left">
+                      {faq.fields.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="prose max-w-none">
                       <LexicalRenderer content={faq.fields.answer} />
-                    </div>
-                  )}
-                </div>
-              ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </div>
           </div>
         </section>
@@ -208,9 +188,9 @@ export default async function TestLandingPage() {
 
       {/* SEO Content Section */}
       {pageData.seoContent && (
-        <section className="py-16">
+        <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto prose prose-lg">
+            <div className="max-w-4xl mx-auto prose lg:prose-xl">
               <LexicalRenderer content={pageData.seoContent} />
             </div>
           </div>
@@ -218,11 +198,11 @@ export default async function TestLandingPage() {
       )}
 
       {/* Debug Panel */}
-      <div className="bg-gray-100 border-t p-6">
+      <div className="bg-gray-800 text-gray-300 p-6">
         <div className="container mx-auto">
-          <details className="cursor-pointer">
-            <summary className="font-semibold text-gray-800 mb-4">🔍 Debug: Raw Data Structure</summary>
-            <pre className="bg-white p-4 rounded border text-xs overflow-auto max-h-96">
+          <details>
+            <summary className="font-semibold text-lg cursor-pointer">🔍 Debug: Raw Contentful Data</summary>
+            <pre className="bg-gray-900 p-4 rounded-md border border-gray-700 text-xs overflow-auto max-h-96 mt-4">
               {JSON.stringify(pageData, null, 2)}
             </pre>
           </details>

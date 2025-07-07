@@ -1,5 +1,5 @@
 // components/LexicalRenderer.tsx
-import type React from "react"
+import React from "react"
 import NextImage from "next/image"
 import { getImageUrl } from "@/lib/utils"
 
@@ -84,6 +84,14 @@ interface LexicalContent {
   }
 }
 
+interface Node {
+  nodeType: string
+  content?: Node[]
+  value?: string
+  marks?: { type: string }[]
+  data?: any
+}
+
 const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode => {
   // console.log("Rendering node:", node.type, node); // Temporary debug log
 
@@ -124,7 +132,7 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
 
   // Handle heading nodes
   if (node.type === "heading" && node.tag && ["h1", "h2", "h3", "h4", "h5", "h6"].includes(node.tag)) {
-    const HeadingTag = node.tag as keyof JSX.IntrinsicElements
+    const HeadingTag = node.tag as any
     let className = "font-bold mb-3 mt-5"
     if (node.tag === "h1") className += " text-3xl md:text-4xl"
     if (node.tag === "h2") className += " text-2xl md:text-3xl"
@@ -296,7 +304,7 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
 
   // Handle list nodes
   if (node.type === "list" && (node.tag === "ul" || node.tag === "ol")) {
-    const ListTag = node.tag as keyof JSX.IntrinsicElements
+    const ListTag = node.tag as any
     const listStyle = node.tag === "ul" ? "list-disc" : "list-decimal"
     return (
       <ListTag key={index} className={`${listStyle} pl-6 mb-4 space-y-1`}>
@@ -322,8 +330,88 @@ const renderLexicalNode = (node: LexicalNode, index: number): React.ReactNode =>
   return null
 }
 
+const renderNode = (node: Node, key: number): React.ReactNode => {
+  switch (node.nodeType) {
+    case "document":
+      return node.content?.map((childNode, index) => renderNode(childNode, index))
+
+    case "paragraph":
+      return (
+        <p key={key} className="mb-4 last:mb-0">
+          {node.content?.map((childNode, index) => renderNode(childNode, index))}
+        </p>
+      )
+
+    case "heading-1":
+      return (
+        <h1 key={key} className="text-4xl font-bold my-6">
+          {node.content?.map((childNode, index) => renderNode(childNode, index))}
+        </h1>
+      )
+    case "heading-2":
+      return (
+        <h2 key={key} className="text-3xl font-bold my-5">
+          {node.content?.map((childNode, index) => renderNode(childNode, index))}
+        </h2>
+      )
+    case "heading-3":
+      return (
+        <h3 key={key} className="text-2xl font-bold my-4">
+          {node.content?.map((childNode, index) => renderNode(childNode, index))}
+        </h3>
+      )
+
+    case "text":
+      let textElement: React.ReactNode = node.value || ""
+      if (node.marks) {
+        for (const mark of node.marks) {
+          switch (mark.type) {
+            case "bold":
+              textElement = <strong>{textElement}</strong>
+              break
+            case "italic":
+              textElement = <em>{textElement}</em>
+              break
+            case "underline":
+              textElement = <u>{textElement}</u>
+              break
+          }
+        }
+      }
+      return <React.Fragment key={key}>{textElement}</React.Fragment>
+
+    case "unordered-list":
+      return (
+        <ul key={key} className="list-disc pl-6 my-4 space-y-2">
+          {node.content?.map((childNode, index) => renderNode(childNode, index))}
+        </ul>
+      )
+
+    case "ordered-list":
+      return (
+        <ol key={key} className="list-decimal pl-6 my-4 space-y-2">
+          {node.content?.map((childNode, index) => renderNode(childNode, index))}
+        </ol>
+      )
+
+    case "list-item":
+      return <li key={key}>{node.content?.map((childNode, index) => renderNode(childNode, index))}</li>
+
+    case "blockquote":
+      return (
+        <blockquote key={key} className="border-l-4 border-gray-300 pl-4 italic my-4 py-2">
+          {node.content?.map((childNode, index) => renderNode(childNode, index))}
+        </blockquote>
+      )
+
+    default:
+      // console.warn("Unsupported node type:", node.nodeType);
+      return null
+  }
+}
+
 interface LexicalRendererProps {
-  content: LexicalContent | string | undefined | null
+  content: LexicalContent | Node | string | undefined | null
 }
 
 export const LexicalRenderer: React.FC<LexicalRendererProps> = ({ content }) => {
@@ -344,6 +432,10 @@ export const LexicalRenderer: React.FC<LexicalRendererProps> = ({ content }) => 
       return <p className="text-gray-500">Content is empty or not renderable.</p>
     }
     return <div className="prose max-w-none">{renderedNodes}</div>
+  }
+
+  if (content && typeof content === "object" && "nodeType" in content) {
+    return renderNode(content as Node, 0)
   }
 
   return <p className="text-gray-500">No content available or content is in an unexpected format.</p>

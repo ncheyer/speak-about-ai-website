@@ -1,58 +1,67 @@
+import type { Asset, Entry, Document } from "contentful"
+
+// --- Field Types from Contentful ---
+
+interface CmsFormField {
+  fieldName: string
+  fieldLabel: string
+  fieldType: string
+  placeholderText?: string
+  helpText?: string
+  validations?: {
+    required?: boolean
+    minLength?: number
+    maxLength?: number
+    pattern?: string
+    errorMessage?: string
+  }
+  fieldWidth?: string
+  sortOrder?: number
+}
+
+interface CmsProcessStep {
+  stepNumber: number
+  stepTitle: string
+  stepDescription: string
+  timeEstimate?: string
+}
+
+interface CmsFaqItem {
+  question: string
+  answer: Document // Rich Text
+  includeInSchema?: boolean
+  sortOrder?: number
+}
+
+// --- Main Landing Page Type ---
+
 export interface LandingPage {
+  // SEO & Metadata
   pageTitle: string
   metaDescription: string
   urlSlug: string
+
+  // Hero Section
   heroHeadline: string
-  heroSubheadline?: any // Rich text content
+  heroSubheadline: string // Changed from Document to string based on JSON
   heroBulletPoints?: string[]
-  heroImage?: {
-    fields: {
-      title: string
-      file: {
-        url: string
-        details: {
-          size: number
-          image: {
-            width: number
-            height: number
-          }
-        }
-        fileName: string
-        contentType: string
-      }
-    }
+  heroImage?: Asset
+
+  // Form
+  formFields?: Entry<CmsFormField>[]
+
+  // Page Content Sections
+  howItWorksSteps?: Entry<CmsProcessStep>[]
+  benefitsSection?: Document // Rich Text
+  faqSection?: Entry<CmsFaqItem>[]
+  seoContent?: Document // Rich Text
+
+  // Tracking
+  trackingCodes?: {
+    gtmId?: string
+    ga4Id?: string
+    fbPixelId?: string
+    conversionEvents?: Record<string, string>
   }
-  formFields?: Array<{
-    fields: {
-      label: string
-      type: string
-      placeholder?: string
-      required?: boolean
-      options?: string[]
-    }
-  }>
-  formSettings?: {
-    submitButtonText?: string
-    successMessage?: string
-    redirectUrl?: string
-  }
-  howItWorksSteps?: Array<{
-    fields: {
-      title: string
-      description?: any // Rich text content
-      icon?: string
-      order?: number
-    }
-  }>
-  benefitsSection?: any // Rich text content
-  faqSection?: Array<{
-    fields: {
-      question: string
-      answer?: any // Rich text content
-      order?: number
-    }
-  }>
-  seoContent?: any // Rich text content (Below Fold SEO Content)
-  schemaMarkup?: any // JSON object
-  analyticsTracking?: any // JSON object
+  schemaMarkup?: Record<string, any>
 }
