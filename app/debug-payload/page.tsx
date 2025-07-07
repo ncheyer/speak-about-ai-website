@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { getBlogPosts, getBlogPostsFromPayload } from "@/lib/payload-blog"
 
 export default async function DebugPayloadPage() {

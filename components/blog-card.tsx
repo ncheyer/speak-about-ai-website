@@ -83,3 +83,6 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
     </article>
   )
 }
+
+// Provide a default export for compatibility with default-import style
+export default BlogCard

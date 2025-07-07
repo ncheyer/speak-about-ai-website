@@ -1,40 +1,54 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useMemo } from "react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { SearchIcon } from "lucide-react"
-import type { BlogPost, DerivedCategory } from "@/lib/contentful-blog"
+import { getBlogPosts } from "@/lib/payload-blog"
+import BlogCard from "@/components/blog-card"
+import type { BlogPost } from "@/lib/blog-data"
 import { FeaturedBlogPostCard } from "@/components/featured-blog-post-card" // For featured posts
-import { BlogCard } from "@/components/blog-card" // For regular posts in the grid
-import { PaginationControls } from "@/components/pagination-controls" // Added PaginationControls
+import type { DerivedCategory } from "@/lib/contentful-blog" // For categories
+import PaginationControls from "@/components/pagination-controls" // For pagination controls
 
 interface BlogClientPageProps {
-  posts: BlogPost[] // These are now non-featured posts
   featuredPosts: BlogPost[]
   categories: DerivedCategory[]
 }
 
 const POSTS_PER_PAGE = 9 // For pagination of non-featured posts
 
-export default function BlogClientPage({ posts, featuredPosts, categories }: BlogClientPageProps) {
+export default async function BlogClientPage() {
+  let posts: BlogPost[] = []
+  let featuredPosts: BlogPost[] = []
+  let categories: DerivedCategory[] = []
+
+  try {
+    const data = await getBlogPosts()
+    posts = Array.isArray(data) ? data : []
+    featuredPosts = posts.filter((post) => post.featured)
+    categories = Array.from(new Set(posts.flatMap((post) => post.categories))).map((cat) => ({
+      slug: cat.slug,
+      name: cat.name,
+    }))
+  } catch (error) {
+    console.error("🔴 getBlogPosts() failed:", error)
+  }
+
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [currentPage, setCurrentPage] = useState<number>(1)
 
-  const normalizedCategories = useMemo(() => {
-    return categories.map((cat) => ({
-      ...cat,
-      slug: typeof cat.slug === "string" ? cat.slug : `category-${Math.random().toString(36).substring(7)}`,
-      name: typeof cat.name === "string" ? cat.name : "Unnamed Category",
-    }))
-  }, [categories])
+  const normalizedCategories = categories.map((cat) => ({
+    ...cat,
+    slug: typeof cat.slug === "string" ? cat.slug : `category-${Math.random().toString(36).substring(7)}`,
+    name: typeof cat.name === "string" ? cat.name : "Unnamed Category",
+  }))
 
   // Filter and search logic applies only to non-featured posts
   const filteredAndSearchedNonFeaturedPosts = useMemo(() => {
-    let filtered = posts // Start with non-featured posts
+    let filtered = posts.filter((post) => !post.featured) // Start with non-featured posts
 
     if (selectedCategorySlug !== "all") {
       filtered = filtered.filter((post) => post.categories.some((cat) => cat.slug === selectedCategorySlug))
@@ -51,7 +65,7 @@ export default function BlogClientPage({ posts, featuredPosts, categories }: Blo
       )
     }
     return filtered
-  }, [posts, selectedCategorySlug, searchTerm])
+  }, [selectedCategorySlug, searchTerm])
 
   // Pagination logic for the filtered and searched non-featured posts
   const totalPages = Math.ceil(filteredAndSearchedNonFeaturedPosts.length / POSTS_PER_PAGE)
@@ -147,7 +161,7 @@ export default function BlogClientPage({ posts, featuredPosts, categories }: Blo
               // BlogCard is now used here, which is simpler.
               // FeaturedBlogPostCard was used in the previous version of BlogClientPage for featured items.
               // We are now using BlogCard for the main grid.
-              return <BlogCard key={post.id} post={post} />
+              return <BlogCard key={post.id ?? post.slug} post={post} />
             })}
           </section>
         ) : (

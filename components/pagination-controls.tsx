@@ -38,3 +38,6 @@ export function PaginationControls({ currentPage, totalPages, onPageChange }: Pa
     </div>
   )
 }
+
+// Provide a default export for compatibility with default-import style
+export default PaginationControls
