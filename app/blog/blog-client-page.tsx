@@ -1,111 +1,109 @@
 "use client"
 
-import type React from "react"
-import { useState, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { SearchIcon } from "lucide-react"
+import { BlogCard } from "@/components/blog-card"
+import { FeaturedBlogPostCard } from "@/components/featured-blog-post-card"
+import PaginationControls from "@/components/pagination-controls"
 import { getBlogPosts } from "@/lib/payload-blog"
-import BlogCard from "@/components/blog-card"
-import type { BlogPost } from "@/lib/blog-data"
-import { FeaturedBlogPostCard } from "@/components/featured-blog-post-card" // For featured posts
-import type { DerivedCategory } from "@/lib/contentful-blog" // For categories
-import PaginationControls from "@/components/pagination-controls" // For pagination controls
+import type { BlogPost, DerivedCategory } from "@/lib/blog-data"
 
-interface BlogClientPageProps {
-  featuredPosts: BlogPost[]
-  categories: DerivedCategory[]
-}
+const POSTS_PER_PAGE = 9
 
-const POSTS_PER_PAGE = 9 // For pagination of non-featured posts
+export default function BlogClientPage() {
+  const [posts, setPosts] = useState<BlogPost[]>([])
+  const [loading, setLoading] = useState(true)
 
-export default async function BlogClientPage() {
-  let posts: BlogPost[] = []
-  let featuredPosts: BlogPost[] = []
-  let categories: DerivedCategory[] = []
-
-  try {
-    const data = await getBlogPosts()
-    posts = Array.isArray(data) ? data : []
-    featuredPosts = posts.filter((post) => post.featured)
-    categories = Array.from(new Set(posts.flatMap((post) => post.categories))).map((cat) => ({
-      slug: cat.slug,
-      name: cat.name,
-    }))
-  } catch (error) {
-    console.error("🔴 getBlogPosts() failed:", error)
-  }
-
+  // UI state
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [currentPage, setCurrentPage] = useState<number>(1)
 
-  const normalizedCategories = categories.map((cat) => ({
-    ...cat,
-    slug: typeof cat.slug === "string" ? cat.slug : `category-${Math.random().toString(36).substring(7)}`,
-    name: typeof cat.name === "string" ? cat.name : "Unnamed Category",
-  }))
-
-  // Filter and search logic applies only to non-featured posts
-  const filteredAndSearchedNonFeaturedPosts = useMemo(() => {
-    let filtered = posts.filter((post) => !post.featured) // Start with non-featured posts
-
-    if (selectedCategorySlug !== "all") {
-      filtered = filtered.filter((post) => post.categories.some((cat) => cat.slug === selectedCategorySlug))
+  // ───────────────────────────────────────────
+  // Data fetch (runs only on client)
+  // ───────────────────────────────────────────
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const data = await getBlogPosts()
+        if (!cancelled && Array.isArray(data)) setPosts(data)
+      } catch (err) {
+        console.error("🔴 getBlogPosts() failed:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
+  // Derived data
+  const featuredPosts = useMemo(() => posts.filter((p) => p.featured), [posts])
+
+  const categories: DerivedCategory[] = useMemo(() => {
+    const map = new Map<string, DerivedCategory>()
+    posts.forEach((p) =>
+      p.categories.forEach((c) => {
+        map.set(c.slug, { slug: c.slug, name: c.name })
+      }),
+    )
+    return Array.from(map.values())
+  }, [posts])
+
+  const desiredTabOrder = ["AI Speakers", "Industry Insights", "Event Planning", "Speaker Spotlight", "Company News"]
+  const allTab = { slug: "all", name: "All Posts" }
+  const orderedTabs = [allTab, ...categories]
+    .sort((a, b) => {
+      if (a.slug === "all") return -1
+      if (b.slug === "all") return 1
+      const iA = desiredTabOrder.indexOf(a.name)
+      const iB = desiredTabOrder.indexOf(b.name)
+      if (iA === -1 && iB === -1) return a.name.localeCompare(b.name)
+      if (iA === -1) return 1
+      if (iB === -1) return -1
+      return iA - iB
+    })
+    .filter((t) => t.slug === "all" || desiredTabOrder.includes(t.name))
+
+  const filteredNonFeatured = useMemo(() => {
+    let list = posts.filter((p) => !p.featured)
+    if (selectedCategorySlug !== "all") {
+      list = list.filter((p) => p.categories.some((c) => c.slug === selectedCategorySlug))
+    }
     if (searchTerm) {
-      const lowerSearchTerm = searchTerm.toLowerCase()
-      filtered = filtered.filter(
-        (post) =>
-          post.title.toLowerCase().includes(lowerSearchTerm) ||
-          post.excerpt.toLowerCase().includes(lowerSearchTerm) ||
-          (post.author?.name && post.author.name.toLowerCase().includes(lowerSearchTerm)) ||
-          post.categories.some((cat) => cat.name.toLowerCase().includes(lowerSearchTerm)),
+      const q = searchTerm.toLowerCase()
+      list = list.filter(
+        (p) =>
+          p.title.toLowerCase().includes(q) ||
+          p.excerpt.toLowerCase().includes(q) ||
+          p.author?.name?.toLowerCase().includes(q) ||
+          p.categories.some((c) => c.name.toLowerCase().includes(q)),
       )
     }
-    return filtered
-  }, [selectedCategorySlug, searchTerm])
+    return list
+  }, [posts, selectedCategorySlug, searchTerm])
 
-  // Pagination logic for the filtered and searched non-featured posts
-  const totalPages = Math.ceil(filteredAndSearchedNonFeaturedPosts.length / POSTS_PER_PAGE)
+  // Pagination
+  const totalPages = Math.ceil(filteredNonFeatured.length / POSTS_PER_PAGE)
   const paginatedPosts = useMemo(() => {
-    const startIndex = (currentPage - 1) * POSTS_PER_PAGE
-    const endIndex = startIndex + POSTS_PER_PAGE
-    return filteredAndSearchedNonFeaturedPosts.slice(startIndex, endIndex)
-  }, [filteredAndSearchedNonFeaturedPosts, currentPage])
+    const start = (currentPage - 1) * POSTS_PER_PAGE
+    return filteredNonFeatured.slice(start, start + POSTS_PER_PAGE)
+  }, [filteredNonFeatured, currentPage])
 
+  // Handlers
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
-    window.scrollTo(0, 0) // Scroll to top on page change
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
-  // Reset to page 1 when tab or search term changes
-  const onTabChange = (tabSlug: string) => {
-    setSelectedCategorySlug(tabSlug)
-    setCurrentPage(1)
-  }
-  const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value)
-    setCurrentPage(1)
-  }
-
-  // User's desired tab order - filter available categories against this
-  const desiredTabOrder = ["AI Speakers", "Industry Insights", "Event Planning", "Speaker Spotlight", "Company News"]
-  const allPostsTab = { slug: "all", name: "All Posts" }
-  const availableCategoryTabs = normalizedCategories.filter((cat) => desiredTabOrder.includes(cat.name))
-
-  const sortedAvailableTabs = [allPostsTab, ...availableCategoryTabs].sort((a, b) => {
-    if (a.slug === "all") return -1
-    if (b.slug === "all") return 1
-    const indexA = desiredTabOrder.indexOf(a.name)
-    const indexB = desiredTabOrder.indexOf(b.name)
-    if (indexA === -1 && indexB === -1) return a.name.localeCompare(b.name) // Sort alphabetically if not in desired order
-    if (indexA === -1) return 1 // Put items not in desired order at the end
-    if (indexB === -1) return -1
-    return indexA - indexB
-  })
-
+  // ───────────────────────────────────────────
+  // Render
+  // ───────────────────────────────────────────
   return (
     <div className="bg-white text-gray-800">
       <main className="max-w-7xl mx-auto p-4 md:p-6">
@@ -115,60 +113,67 @@ export default async function BlogClientPage() {
           intelligence.
         </p>
 
-        {/* Featured Posts Section - Unaffected by tabs/search */}
-        {featuredPosts && featuredPosts.length > 0 && (
+        {/* Featured */}
+        {featuredPosts.length > 0 && (
           <section className="mb-12 md:mb-16 space-y-8">
             {featuredPosts.map((post) => (
-              <FeaturedBlogPostCard key={`featured-${post.id}`} post={post} />
+              <FeaturedBlogPostCard key={post.id} post={post} />
             ))}
           </section>
         )}
 
-        {/* Tabs and Search Section */}
+        {/* Filters */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
             {selectedCategorySlug === "all" && !searchTerm ? "All Articles" : "Filtered Articles"}
           </h2>
+
           <div className="relative w-full md:w-auto md:max-w-xs">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
               type="search"
               placeholder="Search articles..."
               value={searchTerm}
-              onChange={onSearchChange}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
+                setCurrentPage(1)
+              }}
               className="pl-10 w-full bg-white border-gray-300"
               aria-label="Search articles"
             />
           </div>
         </div>
 
-        {sortedAvailableTabs.length > 1 && (
-          <Tabs value={selectedCategorySlug} onValueChange={onTabChange} className="mb-8 md:mb-10">
+        {orderedTabs.length > 1 && (
+          <Tabs
+            value={selectedCategorySlug}
+            onValueChange={(v) => setSelectedCategorySlug(v)}
+            className="mb-8 md:mb-10"
+          >
             <TabsList className="flex flex-wrap justify-center gap-2">
-              {sortedAvailableTabs.map((tab) => (
-                <TabsTrigger key={tab.slug} value={tab.slug}>
-                  {tab.name}
+              {orderedTabs.map((t) => (
+                <TabsTrigger key={t.slug} value={t.slug}>
+                  {t.name}
                 </TabsTrigger>
               ))}
             </TabsList>
           </Tabs>
         )}
 
-        {/* Main Blog Grid - Paginated and Filtered */}
-        {paginatedPosts.length > 0 ? (
+        {/* Grid */}
+        {loading ? (
+          <p className="text-center text-gray-500 py-10">Loading posts...</p>
+        ) : paginatedPosts.length > 0 ? (
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {paginatedPosts.map((post) => {
-              // BlogCard is now used here, which is simpler.
-              // FeaturedBlogPostCard was used in the previous version of BlogClientPage for featured items.
-              // We are now using BlogCard for the main grid.
-              return <BlogCard key={post.id ?? post.slug} post={post} />
-            })}
+            {paginatedPosts.map((post) => (
+              <BlogCard key={post.id} post={post} />
+            ))}
           </section>
         ) : (
-          <p className="text-center text-gray-500 py-10">No posts found matching your criteria.</p>
+          <p className="text-center text-gray-500 py-10">No posts found.</p>
         )}
 
-        {/* Pagination Controls */}
+        {/* Pagination */}
         {totalPages > 1 && (
           <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
         )}
