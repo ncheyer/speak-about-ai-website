@@ -5,23 +5,35 @@ const space = process.env.CONTENTFUL_SPACE_ID
 const accessToken = process.env.CONTENTFUL_ACCESS_TOKEN
 
 if (!space || !accessToken) {
-  throw new Error("Contentful Space ID and Access Token must be provided in environment variables.")
+  console.warn("Contentful credentials not found. Landing page functionality will be limited.")
 }
 
-const client = createClient({
-  space,
-  accessToken,
-})
+function getClient() {
+  if (!space || !accessToken) {
+    return null
+  }
+
+  return createClient({
+    space,
+    accessToken,
+  })
+}
 
 /**
  * Fetches a single landing page by its URL slug.
  * @param slug The URL slug of the page to fetch.
  */
 export async function getLandingPageBySlug(slug: string): Promise<LandingPage | null> {
+  const client = getClient()
+  if (!client) {
+    console.warn("[Contentful] Client not available - missing credentials")
+    return null
+  }
+
   try {
     const entries: EntryCollection<LandingPage> = await client.getEntries({
       content_type: "landingPage",
-      "fields.urlSlug": slug, // CORRECTED: Using 'urlSlug' for the query
+      "fields.urlSlug": slug,
       limit: 1,
       include: 10, // Include linked entries up to 10 levels deep
     })
@@ -42,10 +54,16 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPage | 
  * Fetches all entries of the landingPage content type for a directory.
  */
 export async function getAllLandingPages(): Promise<Entry<LandingPage>[]> {
+  const client = getClient()
+  if (!client) {
+    console.warn("[Contentful] Client not available - missing credentials")
+    return []
+  }
+
   try {
     const entries: EntryCollection<LandingPage> = await client.getEntries({
       content_type: "landingPage",
-      select: ["sys.id", "fields.pageTitle", "fields.urlSlug"], // Only fetch necessary fields
+      select: ["sys.id", "fields.pageTitle", "fields.urlSlug"],
       order: ["fields.pageTitle"],
     })
 

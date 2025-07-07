@@ -27,9 +27,9 @@ export interface LandingPage {
   // SEO & Metadata
   pageTitle: string
   metaDescription: string
-  urlSlug: string // Corrected from 'slug'
+  urlSlug: string
   schemaMarkup?: Record<string, any>
-  trackingCodes?: {
+  analyticsTracking?: {
     head?: string
     bodyStart?: string
     bodyEnd?: string
