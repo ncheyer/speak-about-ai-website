@@ -1,46 +1,48 @@
-import { permanentRedirect, notFound } from "next/navigation"
-import { getSpeakerBySlug } from "@/lib/speakers-data"
-import type { Metadata } from "next"
+import { getAllSpeakers } from "@/lib/speakers-data"
+import { redirect, notFound } from "next/navigation"
 
-interface Props {
-  params: { slug: string }
-}
+// Render dynamically so redirects run at request-time, not build-time.
+export const dynamic = "force-dynamic"
 
-// This page component handles old speaker URLs (e.g., /speaker-slug)
-// and permanently redirects them to the new structure (/speakers/speaker-slug).
-// Next.js prioritizes static routes, so this will only catch slugs that
-// don't match existing pages like /contact, /our-team, etc.
+type Params = { slug: string }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  // We are redirecting, so this metadata is primarily for bots before the redirect happens.
-  const speaker = await getSpeakerBySlug(params.slug)
-  if (speaker) {
-    return {
-      title: `Redirecting to ${speaker.name}'s profile...`,
-      robots: {
-        index: false, // Instruct search engines not to index this redirect page
-        follow: true, // Instruct search engines to follow the link to the new page
-      },
-    }
-  }
-  return {
-    title: "Page Not Found",
-  }
-}
+export default async function OldSpeakerRedirectPage({
+  params,
+}: {
+  params: Params
+}) {
+  const { slug } = params
 
-export default async function OldSpeakerRedirectPage({ params }: Props) {
-  if (!params.slug) {
+  /*  
+    Static folders in /app always take priority over this dynamic route,
+    so normally we don't need to guard against them.  The extra array below
+    is only for edge-cases where you might create new top-level routes
+    later and want to be explicit.
+  */
+  const knownTopLevelRoutes = [
+    "contact",
+    "our-services",
+    "our-team",
+    "privacy",
+    "terms",
+    "blog",
+    "speakers",
+    "industries",
+    "admin",
+    "api",
+  ]
+
+  if (knownTopLevelRoutes.includes(slug)) {
     notFound()
   }
 
-  const speaker = await getSpeakerBySlug(params.slug)
+  const speakers = await getAllSpeakers()
+  const match = speakers.find((s) => s.slug === slug)
 
-  if (speaker) {
-    // If a speaker is found for the given slug, issue a permanent (308) redirect.
-    // This is crucial for SEO to transfer link equity to the new URL.
-    permanentRedirect(`/speakers/${speaker.slug}`)
-  } else {
-    // If no speaker is found, render the standard 404 page.
-    notFound()
+  if (match) {
+    /* 308 = permanent redirect — preserves SEO link equity */
+    redirect(`/speakers/${slug}`, "permanent")
   }
+
+  notFound()
 }

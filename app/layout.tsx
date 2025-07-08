@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://www.speakabout.ai"), // Ensure this is your production URL
+  metadataBase: new URL("https://www.speakabout.ai"),
   openGraph: {
     title: "Book AI Keynote Speakers | Speak About AI",
     description:
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     siteName: "Speak About AI",
     images: [
       {
-        url: "/og-image.jpg", // Make sure this image exists in your public folder
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Speak About AI - Book Top AI Keynote Speakers",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     title: "Book AI Keynote Speakers | Speak About AI",
     description:
       "Book top AI keynote speakers & tech visionaries with Speak About AI, the AI-exclusive bureau. Find experts for your event.",
-    images: ["/og-image.jpg"], // Make sure this image exists
+    images: ["/og-image.jpg"],
   },
   robots: {
     index: true,
@@ -66,11 +66,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/hero-image.png", sizes: "32x32", type: "image/png" },
-      { url: "/hero-image.png", sizes: "16x16", type: "image/png" },
+      { url: "/speak-about-ai-logo.png", sizes: "32x32", type: "image/png" },
+      { url: "/speak-about-ai-logo.png", sizes: "16x16", type: "image/png" },
     ],
-    apple: [{ url: "/hero-image.png", sizes: "180x180", type: "image/png" }],
-    shortcut: "/hero-image.png",
+    apple: [{ url: "/speak-about-ai-logo.png", sizes: "180x180", type: "image/png" }],
+    shortcut: "/speak-about-ai-logo.png",
   },
   generator: "v0.dev",
 }
@@ -83,9 +83,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={montserrat.variable}>
       <head>
-        <link rel="icon" href="/hero-image.png" sizes="any" />
-        <link rel="icon" href="/hero-image.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/hero-image.png" />
+        <link rel="icon" href="/speak-about-ai-logo.png" sizes="any" />
+        <link rel="apple-touch-icon" href="/speak-about-ai-logo.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -95,10 +94,10 @@ export default function RootLayout({
               name: "Speak About AI",
               description: "The world's only AI-exclusive speaker bureau",
               url: "https://www.speakabout.ai",
-              logo: "https://www.speakabout.ai/hero-image.png",
+              logo: "https://www.speakabout.ai/speak-about-ai-logo.png",
               contactPoint: {
                 "@type": "ContactPoint",
-                telephone: "+1-415-860-1799", // Updated phone number
+                telephone: "+1-415-860-1799",
                 contactType: "customer service",
                 email: "booking@speakabout.ai",
               },
@@ -106,8 +105,6 @@ export default function RootLayout({
             }),
           }}
         />
-        {/* Hotjar Tracking Code - Placed in head as per Hotjar's recommendation */}
-        {/* Using dangerouslySetInnerHTML for the inline script part */}
         <script
           id="hotjar-init"
           dangerouslySetInnerHTML={{
@@ -125,7 +122,6 @@ export default function RootLayout({
         />
       </head>
       <body className={montserrat.className}>
-        {/* Google tag (gtag.js) */}
         <Script strategy="afterInteractive" src="https://www.googletagmanager.com/gtag/js?id=AW-16583607648" />
         <Script
           id="gtag-init"
