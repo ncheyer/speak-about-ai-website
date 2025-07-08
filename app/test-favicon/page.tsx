@@ -1,15 +1,19 @@
+import Image from "next/image"
+
 export default function TestFaviconPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gray-50 p-8">
-      <h1 className="text-4xl font-bold text-gray-800">Favicon Test Page</h1>
-
-      <p className="max-w-md text-center text-lg text-gray-600">
-        Look at the browser tab. You should see the circular Speak&nbsp;About&nbsp;AI logo.
-      </p>
-
-      <p className="max-w-md text-center text-sm text-gray-500">
-        If that logo appears, your favicon is correctly configured site-wide.
-      </p>
+      <div className="flex flex-col items-center gap-6 rounded-lg bg-white p-8 text-center shadow-md">
+        <h1 className="text-3xl font-bold text-gray-800">Favicon Test Page</h1>
+        <p className="max-w-md text-lg text-gray-600">The image below should match the icon in your browser tab.</p>
+        <Image
+          src="/speak-about-ai-logo.png"
+          alt="Speak About AI Favicon"
+          width={64}
+          height={64}
+          className="rounded-full ring-2 ring-gray-200"
+        />
+      </div>
     </main>
   )
 }

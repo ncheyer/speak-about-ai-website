@@ -1,48 +1,52 @@
 import { getAllSpeakers } from "@/lib/speakers-data"
 import { redirect, notFound } from "next/navigation"
+import { readdir } from "fs/promises"
+import path from "path"
 
-// Render dynamically so redirects run at request-time, not build-time.
+// This tells Next.js to render this page dynamically, not at build time.
+// This is crucial to allow redirects to work without build errors.
 export const dynamic = "force-dynamic"
 
-type Params = { slug: string }
+type Props = {
+  params: {
+    slug: string
+  }
+}
 
-export default async function OldSpeakerRedirectPage({
-  params,
-}: {
-  params: Params
-}) {
+export default async function OldSpeakerRedirectPage({ params }: Props) {
   const { slug } = params
 
-  /*  
-    Static folders in /app always take priority over this dynamic route,
-    so normally we don't need to guard against them.  The extra array below
-    is only for edge-cases where you might create new top-level routes
-    later and want to be explicit.
-  */
-  const knownTopLevelRoutes = [
-    "contact",
-    "our-services",
-    "our-team",
-    "privacy",
-    "terms",
-    "blog",
-    "speakers",
-    "industries",
-    "admin",
-    "api",
-  ]
+  // Get a list of all top-level directories in the `app` folder
+  // to avoid redirecting for actual pages like /contact, /blog, etc.
+  try {
+    const appDir = path.join(process.cwd(), "app")
+    const entries = await readdir(appDir, { withFileTypes: true })
+    const topLevelRoutes = entries
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) => dirent.name)
+      // Filter out special nextjs folders and the dynamic slug route itself
+      .filter((name) => !name.startsWith("(") && !name.startsWith("_") && !name.startsWith("[") && name !== "api")
 
-  if (knownTopLevelRoutes.includes(slug)) {
-    notFound()
+    if (topLevelRoutes.includes(slug)) {
+      notFound()
+      return
+    }
+  } catch (error) {
+    // If we can't read the directory, we can proceed, but log the error.
+    console.error("Could not read app directory for route checking:", error)
   }
 
   const speakers = await getAllSpeakers()
-  const match = speakers.find((s) => s.slug === slug)
+  const speakerExists = speakers.some((speaker) => speaker.slug === slug)
 
-  if (match) {
-    /* 308 = permanent redirect — preserves SEO link equity */
+  if (speakerExists) {
+    // Issue a permanent redirect (308) for SEO purposes
     redirect(`/speakers/${slug}`, "permanent")
+  } else {
+    // If the slug doesn't match a speaker, show a 404 page
+    notFound()
   }
 
-  notFound()
+  // This part is never reached
+  return null
 }
