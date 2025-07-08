@@ -1,6 +1,8 @@
 "use client"
 
-import "@/lib/fs-polyfill"
+// DO NOT import fs-polyfill here. It's a server-side polyfill.
+// The data fetching libraries below will import it on their own.
+
 import { useEffect, useMemo, useState } from "react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
@@ -8,7 +10,7 @@ import { SearchIcon } from "lucide-react"
 import { BlogCard } from "@/components/blog-card"
 import { FeaturedBlogPostCard } from "@/components/featured-blog-post-card"
 import PaginationControls from "@/components/pagination-controls"
-import { getBlogPosts } from "@/lib/payload-blog"
+import { getBlogPosts } from "@/lib/blog-data" // Use the central data lib
 import type { BlogPost, DerivedCategory } from "@/lib/blog-data"
 
 const POSTS_PER_PAGE = 9
@@ -114,7 +116,6 @@ export default function BlogClientPage() {
           intelligence.
         </p>
 
-        {/* Featured */}
         {featuredPosts.length > 0 && (
           <section className="mb-12 md:mb-16 space-y-8">
             {featuredPosts.map((post) => (
@@ -123,7 +124,6 @@ export default function BlogClientPage() {
           </section>
         )}
 
-        {/* Filters */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
             {selectedCategorySlug === "all" && !searchTerm ? "All Articles" : "Filtered Articles"}
@@ -161,7 +161,6 @@ export default function BlogClientPage() {
           </Tabs>
         )}
 
-        {/* Grid */}
         {loading ? (
           <p className="text-center text-gray-500 py-10">Loading posts...</p>
         ) : paginatedPosts.length > 0 ? (
@@ -174,7 +173,6 @@ export default function BlogClientPage() {
           <p className="text-center text-gray-500 py-10">No posts found.</p>
         )}
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
         )}
