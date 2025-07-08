@@ -1,51 +1,33 @@
 "use client"
 
-// DO NOT import fs-polyfill here. It's a server-side polyfill.
-// The data fetching libraries below will import it on their own.
-
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { SearchIcon } from "lucide-react"
 import { BlogCard } from "@/components/blog-card"
 import { FeaturedBlogPostCard } from "@/components/featured-blog-post-card"
 import PaginationControls from "@/components/pagination-controls"
-import { getBlogPosts } from "@/lib/blog-data" // Use the central data lib
 import type { BlogPost, DerivedCategory } from "@/lib/blog-data"
 
 const POSTS_PER_PAGE = 9
 
-export default function BlogClientPage() {
-  const [posts, setPosts] = useState<BlogPost[]>([])
-  const [loading, setLoading] = useState(true)
+interface BlogClientPageProps {
+  initialPosts: BlogPost[]
+}
 
-  // UI state
+export default function BlogClientPage({ initialPosts }: BlogClientPageProps) {
+  // Initialize state with the data passed from the server component.
+  const [posts, setPosts] = useState<BlogPost[]>(initialPosts)
+  const [loading, setLoading] = useState(false) // No initial loading needed
+
+  // UI state remains the same
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [currentPage, setCurrentPage] = useState<number>(1)
 
-  // ───────────────────────────────────────────
-  // Data fetch (runs only on client)
-  // ───────────────────────────────────────────
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const data = await getBlogPosts()
-        if (!cancelled && Array.isArray(data)) setPosts(data)
-      } catch (err) {
-        console.error("🔴 getBlogPosts() failed:", err)
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  // The initial useEffect fetch is no longer needed.
 
-  // Derived data
+  // Derived data calculations remain the same
   const featuredPosts = useMemo(() => posts.filter((p) => p.featured), [posts])
 
   const categories: DerivedCategory[] = useMemo(() => {
@@ -91,22 +73,18 @@ export default function BlogClientPage() {
     return list
   }, [posts, selectedCategorySlug, searchTerm])
 
-  // Pagination
+  // Pagination logic remains the same
   const totalPages = Math.ceil(filteredNonFeatured.length / POSTS_PER_PAGE)
   const paginatedPosts = useMemo(() => {
     const start = (currentPage - 1) * POSTS_PER_PAGE
     return filteredNonFeatured.slice(start, start + POSTS_PER_PAGE)
   }, [filteredNonFeatured, currentPage])
 
-  // Handlers
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
-  // ───────────────────────────────────────────
-  // Render
-  // ───────────────────────────────────────────
   return (
     <div className="bg-white text-gray-800">
       <main className="max-w-7xl mx-auto p-4 md:p-6">

@@ -18,12 +18,14 @@ export interface BlogPost {
   title: string
   slug: string
   excerpt: string
-  date: string
+  publishedDate: string
   content: Document | null
   featured: boolean
-  coverImage: Asset | null
+  featuredImage: Asset | null
   author: Author | null
   categories: Category[]
+  readTime?: number
+  sys?: any
 }
 
 // Initialize Contentful client
@@ -60,10 +62,10 @@ const parseBlogPost = (entry: Entry<any>): BlogPost => {
     title: entry.fields.title || "Untitled Post",
     slug: entry.fields.slug || "",
     excerpt: entry.fields.excerpt || "",
-    date: entry.fields.date || new Date().toISOString(),
+    publishedDate: entry.fields.publishedDate || new Date().toISOString(),
     content: entry.fields.content || null,
     featured: entry.fields.featured || false,
-    coverImage: entry.fields.coverImage || null,
+    featuredImage: entry.fields.featuredImage || null,
     author: parseAuthor(authorEntry),
     categories: categoryEntries.map(parseCategory).filter((c): c is Category => c !== null),
   }
@@ -73,7 +75,7 @@ const parseBlogPost = (entry: Entry<any>): BlogPost => {
 export async function getBlogPosts(limit?: number): Promise<BlogPost[]> {
   const entries: EntryCollection<any> = await client.getEntries({
     content_type: "blogPost",
-    order: ["-fields.date"],
+    order: ["-fields.publishedDate"],
     limit: limit,
   })
   return entries.items.map(parseBlogPost)
@@ -97,18 +99,17 @@ export async function getFeaturedBlogPosts(): Promise<BlogPost[]> {
   const entries: EntryCollection<any> = await client.getEntries({
     content_type: "blogPost",
     "fields.featured": true,
-    order: ["-fields.date"],
+    order: ["-fields.publishedDate"],
   })
   return entries.items.map(parseBlogPost)
 }
 
-// Fetch related posts (e.g., by category, excluding the current post)
+// Fetch related posts
 export async function getRelatedBlogPosts(currentPostId: string, limit = 3): Promise<BlogPost[]> {
-  // This is a simplified implementation. A real one might fetch by category.
   const entries: EntryCollection<any> = await client.getEntries({
     content_type: "blogPost",
-    "sys.id[ne]": currentPostId, // Exclude the current post
-    order: ["-fields.date"],
+    "sys.id[ne]": currentPostId,
+    order: ["-fields.publishedDate"],
     limit: limit,
   })
   return entries.items.map(parseBlogPost)

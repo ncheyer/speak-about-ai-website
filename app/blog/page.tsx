@@ -1,23 +1,10 @@
-import type { Metadata } from "next"
-import { Suspense } from "react"
 import BlogClientPage from "./blog-client-page"
+import { getBlogPosts } from "@/lib/blog-data"
 
-export const metadata: Metadata = {
-  title: "AI Industry Blog & Insights | Speak About AI", // 45 chars
-  description:
-    "Read the latest AI industry insights, speaker spotlights, and artificial intelligence trends from Speak About AI's expert blog.",
-  keywords: "AI blog, artificial intelligence insights, AI industry news, machine learning trends, AI speaker insights",
-  alternates: {
-    canonical: "/blog",
-  },
-}
+export default async function BlogPage() {
+  // Fetch initial data on the server.
+  const initialPosts = await getBlogPosts()
 
-export default function BlogPage() {
-  return (
-    <div className="min-h-screen bg-white">
-      <Suspense fallback={<div>Loading blog posts...</div>}>
-        <BlogClientPage />
-      </Suspense>
-    </div>
-  )
+  // Render the client component, passing the initial data as a prop.
+  return <BlogClientPage initialPosts={initialPosts} />
 }
