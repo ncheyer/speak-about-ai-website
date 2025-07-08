@@ -1,4 +1,5 @@
-"use client"
+import "@/lib/fs-polyfill"
+;("use client")
 
 import { useEffect, useMemo, useState } from "react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
