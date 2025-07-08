@@ -4,7 +4,6 @@
  *
  * NOTE: no `"use client"` directive here, so an early import is legal.
  */
-import "./fs-polyfill"
 import { getBlogPosts as getBlogPostsFromContentful, type BlogPost } from "./contentful-blog"
 
 export type { BlogPost }

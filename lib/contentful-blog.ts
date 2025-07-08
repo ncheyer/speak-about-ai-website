@@ -1,116 +1,221 @@
-import "@/lib/fs-polyfill" // Must be first
-import { createClient, type Asset, type Entry, type EntryCollection } from "contentful"
-import type { Document } from "@contentful/rich-text-types"
+import { createClient, type Entry, type Asset } from "contentful"
 
-// Define interfaces for our data structures
-export interface Author {
-  name: string
-  picture: Asset | null
+/* -------------------------------------------------------------------------- */
+/*                               ENV VARIABLES                                */
+/* -------------------------------------------------------------------------- */
+const CONTENTFUL_SPACE_ID = process.env.CONTENTFUL_SPACE_ID
+const CONTENTFUL_ACCESS_TOKEN = process.env.CONTENTFUL_ACCESS_TOKEN
+
+/* -------------------------------------------------------------------------- */
+/*                         LAZY CLIENT INITIALISATION                         */
+/* -------------------------------------------------------------------------- */
+let _client: ReturnType<typeof createClient> | null = null
+
+function getClient() {
+  if (_client) return _client
+  if (!CONTENTFUL_SPACE_ID || !CONTENTFUL_ACCESS_TOKEN) {
+    console.warn(
+      "[Contentful] Missing SPACE_ID or ACCESS_TOKEN – returning null client. " +
+        "Blog data will be empty in development / preview environments.",
+    )
+    return null
+  }
+
+  console.log("[Contentful] Initialising Contentful client …")
+  _client = createClient({
+    space: CONTENTFUL_SPACE_ID,
+    accessToken: CONTENTFUL_ACCESS_TOKEN,
+  })
+  return _client
 }
 
-export interface Category {
-  name: string
-  slug: string
-}
-
+/* -------------------------------------------------------------------------- */
+/*                               TYPE DEFINITIONS                             */
+/* -------------------------------------------------------------------------- */
 export interface BlogPost {
   id: string
-  title: string
   slug: string
-  excerpt: string
+  title: string
+  excerpt?: string
+  content?: any
+  author?: { name: string; picture?: { url: string; description?: string } }
+  categories?: { slug: string; name: string }[]
   publishedDate: string
-  content: Document | null
-  featured: boolean
-  featuredImage: Asset | null
-  author: Author | null
-  categories: Category[]
+  featuredImage?: { url: string; alt: string }
   readTime?: number
-  sys?: any
+  featured?: boolean
+  sys: any
 }
 
-// Initialize Contentful client
-const client = createClient({
-  space: process.env.CONTENTFUL_SPACE_ID || "",
-  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN || "",
-})
+type ContentfulIncludes = {
+  Asset?: Asset[]
+  Entry?: Entry<any>[]
+}
 
-// Helper to parse an author entry
-const parseAuthor = (entry: Entry<any>): Author | null => {
-  if (!entry || !entry.fields) return null
+/* -------------------------------------------------------------------------- */
+/*                               FIELD HELPERS                                */
+/* -------------------------------------------------------------------------- */
+function extractAsset(assets: Asset[] | undefined, assetId: string | undefined) {
+  if (!assets || !assetId) return undefined
+  const asset = assets.find((a) => a.sys.id === assetId)
+  if (!asset) return undefined
   return {
-    name: entry.fields.name || "Anonymous",
-    picture: entry.fields.picture || null,
+    url: asset.fields.file?.url ? `https:${asset.fields.file.url}` : "",
+    alt: (asset.fields.description as string) || (asset.fields.title as string) || "",
   }
 }
 
-// Helper to parse a category entry
-const parseCategory = (entry: Entry<any>): Category | null => {
-  if (!entry || !entry.fields) return null
+function extractAuthor(entries: Entry<any>[] | undefined, authorId: string | undefined) {
+  const fallback = { name: "Speak About AI" }
+  if (!entries || !authorId) return fallback
+
+  const entry = entries.find((e) => e.sys.id === authorId && e.sys.contentType.sys.id === "author")
+  if (!entry) return fallback
+
+  const pictureAsset = entry.fields.picture as Asset | undefined
   return {
-    name: entry.fields.name || "Uncategorized",
-    slug: entry.fields.slug || "uncategorized",
+    name: (entry.fields.name as string) || "Speak About AI",
+    picture: pictureAsset?.fields?.file
+      ? {
+          url: `https:${pictureAsset.fields.file.url}`,
+          description: pictureAsset.fields.description as string,
+        }
+      : undefined,
   }
 }
 
-// Helper to parse a blog post entry
-const parseBlogPost = (entry: Entry<any>): BlogPost => {
-  const authorEntry = entry.fields.author as Entry<any>
-  const categoryEntries = (entry.fields.categories as Entry<any>[]) || []
+function extractCategories(entries: Entry<any>[] | undefined, categoryLinks: Entry<any>[] | undefined) {
+  if (!entries || !categoryLinks) return []
+  return categoryLinks
+    .map((link) => {
+      const entry = entries.find((e) => e.sys.id === link.sys.id && e.sys.contentType.sys.id === "category")
+      return entry && entry.fields.name && entry.fields.slug
+        ? { name: entry.fields.name as string, slug: entry.fields.slug as string }
+        : null
+    })
+    .filter(Boolean) as { slug: string; name: string }[]
+}
 
+function resolveRichTextLinks(content: any, includes: ContentfulIncludes | undefined): any {
+  if (!content?.content || !includes) return content
+
+  const entryMap = new Map(includes.Entry?.map((e) => [e.sys.id, e]))
+  const assetMap = new Map(includes.Asset?.map((a) => [a.sys.id, a]))
+  const clone = JSON.parse(JSON.stringify(content))
+
+  function walk(node: any) {
+    if (node.nodeType === "embedded-entry-block" || node.nodeType === "embedded-entry-inline") {
+      const id = node.data?.target?.sys?.id
+      if (id && entryMap.has(id)) node.data.target = entryMap.get(id)
+    } else if (node.nodeType === "embedded-asset-block") {
+      const id = node.data?.target?.sys?.id
+      if (id && assetMap.has(id)) node.data.target = assetMap.get(id)
+    }
+    if (Array.isArray(node.content)) node.content.forEach(walk)
+  }
+
+  clone.content.forEach(walk)
+  return clone
+}
+
+function mapEntryToPost(entry: Entry<any>, includes?: ContentfulIncludes): BlogPost {
+  const { sys, fields } = entry
   return {
-    id: entry.sys.id,
-    title: entry.fields.title || "Untitled Post",
-    slug: entry.fields.slug || "",
-    excerpt: entry.fields.excerpt || "",
-    publishedDate: entry.fields.publishedDate || new Date().toISOString(),
-    content: entry.fields.content || null,
-    featured: entry.fields.featured || false,
-    featuredImage: entry.fields.featuredImage || null,
-    author: parseAuthor(authorEntry),
-    categories: categoryEntries.map(parseCategory).filter((c): c is Category => c !== null),
+    id: sys.id,
+    slug: (fields.slug as string) || `post-${sys.id}`,
+    title: (fields.title as string) || "Untitled Post",
+    excerpt: fields.excerpt as string | undefined,
+    content: resolveRichTextLinks(fields.content, includes),
+    author: extractAuthor(includes?.Entry, (fields.author as Entry<any>)?.sys.id),
+    categories: extractCategories(includes?.Entry, fields.categories as Entry<any>[]),
+    publishedDate: (fields.publishedDate as string) || sys.createdAt,
+    featuredImage: extractAsset(includes?.Asset, (fields.featuredImage as Asset)?.sys.id),
+    readTime: fields.readTime as number,
+    featured: (fields.featured as boolean) ?? false,
+    sys,
   }
 }
 
-// Fetch all blog posts
+/* -------------------------------------------------------------------------- */
+/*                               PUBLIC API                                   */
+/* -------------------------------------------------------------------------- */
+const INCLUDE_LEVEL = 10
+
 export async function getBlogPosts(limit?: number): Promise<BlogPost[]> {
-  const entries: EntryCollection<any> = await client.getEntries({
-    content_type: "blogPost",
-    order: ["-fields.publishedDate"],
-    limit: limit,
-  })
-  return entries.items.map(parseBlogPost)
-}
-
-// Fetch a single blog post by its slug
-export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  const entries: EntryCollection<any> = await client.getEntries({
-    content_type: "blogPost",
-    "fields.slug": slug,
-    limit: 1,
-  })
-  if (entries.items.length > 0) {
-    return parseBlogPost(entries.items[0])
+  const client = getClient()
+  if (!client) return []
+  try {
+    const res = await client.getEntries({
+      content_type: "blogPost",
+      order: ["-fields.publishedDate", "-sys.createdAt"],
+      include: INCLUDE_LEVEL,
+      limit,
+    })
+    const includes = { Asset: res.includes?.Asset, Entry: res.includes?.Entry }
+    return res.items.map((i) => mapEntryToPost(i, includes))
+  } catch (e) {
+    console.error("[getBlogPosts] Error:", e)
+    return []
   }
-  return null
 }
 
-// Fetch only featured blog posts
-export async function getFeaturedBlogPosts(): Promise<BlogPost[]> {
-  const entries: EntryCollection<any> = await client.getEntries({
-    content_type: "blogPost",
-    "fields.featured": true,
-    order: ["-fields.publishedDate"],
-  })
-  return entries.items.map(parseBlogPost)
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  const client = getClient()
+  if (!client) return null
+  try {
+    const res = await client.getEntries({
+      content_type: "blogPost",
+      "fields.slug": slug,
+      limit: 1,
+      include: INCLUDE_LEVEL,
+    })
+    if (!res.items.length) return null
+    const includes = { Asset: res.includes?.Asset, Entry: res.includes?.Entry }
+    return mapEntryToPost(res.items[0], includes)
+  } catch (e) {
+    console.error(`[getBlogPostBySlug] Error for slug "${slug}":`, e)
+    return null
+  }
 }
 
-// Fetch related posts
-export async function getRelatedBlogPosts(currentPostId: string, limit = 3): Promise<BlogPost[]> {
-  const entries: EntryCollection<any> = await client.getEntries({
-    content_type: "blogPost",
-    "sys.id[ne]": currentPostId,
-    order: ["-fields.publishedDate"],
-    limit: limit,
-  })
-  return entries.items.map(parseBlogPost)
+export async function getFeaturedBlogPosts(limit = 3): Promise<BlogPost[]> {
+  const client = getClient()
+  if (!client) return []
+  try {
+    const res = await client.getEntries({
+      content_type: "blogPost",
+      "fields.featured": true,
+      order: ["-fields.publishedDate", "-sys.createdAt"],
+      include: INCLUDE_LEVEL,
+      limit,
+    })
+    const items = res.items.length ? res.items : (await getBlogPosts(limit)).map((p) => ({ fields: p, sys: p.sys }))
+    const includes = { Asset: res.includes?.Asset, Entry: res.includes?.Entry }
+    return items.map((i) => mapEntryToPost(i as unknown as Entry<any>, includes))
+  } catch (e) {
+    console.error("[getFeaturedBlogPosts] Error:", e)
+    return []
+  }
+}
+
+export async function getRelatedBlogPosts(currentId: string, limit = 3): Promise<BlogPost[]> {
+  const client = getClient()
+  if (!client) return []
+  try {
+    const res = await client.getEntries({
+      content_type: "blogPost",
+      order: ["-fields.publishedDate", "-sys.createdAt"],
+      "sys.id[ne]": currentId,
+      limit: limit + 1,
+      include: INCLUDE_LEVEL,
+    })
+    const includes = { Asset: res.includes?.Asset, Entry: res.includes?.Entry }
+    return res.items
+      .filter((i) => i.sys.id !== currentId)
+      .slice(0, limit)
+      .map((i) => mapEntryToPost(i, includes))
+  } catch (e) {
+    console.error("[getRelatedBlogPosts] Error:", e)
+    return []
+  }
 }

@@ -1,4 +1,4 @@
-import { getBlogPost, getBlogPosts } from "@/lib/blog-data"
+import { getBlogPostBySlug, getBlogPosts } from "@/lib/blog-data"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -80,7 +80,7 @@ type BlogPostPageProps = {
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps, parent: ResolvingMetadata): Promise<Metadata> {
-  const post = await getBlogPost(params.slug)
+  const post = await getBlogPostBySlug(params.slug)
 
   if (!post) {
     return {
@@ -118,7 +118,7 @@ export async function generateMetadata({ params }: BlogPostPageProps, parent: Re
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = await getBlogPost(params.slug)
+  const post = await getBlogPostBySlug(params.slug)
 
   if (!post) {
     notFound()
