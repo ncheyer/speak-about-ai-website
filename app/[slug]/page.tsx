@@ -1,46 +1,38 @@
-import { permanentRedirect, notFound } from "next/navigation"
-import { getSpeakerBySlug } from "@/lib/speakers-data"
-import type { Metadata } from "next"
+import { getAllSpeakers } from "@/lib/speakers-data"
+import { redirect, notFound } from "next/navigation"
 
-interface Props {
-  params: { slug: string }
+type Params = { slug: string }
+
+/**
+ * Generate static params for each known speaker slug so the redirect page
+ * can be statically optimized while still issuing the proper 308 redirect.
+ */
+export async function generateStaticParams() {
+  const speakers = await getAllSpeakers()
+  return speakers.map((s) => ({ slug: s.slug }))
 }
 
-// This page component handles old speaker URLs (e.g., /speaker-slug)
-// and permanently redirects them to the new structure (/speakers/speaker-slug).
-// Next.js prioritizes static routes, so this will only catch slugs that
-// don't match existing pages like /contact, /our-team, etc.
+/**
+ * Any top-level route like `/adam-cheyer` that conflicts with an existing
+ * speaker slug will be permanently redirected to `/speakers/adam-cheyer`.
+ * All other unmatched slugs will fall through to the Next.js 404 page.
+ */
+export default async function OldSpeakerRedirectPage({
+  params,
+}: {
+  params: Params
+}) {
+  const { slug } = params
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  // We are redirecting, so this metadata is primarily for bots before the redirect happens.
-  const speaker = await getSpeakerBySlug(params.slug)
-  if (speaker) {
-    return {
-      title: `Redirecting to ${speaker.name}'s profile...`,
-      robots: {
-        index: false, // Instruct search engines not to index this redirect page
-        follow: true, // Instruct search engines to follow the link to the new page
-      },
-    }
-  }
-  return {
-    title: "Page Not Found",
-  }
-}
+  // Check if the slug matches a speaker
+  const speakers = await getAllSpeakers()
+  const match = speakers.find((s) => s.slug === slug)
 
-export default async function OldSpeakerRedirectPage({ params }: Props) {
-  if (!params.slug) {
-    notFound()
+  if (match) {
+    // 308 permanent redirect preserves SEO equity
+    redirect(`/speakers/${slug}`, "permanent")
   }
 
-  const speaker = await getSpeakerBySlug(params.slug)
-
-  if (speaker) {
-    // If a speaker is found for the given slug, issue a permanent (308) redirect.
-    // This is crucial for SEO to transfer link equity to the new URL.
-    permanentRedirect(`/speakers/${speaker.slug}`)
-  } else {
-    // If no speaker is found, render the standard 404 page.
-    notFound()
-  }
+  // Not a speaker – show the default 404
+  notFound()
 }
