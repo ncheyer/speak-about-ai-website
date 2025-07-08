@@ -5,10 +5,19 @@ import {
   getBlogPostBySlug as _getPostBySlug,
   getFeaturedBlogPosts as _getFeatured, // Ensure this is exported
   getRelatedBlogPosts as _getRelated,
-  type BlogPost,
 } from "./contentful-blog"
 
-export type { BlogPost }
+/**
+ * Central re-exports so other code can `import { … } from "lib/blog-data"`
+ * without caring where the data ultimately comes from.
+ */
+export {
+  getBlogPosts,
+  getBlogPostBySlug,
+  getFeaturedBlogPosts,
+  getRelatedBlogPosts,
+  type BlogPost,
+} from "./contentful-blog"
 
 export async function getBlogPosts(limit?: number) {
   // Added optional limit parameter

@@ -1,34 +1,26 @@
 /**
- * Lightweight polyfill for environments where Node’s `fs.readdir`
- * and `fs.readdirSync` are not implemented (e.g. edge/browser stubs).
+ * Lightweight polyfill for runtimes where the Node `fs` shim omits
+ * `readdir` / `readdirSync` (e.g. Next.js, edge-runtime).
  *
- * We attach the stubs to a global `fs` object so any downstream
- * library (glob → path-scurry) finds what it needs and keeps going.
+ * We patch only if the functions are missing to avoid interfering
+ * with normal Node.js behaviour in local / server builds.
  *
- * The polyfill is a no-op in full Node.js where the functions exist.
+ * IMPORTANT: there is deliberately **no** `"use client"` directive
+ * so this file can be loaded from either server or client code.
  */
-declare global {
-  // eslint-disable-next-line no-var
-  var fs: any | undefined
+import fs from "fs"
+
+// Async version – always yields an empty array.
+if (typeof (fs as any).readdir !== "function") {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(fs as any).readdir = (...args: any[]) => {
+    const cb = args.pop()
+    if (typeof cb === "function") cb(null, [])
+  }
 }
-;(function applyFsReaddirStub() {
-  // Ensure a global `fs` object exists.
-  if (typeof globalThis.fs === "undefined") {
-    globalThis.fs = {}
-  }
-  const fs = globalThis.fs
 
-  // Async version – always returns an empty array.
-  if (typeof fs.readdir !== "function") {
-    fs.readdir = (_path: string, cb: (err: NodeJS.ErrnoException | null, files: string[]) => void): void => {
-      if (typeof cb === "function") cb(null, [])
-    }
-  }
-
-  // Sync version – always returns an empty array.
-  if (typeof fs.readdirSync !== "function") {
-    fs.readdirSync = (): string[] => []
-  }
-})()
-
-export {}
+// Sync version – always returns an empty array.
+if (typeof (fs as any).readdirSync !== "function") {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(fs as any).readdirSync = () => []
+}
