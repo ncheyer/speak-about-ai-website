@@ -66,11 +66,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/speak-about-ai-logo.png", sizes: "32x32", type: "image/png" },
-      { url: "/speak-about-ai-logo.png", sizes: "16x16", type: "image/png" },
+      { url: "/new-ai-logo.png", sizes: "32x32", type: "image/png" },
+      { url: "/new-ai-logo.png", sizes: "16x16", type: "image/png" },
     ],
-    apple: [{ url: "/speak-about-ai-logo.png", sizes: "180x180", type: "image/png" }],
-    shortcut: "/speak-about-ai-logo.png",
+    apple: [{ url: "/new-ai-logo.png", sizes: "180x180", type: "image/png" }],
+    shortcut: "/new-ai-logo.png",
   },
   generator: "v0.dev",
 }
@@ -83,8 +83,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={montserrat.variable}>
       <head>
-        <link rel="icon" href="/speak-about-ai-logo.png" sizes="any" />
-        <link rel="apple-touch-icon" href="/speak-about-ai-logo.png" />
+        <link rel="icon" href="/new-ai-logo.png" sizes="any" />
+        <link rel="apple-touch-icon" href="/new-ai-logo.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -94,7 +94,7 @@ export default function RootLayout({
               name: "Speak About AI",
               description: "The world's only AI-exclusive speaker bureau",
               url: "https://www.speakabout.ai",
-              logo: "https://www.speakabout.ai/speak-about-ai-logo.png",
+              logo: "https://www.speakabout.ai/new-ai-logo.png",
               contactPoint: {
                 "@type": "ContactPoint",
                 telephone: "+1-415-860-1799",

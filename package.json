@@ -57,6 +57,7 @@
     "cross-env": "^7.0.3",
     "embla-carousel-react": "latest",
     "fs": "latest",
+    "glob": "latest",
     "graphql": "latest",
     "input-otp": "latest",
     "lucide-react": "^0.454.0",

@@ -1,11 +1,33 @@
 import { getAllSpeakers } from "@/lib/speakers-data"
 import { redirect, notFound } from "next/navigation"
-import { readdir } from "fs/promises"
+import { glob } from "glob"
 import path from "path"
 
 // This tells Next.js to render this page dynamically, not at build time.
 // This is crucial to allow redirects to work without build errors.
 export const dynamic = "force-dynamic"
+
+async function getExistingRoutes() {
+  const appDir = path.join(process.cwd(), "app")
+  const files = await glob("**/page.tsx", { cwd: appDir })
+
+  // 'files' will be like: ['(no-nav)/ai-keynote-speakers/page.tsx', 'blog/page.tsx', 'contact/page.tsx', ...]
+  // We need to extract the route segments from these paths.
+  const routes = files
+    .map((file) => {
+      // Get the directory part of the file path
+      const dir = path.dirname(file)
+      // Don't include dynamic routes or the root page
+      if (dir.includes("[") || dir === ".") {
+        return null
+      }
+      // Clean up route group syntax like (no-nav)
+      return dir.replace(/$$[^)]+$$\/?/g, "")
+    })
+    .filter((route): route is string => route !== null && route !== "")
+
+  return new Set(routes)
+}
 
 type Props = {
   params: {
@@ -16,24 +38,9 @@ type Props = {
 export default async function OldSpeakerRedirectPage({ params }: Props) {
   const { slug } = params
 
-  // Get a list of all top-level directories in the `app` folder
-  // to avoid redirecting for actual pages like /contact, /blog, etc.
-  try {
-    const appDir = path.join(process.cwd(), "app")
-    const entries = await readdir(appDir, { withFileTypes: true })
-    const topLevelRoutes = entries
-      .filter((dirent) => dirent.isDirectory())
-      .map((dirent) => dirent.name)
-      // Filter out special nextjs folders and the dynamic slug route itself
-      .filter((name) => !name.startsWith("(") && !name.startsWith("_") && !name.startsWith("[") && name !== "api")
-
-    if (topLevelRoutes.includes(slug)) {
-      notFound()
-      return
-    }
-  } catch (error) {
-    // If we can't read the directory, we can proceed, but log the error.
-    console.error("Could not read app directory for route checking:", error)
+  const existingRoutes = await getExistingRoutes()
+  if (existingRoutes.has(slug)) {
+    notFound()
   }
 
   const speakers = await getAllSpeakers()
