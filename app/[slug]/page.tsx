@@ -1,59 +1,96 @@
-import { getAllSpeakers } from "@/lib/speakers-data"
 import { redirect, notFound } from "next/navigation"
-import { glob } from "glob"
-import path from "path"
+import { getAllSpeakers } from "@/lib/speakers-data"
 
-// This tells Next.js to render this page dynamically, not at build time.
-// This is crucial to allow redirects to work without build errors.
-export const dynamic = "force-dynamic"
+// Define known routes that should not be treated as speaker redirects
+const KNOWN_ROUTES = [
+  "blog",
+  "contact",
+  "speakers",
+  "our-services",
+  "our-team",
+  "privacy",
+  "terms",
+  "industries",
+  "ai-keynote-speakers",
+  "top-ai-speakers-2025",
+  "test-favicon",
+  "debug",
+  "admin",
+  "api",
+]
 
-async function getExistingRoutes() {
-  const appDir = path.join(process.cwd(), "app")
-  const files = await glob("**/page.tsx", { cwd: appDir })
-
-  // 'files' will be like: ['(no-nav)/ai-keynote-speakers/page.tsx', 'blog/page.tsx', 'contact/page.tsx', ...]
-  // We need to extract the route segments from these paths.
-  const routes = files
-    .map((file) => {
-      // Get the directory part of the file path
-      const dir = path.dirname(file)
-      // Don't include dynamic routes or the root page
-      if (dir.includes("[") || dir === ".") {
-        return null
-      }
-      // Clean up route group syntax like (no-nav)
-      return dir.replace(/$$[^)]+$$\/?/g, "")
-    })
-    .filter((route): route is string => route !== null && route !== "")
-
-  return new Set(routes)
+interface CatchAllPageProps {
+  params: Promise<{ slug: string }>
 }
 
-type Props = {
-  params: {
-    slug: string
-  }
-}
+export default async function CatchAllPage({ params }: CatchAllPageProps) {
+  const { slug } = await params
 
-export default async function OldSpeakerRedirectPage({ params }: Props) {
-  const { slug } = params
-
-  const existingRoutes = await getExistingRoutes()
-  if (existingRoutes.has(slug)) {
+  // Check if this is a known route that should not be redirected
+  if (KNOWN_ROUTES.includes(slug)) {
     notFound()
   }
 
+  // Get all speakers and check if this slug matches a speaker
   const speakers = await getAllSpeakers()
-  const speakerExists = speakers.some((speaker) => speaker.slug === slug)
+  const speaker = speakers.find((s) => s.slug === slug)
 
-  if (speakerExists) {
-    // Issue a permanent redirect (308) for SEO purposes
-    redirect(`/speakers/${slug}`, "permanent")
-  } else {
-    // If the slug doesn't match a speaker, show a 404 page
-    notFound()
+  if (speaker) {
+    // Redirect to the new speaker URL structure
+    // Note: redirect() throws internally, so don't wrap in try-catch
+    redirect(`/speakers/${slug}`)
   }
 
-  // This part is never reached
-  return null
+  // No speaker found with this slug, show 404
+  notFound()
+}
+
+// Generate static params for known speaker slugs
+export async function generateStaticParams() {
+  try {
+    const speakers = await getAllSpeakers()
+    return speakers.map((speaker) => ({
+      slug: speaker.slug,
+    }))
+  } catch (error) {
+    console.error("Error generating static params:", error)
+    return []
+  }
+}
+
+// Generate metadata for speaker redirects
+export async function generateMetadata({ params }: CatchAllPageProps) {
+  try {
+    const { slug } = await params
+    const speakers = await getAllSpeakers()
+    const speaker = speakers.find((s) => s.slug === slug)
+
+    if (speaker) {
+      return {
+        title: `${speaker.name} - AI Keynote Speaker | Speak About AI`,
+        description: `Book ${speaker.name} for your next event. ${speaker.bio?.substring(0, 150) || "Expert AI keynote speaker"}...`,
+        robots: {
+          index: false, // Don't index redirect pages
+          follow: false,
+        },
+      }
+    }
+
+    return {
+      title: "Page Not Found | Speak About AI",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    }
+  } catch (error) {
+    console.error("Error generating metadata:", error)
+    return {
+      title: "Page Not Found | Speak About AI",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    }
+  }
 }

@@ -1,25 +1,33 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Montserrat } from "next/font/google"
+import { Inter } from "next/font/google"
 import "./globals.css"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
+import TrackingScripts from "@/components/tracking-scripts"
 import PipedriveChat from "@/components/pipedrive-chat"
 import { ScrollToTopProvider } from "@/components/scroll-to-top-provider"
-import Script from "next/script"
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  variable: "--font-montserrat",
-  display: "swap",
-})
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Book AI Keynote Speakers | Speak About AI",
+  title: {
+    default: "Speak About AI - Premier AI Keynote Speakers Bureau",
+    template: "%s | Speak About AI",
+  },
   description:
-    "Book top AI keynote speakers & tech visionaries with Speak About AI, the world's only AI-exclusive speaker bureau. Find experts for your event.",
-  keywords:
-    "AI keynote speakers, book AI speakers, artificial intelligence speakers, AI conference speakers, machine learning speakers, tech keynote speakers",
+    "Book world-class AI keynote speakers for your next event. Our expert speakers include AI pioneers, researchers, and industry leaders who deliver engaging presentations on artificial intelligence, machine learning, and the future of technology.",
+  keywords: [
+    "AI speakers",
+    "keynote speakers",
+    "artificial intelligence",
+    "machine learning",
+    "technology speakers",
+    "AI experts",
+    "conference speakers",
+  ],
   authors: [{ name: "Speak About AI" }],
   creator: "Speak About AI",
   publisher: "Speak About AI",
@@ -28,30 +36,33 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://www.speakabout.ai"),
+  metadataBase: new URL("https://speakaboutai.com"),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "Book AI Keynote Speakers | Speak About AI",
-    description:
-      "Book top AI keynote speakers & tech visionaries with Speak About AI, the AI-exclusive bureau. Find experts for your event.",
-    url: "https://www.speakabout.ai",
+    type: "website",
+    locale: "en_US",
+    url: "https://speakaboutai.com",
     siteName: "Speak About AI",
+    title: "Speak About AI - Premier AI Keynote Speakers Bureau",
+    description:
+      "Book world-class AI keynote speakers for your next event. Our expert speakers include AI pioneers, researchers, and industry leaders.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/new-ai-logo.png",
         width: 1200,
         height: 630,
-        alt: "Speak About AI - Book Top AI Keynote Speakers",
+        alt: "Speak About AI Logo",
       },
     ],
-    locale: "en_US",
-    type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Book AI Keynote Speakers | Speak About AI",
+    title: "Speak About AI - Premier AI Keynote Speakers Bureau",
     description:
-      "Book top AI keynote speakers & tech visionaries with Speak About AI, the AI-exclusive bureau. Find experts for your event.",
-    images: ["/og-image.jpg"],
+      "Book world-class AI keynote speakers for your next event. Our expert speakers include AI pioneers, researchers, and industry leaders.",
+    images: ["/new-ai-logo.png"],
   },
   robots: {
     index: true,
@@ -72,7 +83,8 @@ export const metadata: Metadata = {
     apple: [{ url: "/new-ai-logo.png", sizes: "180x180", type: "image/png" }],
     shortcut: "/new-ai-logo.png",
   },
-  generator: "v0.dev",
+  manifest: "/site.webmanifest",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -81,66 +93,24 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={montserrat.variable}>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/new-ai-logo.png" sizes="any" />
         <link rel="apple-touch-icon" href="/new-ai-logo.png" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              name: "Speak About AI",
-              description: "The world's only AI-exclusive speaker bureau",
-              url: "https://www.speakabout.ai",
-              logo: "https://www.speakabout.ai/new-ai-logo.png",
-              contactPoint: {
-                "@type": "ContactPoint",
-                telephone: "+1-415-860-1799",
-                contactType: "customer service",
-                email: "booking@speakabout.ai",
-              },
-              sameAs: ["https://linkedin.com/company/speakaboutai", "https://twitter.com/speakaboutai"],
-            }),
-          }}
-        />
-        <script
-          id="hotjar-init"
-          dangerouslySetInnerHTML={{
-            __html: `
-            (function(h,o,t,j,a,r){
-                h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
-                h._hjSettings={hjid:6446085,hjsv:6};
-                a=o.getElementsByTagName('head')[0];
-                r=o.createElement('script');r.async=1;
-                r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
-                a.appendChild(r);
-            })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
-          `,
-          }}
-        />
+        <TrackingScripts />
       </head>
-      <body className={montserrat.className}>
-        <Script strategy="afterInteractive" src="https://www.googletagmanager.com/gtag/js?id=AW-16583607648" />
-        <Script
-          id="gtag-init"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'AW-16583607648');
-      `,
-          }}
-        />
-        <ScrollToTopProvider>
-          <Header />
-          {children}
-          <Footer />
-          <PipedriveChat />
-        </ScrollToTopProvider>
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+          <ScrollToTopProvider>
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <Toaster />
+            <PipedriveChat />
+          </ScrollToTopProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
