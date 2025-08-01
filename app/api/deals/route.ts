@@ -16,15 +16,30 @@ export async function GET(request: NextRequest) {
       deals = await getAllDeals()
     }
 
-    return NextResponse.json({ deals })
+    return NextResponse.json(deals)
   } catch (error) {
     console.error("Error in GET /api/deals:", error)
+
+    let errorMessage = "Failed to fetch deals"
+    let statusCode = 500
+
+    if (error instanceof Error) {
+      if (error.message.includes("does not exist")) {
+        errorMessage = "Database table not found. Please run the setup script."
+        statusCode = 503
+      } else if (error.message.includes("DATABASE_URL")) {
+        errorMessage = "Database configuration error"
+        statusCode = 503
+      }
+    }
+
     return NextResponse.json(
       {
-        error: "Failed to fetch deals",
+        error: errorMessage,
         details: error instanceof Error ? error.message : "Unknown error",
+        tableExists: false,
       },
-      { status: 500 },
+      { status: statusCode },
     )
   }
 }
@@ -64,7 +79,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to create deal" }, { status: 500 })
     }
 
-    return NextResponse.json({ deal }, { status: 201 })
+    return NextResponse.json(deal, { status: 201 })
   } catch (error) {
     console.error("Error in POST /api/deals:", error)
     return NextResponse.json(

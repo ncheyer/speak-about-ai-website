@@ -4,7 +4,7 @@ import { updateDeal, deleteDeal } from "@/lib/deals-db"
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = Number.parseInt(params.id)
-    if (isNaN(id)) {
+    if (Number.isNaN(id)) {
       return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
     }
 
@@ -15,7 +15,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Deal not found or failed to update" }, { status: 404 })
     }
 
-    return NextResponse.json({ deal })
+    return NextResponse.json(deal)
   } catch (error) {
     console.error("Error in PUT /api/deals/[id]:", error)
     return NextResponse.json(
@@ -31,7 +31,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = Number.parseInt(params.id)
-    if (isNaN(id)) {
+    if (Number.isNaN(id)) {
       return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
     }
 

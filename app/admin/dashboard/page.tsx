@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   TrendingUp,
   DollarSign,
@@ -28,6 +29,9 @@ import {
   BarChart3,
   CheckSquare,
   Loader2,
+  AlertTriangle,
+  Database,
+  ExternalLink,
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -84,6 +88,8 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [databaseError, setDatabaseError] = useState<string | null>(null)
+  const [tableExists, setTableExists] = useState(true)
 
   const [formData, setFormData] = useState({
     clientName: "",
@@ -119,19 +125,32 @@ export default function AdminDashboard() {
   const loadDeals = async () => {
     try {
       setLoading(true)
+      setDatabaseError(null)
       const response = await fetch("/api/deals")
+
       if (response.ok) {
         const dealsData = await response.json()
         setDeals(dealsData)
+        setTableExists(true)
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to load deals",
-          variant: "destructive",
-        })
+        const errorData = await response.json()
+
+        if (response.status === 503 && errorData.tableExists === false) {
+          setTableExists(false)
+          setDatabaseError("The deals table doesn't exist in your database. Please run the setup script to create it.")
+          setDeals([])
+        } else {
+          setDatabaseError(errorData.error || "Failed to load deals")
+          toast({
+            title: "Error",
+            description: errorData.error || "Failed to load deals",
+            variant: "destructive",
+          })
+        }
       }
     } catch (error) {
       console.error("Error loading deals:", error)
+      setDatabaseError("Failed to connect to the database")
       toast({
         title: "Error",
         description: "Failed to load deals",
@@ -219,9 +238,10 @@ export default function AdminDashboard() {
         setEditingDeal(null)
         loadDeals()
       } else {
+        const errorData = await response.json()
         toast({
           title: "Error",
-          description: "Failed to save deal",
+          description: errorData.error || "Failed to save deal",
           variant: "destructive",
         })
       }
@@ -307,7 +327,13 @@ export default function AdminDashboard() {
                 Project Management
               </Button>
             </Link>
-            <Button onClick={() => setShowCreateForm(true)}>
+            <Link href="/debug-neon">
+              <Button variant="outline">
+                <Database className="mr-2 h-4 w-4" />
+                Debug Database
+              </Button>
+            </Link>
+            <Button onClick={() => setShowCreateForm(true)} disabled={!tableExists}>
               <Plus className="mr-2 h-4 w-4" />
               New Deal
             </Button>
@@ -317,6 +343,29 @@ export default function AdminDashboard() {
             </Button>
           </div>
         </div>
+
+        {/* Database Error Alert */}
+        {databaseError && !tableExists && (
+          <Alert className="mb-8 border-yellow-200 bg-yellow-50">
+            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+            <AlertTitle className="text-yellow-800">Database Setup Required</AlertTitle>
+            <AlertDescription className="text-yellow-700">
+              <p className="mb-3">{databaseError}</p>
+              <div className="flex gap-2">
+                <Link href="/debug-neon">
+                  <Button size="sm" variant="outline" className="bg-white">
+                    <Database className="mr-2 h-4 w-4" />
+                    Debug Database
+                  </Button>
+                </Link>
+                <Button size="sm" onClick={loadDeals} variant="outline" className="bg-white">
+                  <Loader2 className="mr-2 h-4 w-4" />
+                  Retry Connection
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -359,40 +408,42 @@ export default function AdminDashboard() {
         </div>
 
         {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search deals..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
+        {tableExists && (
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Search deals..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="lead">New Leads</SelectItem>
+                    <SelectItem value="qualified">Qualified</SelectItem>
+                    <SelectItem value="proposal">Proposal Sent</SelectItem>
+                    <SelectItem value="negotiation">Negotiating</SelectItem>
+                    <SelectItem value="won">Won</SelectItem>
+                    <SelectItem value="lost">Lost</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="lead">New Leads</SelectItem>
-                  <SelectItem value="qualified">Qualified</SelectItem>
-                  <SelectItem value="proposal">Proposal Sent</SelectItem>
-                  <SelectItem value="negotiation">Negotiating</SelectItem>
-                  <SelectItem value="won">Won</SelectItem>
-                  <SelectItem value="lost">Lost</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Create/Edit Form */}
-        {showCreateForm && (
+        {showCreateForm && tableExists && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>{editingDeal ? "Edit Deal" : "Create New Deal"}</CardTitle>
@@ -632,9 +683,32 @@ export default function AdminDashboard() {
 
         {/* Deals List */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900">Active Deals ({filteredDeals.length})</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Active Deals ({tableExists ? filteredDeals.length : 0})</h2>
 
-          {filteredDeals.length === 0 ? (
+          {!tableExists ? (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Database className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Database Setup Required</h3>
+                <p className="text-gray-500 mb-4">
+                  The deals table doesn't exist in your database. Please run the setup script to get started.
+                </p>
+                <div className="flex justify-center gap-2">
+                  <Link href="/debug-neon">
+                    <Button>
+                      <Database className="mr-2 h-4 w-4" />
+                      Debug Database
+                      <ExternalLink className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Button variant="outline" onClick={loadDeals}>
+                    <Loader2 className="mr-2 h-4 w-4" />
+                    Retry Connection
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : filteredDeals.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
                 <p className="text-gray-500 mb-4">No deals found</p>

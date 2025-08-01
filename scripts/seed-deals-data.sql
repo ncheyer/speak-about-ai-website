@@ -113,4 +113,68 @@ INSERT INTO deals (
     'qualified', 'urgent', 'Trade Publication',
     'Large automotive event. Multiple speaking opportunities available.',
     '2024-01-28', '2024-02-05'
+),
+(
+    'Sarah Johnson', 'sarah@techcorp.com', '+1-555-0123', 'TechCorp Inc',
+    'AI Innovation Summit 2024', '2024-09-15', 'San Francisco, CA', 'Corporate Conference',
+    'Adam Cheyer (Siri Co-Founder)', 500, '$50,000 - $75,000', 65000.00,
+    'proposal', 'high', 'Website Contact Form', 
+    'Large corporate event, very interested in AI keynote speakers. Budget confirmed.',
+    '2024-01-18', '2024-01-22'
+),
+(
+    'Michael Chen', 'm.chen@startup.io', '+1-555-0456', 'InnovateTech Startup',
+    'Startup Tech Conference', '2024-08-20', 'Austin, TX', 'Tech Conference',
+    'Machine Learning Expert', 200, '$15,000 - $25,000', 20000.00,
+    'negotiation', 'medium', 'LinkedIn Outreach',
+    'Startup looking for affordable ML speaker. Flexible on dates.',
+    '2024-01-19', '2024-01-25'
+),
+(
+    'Jennifer Williams', 'jwilliams@university.edu', '+1-555-0789', 'Stanford University',
+    'AI Ethics Symposium', '2024-10-05', 'Palo Alto, CA', 'Academic Conference',
+    'AI Ethics Expert', 150, '$10,000 - $20,000', 15000.00,
+    'qualified', 'medium', 'Referral',
+    'Academic event focused on AI ethics and responsible AI development.',
+    '2024-01-16', '2024-01-23'
+),
+(
+    'David Rodriguez', 'david.r@healthtech.com', '+1-555-0321', 'HealthTech Solutions',
+    'Healthcare AI Summit', '2024-11-12', 'Boston, MA', 'Healthcare Conference',
+    'Healthcare AI Specialist', 300, '$30,000 - $45,000', 38000.00,
+    'lead', 'high', 'Website Contact Form',
+    'Healthcare company interested in AI applications in medicine.',
+    '2024-01-20', '2024-01-24'
+),
+(
+    'Lisa Park', 'lisa.park@retailcorp.com', '+1-555-0654', 'RetailCorp',
+    'Retail Innovation Day', '2024-07-30', 'Chicago, IL', 'Corporate Workshop',
+    'Retail AI Expert', 100, '$20,000 - $30,000', 25000.00,
+    'won', 'medium', 'Cold Email',
+    'Successfully closed deal for retail AI workshop. Payment confirmed.',
+    '2024-01-15', NULL
+),
+(
+    'Robert Kim', 'robert@financeplus.com', '+1-555-0987', 'FinancePlus',
+    'Financial AI Conference', '2024-12-08', 'New York, NY', 'Financial Conference',
+    'FinTech AI Speaker', 400, '$40,000 - $60,000', 52000.00,
+    'proposal', 'urgent', 'Industry Referral',
+    'Large financial services company. Decision needed by end of month.',
+    '2024-01-21', '2024-01-26'
+),
+(
+    'Amanda Foster', 'amanda@edutech.org', '+1-555-0147', 'EduTech Foundation',
+    'Education Technology Summit', '2024-06-18', 'Seattle, WA', 'Education Conference',
+    'EdTech AI Specialist', 250, '$18,000 - $28,000', 22000.00,
+    'qualified', 'low', 'Conference Networking',
+    'Non-profit education organization. Budget approval in progress.',
+    '2024-01-17', '2024-01-28'
+),
+(
+    'James Wilson', 'james.wilson@autotech.com', '+1-555-0258', 'AutoTech Industries',
+    'Automotive AI Expo', '2024-09-25', 'Detroit, MI', 'Industry Expo',
+    'Automotive AI Expert', 600, '$60,000 - $80,000', 70000.00,
+    'lost', 'high', 'Trade Show',
+    'Lost to competitor. Price was too high for their budget.',
+    '2024-01-14', NULL
 );
