@@ -35,6 +35,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import { DealsKanban } from "@/components/deals-kanban"
 
 interface Deal {
   id: number
@@ -682,9 +683,9 @@ export default function AdminDashboard() {
           </Card>
         )}
 
-        {/* Deals List */}
+        {/* Deals Kanban View */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900">Active Deals ({tableExists ? filteredDeals.length : 0})</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Deal Pipeline</h2>
 
           {!tableExists ? (
             <Card>
@@ -709,100 +710,8 @@ export default function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
-          ) : filteredDeals.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <p className="text-gray-500 mb-4">No deals found</p>
-                <Button onClick={() => setShowCreateForm(true)}>Create Your First Deal</Button>
-              </CardContent>
-            </Card>
           ) : (
-            <div className="grid grid-cols-1 gap-6">
-              {filteredDeals.map((deal) => (
-                <Card key={deal.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <CardTitle className="text-xl">{deal.event_title}</CardTitle>
-                          <Badge className={`${DEAL_STATUSES[deal.status].color} text-white`}>
-                            {DEAL_STATUSES[deal.status].label}
-                          </Badge>
-                          <Badge className={PRIORITY_COLORS[deal.priority]}>{deal.priority.toUpperCase()}</Badge>
-                        </div>
-                        <CardDescription>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                            <div>
-                              <p className="font-semibold text-gray-900">{deal.client_name}</p>
-                              <p className="text-sm">{deal.company}</p>
-                              <div className="flex items-center text-sm text-gray-600 mt-1">
-                                <Mail className="mr-1 h-3 w-3" />
-                                {deal.client_email}
-                              </div>
-                              <div className="flex items-center text-sm text-gray-600">
-                                <Phone className="mr-1 h-3 w-3" />
-                                {deal.client_phone}
-                              </div>
-                            </div>
-                            <div>
-                              <div className="flex items-center text-sm text-gray-600">
-                                <Calendar className="mr-1 h-3 w-3" />
-                                {new Date(deal.event_date).toLocaleDateString()}
-                              </div>
-                              <div className="flex items-center text-sm text-gray-600 mt-1">
-                                <MapPin className="mr-1 h-3 w-3" />
-                                {deal.event_location}
-                              </div>
-                              <div className="flex items-center text-sm text-gray-600 mt-1">
-                                <Users className="mr-1 h-3 w-3" />
-                                {deal.attendee_count} attendees
-                              </div>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">
-                                <strong>Deal Value:</strong> ${deal.deal_value.toLocaleString()}
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                <strong>Budget:</strong> {deal.budget_range}
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                <strong>Source:</strong> {deal.source}
-                              </p>
-                              {deal.next_follow_up && (
-                                <div className="flex items-center text-sm text-orange-600 mt-1">
-                                  <Clock className="mr-1 h-3 w-3" />
-                                  Follow-up: {new Date(deal.next_follow_up).toLocaleDateString()}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CardDescription>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="ghost" onClick={() => setSelectedDeal(deal)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => handleEdit(deal)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {deal.speaker_requested && (
-                      <p className="text-sm text-gray-600 mb-2">
-                        <strong>Speaker Requested:</strong> {deal.speaker_requested}
-                      </p>
-                    )}
-                    {deal.notes && (
-                      <p className="text-sm text-gray-600">
-                        <strong>Notes:</strong> {deal.notes}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <DealsKanban />
           )}
         </div>
 
