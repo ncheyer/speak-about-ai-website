@@ -1,5 +1,5 @@
-// Simple in-memory data store for v0.dev compatibility
-// In production, this would be replaced with a real database
+// Data store that switches between Google Sheets and in-memory storage
+// Uses Google Sheets if properly configured, otherwise falls back to in-memory
 
 export interface User {
   id: string
@@ -35,131 +35,101 @@ export interface EventAttendee {
   createdAt: Date
 }
 
-// In-memory storage
-let users: User[] = []
-let events: Event[] = []
-let attendees: EventAttendee[] = []
+// Check if Google Sheets is properly configured
+const isGoogleSheetsConfigured = () => {
+  return !!(
+    process.env.GOOGLE_SPREADSHEET_ID && 
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && 
+    process.env.GOOGLE_PRIVATE_KEY
+  )
+}
 
-// User functions
+// Dynamic import and export of the appropriate data store
+let dbModule: any = null
+
+async function getDb() {
+  if (!dbModule) {
+    if (isGoogleSheetsConfigured()) {
+      console.log('🔗 Using Google Sheets as database')
+      const module = await import('./sheets-data-store')
+      dbModule = module.db
+    } else {
+      console.log('💾 Using in-memory database')
+      const module = await import('./memory-data-store')
+      dbModule = module.db
+    }
+  }
+  return dbModule
+}
+
+// Export database functions that dynamically choose the implementation
 export const db = {
   user: {
     create: async (data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> => {
-      const user: User = {
-        ...data,
-        id: Math.random().toString(36).substring(2, 9),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-      users.push(user)
-      return user
+      const database = await getDb()
+      return database.user.create(data)
     },
     
     findUnique: async ({ where }: { where: { id?: string; email?: string } }): Promise<User | null> => {
-      if (where.id) {
-        return users.find(u => u.id === where.id) || null
-      }
-      if (where.email) {
-        return users.find(u => u.email === where.email) || null
-      }
-      return null
+      const database = await getDb()
+      return database.user.findUnique({ where })
     },
     
     update: async ({ where, data }: { where: { id: string }; data: Partial<User> }): Promise<User> => {
-      const index = users.findIndex(u => u.id === where.id)
-      if (index === -1) throw new Error('User not found')
-      
-      users[index] = {
-        ...users[index],
-        ...data,
-        updatedAt: new Date(),
-      }
-      return users[index]
+      const database = await getDb()
+      return database.user.update({ where, data })
     },
   },
   
   event: {
     create: async (data: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>): Promise<Event> => {
-      const event: Event = {
-        ...data,
-        id: Math.random().toString(36).substring(2, 9),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-      events.push(event)
-      return event
+      const database = await getDb()
+      return database.event.create(data)
     },
     
     findMany: async ({ where, orderBy }: { 
       where?: { userId?: string; published?: boolean }; 
       orderBy?: { date?: 'asc' | 'desc' } 
     } = {}): Promise<Event[]> => {
-      let result = [...events]
-      
-      if (where?.userId) {
-        result = result.filter(e => e.userId === where.userId)
-      }
-      if (where?.published !== undefined) {
-        result = result.filter(e => e.published === where.published)
-      }
-      
-      if (orderBy?.date) {
-        result.sort((a, b) => {
-          const diff = a.date.getTime() - b.date.getTime()
-          return orderBy.date === 'asc' ? diff : -diff
-        })
-      }
-      
-      return result
+      const database = await getDb()
+      return database.event.findMany({ where, orderBy })
     },
     
     findUnique: async ({ where }: { where: { id: string } }): Promise<Event | null> => {
-      return events.find(e => e.id === where.id) || null
+      const database = await getDb()
+      return database.event.findUnique({ where })
     },
     
     update: async ({ where, data }: { where: { id: string }; data: Partial<Event> }): Promise<Event> => {
-      const index = events.findIndex(e => e.id === where.id)
-      if (index === -1) throw new Error('Event not found')
-      
-      events[index] = {
-        ...events[index],
-        ...data,
-        updatedAt: new Date(),
-      }
-      return events[index]
+      const database = await getDb()
+      return database.event.update({ where, data })
     },
     
     delete: async ({ where }: { where: { id: string } }): Promise<void> => {
-      const index = events.findIndex(e => e.id === where.id)
-      if (index === -1) throw new Error('Event not found')
-      events.splice(index, 1)
+      const database = await getDb()
+      return database.event.delete({ where })
     },
   },
   
   eventAttendee: {
     create: async (data: Omit<EventAttendee, 'id' | 'createdAt'>): Promise<EventAttendee> => {
-      const attendee: EventAttendee = {
-        ...data,
-        id: Math.random().toString(36).substring(2, 9),
-        createdAt: new Date(),
-      }
-      attendees.push(attendee)
-      return attendee
+      const database = await getDb()
+      return database.eventAttendee.create(data)
     },
     
     findMany: async ({ where }: { where?: { eventId?: string } } = {}): Promise<EventAttendee[]> => {
-      if (where?.eventId) {
-        return attendees.filter(a => a.eventId === where.eventId)
-      }
-      return [...attendees]
+      const database = await getDb()
+      return database.eventAttendee.findMany({ where })
     },
     
     count: async ({ where }: { where: { eventId: string } }): Promise<number> => {
-      return attendees.filter(a => a.eventId === where.eventId).length
+      const database = await getDb()
+      return database.eventAttendee.count({ where })
     },
   },
 }
 
-// Helper to get event with attendee count
+// Helper functions
 export async function getEventWithAttendeeCount(eventId: string) {
   const event = await db.event.findUnique({ where: { id: eventId } })
   if (!event) return null
@@ -173,7 +143,6 @@ export async function getEventWithAttendeeCount(eventId: string) {
   }
 }
 
-// Helper to get all events with attendee counts for a user
 export async function getUserEventsWithAttendees(userId: string) {
   const userEvents = await db.event.findMany({ 
     where: { userId },
