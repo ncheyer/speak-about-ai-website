@@ -28,6 +28,33 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const id = Number.parseInt(params.id)
+    if (Number.isNaN(id)) {
+      return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
+    }
+
+    const body = await request.json()
+    const deal = await updateDeal(id, body)
+
+    if (!deal) {
+      return NextResponse.json({ error: "Deal not found or failed to update" }, { status: 404 })
+    }
+
+    return NextResponse.json(deal)
+  } catch (error) {
+    console.error("Error in PATCH /api/deals/[id]:", error)
+    return NextResponse.json(
+      {
+        error: "Failed to update deal",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
+  }
+}
+
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = Number.parseInt(params.id)
