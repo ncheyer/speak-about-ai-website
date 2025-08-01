@@ -4,8 +4,12 @@ import { updateDeal, deleteDeal } from "@/lib/deals-db"
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = Number.parseInt(params.id)
-    const dealData = await request.json()
 
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
+    }
+
+    const dealData = await request.json()
     const deal = await updateDeal(id, dealData)
 
     if (!deal) {
@@ -15,13 +19,24 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json(deal)
   } catch (error) {
     console.error("Error in PUT /api/deals/[id]:", error)
-    return NextResponse.json({ error: "Failed to update deal" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Failed to update deal",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
   }
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = Number.parseInt(params.id)
+
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
+    }
+
     const success = await deleteDeal(id)
 
     if (!success) {
@@ -31,6 +46,12 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     return NextResponse.json({ message: "Deal deleted successfully" })
   } catch (error) {
     console.error("Error in DELETE /api/deals/[id]:", error)
-    return NextResponse.json({ error: "Failed to delete deal" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Failed to delete deal",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
   }
 }
