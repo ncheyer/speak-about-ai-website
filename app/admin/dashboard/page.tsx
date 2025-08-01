@@ -130,15 +130,15 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         const dealsData = await response.json()
-        setDeals(dealsData)
+        setDeals(Array.isArray(dealsData) ? dealsData : dealsData.deals || [])
         setTableExists(true)
       } else {
         const errorData = await response.json()
+        setDeals([])
 
         if (response.status === 503 && errorData.tableExists === false) {
           setTableExists(false)
           setDatabaseError("The deals table doesn't exist in your database. Please run the setup script to create it.")
-          setDeals([])
         } else {
           setDatabaseError(errorData.error || "Failed to load deals")
           toast({
@@ -150,6 +150,7 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Error loading deals:", error)
+      setDeals([])
       setDatabaseError("Failed to connect to the database")
       toast({
         title: "Error",
