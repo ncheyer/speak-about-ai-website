@@ -24,8 +24,10 @@ import {
   MapPin,
   Clock,
   LogOut,
-  BarChart3
+  BarChart3,
+  CheckSquare
 } from "lucide-react"
+import Link from "next/link"
 
 interface Deal {
   id: string
@@ -289,6 +291,12 @@ export default function AdminDashboard() {
             <p className="mt-2 text-gray-600">Manage deals and event bookings</p>
           </div>
           <div className="flex gap-4">
+            <Link href="/admin/projects">
+              <Button variant="outline">
+                <CheckSquare className="mr-2 h-4 w-4" />
+                Project Management
+              </Button>
+            </Link>
             <Button onClick={() => setShowCreateForm(true)}>
               <Plus className="mr-2 h-4 w-4" />
               New Deal
