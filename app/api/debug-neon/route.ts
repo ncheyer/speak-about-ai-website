@@ -7,25 +7,23 @@ export async function GET() {
     if (!process.env.DATABASE_URL) {
       return NextResponse.json(
         {
+          success: false,
           error: "DATABASE_URL environment variable is not set",
-          availableEnvVars: Object.keys(process.env).filter(
-            (key) => key.includes("DATABASE") || key.includes("POSTGRES") || key.includes("NEON"),
-          ),
+          details: "The Neon integration may not be properly configured",
         },
         { status: 500 },
       )
     }
 
-    console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL)
-    console.log("DATABASE_URL starts with:", process.env.DATABASE_URL?.substring(0, 20))
-
-    // Try to create the SQL client
     const sql = neon(process.env.DATABASE_URL)
 
     // Test basic connection
-    const result = await sql`SELECT NOW() as current_time, version() as postgres_version`
+    console.log("Testing database connection...")
+    await sql`SELECT 1 as test`
+    console.log("Database connection successful")
 
-    // Test if deals table exists
+    // Check if deals table exists
+    console.log("Checking if deals table exists...")
     const tableCheck = await sql`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -34,25 +32,45 @@ export async function GET() {
       ) as table_exists
     `
 
+    const tableExists = tableCheck[0]?.table_exists || false
+    console.log("Deals table exists:", tableExists)
+
+    // If table exists, get row count
+    let rowCount = 0
+    if (tableExists) {
+      const countResult = await sql`SELECT COUNT(*) as count FROM deals`
+      rowCount = Number.parseInt(countResult[0]?.count || "0")
+      console.log("Deals table row count:", rowCount)
+    }
+
+    // Get database info
+    const dbInfo = await sql`
+      SELECT 
+        current_database() as database_name,
+        current_user as user_name,
+        version() as postgres_version
+    `
+
     return NextResponse.json({
       success: true,
       connection: "Connected successfully",
-      currentTime: result[0]?.current_time,
-      postgresVersion: result[0]?.postgres_version,
-      dealsTableExists: tableCheck[0]?.table_exists,
-      databaseUrl: process.env.DATABASE_URL ? "Set (hidden for security)" : "Not set",
+      database: dbInfo[0]?.database_name,
+      user: dbInfo[0]?.user_name,
+      version: dbInfo[0]?.postgres_version,
+      tableExists,
+      rowCount,
+      message: tableExists
+        ? `Deals table exists with ${rowCount} rows`
+        : "Deals table does not exist. Run the create-deals-table.sql script.",
     })
   } catch (error) {
-    console.error("Neon connection error:", error)
+    console.error("Database connection error:", error)
 
     return NextResponse.json(
       {
-        error: "Failed to connect to Neon database",
-        details: error instanceof Error ? error.message : "Unknown error",
-        databaseUrl: process.env.DATABASE_URL ? "Set (hidden for security)" : "Not set",
-        availableEnvVars: Object.keys(process.env).filter(
-          (key) => key.includes("DATABASE") || key.includes("POSTGRES") || key.includes("NEON"),
-        ),
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown database error",
+        details: "Check your DATABASE_URL and network connectivity",
       },
       { status: 500 },
     )

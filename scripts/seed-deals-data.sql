@@ -6,20 +6,20 @@ INSERT INTO deals (
     status, priority, source, notes, last_contact, next_follow_up
 ) VALUES 
 (
-    'Sarah Johnson', 'sarah.johnson@techcorp.com', '+1-555-0123', 'TechCorp Inc.',
-    'AI Innovation Summit 2024', '2024-06-15', 'San Francisco, CA', 'Conference',
-    'Peter Norvig', 500, '$50,000-$100,000', 75000.00,
+    'Sarah Johnson', 'sarah.johnson@techcorp.com', '+1-555-0123', 'TechCorp Industries',
+    'Annual Technology Summit 2024', '2024-06-15', 'San Francisco, CA', 'Corporate Conference',
+    'Peter Norvig', 500, '$50,000-$75,000', 65000.00,
     'proposal', 'high', 'Website Contact Form',
     'Interested in AI keynote speaker for their annual summit. Budget confirmed.',
     '2024-01-15', '2024-01-22'
 ),
 (
     'Michael Chen', 'mchen@healthplus.org', '+1-555-0456', 'HealthPlus Medical',
-    'Healthcare AI Workshop', '2024-05-20', 'Boston, MA', 'Workshop',
-    'Dr. Shafi Ahmed', 150, '$20,000-$50,000', 35000.00,
-    'negotiation', 'medium', 'LinkedIn',
-    'Looking for healthcare AI expert for medical staff training workshop.',
-    '2024-01-10', '2024-01-18'
+    'Healthcare Innovation Conference', '2024-05-20', 'Boston, MA', 'Medical Conference',
+    'Dr. Shafi Ahmed', 300, '$25,000-$50,000', 35000.00,
+    'negotiation', 'urgent', 'Referral',
+    'Looking for healthcare AI expert. Price negotiation in progress.',
+    '2024-01-18', '2024-01-25'
 ),
 (
     'Emily Rodriguez', 'emily.r@financeworld.com', '+1-555-0789', 'Finance World LLC',
@@ -68,4 +68,49 @@ INSERT INTO deals (
     'qualified', 'medium', 'Startup Network',
     'Bootcamp for early-stage AI startups. Looking for practical AI guidance.',
     '2024-01-11', '2024-01-19'
+),
+(
+    'David Park', 'dpark@manufacturing.co', '+1-555-0321',
+    'Advanced Manufacturing Co', 'Industry 4.0 Summit',
+    '2024-08-05', 'Detroit, MI', 'Industry Conference',
+    'Tatyana Mamut', 200, '$25,000-$50,000', 40000.00,
+    'lead', 'medium', 'Cold Email',
+    'Initial inquiry about AI in manufacturing. Need to qualify budget.',
+    '2024-01-22', '2024-01-29'
+),
+(
+    'Lisa Thompson', 'lisa@retailsummit.org', '+1-555-0654',
+    'National Retail Summit', 'Retail Innovation 2024',
+    '2024-09-12', 'Chicago, IL', 'Retail Conference',
+    'Allie K. Miller', 400, '$50,000-$75,000', 55000.00,
+    'won', 'high', 'Past Client',
+    'Contract signed! Payment terms: 50% upfront, 50% on event day.',
+    '2024-01-10', NULL
+),
+(
+    'Robert Kim', 'rkim@financeforum.com', '+1-555-0987',
+    'Global Finance Forum', 'FinTech Future Conference',
+    '2024-04-18', 'New York, NY', 'Financial Conference',
+    'Cassie Kozyrkov', 600, '$75,000+', 90000.00,
+    'lost', 'medium', 'Industry Contact',
+    'Lost to competitor. Budget was approved but they chose different speaker.',
+    '2024-01-05', NULL
+),
+(
+    'Amanda White', 'awhite@edutech.edu', '+1-555-0147',
+    'EduTech University', 'Future of Learning Symposium',
+    '2024-10-22', 'Seattle, WA', 'Educational Event',
+    'Sharon Zhou', 250, '$25,000-$50,000', 30000.00,
+    'proposal', 'medium', 'University Network',
+    'Academic event focused on AI in education. Proposal submitted.',
+    '2024-01-25', '2024-02-01'
+),
+(
+    'James Wilson', 'jwilson@autoshow.com', '+1-555-0258',
+    'International Auto Show', 'Automotive AI Expo 2024',
+    '2024-11-08', 'Los Angeles, CA', 'Trade Show',
+    'Christopher Ategeka', 1000, '$75,000+', 100000.00,
+    'qualified', 'urgent', 'Trade Publication',
+    'Large automotive event. Multiple speaking opportunities available.',
+    '2024-01-28', '2024-02-05'
 );
