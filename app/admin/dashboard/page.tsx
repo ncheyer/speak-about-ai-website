@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -9,14 +11,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  TrendingUp, 
-  DollarSign, 
-  Users, 
+import {
+  TrendingUp,
+  DollarSign,
+  Users,
   Calendar,
   Plus,
   Search,
-  Filter,
   Edit,
   Eye,
   Phone,
@@ -25,58 +26,64 @@ import {
   Clock,
   LogOut,
   BarChart3,
-  CheckSquare
+  CheckSquare,
+  Loader2,
 } from "lucide-react"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 interface Deal {
-  id: string
-  clientName: string
-  clientEmail: string
-  clientPhone: string
+  id: number
+  client_name: string
+  client_email: string
+  client_phone: string
   company: string
-  eventTitle: string
-  eventDate: string
-  eventLocation: string
-  eventType: string
-  speakerRequested?: string
-  attendeeCount: number
-  budgetRange: string
-  dealValue: number
-  status: 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
+  event_title: string
+  event_date: string
+  event_location: string
+  event_type: string
+  speaker_requested?: string
+  attendee_count: number
+  budget_range: string
+  deal_value: number
+  status: "lead" | "qualified" | "proposal" | "negotiation" | "won" | "lost"
+  priority: "low" | "medium" | "high" | "urgent"
   source: string
   notes: string
-  createdAt: string
-  lastContact: string
-  nextFollowUp?: string
+  created_at: string
+  last_contact: string
+  next_follow_up?: string
+  updated_at: string
 }
 
 const DEAL_STATUSES = {
-  lead: { label: 'New Lead', color: 'bg-gray-500' },
-  qualified: { label: 'Qualified', color: 'bg-blue-500' },
-  proposal: { label: 'Proposal Sent', color: 'bg-yellow-500' },
-  negotiation: { label: 'Negotiating', color: 'bg-orange-500' },
-  won: { label: 'Won', color: 'bg-green-500' },
-  lost: { label: 'Lost', color: 'bg-red-500' }
+  lead: { label: "New Lead", color: "bg-gray-500" },
+  qualified: { label: "Qualified", color: "bg-blue-500" },
+  proposal: { label: "Proposal Sent", color: "bg-yellow-500" },
+  negotiation: { label: "Negotiating", color: "bg-orange-500" },
+  won: { label: "Won", color: "bg-green-500" },
+  lost: { label: "Lost", color: "bg-red-500" },
 }
 
 const PRIORITY_COLORS = {
-  low: 'bg-gray-100 text-gray-800',
-  medium: 'bg-blue-100 text-blue-800',
-  high: 'bg-orange-100 text-orange-800',
-  urgent: 'bg-red-100 text-red-800'
+  low: "bg-gray-100 text-gray-800",
+  medium: "bg-blue-100 text-blue-800",
+  high: "bg-orange-100 text-orange-800",
+  urgent: "bg-red-100 text-red-800",
 }
 
 export default function AdminDashboard() {
   const router = useRouter()
+  const { toast } = useToast()
   const [deals, setDeals] = useState<Deal[]>([])
+  const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null)
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   const [formData, setFormData] = useState({
     clientName: "",
@@ -91,14 +98,14 @@ export default function AdminDashboard() {
     attendeeCount: "",
     budgetRange: "",
     dealValue: "",
-    status: "lead" as Deal['status'],
-    priority: "medium" as Deal['priority'],
+    status: "lead" as Deal["status"],
+    priority: "medium" as Deal["priority"],
     source: "",
     notes: "",
-    nextFollowUp: ""
+    nextFollowUp: "",
   })
 
-  // Check authentication
+  // Check authentication and load deals
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
     if (!isAdminLoggedIn) {
@@ -106,85 +113,34 @@ export default function AdminDashboard() {
       return
     }
     setIsLoggedIn(true)
-
-    // Load deals from localStorage
-    const savedDeals = localStorage.getItem("adminDeals")
-    if (savedDeals) {
-      setDeals(JSON.parse(savedDeals))
-    } else {
-      // Initialize with sample data
-      const sampleDeals: Deal[] = [
-        {
-          id: "1",
-          clientName: "Sarah Johnson",
-          clientEmail: "sarah@techcorp.com",
-          clientPhone: "+1-555-0123",
-          company: "TechCorp Inc",
-          eventTitle: "AI Innovation Summit 2024",
-          eventDate: "2024-09-15",
-          eventLocation: "San Francisco, CA",
-          eventType: "Corporate Conference",
-          speakerRequested: "Adam Cheyer (Siri Co-Founder)",
-          attendeeCount: 500,
-          budgetRange: "$50,000 - $75,000",
-          dealValue: 65000,
-          status: "proposal",
-          priority: "high",
-          source: "Website Contact Form",
-          notes: "Large corporate event, very interested in AI keynote speakers. Budget confirmed.",
-          createdAt: "2024-01-15",
-          lastContact: "2024-01-18",
-          nextFollowUp: "2024-01-22"
-        },
-        {
-          id: "2", 
-          clientName: "Michael Chen",
-          clientEmail: "m.chen@startup.io",
-          clientPhone: "+1-555-0456",
-          company: "InnovateTech Startup",
-          eventTitle: "Startup Tech Conference",
-          eventDate: "2024-08-20",
-          eventLocation: "Austin, TX",
-          eventType: "Tech Conference",
-          speakerRequested: "Machine Learning Expert",
-          attendeeCount: 200,
-          budgetRange: "$15,000 - $25,000",
-          dealValue: 20000,
-          status: "negotiation",
-          priority: "medium",
-          source: "LinkedIn Outreach",
-          notes: "Startup looking for affordable ML speaker. Flexible on dates.",
-          createdAt: "2024-01-10",
-          lastContact: "2024-01-19",
-          nextFollowUp: "2024-01-25"
-        },
-        {
-          id: "3",
-          clientName: "Jennifer Williams",
-          clientEmail: "jwilliams@university.edu",
-          clientPhone: "+1-555-0789",
-          company: "Stanford University",
-          eventTitle: "AI Ethics Symposium",
-          eventDate: "2024-10-05",
-          eventLocation: "Palo Alto, CA",
-          eventType: "Academic Conference",
-          speakerRequested: "AI Ethics Expert",
-          attendeeCount: 150,
-          budgetRange: "$10,000 - $20,000",
-          dealValue: 15000,
-          status: "qualified",
-          priority: "medium",
-          source: "Referral",
-          notes: "Academic event focused on AI ethics and responsible AI development.",
-          createdAt: "2024-01-08",
-          lastContact: "2024-01-16",
-          nextFollowUp: "2024-01-23"
-        }
-      ]
-      setDeals(sampleDeals)
-      localStorage.setItem("adminDeals", JSON.stringify(sampleDeals))
-    }
+    loadDeals()
   }, [router])
+
+  const loadDeals = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch("/api/deals")
+      if (response.ok) {
+        const dealsData = await response.json()
+        setDeals(dealsData)
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load deals",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error loading deals:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load deals",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("adminLoggedIn")
@@ -192,81 +148,124 @@ export default function AdminDashboard() {
     router.push("/admin")
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    const newDeal: Deal = {
-      id: editingDeal?.id || Date.now().toString(),
-      clientName: formData.clientName,
-      clientEmail: formData.clientEmail,
-      clientPhone: formData.clientPhone,
-      company: formData.company,
-      eventTitle: formData.eventTitle,
-      eventDate: formData.eventDate,
-      eventLocation: formData.eventLocation,
-      eventType: formData.eventType,
-      speakerRequested: formData.speakerRequested,
-      attendeeCount: parseInt(formData.attendeeCount) || 0,
-      budgetRange: formData.budgetRange,
-      dealValue: parseFloat(formData.dealValue) || 0,
-      status: formData.status,
-      priority: formData.priority,
-      source: formData.source,
-      notes: formData.notes,
-      createdAt: editingDeal?.createdAt || new Date().toISOString().split('T')[0],
-      lastContact: new Date().toISOString().split('T')[0],
-      nextFollowUp: formData.nextFollowUp
-    }
+    setSubmitting(true)
 
-    let updatedDeals
-    if (editingDeal) {
-      updatedDeals = deals.map(d => d.id === editingDeal.id ? newDeal : d)
-    } else {
-      updatedDeals = [...deals, newDeal]
-    }
+    try {
+      const dealData = {
+        client_name: formData.clientName,
+        client_email: formData.clientEmail,
+        client_phone: formData.clientPhone,
+        company: formData.company,
+        event_title: formData.eventTitle,
+        event_date: formData.eventDate,
+        event_location: formData.eventLocation,
+        event_type: formData.eventType,
+        speaker_requested: formData.speakerRequested,
+        attendee_count: Number.parseInt(formData.attendeeCount) || 0,
+        budget_range: formData.budgetRange,
+        deal_value: Number.parseFloat(formData.dealValue) || 0,
+        status: formData.status,
+        priority: formData.priority,
+        source: formData.source,
+        notes: formData.notes,
+        last_contact: new Date().toISOString().split("T")[0],
+        next_follow_up: formData.nextFollowUp || undefined,
+      }
 
-    setDeals(updatedDeals)
-    localStorage.setItem("adminDeals", JSON.stringify(updatedDeals))
-    
-    // Reset form
-    setFormData({
-      clientName: "", clientEmail: "", clientPhone: "", company: "",
-      eventTitle: "", eventDate: "", eventLocation: "", eventType: "",
-      speakerRequested: "", attendeeCount: "", budgetRange: "", dealValue: "",
-      status: "lead", priority: "medium", source: "", notes: "", nextFollowUp: ""
-    })
-    setShowCreateForm(false)
-    setEditingDeal(null)
+      let response
+      if (editingDeal) {
+        response = await fetch(`/api/deals/${editingDeal.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dealData),
+        })
+      } else {
+        response = await fetch("/api/deals", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dealData),
+        })
+      }
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: editingDeal ? "Deal updated successfully" : "Deal created successfully",
+        })
+
+        // Reset form and reload deals
+        setFormData({
+          clientName: "",
+          clientEmail: "",
+          clientPhone: "",
+          company: "",
+          eventTitle: "",
+          eventDate: "",
+          eventLocation: "",
+          eventType: "",
+          speakerRequested: "",
+          attendeeCount: "",
+          budgetRange: "",
+          dealValue: "",
+          status: "lead",
+          priority: "medium",
+          source: "",
+          notes: "",
+          nextFollowUp: "",
+        })
+        setShowCreateForm(false)
+        setEditingDeal(null)
+        loadDeals()
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to save deal",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error saving deal:", error)
+      toast({
+        title: "Error",
+        description: "Failed to save deal",
+        variant: "destructive",
+      })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleEdit = (deal: Deal) => {
     setFormData({
-      clientName: deal.clientName,
-      clientEmail: deal.clientEmail,
-      clientPhone: deal.clientPhone,
+      clientName: deal.client_name,
+      clientEmail: deal.client_email,
+      clientPhone: deal.client_phone,
       company: deal.company,
-      eventTitle: deal.eventTitle,
-      eventDate: deal.eventDate,
-      eventLocation: deal.eventLocation,
-      eventType: deal.eventType,
-      speakerRequested: deal.speakerRequested || "",
-      attendeeCount: deal.attendeeCount.toString(),
-      budgetRange: deal.budgetRange,
-      dealValue: deal.dealValue.toString(),
+      eventTitle: deal.event_title,
+      eventDate: deal.event_date,
+      eventLocation: deal.event_location,
+      eventType: deal.event_type,
+      speakerRequested: deal.speaker_requested || "",
+      attendeeCount: deal.attendee_count.toString(),
+      budgetRange: deal.budget_range,
+      dealValue: deal.deal_value.toString(),
       status: deal.status,
       priority: deal.priority,
       source: deal.source,
       notes: deal.notes,
-      nextFollowUp: deal.nextFollowUp || ""
+      nextFollowUp: deal.next_follow_up || "",
     })
     setEditingDeal(deal)
     setShowCreateForm(true)
   }
 
-  const filteredDeals = deals.filter(deal => {
-    const matchesSearch = deal.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         deal.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         deal.eventTitle.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredDeals = deals.filter((deal) => {
+    const matchesSearch =
+      deal.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deal.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deal.event_title.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || deal.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -275,11 +274,22 @@ export default function AdminDashboard() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading deals...</span>
+      </div>
+    )
+  }
+
   // Calculate statistics
   const totalDeals = deals.length
-  const totalValue = deals.reduce((sum, deal) => sum + deal.dealValue, 0)
-  const wonDeals = deals.filter(d => d.status === 'won').length
-  const pipelineValue = deals.filter(d => !['won', 'lost'].includes(d.status)).reduce((sum, deal) => sum + deal.dealValue, 0)
+  const totalValue = deals.reduce((sum, deal) => sum + deal.deal_value, 0)
+  const wonDeals = deals.filter((d) => d.status === "won").length
+  const pipelineValue = deals
+    .filter((d) => !["won", "lost"].includes(d.status))
+    .reduce((sum, deal) => sum + deal.deal_value, 0)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -514,7 +524,10 @@ export default function AdminDashboard() {
                     </div>
                     <div>
                       <Label htmlFor="status">Status</Label>
-                      <Select value={formData.status} onValueChange={(value: Deal['status']) => setFormData({ ...formData, status: value })}>
+                      <Select
+                        value={formData.status}
+                        onValueChange={(value: Deal["status"]) => setFormData({ ...formData, status: value })}
+                      >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -530,7 +543,10 @@ export default function AdminDashboard() {
                     </div>
                     <div>
                       <Label htmlFor="priority">Priority</Label>
-                      <Select value={formData.priority} onValueChange={(value: Deal['priority']) => setFormData({ ...formData, priority: value })}>
+                      <Select
+                        value={formData.priority}
+                        onValueChange={(value: Deal["priority"]) => setFormData({ ...formData, priority: value })}
+                      >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -575,20 +591,34 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex gap-4">
-                  <Button type="submit">
+                  <Button type="submit" disabled={submitting}>
+                    {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {editingDeal ? "Update Deal" : "Create Deal"}
                   </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => {
                       setShowCreateForm(false)
                       setEditingDeal(null)
                       setFormData({
-                        clientName: "", clientEmail: "", clientPhone: "", company: "",
-                        eventTitle: "", eventDate: "", eventLocation: "", eventType: "",
-                        speakerRequested: "", attendeeCount: "", budgetRange: "", dealValue: "",
-                        status: "lead", priority: "medium", source: "", notes: "", nextFollowUp: ""
+                        clientName: "",
+                        clientEmail: "",
+                        clientPhone: "",
+                        company: "",
+                        eventTitle: "",
+                        eventDate: "",
+                        eventLocation: "",
+                        eventType: "",
+                        speakerRequested: "",
+                        attendeeCount: "",
+                        budgetRange: "",
+                        dealValue: "",
+                        status: "lead",
+                        priority: "medium",
+                        source: "",
+                        notes: "",
+                        nextFollowUp: "",
                       })
                     }}
                   >
@@ -603,14 +633,12 @@ export default function AdminDashboard() {
         {/* Deals List */}
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-900">Active Deals ({filteredDeals.length})</h2>
-          
+
           {filteredDeals.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
                 <p className="text-gray-500 mb-4">No deals found</p>
-                <Button onClick={() => setShowCreateForm(true)}>
-                  Create Your First Deal
-                </Button>
+                <Button onClick={() => setShowCreateForm(true)}>Create Your First Deal</Button>
               </CardContent>
             </Card>
           ) : (
@@ -621,56 +649,54 @@ export default function AdminDashboard() {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <CardTitle className="text-xl">{deal.eventTitle}</CardTitle>
+                          <CardTitle className="text-xl">{deal.event_title}</CardTitle>
                           <Badge className={`${DEAL_STATUSES[deal.status].color} text-white`}>
                             {DEAL_STATUSES[deal.status].label}
                           </Badge>
-                          <Badge className={PRIORITY_COLORS[deal.priority]}>
-                            {deal.priority.toUpperCase()}
-                          </Badge>
+                          <Badge className={PRIORITY_COLORS[deal.priority]}>{deal.priority.toUpperCase()}</Badge>
                         </div>
                         <CardDescription>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                             <div>
-                              <p className="font-semibold text-gray-900">{deal.clientName}</p>
+                              <p className="font-semibold text-gray-900">{deal.client_name}</p>
                               <p className="text-sm">{deal.company}</p>
                               <div className="flex items-center text-sm text-gray-600 mt-1">
                                 <Mail className="mr-1 h-3 w-3" />
-                                {deal.clientEmail}
+                                {deal.client_email}
                               </div>
                               <div className="flex items-center text-sm text-gray-600">
                                 <Phone className="mr-1 h-3 w-3" />
-                                {deal.clientPhone}
+                                {deal.client_phone}
                               </div>
                             </div>
                             <div>
                               <div className="flex items-center text-sm text-gray-600">
                                 <Calendar className="mr-1 h-3 w-3" />
-                                {new Date(deal.eventDate).toLocaleDateString()}
+                                {new Date(deal.event_date).toLocaleDateString()}
                               </div>
                               <div className="flex items-center text-sm text-gray-600 mt-1">
                                 <MapPin className="mr-1 h-3 w-3" />
-                                {deal.eventLocation}
+                                {deal.event_location}
                               </div>
                               <div className="flex items-center text-sm text-gray-600 mt-1">
                                 <Users className="mr-1 h-3 w-3" />
-                                {deal.attendeeCount} attendees
+                                {deal.attendee_count} attendees
                               </div>
                             </div>
                             <div>
                               <p className="text-sm text-gray-600">
-                                <strong>Deal Value:</strong> ${deal.dealValue.toLocaleString()}
+                                <strong>Deal Value:</strong> ${deal.deal_value.toLocaleString()}
                               </p>
                               <p className="text-sm text-gray-600">
-                                <strong>Budget:</strong> {deal.budgetRange}
+                                <strong>Budget:</strong> {deal.budget_range}
                               </p>
                               <p className="text-sm text-gray-600">
                                 <strong>Source:</strong> {deal.source}
                               </p>
-                              {deal.nextFollowUp && (
+                              {deal.next_follow_up && (
                                 <div className="flex items-center text-sm text-orange-600 mt-1">
                                   <Clock className="mr-1 h-3 w-3" />
-                                  Follow-up: {new Date(deal.nextFollowUp).toLocaleDateString()}
+                                  Follow-up: {new Date(deal.next_follow_up).toLocaleDateString()}
                                 </div>
                               )}
                             </div>
@@ -688,9 +714,9 @@ export default function AdminDashboard() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {deal.speakerRequested && (
+                    {deal.speaker_requested && (
                       <p className="text-sm text-gray-600 mb-2">
-                        <strong>Speaker Requested:</strong> {deal.speakerRequested}
+                        <strong>Speaker Requested:</strong> {deal.speaker_requested}
                       </p>
                     )}
                     {deal.notes && (
@@ -711,7 +737,7 @@ export default function AdminDashboard() {
             <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <CardHeader>
                 <div className="flex justify-between items-start">
-                  <CardTitle>{selectedDeal.eventTitle}</CardTitle>
+                  <CardTitle>{selectedDeal.event_title}</CardTitle>
                   <Button variant="ghost" onClick={() => setSelectedDeal(null)}>
                     ×
                   </Button>
@@ -720,33 +746,63 @@ export default function AdminDashboard() {
               <CardContent className="space-y-4">
                 <div>
                   <h4 className="font-semibold">Client Information</h4>
-                  <p>{selectedDeal.clientName} - {selectedDeal.company}</p>
-                  <p>{selectedDeal.clientEmail} | {selectedDeal.clientPhone}</p>
+                  <p>
+                    {selectedDeal.client_name} - {selectedDeal.company}
+                  </p>
+                  <p>
+                    {selectedDeal.client_email} | {selectedDeal.client_phone}
+                  </p>
                 </div>
                 <div>
                   <h4 className="font-semibold">Event Details</h4>
-                  <p><strong>Date:</strong> {new Date(selectedDeal.eventDate).toLocaleDateString()}</p>
-                  <p><strong>Location:</strong> {selectedDeal.eventLocation}</p>
-                  <p><strong>Type:</strong> {selectedDeal.eventType}</p>
-                  <p><strong>Attendees:</strong> {selectedDeal.attendeeCount}</p>
-                  {selectedDeal.speakerRequested && (
-                    <p><strong>Speaker:</strong> {selectedDeal.speakerRequested}</p>
+                  <p>
+                    <strong>Date:</strong> {new Date(selectedDeal.event_date).toLocaleDateString()}
+                  </p>
+                  <p>
+                    <strong>Location:</strong> {selectedDeal.event_location}
+                  </p>
+                  <p>
+                    <strong>Type:</strong> {selectedDeal.event_type}
+                  </p>
+                  <p>
+                    <strong>Attendees:</strong> {selectedDeal.attendee_count}
+                  </p>
+                  {selectedDeal.speaker_requested && (
+                    <p>
+                      <strong>Speaker:</strong> {selectedDeal.speaker_requested}
+                    </p>
                   )}
                 </div>
                 <div>
                   <h4 className="font-semibold">Deal Information</h4>
-                  <p><strong>Value:</strong> ${selectedDeal.dealValue.toLocaleString()}</p>
-                  <p><strong>Budget Range:</strong> {selectedDeal.budgetRange}</p>
-                  <p><strong>Status:</strong> {DEAL_STATUSES[selectedDeal.status].label}</p>
-                  <p><strong>Priority:</strong> {selectedDeal.priority.toUpperCase()}</p>
-                  <p><strong>Source:</strong> {selectedDeal.source}</p>
+                  <p>
+                    <strong>Value:</strong> ${selectedDeal.deal_value.toLocaleString()}
+                  </p>
+                  <p>
+                    <strong>Budget Range:</strong> {selectedDeal.budget_range}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {DEAL_STATUSES[selectedDeal.status].label}
+                  </p>
+                  <p>
+                    <strong>Priority:</strong> {selectedDeal.priority.toUpperCase()}
+                  </p>
+                  <p>
+                    <strong>Source:</strong> {selectedDeal.source}
+                  </p>
                 </div>
                 <div>
                   <h4 className="font-semibold">Timeline</h4>
-                  <p><strong>Created:</strong> {new Date(selectedDeal.createdAt).toLocaleDateString()}</p>
-                  <p><strong>Last Contact:</strong> {new Date(selectedDeal.lastContact).toLocaleDateString()}</p>
-                  {selectedDeal.nextFollowUp && (
-                    <p><strong>Next Follow-up:</strong> {new Date(selectedDeal.nextFollowUp).toLocaleDateString()}</p>
+                  <p>
+                    <strong>Created:</strong> {new Date(selectedDeal.created_at).toLocaleDateString()}
+                  </p>
+                  <p>
+                    <strong>Last Contact:</strong> {new Date(selectedDeal.last_contact).toLocaleDateString()}
+                  </p>
+                  {selectedDeal.next_follow_up && (
+                    <p>
+                      <strong>Next Follow-up:</strong> {new Date(selectedDeal.next_follow_up).toLocaleDateString()}
+                    </p>
                   )}
                 </div>
                 {selectedDeal.notes && (
