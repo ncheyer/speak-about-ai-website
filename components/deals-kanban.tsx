@@ -52,10 +52,14 @@ export function DealsKanban() {
       const response = await fetch("/api/deals")
       if (response.ok) {
         const data = await response.json()
-        setDeals(data.deals)
+        // Handle both array response and object with deals property
+        setDeals(Array.isArray(data) ? data : data.deals || [])
+      } else {
+        setDeals([])
       }
     } catch (error) {
       console.error("Error fetching deals:", error)
+      setDeals([])
     } finally {
       setLoading(false)
     }
@@ -122,7 +126,7 @@ export function DealsKanban() {
     <div className="overflow-x-auto pb-4">
       <div className="flex gap-4 min-w-max p-4">
         {STAGES.map(stage => {
-          const stageDeals = deals.filter(deal => deal.status === stage.id)
+          const stageDeals = (deals || []).filter(deal => deal.status === stage.id)
           const totalValue = stageDeals.reduce((sum, deal) => sum + Number(deal.deal_value), 0)
 
           return (
