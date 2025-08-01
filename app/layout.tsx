@@ -9,8 +9,6 @@ import { Toaster } from "@/components/ui/toaster"
 import TrackingScripts from "@/components/tracking-scripts"
 import PipedriveChat from "@/components/pipedrive-chat"
 import { ScrollToTopProvider } from "@/components/scroll-to-top-provider"
-import { SessionProvider } from "@/components/providers/session-provider"
-import { ToastProvider } from "@/hooks/use-toast"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -102,21 +100,17 @@ export default function RootLayout({
         <TrackingScripts />
       </head>
       <body className={inter.className}>
-        <SessionProvider>
-          <ToastProvider>
-            <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-              <ScrollToTopProvider>
-                <div className="flex min-h-screen flex-col">
-                  <Header />
-                  <main className="flex-1">{children}</main>
-                  <Footer />
-                </div>
-                <Toaster />
-                <PipedriveChat />
-              </ScrollToTopProvider>
-            </ThemeProvider>
-          </ToastProvider>
-        </SessionProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+          <ScrollToTopProvider>
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <Toaster />
+            <PipedriveChat />
+          </ScrollToTopProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
