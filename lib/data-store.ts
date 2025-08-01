@@ -54,8 +54,9 @@ async function getDb() {
       const module = await import('./sheets-data-store')
       dbModule = module.db
     } else {
-      console.log('💾 Using in-memory database')
-      const module = await import('./memory-data-store')
+      // Use file-based storage for better v0.dev compatibility
+      console.log('📁 Using file-based database')
+      const module = await import('./file-data-store')
       dbModule = module.db
     }
   }

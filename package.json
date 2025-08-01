@@ -52,8 +52,6 @@
     "embla-carousel-react": "latest",
     "fs": "latest",
     "glob": "latest",
-    "google-auth-library": "^10.2.0",
-    "googleapis": "^154.1.0",
     "graphql": "latest",
     "input-otp": "latest",
     "lucide-react": "^0.454.0",
