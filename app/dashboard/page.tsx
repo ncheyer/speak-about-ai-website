@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { prisma } from "@/lib/prisma"
+import { getUserEventsWithAttendees } from "@/lib/data-store"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,19 +15,7 @@ export default async function DashboardPage() {
     redirect("/login")
   }
 
-  const events = await prisma.event.findMany({
-    where: {
-      userId: session.user.id,
-    },
-    include: {
-      _count: {
-        select: { attendees: true },
-      },
-    },
-    orderBy: {
-      date: "asc",
-    },
-  })
+  const events = await getUserEventsWithAttendees(session.user.id)
 
   const upcomingEvents = events.filter(event => new Date(event.date) >= new Date())
   const pastEvents = events.filter(event => new Date(event.date) < new Date())
