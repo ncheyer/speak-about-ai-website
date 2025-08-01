@@ -4,19 +4,18 @@ import { updateDeal, deleteDeal } from "@/lib/deals-db"
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = Number.parseInt(params.id)
-
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
     }
 
-    const dealData = await request.json()
-    const deal = await updateDeal(id, dealData)
+    const body = await request.json()
+    const deal = await updateDeal(id, body)
 
     if (!deal) {
-      return NextResponse.json({ error: "Deal not found or update failed" }, { status: 404 })
+      return NextResponse.json({ error: "Deal not found or failed to update" }, { status: 404 })
     }
 
-    return NextResponse.json(deal)
+    return NextResponse.json({ deal })
   } catch (error) {
     console.error("Error in PUT /api/deals/[id]:", error)
     return NextResponse.json(
@@ -32,7 +31,6 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = Number.parseInt(params.id)
-
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
     }
@@ -40,7 +38,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     const success = await deleteDeal(id)
 
     if (!success) {
-      return NextResponse.json({ error: "Deal not found or delete failed" }, { status: 404 })
+      return NextResponse.json({ error: "Deal not found or failed to delete" }, { status: 404 })
     }
 
     return NextResponse.json({ message: "Deal deleted successfully" })
