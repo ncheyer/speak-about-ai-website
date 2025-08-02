@@ -163,10 +163,24 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminLoggedIn")
-    localStorage.removeItem("adminUser")
-    router.push("/admin")
+  const handleLogout = async () => {
+    try {
+      // Call logout API
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      // Clear all authentication data
+      localStorage.removeItem("adminLoggedIn")
+      localStorage.removeItem("adminSessionToken")
+      localStorage.removeItem("adminUser")
+      router.push("/admin")
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

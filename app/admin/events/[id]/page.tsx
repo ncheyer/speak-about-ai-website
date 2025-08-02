@@ -107,7 +107,8 @@ export default function EventDetailPage() {
 
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
-    if (!isAdminLoggedIn) {
+    const sessionToken = localStorage.getItem("adminSessionToken")
+    if (!isAdminLoggedIn || !sessionToken) {
       router.push("/admin")
       return
     }

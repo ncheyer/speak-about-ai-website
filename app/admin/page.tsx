@@ -11,8 +11,8 @@ import { Shield, AlertCircle } from "lucide-react"
 export default function AdminLoginPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
-    email: "admin@speakaboutai.com",
-    password: "admin123",
+    email: "",
+    password: "",
   })
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -20,7 +20,8 @@ export default function AdminLoginPage() {
   // Check if already logged in
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
-    if (isAdminLoggedIn) {
+    const sessionToken = localStorage.getItem("adminSessionToken")
+    if (isAdminLoggedIn && sessionToken) {
       router.push("/admin/dashboard")
     }
   }, [router])
@@ -30,21 +31,37 @@ export default function AdminLoginPage() {
     setIsLoading(true)
     setError("")
 
-    // Admin authentication
-    setTimeout(() => {
-      if (formData.email === "admin@speakaboutai.com" && formData.password === "admin123") {
-        localStorage.setItem("adminLoggedIn", "true")
-        localStorage.setItem("adminUser", JSON.stringify({
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           email: formData.email,
-          name: "Admin User",
-          role: "admin"
-        }))
+          password: formData.password,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Store authentication data
+        localStorage.setItem("adminLoggedIn", "true")
+        localStorage.setItem("adminSessionToken", data.sessionToken)
+        localStorage.setItem("adminUser", JSON.stringify(data.user))
+        
+        // Redirect to dashboard
         router.push("/admin/dashboard")
       } else {
-        setError("Invalid admin credentials")
+        setError(data.error || "Authentication failed")
       }
+    } catch (error) {
+      console.error("Login error:", error)
+      setError("Connection error. Please try again.")
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -68,7 +85,7 @@ export default function AdminLoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@speakaboutai.com"
+                placeholder="human@speakabout.ai"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
@@ -106,14 +123,6 @@ export default function AdminLoginPage() {
               {isLoading ? "Authenticating..." : "Access Admin Panel"}
             </Button>
           </form>
-
-          <div className="mt-6 p-4 bg-blue-900/20 border border-blue-800 rounded-lg">
-            <h4 className="font-semibold text-blue-300 mb-2">Demo Admin Access</h4>
-            <p className="text-sm text-blue-200">
-              <strong>Email:</strong> admin@speakaboutai.com<br />
-              <strong>Password:</strong> admin123
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
