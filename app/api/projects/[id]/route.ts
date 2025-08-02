@@ -47,6 +47,41 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (body.completion_percentage !== undefined) {
       body.completion_percentage = parseInt(body.completion_percentage)
     }
+    
+    // Convert additional numeric fields from the offer sheet
+    if (body.audience_size !== undefined) {
+      body.audience_size = parseInt(body.audience_size)
+    }
+    if (body.program_length !== undefined) {
+      body.program_length = parseInt(body.program_length)
+    }
+    if (body.qa_length !== undefined) {
+      body.qa_length = parseInt(body.qa_length)
+    }
+    if (body.total_program_length !== undefined) {
+      body.total_program_length = parseInt(body.total_program_length)
+    }
+    if (body.speaker_fee !== undefined) {
+      body.speaker_fee = parseFloat(body.speaker_fee)
+    }
+    if (body.travel_expenses_amount !== undefined) {
+      body.travel_expenses_amount = parseFloat(body.travel_expenses_amount)
+    }
+    
+    // Convert boolean fields
+    const booleanFields = [
+      'recording_allowed', 'live_streaming', 'photography_allowed', 'travel_required',
+      'airport_transport_provided', 'venue_transport_provided', 'accommodation_required',
+      'green_room_available', 'marketing_use_allowed', 'press_media_present',
+      'prep_call_requested', 'contract_signed', 'invoice_sent', 'payment_received',
+      'presentation_ready', 'materials_sent'
+    ]
+    
+    booleanFields.forEach(field => {
+      if (body[field] !== undefined) {
+        body[field] = body[field] === 'true' || body[field] === true
+      }
+    })
 
     const project = await updateProject(id, body)
 
@@ -67,7 +102,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id)
     if (isNaN(id)) {

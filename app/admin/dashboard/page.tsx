@@ -437,7 +437,12 @@ export default function AdminDashboard() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${pipelineValue.toLocaleString()}</div>
+              <div className="text-2xl font-bold">
+                ${new Intl.NumberFormat('en-US', { 
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0 
+                }).format(pipelineValue)}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -455,7 +460,12 @@ export default function AdminDashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${totalValue.toLocaleString()}</div>
+              <div className="text-2xl font-bold">
+                ${new Intl.NumberFormat('en-US', { 
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0 
+                }).format(totalValue)}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -789,7 +799,10 @@ export default function AdminDashboard() {
                 <div>
                   <h4 className="font-semibold">Deal Information</h4>
                   <p>
-                    <strong>Value:</strong> ${selectedDeal.deal_value.toLocaleString()}
+                    <strong>Value:</strong> ${new Intl.NumberFormat('en-US', { 
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0 
+                    }).format(selectedDeal.deal_value)}
                   </p>
                   <p>
                     <strong>Budget Range:</strong> {selectedDeal.budget_range}

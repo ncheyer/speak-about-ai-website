@@ -23,7 +23,6 @@ import {
   Edit,
   Eye,
   Target,
-  DollarSign,
   Loader2,
   Trash2,
   List,
@@ -448,17 +447,6 @@ export default function ProjectManagement() {
               <div className="text-2xl font-bold text-green-600">{completedProjects.length}</div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${projects.reduce((sum, p) => sum + (p.budget || 0), 0).toLocaleString()}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Filters - only show in table view */}
@@ -587,14 +575,6 @@ export default function ProjectManagement() {
                               </div>
                             </div>
                             <div>
-                              <div className="flex items-center text-sm text-gray-600">
-                                <DollarSign className="mr-1 h-3 w-3" />
-                                Budget: ${project.budget.toLocaleString()}
-                              </div>
-                              <div className="flex items-center text-sm text-gray-600 mt-1">
-                                <DollarSign className="mr-1 h-3 w-3" />
-                                Spent: ${project.spent.toLocaleString()}
-                              </div>
                               <div className="flex items-center text-sm text-gray-600 mt-1">
                                 <CheckCircle2 className="mr-1 h-3 w-3" />
                                 {project.completion_percentage}% complete
@@ -618,9 +598,11 @@ export default function ProjectManagement() {
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
-                        <Button size="sm" variant="ghost" onClick={() => setSelectedProject(project)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        <Link href={`/admin/projects/${project.id}/edit`}>
+                          <Button size="sm" variant="ghost">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </Link>
                         <Button size="sm" variant="ghost" onClick={() => deleteProject(project.id)}>
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
