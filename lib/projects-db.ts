@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless"
+import { getAutomaticProjectStatus, type ProjectStatus } from "./project-status-utils"
 
 // Check if DATABASE_URL is available
 if (!process.env.DATABASE_URL) {
@@ -177,6 +178,18 @@ export async function getAllProjects(): Promise<Project[]> {
 export async function createProject(projectData: Omit<Project, "id" | "created_at" | "updated_at">): Promise<Project | null> {
   try {
     console.log("Creating new project:", projectData.project_name)
+    
+    // Automatically determine status based on event date
+    const automaticStatus = getAutomaticProjectStatus(
+      projectData.event_date || projectData.deadline || new Date(),
+      projectData.status as ProjectStatus
+    )
+    
+    // Use automatic status if event date exists, otherwise keep provided status
+    const finalProjectData = {
+      ...projectData,
+      status: projectData.event_date ? automaticStatus : projectData.status
+    }
     const [project] = await sql`
       INSERT INTO projects (
         project_name, client_name, client_email, client_phone, company,
@@ -189,23 +202,23 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         venue_contact, contract_signed, invoice_sent, payment_received,
         presentation_ready, materials_sent
       ) VALUES (
-        ${projectData.project_name}, ${projectData.client_name}, ${projectData.client_email || null}, 
-        ${projectData.client_phone || null}, ${projectData.company || null},
-        ${projectData.project_type}, ${projectData.description || null}, ${projectData.status}, 
-        ${projectData.priority}, ${projectData.start_date},
-        ${projectData.end_date || null}, ${projectData.deadline || null}, ${projectData.budget}, 
-        ${projectData.spent}, ${projectData.completion_percentage},
-        ${projectData.team_members || null}, ${projectData.deliverables || null}, 
-        ${projectData.milestones || null}, ${projectData.notes || null}, ${projectData.tags || null},
-        ${projectData.event_date || null}, ${projectData.event_location || null}, 
-        ${projectData.event_type || null}, ${projectData.attendee_count || null}, ${projectData.speaker_fee || null},
-        ${projectData.travel_required || false}, ${projectData.accommodation_required || false},
-        ${projectData.av_requirements || null}, ${projectData.meals_provided || null},
-        ${projectData.special_requests || null}, ${projectData.event_agenda || null},
-        ${projectData.marketing_materials || null}, ${projectData.contact_person || null},
-        ${projectData.venue_contact || null}, ${projectData.contract_signed || false},
-        ${projectData.invoice_sent || false}, ${projectData.payment_received || false},
-        ${projectData.presentation_ready || false}, ${projectData.materials_sent || false}
+        ${finalProjectData.project_name}, ${finalProjectData.client_name}, ${finalProjectData.client_email || null}, 
+        ${finalProjectData.client_phone || null}, ${finalProjectData.company || null},
+        ${finalProjectData.project_type}, ${finalProjectData.description || null}, ${finalProjectData.status}, 
+        ${finalProjectData.priority}, ${finalProjectData.start_date},
+        ${finalProjectData.end_date || null}, ${finalProjectData.deadline || null}, ${finalProjectData.budget}, 
+        ${finalProjectData.spent}, ${finalProjectData.completion_percentage},
+        ${finalProjectData.team_members || null}, ${finalProjectData.deliverables || null}, 
+        ${finalProjectData.milestones || null}, ${finalProjectData.notes || null}, ${finalProjectData.tags || null},
+        ${finalProjectData.event_date || null}, ${finalProjectData.event_location || null}, 
+        ${finalProjectData.event_type || null}, ${finalProjectData.attendee_count || null}, ${finalProjectData.speaker_fee || null},
+        ${finalProjectData.travel_required || false}, ${finalProjectData.accommodation_required || false},
+        ${finalProjectData.av_requirements || null}, ${finalProjectData.meals_provided || null},
+        ${finalProjectData.special_requests || null}, ${finalProjectData.event_agenda || null},
+        ${finalProjectData.marketing_materials || null}, ${finalProjectData.contact_person || null},
+        ${finalProjectData.venue_contact || null}, ${finalProjectData.contract_signed || false},
+        ${finalProjectData.invoice_sent || false}, ${finalProjectData.payment_received || false},
+        ${finalProjectData.presentation_ready || false}, ${finalProjectData.materials_sent || false}
       )
       RETURNING *
     `
@@ -220,6 +233,21 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
 export async function updateProject(id: number, projectData: Partial<Project>): Promise<Project | null> {
   try {
     console.log("Updating project ID:", id)
+    
+    // If event_date is being updated, automatically determine status
+    let finalProjectData = { ...projectData }
+    if (projectData.event_date) {
+      const automaticStatus = getAutomaticProjectStatus(
+        projectData.event_date,
+        projectData.status as ProjectStatus
+      )
+      
+      // Only update status if it's not manually set to completed or cancelled
+      if (!projectData.status || (projectData.status !== "completed" && projectData.status !== "cancelled")) {
+        finalProjectData.status = automaticStatus
+        console.log(`Auto-updating project ${id} status to: ${automaticStatus} based on event date: ${projectData.event_date}`)
+      }
+    }
     const [project] = await sql`
       UPDATE projects SET
         project_name = COALESCE(${projectData.project_name || null}, project_name),
@@ -227,10 +255,10 @@ export async function updateProject(id: number, projectData: Partial<Project>): 
         client_email = COALESCE(${projectData.client_email || null}, client_email),
         client_phone = COALESCE(${projectData.client_phone || null}, client_phone),
         company = COALESCE(${projectData.company || null}, company),
-        project_type = COALESCE(${projectData.project_type || null}, project_type),
-        description = COALESCE(${projectData.description || null}, description),
-        status = COALESCE(${projectData.status || null}, status),
-        priority = COALESCE(${projectData.priority || null}, priority),
+        project_type = COALESCE(${finalProjectData.project_type || null}, project_type),
+        description = COALESCE(${finalProjectData.description || null}, description),
+        status = COALESCE(${finalProjectData.status || null}, status),
+        priority = COALESCE(${finalProjectData.priority || null}, priority),
         start_date = COALESCE(${projectData.start_date || null}, start_date),
         end_date = COALESCE(${projectData.end_date || null}, end_date),
         deadline = COALESCE(${projectData.deadline || null}, deadline),
@@ -434,6 +462,50 @@ export async function getActiveProjects(): Promise<Project[]> {
   } catch (error) {
     console.error("Error fetching active projects:", error)
     return []
+  }
+}
+
+// Update all project statuses based on their event dates
+export async function updateAllProjectStatuses(): Promise<{ updated: number, errors: number }> {
+  try {
+    console.log("Updating all project statuses based on event dates...")
+    
+    // Get all projects with event dates that aren't completed or cancelled
+    const projects = await sql`
+      SELECT id, event_date, status FROM projects 
+      WHERE event_date IS NOT NULL 
+      AND status NOT IN ('completed', 'cancelled')
+      ORDER BY event_date ASC
+    `
+    
+    let updated = 0
+    let errors = 0
+    
+    for (const project of projects) {
+      try {
+        const currentStatus = project.status as ProjectStatus
+        const automaticStatus = getAutomaticProjectStatus(project.event_date, currentStatus)
+        
+        if (automaticStatus !== currentStatus) {
+          await sql`
+            UPDATE projects 
+            SET status = ${automaticStatus}, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ${project.id}
+          `
+          console.log(`Updated project ${project.id} from ${currentStatus} to ${automaticStatus}`)
+          updated++
+        }
+      } catch (error) {
+        console.error(`Error updating project ${project.id}:`, error)
+        errors++
+      }
+    }
+    
+    console.log(`Status update complete: ${updated} updated, ${errors} errors`)
+    return { updated, errors }
+  } catch (error) {
+    console.error("Error in bulk status update:", error)
+    return { updated: 0, errors: 1 }
   }
 }
 

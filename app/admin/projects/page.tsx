@@ -26,7 +26,8 @@ import {
   Loader2,
   Trash2,
   List,
-  Kanban
+  Kanban,
+  RefreshCw
 } from "lucide-react"
 
 interface Project {
@@ -200,6 +201,7 @@ export default function ProjectManagement() {
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [filterPriority, setFilterPriority] = useState<string>("all")
   const [viewMode, setViewMode] = useState<"table" | "kanban">("table")
+  const [isUpdatingStatuses, setIsUpdatingStatuses] = useState(false)
 
   // Check authentication and load data
   useEffect(() => {
@@ -298,6 +300,40 @@ export default function ProjectManagement() {
       })
     } finally {
       setIsUpdating(false)
+    }
+  }
+
+  const updateProjectStatuses = async () => {
+    setIsUpdatingStatuses(true)
+    try {
+      const response = await fetch("/api/projects/update-statuses", {
+        method: "POST",
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        toast({
+          title: "Status Update Complete",
+          description: result.message,
+        })
+        loadProjects() // Reload projects to show updated statuses
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Update Failed",
+          description: errorData.error || "Failed to update project statuses",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error updating statuses:", error)
+      toast({
+        title: "Update Failed",
+        description: "Failed to update project statuses",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdatingStatuses(false)
     }
   }
 
@@ -402,6 +438,18 @@ export default function ProjectManagement() {
                 Pipeline
               </Button>
             </div>
+            <Button 
+              onClick={updateProjectStatuses} 
+              disabled={isUpdatingStatuses}
+              variant="outline"
+            >
+              {isUpdatingStatuses ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Update Statuses
+            </Button>
             <Button onClick={() => setShowCreateForm(true)}>
               <Plus className="mr-2 h-4 w-4" />
               New Project

@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { updateDeal, deleteDeal } from "@/lib/deals-db"
 import { createProject } from "@/lib/projects-db"
+import { getAutomaticProjectStatus } from "@/lib/project-status-utils"
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -36,7 +37,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
                        deal.event_type === "Keynote" ? "Speaking" :
                        deal.event_type === "Consulting" ? "Consulting" : "Other",
           description: `Event: ${deal.event_title}\nLocation: ${deal.event_location}\nAttendees: ${deal.attendee_count}\n\n${deal.notes}`,
-          status: "2plus_months" as const,
+          status: getAutomaticProjectStatus(deal.event_date) as const,
           priority: deal.priority,
           start_date: new Date().toISOString().split('T')[0],
           deadline: deal.event_date,
@@ -143,7 +144,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
                        deal.event_type === "Keynote" ? "Speaking" :
                        deal.event_type === "Consulting" ? "Consulting" : "Other",
           description: `Event: ${deal.event_title}\nLocation: ${deal.event_location}\nAttendees: ${deal.attendee_count}\n\n${deal.notes}`,
-          status: "2plus_months" as const,
+          status: getAutomaticProjectStatus(deal.event_date) as const,
           priority: deal.priority,
           start_date: new Date().toISOString().split('T')[0],
           deadline: deal.event_date,
