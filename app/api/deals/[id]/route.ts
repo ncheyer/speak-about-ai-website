@@ -26,6 +26,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (originalDeal && originalDeal.status !== "won" && deal.status === "won") {
       try {
         const projectData = {
+          // Basic project fields
           project_name: deal.event_title,
           client_name: deal.client_name,
           client_email: deal.client_email,
@@ -42,15 +43,50 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
           budget: deal.deal_value,
           spent: 0,
           completion_percentage: 0,
-          // Event-specific fields
+          
+          // Event Overview - Billing Contact (from deal client info)
+          billing_contact_name: deal.client_name,
+          billing_contact_email: deal.client_email,
+          billing_contact_phone: deal.client_phone,
+          
+          // Event Overview - Logistics Contact (same as billing for now)
+          logistics_contact_name: deal.client_name,
+          logistics_contact_email: deal.client_email,
+          logistics_contact_phone: deal.client_phone,
+          
+          // Event Overview - Additional Fields
+          end_client_name: deal.company,
+          event_name: deal.event_title,
           event_date: deal.event_date,
           event_location: deal.event_location,
           event_type: deal.event_type,
-          attendee_count: deal.attendee_count,
+          
+          // Speaker Program Details
+          requested_speaker_name: deal.speaker_requested,
+          program_topic: `${deal.event_title} - ${deal.event_type}`,
+          program_type: deal.event_type,
+          audience_size: deal.attendee_count,
+          audience_demographics: "To be determined during planning",
+          
+          // Financial Details
           speaker_fee: deal.deal_value,
+          
+          // Basic event fields (existing)
+          attendee_count: deal.attendee_count,
           contact_person: deal.client_name,
-          notes: `Deal ID: ${deal.id}\nOriginal notes: ${deal.notes}`,
-          tags: [deal.event_type, deal.source]
+          notes: `Deal ID: ${deal.id}\nSource: ${deal.source}\nBudget Range: ${deal.budget_range}\nOriginal notes: ${deal.notes}`,
+          tags: [deal.event_type, deal.source],
+          
+          // Status tracking (initialized for new project)
+          contract_signed: false,
+          invoice_sent: false,
+          payment_received: false,
+          presentation_ready: false,
+          materials_sent: false,
+          
+          // Event classification based on type
+          event_classification: deal.event_type?.toLowerCase().includes('virtual') || deal.event_type?.toLowerCase().includes('webinar') ? 'virtual' :
+                              deal.event_location?.toLowerCase().includes('remote') ? 'virtual' : 'local'
         }
         
         await createProject(projectData)
@@ -97,6 +133,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (originalDeal && originalDeal.status !== "won" && deal.status === "won") {
       try {
         const projectData = {
+          // Basic project fields
           project_name: deal.event_title,
           client_name: deal.client_name,
           client_email: deal.client_email,
@@ -113,15 +150,50 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
           budget: deal.deal_value,
           spent: 0,
           completion_percentage: 0,
-          // Event-specific fields
+          
+          // Event Overview - Billing Contact (from deal client info)
+          billing_contact_name: deal.client_name,
+          billing_contact_email: deal.client_email,
+          billing_contact_phone: deal.client_phone,
+          
+          // Event Overview - Logistics Contact (same as billing for now)
+          logistics_contact_name: deal.client_name,
+          logistics_contact_email: deal.client_email,
+          logistics_contact_phone: deal.client_phone,
+          
+          // Event Overview - Additional Fields
+          end_client_name: deal.company,
+          event_name: deal.event_title,
           event_date: deal.event_date,
           event_location: deal.event_location,
           event_type: deal.event_type,
-          attendee_count: deal.attendee_count,
+          
+          // Speaker Program Details
+          requested_speaker_name: deal.speaker_requested,
+          program_topic: `${deal.event_title} - ${deal.event_type}`,
+          program_type: deal.event_type,
+          audience_size: deal.attendee_count,
+          audience_demographics: "To be determined during planning",
+          
+          // Financial Details
           speaker_fee: deal.deal_value,
+          
+          // Basic event fields (existing)
+          attendee_count: deal.attendee_count,
           contact_person: deal.client_name,
-          notes: `Deal ID: ${deal.id}\nOriginal notes: ${deal.notes}`,
-          tags: [deal.event_type, deal.source]
+          notes: `Deal ID: ${deal.id}\nSource: ${deal.source}\nBudget Range: ${deal.budget_range}\nOriginal notes: ${deal.notes}`,
+          tags: [deal.event_type, deal.source],
+          
+          // Status tracking (initialized for new project)
+          contract_signed: false,
+          invoice_sent: false,
+          payment_received: false,
+          presentation_ready: false,
+          materials_sent: false,
+          
+          // Event classification based on type
+          event_classification: deal.event_type?.toLowerCase().includes('virtual') || deal.event_type?.toLowerCase().includes('webinar') ? 'virtual' :
+                              deal.event_location?.toLowerCase().includes('remote') ? 'virtual' : 'local'
         }
         
         await createProject(projectData)

@@ -30,26 +30,115 @@ export interface Project {
   milestones?: any // JSONB
   notes?: string
   tags?: string[]
-  // Event-specific fields
+  
+  // Event Overview - Billing Contact
+  billing_contact_name?: string
+  billing_contact_title?: string
+  billing_contact_email?: string
+  billing_contact_phone?: string
+  billing_address?: string
+  
+  // Event Overview - Logistics Contact
+  logistics_contact_name?: string
+  logistics_contact_email?: string
+  logistics_contact_phone?: string
+  
+  // Event Overview - Additional Fields
+  end_client_name?: string
+  event_name?: string
   event_date?: string
-  event_location?: string
-  event_type?: string
-  attendee_count?: number
-  speaker_fee?: number
-  travel_required?: boolean
-  accommodation_required?: boolean
+  event_website?: string
+  venue_name?: string
+  venue_address?: string
+  venue_contact_name?: string
+  venue_contact_email?: string
+  venue_contact_phone?: string
+  
+  // Speaker Program Details
+  requested_speaker_name?: string
+  program_topic?: string
+  program_type?: string
+  audience_size?: number
+  audience_demographics?: string
+  speaker_attire?: string
+  
+  // Event Schedule
+  event_start_time?: string
+  event_end_time?: string
+  speaker_arrival_time?: string
+  program_start_time?: string
+  program_length?: number
+  qa_length?: number
+  total_program_length?: number
+  speaker_departure_time?: string
+  event_timeline?: string
+  event_timezone?: string
+  
+  // Technical Requirements
   av_requirements?: string
-  catering_requirements?: string
-  special_requirements?: string
-  event_agenda?: any // JSONB
-  marketing_materials?: any // JSONB
-  contact_person?: string
-  venue_contact?: string
+  recording_allowed?: boolean
+  recording_purpose?: string
+  live_streaming?: boolean
+  photography_allowed?: boolean
+  tech_rehearsal_date?: string
+  tech_rehearsal_time?: string
+  
+  // Travel & Accommodation
+  travel_required?: boolean
+  fly_in_date?: string
+  fly_out_date?: string
+  nearest_airport?: string
+  airport_transport_provided?: boolean
+  airport_transport_details?: string
+  venue_transport_provided?: boolean
+  venue_transport_details?: string
+  accommodation_required?: boolean
+  hotel_dates_needed?: string
+  hotel_tier_preference?: string
+  meals_provided?: string
+  dietary_requirements?: string
+  guest_list_details?: string
+  
+  // Additional Information
+  green_room_available?: boolean
+  meet_greet_opportunities?: string
+  marketing_use_allowed?: boolean
+  press_media_present?: boolean
+  media_interview_requests?: string
+  special_requests?: string
+  
+  // Financial Details
+  speaker_fee?: number
+  travel_expenses_type?: string
+  travel_expenses_amount?: number
+  payment_terms?: string
+  invoice_number?: string
+  purchase_order_number?: string
+  
+  // Confirmation Details
+  prep_call_requested?: boolean
+  prep_call_date?: string
+  prep_call_time?: string
+  additional_notes?: string
+  
+  // Status Tracking
   contract_signed?: boolean
   invoice_sent?: boolean
   payment_received?: boolean
   presentation_ready?: boolean
   materials_sent?: boolean
+  
+  // Event Classification
+  event_classification?: "virtual" | "local" | "travel"
+  
+  // Legacy fields (keeping for backward compatibility)
+  event_location?: string
+  event_type?: string
+  attendee_count?: number
+  event_agenda?: any // JSONB
+  marketing_materials?: any // JSONB
+  contact_person?: string
+  venue_contact?: string
   created_at: string
   updated_at: string
   completed_at?: string
@@ -87,8 +176,8 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         end_date, deadline, budget, spent, completion_percentage,
         team_members, deliverables, milestones, notes, tags,
         event_date, event_location, event_type, attendee_count, speaker_fee,
-        travel_required, accommodation_required, av_requirements, catering_requirements,
-        special_requirements, event_agenda, marketing_materials, contact_person,
+        travel_required, accommodation_required, av_requirements, meals_provided,
+        special_requests, event_agenda, marketing_materials, contact_person,
         venue_contact, contract_signed, invoice_sent, payment_received,
         presentation_ready, materials_sent
       ) VALUES (
@@ -103,8 +192,8 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         ${projectData.event_date || null}, ${projectData.event_location || null}, 
         ${projectData.event_type || null}, ${projectData.attendee_count || null}, ${projectData.speaker_fee || null},
         ${projectData.travel_required || false}, ${projectData.accommodation_required || false},
-        ${projectData.av_requirements || null}, ${projectData.catering_requirements || null},
-        ${projectData.special_requirements || null}, ${projectData.event_agenda || null},
+        ${projectData.av_requirements || null}, ${projectData.meals_provided || null},
+        ${projectData.special_requests || null}, ${projectData.event_agenda || null},
         ${projectData.marketing_materials || null}, ${projectData.contact_person || null},
         ${projectData.venue_contact || null}, ${projectData.contract_signed || false},
         ${projectData.invoice_sent || false}, ${projectData.payment_received || false},
@@ -153,8 +242,8 @@ export async function updateProject(id: number, projectData: Partial<Project>): 
         travel_required = COALESCE(${projectData.travel_required !== undefined ? projectData.travel_required : null}, travel_required),
         accommodation_required = COALESCE(${projectData.accommodation_required !== undefined ? projectData.accommodation_required : null}, accommodation_required),
         av_requirements = COALESCE(${projectData.av_requirements || null}, av_requirements),
-        catering_requirements = COALESCE(${projectData.catering_requirements || null}, catering_requirements),
-        special_requirements = COALESCE(${projectData.special_requirements || null}, special_requirements),
+        meals_provided = COALESCE(${projectData.meals_provided || null}, meals_provided),
+        special_requests = COALESCE(${projectData.special_requests || null}, special_requests),
         event_agenda = COALESCE(${projectData.event_agenda || null}, event_agenda),
         marketing_materials = COALESCE(${projectData.marketing_materials || null}, marketing_materials),
         contact_person = COALESCE(${projectData.contact_person || null}, contact_person),

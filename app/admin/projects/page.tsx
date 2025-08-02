@@ -48,16 +48,114 @@ interface Project {
   spent: number
   completion_percentage: number
   team_members?: string[]
+  
+  // Event Overview - Billing Contact
+  billing_contact_name?: string
+  billing_contact_title?: string
+  billing_contact_email?: string
+  billing_contact_phone?: string
+  billing_address?: string
+  
+  // Event Overview - Logistics Contact
+  logistics_contact_name?: string
+  logistics_contact_email?: string
+  logistics_contact_phone?: string
+  
+  // Event Overview - Additional Fields
+  end_client_name?: string
+  event_name?: string
+  event_date?: string
+  event_website?: string
+  venue_name?: string
+  venue_address?: string
+  venue_contact_name?: string
+  venue_contact_email?: string
+  venue_contact_phone?: string
+  
+  // Speaker Program Details
+  requested_speaker_name?: string
+  program_topic?: string
+  program_type?: string
+  audience_size?: number
+  audience_demographics?: string
+  speaker_attire?: string
+  
+  // Event Schedule
+  event_start_time?: string
+  event_end_time?: string
+  speaker_arrival_time?: string
+  program_start_time?: string
+  program_length?: number
+  qa_length?: number
+  total_program_length?: number
+  speaker_departure_time?: string
+  event_timeline?: string
+  event_timezone?: string
+  
+  // Technical Requirements
+  av_requirements?: string
+  recording_allowed?: boolean
+  recording_purpose?: string
+  live_streaming?: boolean
+  photography_allowed?: boolean
+  tech_rehearsal_date?: string
+  tech_rehearsal_time?: string
+  
+  // Travel & Accommodation
+  travel_required?: boolean
+  fly_in_date?: string
+  fly_out_date?: string
+  nearest_airport?: string
+  airport_transport_provided?: boolean
+  airport_transport_details?: string
+  venue_transport_provided?: boolean
+  venue_transport_details?: string
+  accommodation_required?: boolean
+  hotel_dates_needed?: string
+  hotel_tier_preference?: string
+  meals_provided?: string
+  dietary_requirements?: string
+  guest_list_details?: string
+  
+  // Additional Information
+  green_room_available?: boolean
+  meet_greet_opportunities?: string
+  marketing_use_allowed?: boolean
+  press_media_present?: boolean
+  media_interview_requests?: string
+  special_requests?: string
+  
+  // Financial Details
+  speaker_fee?: number
+  travel_expenses_type?: string
+  travel_expenses_amount?: number
+  payment_terms?: string
+  invoice_number?: string
+  purchase_order_number?: string
+  
+  // Confirmation Details
+  prep_call_requested?: boolean
+  prep_call_date?: string
+  prep_call_time?: string
+  additional_notes?: string
+  
+  // Status Tracking
+  contract_signed?: boolean
+  invoice_sent?: boolean
+  payment_received?: boolean
+  presentation_ready?: boolean
+  materials_sent?: boolean
+  
+  // Event Classification
+  event_classification?: "virtual" | "local" | "travel"
   deliverables?: string
   milestones?: any
   notes?: string
   tags?: string[]
-  // Event-specific fields
-  event_date?: string
+  // Legacy fields (keeping for backward compatibility)
   event_location?: string
   event_type?: string
   attendee_count?: number
-  speaker_fee?: number
   created_at: string
   updated_at: string
   completed_at?: string
@@ -579,6 +677,24 @@ export default function ProjectManagement() {
                     spent: parseFloat(formData.get('spent') as string) || 0,
                     completion_percentage: parseInt(formData.get('completion_percentage') as string) || 0,
                     notes: formData.get('notes') as string || undefined,
+                    // Event Overview Fields
+                    event_name: formData.get('event_name') as string || undefined,
+                    event_date: formData.get('event_date') as string || undefined,
+                    event_classification: formData.get('event_classification') as 'virtual' | 'local' | 'travel' || undefined,
+                    venue_name: formData.get('venue_name') as string || undefined,
+                    venue_address: formData.get('venue_address') as string || undefined,
+                    // Speaker Program Details
+                    requested_speaker_name: formData.get('requested_speaker_name') as string || undefined,
+                    program_topic: formData.get('program_topic') as string || undefined,
+                    program_type: formData.get('program_type') as string || undefined,
+                    audience_size: parseInt(formData.get('audience_size') as string) || undefined,
+                    // Financial Details
+                    speaker_fee: parseFloat(formData.get('speaker_fee') as string) || undefined,
+                    // Contact Information
+                    billing_contact_name: formData.get('billing_contact_name') as string || undefined,
+                    billing_contact_email: formData.get('billing_contact_email') as string || undefined,
+                    logistics_contact_name: formData.get('logistics_contact_name') as string || undefined,
+                    logistics_contact_email: formData.get('logistics_contact_email') as string || undefined,
                     tags: (formData.get('tags') as string)?.split(',').map(t => t.trim()).filter(Boolean) || undefined
                   }
                   createProject(projectData)
@@ -669,6 +785,93 @@ export default function ProjectManagement() {
                       <Input name="tags" placeholder="ai, workshop, strategy" />
                     </div>
                   </div>
+                  
+                  {/* Event Details Section */}
+                  <div className="border-t pt-4">
+                    <h3 className="text-lg font-semibold mb-3">Event Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Event Name</label>
+                        <Input name="event_name" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Event Date</label>
+                        <Input name="event_date" type="date" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Event Classification</label>
+                        <Select name="event_classification">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select classification" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="virtual">Virtual</SelectItem>
+                            <SelectItem value="local">Local</SelectItem>
+                            <SelectItem value="travel">Travel Required</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Speaker Fee ($)</label>
+                        <Input name="speaker_fee" type="number" step="0.01" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Venue Name</label>
+                        <Input name="venue_name" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Audience Size</label>
+                        <Input name="audience_size" type="number" />
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <label className="text-sm font-medium">Venue Address</label>
+                      <Textarea name="venue_address" rows={2} />
+                    </div>
+                  </div>
+                  
+                  {/* Speaker Program Details */}
+                  <div className="border-t pt-4">
+                    <h3 className="text-lg font-semibold mb-3">Speaker Program Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Requested Speaker</label>
+                        <Input name="requested_speaker_name" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Program Type</label>
+                        <Input name="program_type" placeholder="Keynote, Workshop, Panel, etc." />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-medium">Program Topic</label>
+                        <Input name="program_topic" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Contact Information */}
+                  <div className="border-t pt-4">
+                    <h3 className="text-lg font-semibold mb-3">Contact Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Billing Contact Name</label>
+                        <Input name="billing_contact_name" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Billing Contact Email</label>
+                        <Input name="billing_contact_email" type="email" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Logistics Contact Name</label>
+                        <Input name="logistics_contact_name" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Logistics Contact Email</label>
+                        <Input name="logistics_contact_email" type="email" />
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div>
                     <label className="text-sm font-medium">Description</label>
                     <Textarea name="description" rows={3} />
