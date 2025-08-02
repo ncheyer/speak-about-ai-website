@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -162,6 +162,40 @@ export default function AdminDashboard() {
       setLoading(false)
     }
   }
+
+  // Optimize button click handlers
+  const handleShowCreateForm = useCallback(() => {
+    setShowCreateForm(true)
+  }, [])
+
+  // Optimize form field updates
+  const updateFormField = useCallback((field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }, [])
+
+  const handleCancelForm = useCallback(() => {
+    setShowCreateForm(false)
+    setEditingDeal(null)
+    setFormData({
+      clientName: "",
+      clientEmail: "",
+      clientPhone: "",
+      company: "",
+      eventTitle: "",
+      eventDate: "",
+      eventLocation: "",
+      eventType: "",
+      speakerRequested: "",
+      attendeeCount: "",
+      budgetRange: "",
+      dealValue: "",
+      status: "lead",
+      priority: "medium",
+      source: "",
+      notes: "",
+      nextFollowUp: "",
+    })
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -349,7 +383,10 @@ export default function AdminDashboard() {
                 Debug Database
               </Button>
             </Link>
-            <Button onClick={() => setShowCreateForm(true)} disabled={!tableExists}>
+            <Button 
+              onClick={handleShowCreateForm} 
+              disabled={!tableExists}
+            >
               <Plus className="mr-2 h-4 w-4" />
               New Deal
             </Button>
@@ -475,7 +512,7 @@ export default function AdminDashboard() {
                       <Input
                         id="clientName"
                         value={formData.clientName}
-                        onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                        onChange={(e) => updateFormField('clientName', e.target.value)}
                         required
                       />
                     </div>
@@ -484,7 +521,7 @@ export default function AdminDashboard() {
                       <Input
                         id="company"
                         value={formData.company}
-                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                        onChange={(e) => updateFormField('company', e.target.value)}
                       />
                     </div>
                     <div>
@@ -493,7 +530,7 @@ export default function AdminDashboard() {
                         id="clientEmail"
                         type="email"
                         value={formData.clientEmail}
-                        onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
+                        onChange={(e) => updateFormField('clientEmail', e.target.value)}
                       />
                     </div>
                     <div>
@@ -665,29 +702,7 @@ export default function AdminDashboard() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => {
-                      setShowCreateForm(false)
-                      setEditingDeal(null)
-                      setFormData({
-                        clientName: "",
-                        clientEmail: "",
-                        clientPhone: "",
-                        company: "",
-                        eventTitle: "",
-                        eventDate: "",
-                        eventLocation: "",
-                        eventType: "",
-                        speakerRequested: "",
-                        attendeeCount: "",
-                        budgetRange: "",
-                        dealValue: "",
-                        status: "lead",
-                        priority: "medium",
-                        source: "",
-                        notes: "",
-                        nextFollowUp: "",
-                      })
-                    }}
+                    onClick={handleCancelForm}
                   >
                     Cancel
                   </Button>
