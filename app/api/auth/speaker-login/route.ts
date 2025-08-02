@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
+import { verifyPassword } from '@/lib/password-utils'
 
 // Initialize Neon client
 const sql = neon(process.env.DATABASE_URL!)
@@ -8,32 +9,58 @@ export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
 
-    if (!email) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email is required' },
+        { error: 'Email and password are required' },
         { status: 400 }
       )
     }
 
-    // For MVP, we'll use a simple email-based authentication
-    // In production, implement proper password hashing and verification
+    // Add small delay to prevent brute force attacks
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // Get speaker with password hash
     const speakers = await sql`
-      SELECT id, email, name, active
+      SELECT id, email, name, active, password_hash, email_verified
       FROM speakers
-      WHERE email = ${email} AND active = true
+      WHERE email = ${email.toLowerCase()} AND active = true
       LIMIT 1
     `
 
     if (speakers.length === 0) {
       return NextResponse.json(
-        { error: 'Speaker not found or inactive' },
-        { status: 404 }
+        { error: 'Invalid email or password' },
+        { status: 401 }
       )
     }
 
     const speaker = speakers[0]
 
-    // Generate a simple session token (in production, use proper JWT or session management)
+    // Check if speaker has set a password
+    if (!speaker.password_hash) {
+      return NextResponse.json(
+        { error: 'Please set your password first. Contact admin for assistance.' },
+        { status: 401 }
+      )
+    }
+
+    // Verify password
+    if (!verifyPassword(password, speaker.password_hash)) {
+      return NextResponse.json(
+        { error: 'Invalid email or password' },
+        { status: 401 }
+      )
+    }
+
+    // Check email verification
+    if (!speaker.email_verified) {
+      return NextResponse.json(
+        { error: 'Please verify your email address first' },
+        { status: 401 }
+      )
+    }
+
+    // Generate session token
     const sessionToken = Buffer.from(`speaker:${speaker.id}:${Date.now()}`).toString('base64')
 
     return NextResponse.json({

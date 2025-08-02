@@ -138,20 +138,30 @@ export default function SpeakerPortalLogin() {
               </Button>
             </form>
 
-            {/* Info Section */}
+            {/* Registration Section */}
             <div className="mt-6 pt-6 border-t border-gray-200">
               <div className="text-center text-sm text-gray-600">
-                <p className="mb-2">Don't have a speaker account?</p>
-                <p>Contact your account manager to get set up</p>
+                <p className="mb-3">Don't have a speaker account?</p>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => router.push("/portal/speaker-register")}
+                >
+                  Create Speaker Account
+                </Button>
               </div>
             </div>
 
-            {/* Demo Note */}
-            <Alert className="mt-4">
-              <AlertDescription>
-                <strong>Demo Account:</strong> Use email <code>speaker@speakaboutai.com</code> with any password to test
-              </AlertDescription>
-            </Alert>
+            {/* Forgot Password */}
+            <div className="mt-4 text-center">
+              <Button
+                variant="link"
+                className="text-sm text-gray-600 hover:text-purple-600"
+                onClick={() => router.push("/portal/speaker-reset-password")}
+              >
+                Forgot your password?
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

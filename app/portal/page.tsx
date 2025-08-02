@@ -112,10 +112,19 @@ export default function PortalHome() {
                 </div>
               </div>
               
-              <Button className="w-full bg-purple-600 hover:bg-purple-700 group-hover:translate-x-1 transition-transform">
-                Access Speaker Portal
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <div className="space-y-2">
+                <Button className="w-full bg-purple-600 hover:bg-purple-700 group-hover:translate-x-1 transition-transform">
+                  Access Speaker Portal
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full text-purple-600 border-purple-200 hover:bg-purple-50"
+                  onClick={() => router.push("/portal/speaker-register")}
+                >
+                  New Speaker? Register Here
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
