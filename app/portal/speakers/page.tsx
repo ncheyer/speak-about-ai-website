@@ -99,53 +99,69 @@ export default function SpeakerHub() {
   })
 
   useEffect(() => {
-    // For now, use mock data. In production, fetch from API
-    const mockSpeaker: Speaker = {
-      id: 1,
-      email: "speaker@speakaboutai.com",
-      name: "AI Expert Speaker",
-      bio: "Full biography goes here...",
-      short_bio: "Short bio for promotions",
-      one_liner: "Making AI accessible to everyone",
-      headshot_url: "",
-      website: "https://speakaboutai.com",
-      social_media: {
-        twitter: "@speakaboutai",
-        linkedin: "speakaboutai"
-      },
-      topics: ["Artificial Intelligence", "Machine Learning", "AI Ethics"],
-      speaking_fee_range: "$5,000 - $15,000",
-      travel_preferences: "Business class for flights over 3 hours",
-      technical_requirements: "HDMI connection, wireless microphone",
-      dietary_restrictions: "Vegetarian",
-      emergency_contact: {
-        name: "Emergency Contact",
-        phone: "+1 234 567 8900",
-        relationship: "Spouse"
-      },
-      active: true
+    const fetchSpeakerData = async () => {
+      try {
+        const sessionToken = localStorage.getItem("speakerSessionToken")
+        const isLoggedIn = localStorage.getItem("speakerLoggedIn")
+        
+        if (!sessionToken || !isLoggedIn) {
+          router.push("/portal/speaker")
+          return
+        }
+
+        const response = await fetch("/api/speakers/me", {
+          headers: {
+            "Authorization": `Bearer ${sessionToken}`,
+            "Content-Type": "application/json"
+          }
+        })
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Session expired, redirect to login
+            localStorage.removeItem("speakerLoggedIn")
+            localStorage.removeItem("speakerSessionToken")
+            localStorage.removeItem("speakerUser")
+            router.push("/portal/speaker")
+            return
+          }
+          throw new Error("Failed to fetch speaker data")
+        }
+
+        const data = await response.json()
+        const speakerData = data.speaker
+
+        setSpeaker(speakerData)
+        setFormData({
+          name: speakerData.name || "",
+          bio: speakerData.bio || "",
+          short_bio: speakerData.short_bio || "",
+          one_liner: speakerData.one_liner || "",
+          headshot_url: speakerData.headshot_url || "",
+          website: speakerData.website || "",
+          social_media: speakerData.social_media || { twitter: "", linkedin: "", instagram: "", youtube: "" },
+          topics: speakerData.topics || [],
+          speaking_fee_range: speakerData.speaking_fee_range || "",
+          travel_preferences: speakerData.travel_preferences || "",
+          technical_requirements: speakerData.technical_requirements || "",
+          dietary_restrictions: speakerData.dietary_restrictions || "",
+          emergency_contact: speakerData.emergency_contact || { name: "", phone: "", relationship: "" }
+        })
+      } catch (error) {
+        console.error("Error fetching speaker data:", error)
+        setError("Failed to load speaker profile. Please try refreshing the page.")
+      } finally {
+        setIsLoading(false)
+      }
     }
-    
-    setSpeaker(mockSpeaker)
-    setFormData({
-      name: mockSpeaker.name,
-      bio: mockSpeaker.bio || "",
-      short_bio: mockSpeaker.short_bio || "",
-      one_liner: mockSpeaker.one_liner || "",
-      headshot_url: mockSpeaker.headshot_url || "",
-      website: mockSpeaker.website || "",
-      social_media: mockSpeaker.social_media || { twitter: "", linkedin: "", instagram: "", youtube: "" },
-      topics: mockSpeaker.topics || [],
-      speaking_fee_range: mockSpeaker.speaking_fee_range || "",
-      travel_preferences: mockSpeaker.travel_preferences || "",
-      technical_requirements: mockSpeaker.technical_requirements || "",
-      dietary_restrictions: mockSpeaker.dietary_restrictions || "",
-      emergency_contact: mockSpeaker.emergency_contact || { name: "", phone: "", relationship: "" }
-    })
-    setIsLoading(false)
-  }, [])
+
+    fetchSpeakerData()
+  }, [router])
 
   const handleLogout = () => {
+    localStorage.removeItem("speakerLoggedIn")
+    localStorage.removeItem("speakerSessionToken")
+    localStorage.removeItem("speakerUser")
     router.push("/portal")
   }
 
@@ -155,15 +171,42 @@ export default function SpeakerHub() {
     setSuccess("")
 
     try {
-      // In production, make API call to save speaker data
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
+      const sessionToken = localStorage.getItem("speakerSessionToken")
       
-      setSpeaker({ ...speaker!, ...formData })
+      if (!sessionToken) {
+        setError("Session expired. Please log in again.")
+        return
+      }
+
+      const response = await fetch("/api/speakers/me", {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${sessionToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("speakerLoggedIn")
+          localStorage.removeItem("speakerSessionToken")
+          localStorage.removeItem("speakerUser")
+          router.push("/portal/speaker")
+          return
+        }
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to save changes")
+      }
+
+      const data = await response.json()
+      setSpeaker(data.speaker)
       setSuccess("Profile updated successfully!")
       
       setTimeout(() => setSuccess(""), 3000)
     } catch (error) {
-      setError("Failed to save changes. Please try again.")
+      console.error("Save error:", error)
+      setError(error instanceof Error ? error.message : "Failed to save changes. Please try again.")
     } finally {
       setIsSaving(false)
     }
