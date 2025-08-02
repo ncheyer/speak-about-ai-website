@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { updateDeal, deleteDeal } from "@/lib/deals-db"
+import { createProject } from "@/lib/projects-db"
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -9,10 +10,47 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     const body = await request.json()
+    
+    // Get the original deal to check if status is changing
+    const { getAllDeals } = await import("@/lib/deals-db")
+    const deals = await getAllDeals()
+    const originalDeal = deals.find(d => d.id === id)
+    
     const deal = await updateDeal(id, body)
 
     if (!deal) {
       return NextResponse.json({ error: "Deal not found or failed to update" }, { status: 404 })
+    }
+
+    // If deal status changed to "won", create a project
+    if (originalDeal && originalDeal.status !== "won" && deal.status === "won") {
+      try {
+        const projectData = {
+          project_name: deal.event_title,
+          client_name: deal.client_name,
+          client_email: deal.client_email,
+          client_phone: deal.client_phone,
+          company: deal.company,
+          project_type: deal.event_type === "Workshop" ? "Workshop" : 
+                       deal.event_type === "Keynote" ? "Speaking" :
+                       deal.event_type === "Consulting" ? "Consulting" : "Other",
+          description: `Event: ${deal.event_title}\nLocation: ${deal.event_location}\nAttendees: ${deal.attendee_count}\n\n${deal.notes}`,
+          status: "planning" as const,
+          priority: deal.priority,
+          start_date: new Date().toISOString().split('T')[0],
+          deadline: deal.event_date,
+          budget: deal.deal_value,
+          spent: 0,
+          completion_percentage: 0,
+          notes: `Deal ID: ${deal.id}\nOriginal notes: ${deal.notes}`,
+          tags: [deal.event_type, deal.source]
+        }
+        
+        await createProject(projectData)
+      } catch (error) {
+        console.error("Error creating project from won deal:", error)
+        // Don't fail the deal update if project creation fails
+      }
     }
 
     return NextResponse.json(deal)
@@ -36,10 +74,47 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
 
     const body = await request.json()
+    
+    // Get the original deal to check if status is changing
+    const { getAllDeals } = await import("@/lib/deals-db")
+    const deals = await getAllDeals()
+    const originalDeal = deals.find(d => d.id === id)
+    
     const deal = await updateDeal(id, body)
 
     if (!deal) {
       return NextResponse.json({ error: "Deal not found or failed to update" }, { status: 404 })
+    }
+
+    // If deal status changed to "won", create a project
+    if (originalDeal && originalDeal.status !== "won" && deal.status === "won") {
+      try {
+        const projectData = {
+          project_name: deal.event_title,
+          client_name: deal.client_name,
+          client_email: deal.client_email,
+          client_phone: deal.client_phone,
+          company: deal.company,
+          project_type: deal.event_type === "Workshop" ? "Workshop" : 
+                       deal.event_type === "Keynote" ? "Speaking" :
+                       deal.event_type === "Consulting" ? "Consulting" : "Other",
+          description: `Event: ${deal.event_title}\nLocation: ${deal.event_location}\nAttendees: ${deal.attendee_count}\n\n${deal.notes}`,
+          status: "planning" as const,
+          priority: deal.priority,
+          start_date: new Date().toISOString().split('T')[0],
+          deadline: deal.event_date,
+          budget: deal.deal_value,
+          spent: 0,
+          completion_percentage: 0,
+          notes: `Deal ID: ${deal.id}\nOriginal notes: ${deal.notes}`,
+          tags: [deal.event_type, deal.source]
+        }
+        
+        await createProject(projectData)
+      } catch (error) {
+        console.error("Error creating project from won deal:", error)
+        // Don't fail the deal update if project creation fails
+      }
     }
 
     return NextResponse.json(deal)
