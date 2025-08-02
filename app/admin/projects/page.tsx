@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   Plus,
   Edit,
+  Eye,
   Target,
   DollarSign,
   Loader2,
@@ -38,7 +39,7 @@ interface Project {
   company?: string
   project_type: string
   description?: string
-  status: "planning" | "in_progress" | "review" | "completed" | "on_hold" | "cancelled"
+  status: "2plus_months" | "1to2_months" | "less_than_month" | "final_week" | "completed" | "cancelled"
   priority: "low" | "medium" | "high" | "urgent"
   start_date: string
   end_date?: string
@@ -51,18 +52,24 @@ interface Project {
   milestones?: any
   notes?: string
   tags?: string[]
+  // Event-specific fields
+  event_date?: string
+  event_location?: string
+  event_type?: string
+  attendee_count?: number
+  speaker_fee?: number
   created_at: string
   updated_at: string
   completed_at?: string
 }
 
 const PROJECT_STATUSES = {
-  planning: { label: 'Planning', color: 'bg-blue-500' },
-  in_progress: { label: 'In Progress', color: 'bg-yellow-500' },
-  review: { label: 'In Review', color: 'bg-purple-500' },
-  completed: { label: 'Completed', color: 'bg-green-500' },
-  on_hold: { label: 'On Hold', color: 'bg-orange-500' },
-  cancelled: { label: 'Cancelled', color: 'bg-red-500' }
+  "2plus_months": { label: '2+ Months Out', color: 'bg-blue-500' },
+  "1to2_months": { label: '1-2 Months Out', color: 'bg-yellow-500' },
+  "less_than_month": { label: '< 1 Month Out', color: 'bg-orange-500' },
+  "final_week": { label: 'Final Week', color: 'bg-red-500' },
+  "completed": { label: 'Completed', color: 'bg-green-500' },
+  "cancelled": { label: 'Cancelled', color: 'bg-gray-500' }
 }
 
 const PRIORITY_COLORS = {
@@ -507,6 +514,11 @@ export default function ProjectManagement() {
                         </CardDescription>
                       </div>
                       <div className="flex space-x-2">
+                        <Link href={`/admin/events/${project.id}`}>
+                          <Button size="sm" variant="ghost">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
                         <Button size="sm" variant="ghost" onClick={() => setSelectedProject(project)}>
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -606,7 +618,7 @@ export default function ProjectManagement() {
                     </div>
                     <div>
                       <label className="text-sm font-medium">Status *</label>
-                      <Select name="status" defaultValue="planning" required>
+                      <Select name="status" defaultValue="2plus_months" required>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>

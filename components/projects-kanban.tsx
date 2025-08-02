@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, DragEvent } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, DollarSign, Clock, AlertTriangle, CheckCircle2, Target } from "lucide-react"
@@ -15,10 +16,15 @@ interface Project {
   company?: string
   project_type: string
   description?: string
-  status: "planning" | "in_progress" | "review" | "completed" | "on_hold" | "cancelled"
+  status: "2plus_months" | "1to2_months" | "less_than_month" | "final_week" | "completed" | "cancelled"
   priority: "low" | "medium" | "high" | "urgent"
   start_date: string
   deadline?: string
+  event_date?: string
+  event_location?: string
+  event_type?: string
+  attendee_count?: number
+  speaker_fee?: number
   budget: number
   spent: number
   completion_percentage: number
@@ -27,12 +33,12 @@ interface Project {
 }
 
 const STAGES = [
-  { id: "planning", title: "Planning", color: "bg-blue-500" },
-  { id: "in_progress", title: "In Progress", color: "bg-yellow-500" },
-  { id: "review", title: "In Review", color: "bg-purple-500" },
-  { id: "completed", title: "Completed", color: "bg-green-500" },
-  { id: "on_hold", title: "On Hold", color: "bg-orange-500" },
-  { id: "cancelled", title: "Cancelled", color: "bg-red-500" },
+  { id: "2plus_months", title: "2+ Months Out", color: "bg-blue-500", description: "Early planning phase" },
+  { id: "1to2_months", title: "1-2 Months Out", color: "bg-yellow-500", description: "Active preparation" },
+  { id: "less_than_month", title: "< 1 Month Out", color: "bg-orange-500", description: "Final preparations" },
+  { id: "final_week", title: "Final Week", color: "bg-red-500", description: "Last minute details" },
+  { id: "completed", title: "Completed", color: "bg-green-500", description: "Event finished" },
+  { id: "cancelled", title: "Cancelled", color: "bg-gray-500", description: "Event cancelled" },
 ]
 
 const PRIORITY_COLORS = {
@@ -43,6 +49,7 @@ const PRIORITY_COLORS = {
 }
 
 export function ProjectsKanban() {
+  const router = useRouter()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [draggedProject, setDraggedProject] = useState<Project | null>(null)
@@ -156,7 +163,7 @@ export function ProjectsKanban() {
       <div className="flex gap-4 min-w-max p-4">
         {STAGES.map(stage => {
           const stageProjects = (projects || []).filter(project => project.status === stage.id)
-          const totalBudget = stageProjects.reduce((sum, project) => sum + Number(project.budget), 0)
+          const totalFees = stageProjects.reduce((sum, project) => sum + Number(project.speaker_fee || project.budget || 0), 0)
 
           return (
             <div
@@ -174,15 +181,21 @@ export function ProjectsKanban() {
                   <Badge variant="secondary">{stageProjects.length}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {formatCurrency(totalBudget)} total budget
+                  {stage.description}
                 </p>
+                {totalFees > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatCurrency(totalFees)} total fees
+                  </p>
+                )}
               </div>
 
               <div className="space-y-3">
                 {stageProjects.map(project => {
-                  const daysUntilDeadline = calculateDaysUntilDeadline(project.deadline)
-                  const isOverdue = daysUntilDeadline !== null && daysUntilDeadline < 0
-                  const isUrgent = daysUntilDeadline !== null && daysUntilDeadline <= 7 && daysUntilDeadline >= 0
+                  const eventDate = project.event_date || project.deadline
+                  const daysUntilEvent = calculateDaysUntilDeadline(eventDate)
+                  const isOverdue = daysUntilEvent !== null && daysUntilEvent < 0
+                  const isUrgent = daysUntilEvent !== null && daysUntilEvent <= 7 && daysUntilEvent >= 0
 
                   return (
                     <Card
@@ -194,6 +207,12 @@ export function ProjectsKanban() {
                       )}
                       draggable
                       onDragStart={(e) => handleDragStart(e, project)}
+                      onClick={(e) => {
+                        // Only navigate if not dragging
+                        if (!e.defaultPrevented) {
+                          router.push(`/admin/events/${project.id}`)
+                        }
+                      }}
                     >
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
@@ -217,38 +236,40 @@ export function ProjectsKanban() {
                       <CardContent className="space-y-2">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Target className="h-3 w-3" />
-                          {project.project_type}
+                          {project.event_type || project.project_type}
                         </div>
-                        {project.deadline && (
+                        {eventDate && (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            Due: {formatDate(project.deadline)}
-                            {daysUntilDeadline !== null && (
+                            <Calendar className="h-3 w-3" />
+                            {formatDate(eventDate)}
+                            {daysUntilEvent !== null && (
                               <span className={cn(
-                                "font-semibold",
+                                "font-semibold ml-1",
                                 isOverdue ? "text-red-600" : isUrgent ? "text-orange-600" : ""
                               )}>
-                                ({Math.abs(daysUntilDeadline)} days {isOverdue ? 'overdue' : 'left'})
+                                ({Math.abs(daysUntilEvent)} days {isOverdue ? 'ago' : 'left'})
                               </span>
                             )}
                           </div>
                         )}
+                        {project.event_location && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {project.event_location}
+                          </div>
+                        )}
                         <div className="flex items-center justify-between pt-2">
                           <div className="flex items-center gap-2 text-sm">
-                            <CheckCircle2 className="h-3 w-3" />
-                            {project.completion_percentage}%
+                            {project.attendee_count && (
+                              <>
+                                <CheckCircle2 className="h-3 w-3" />
+                                {project.attendee_count} attendees
+                              </>
+                            )}
                           </div>
                           <div className="font-semibold text-sm">
-                            {formatCurrency(Number(project.budget))}
+                            {formatCurrency(Number(project.speaker_fee || project.budget || 0))}
                           </div>
-                        </div>
-                        
-                        {/* Progress bar */}
-                        <div className="w-full bg-gray-200 rounded-full h-1.5">
-                          <div 
-                            className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" 
-                            style={{ width: `${project.completion_percentage}%` }}
-                          ></div>
                         </div>
 
                         {/* Tags */}

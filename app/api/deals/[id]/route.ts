@@ -35,13 +35,20 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
                        deal.event_type === "Keynote" ? "Speaking" :
                        deal.event_type === "Consulting" ? "Consulting" : "Other",
           description: `Event: ${deal.event_title}\nLocation: ${deal.event_location}\nAttendees: ${deal.attendee_count}\n\n${deal.notes}`,
-          status: "planning" as const,
+          status: "2plus_months" as const,
           priority: deal.priority,
           start_date: new Date().toISOString().split('T')[0],
           deadline: deal.event_date,
           budget: deal.deal_value,
           spent: 0,
           completion_percentage: 0,
+          // Event-specific fields
+          event_date: deal.event_date,
+          event_location: deal.event_location,
+          event_type: deal.event_type,
+          attendee_count: deal.attendee_count,
+          speaker_fee: deal.deal_value,
+          contact_person: deal.client_name,
           notes: `Deal ID: ${deal.id}\nOriginal notes: ${deal.notes}`,
           tags: [deal.event_type, deal.source]
         }
@@ -99,13 +106,20 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
                        deal.event_type === "Keynote" ? "Speaking" :
                        deal.event_type === "Consulting" ? "Consulting" : "Other",
           description: `Event: ${deal.event_title}\nLocation: ${deal.event_location}\nAttendees: ${deal.attendee_count}\n\n${deal.notes}`,
-          status: "planning" as const,
+          status: "2plus_months" as const,
           priority: deal.priority,
           start_date: new Date().toISOString().split('T')[0],
           deadline: deal.event_date,
           budget: deal.deal_value,
           spent: 0,
           completion_percentage: 0,
+          // Event-specific fields
+          event_date: deal.event_date,
+          event_location: deal.event_location,
+          event_type: deal.event_type,
+          attendee_count: deal.attendee_count,
+          speaker_fee: deal.deal_value,
+          contact_person: deal.client_name,
           notes: `Deal ID: ${deal.id}\nOriginal notes: ${deal.notes}`,
           tags: [deal.event_type, deal.source]
         }
