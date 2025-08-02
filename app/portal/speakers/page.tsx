@@ -71,6 +71,8 @@ export default function SpeakerHub() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [newTopic, setNewTopic] = useState("")
+  const [bookings, setBookings] = useState<any>(null)
+  const [bookingsLoading, setBookingsLoading] = useState(false)
   
   // Form state
   const [formData, setFormData] = useState({
@@ -229,6 +231,35 @@ export default function SpeakerHub() {
     })
   }
 
+  const fetchBookings = async () => {
+    setBookingsLoading(true)
+    try {
+      const sessionToken = localStorage.getItem("speakerSessionToken")
+      
+      if (!sessionToken) {
+        return
+      }
+
+      const response = await fetch("/api/speakers/me/bookings", {
+        headers: {
+          "Authorization": `Bearer ${sessionToken}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setBookings(data.data)
+      } else {
+        console.error("Failed to fetch bookings")
+      }
+    } catch (error) {
+      console.error("Error fetching bookings:", error)
+    } finally {
+      setBookingsLoading(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -283,13 +314,212 @@ export default function SpeakerHub() {
         )}
 
         {/* Main Content */}
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto">
+        <Tabs defaultValue="events" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
+            <TabsTrigger value="events">My Events</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="promotion">Promotion</TabsTrigger>
             <TabsTrigger value="logistics">Logistics</TabsTrigger>
             <TabsTrigger value="financial">Financial</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="events" className="space-y-6">
+            {bookings ? (
+              <div className="space-y-6">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <div className="text-2xl font-bold text-blue-600">{bookings.summary.totalUpcoming}</div>
+                      <div className="text-sm text-gray-600">Upcoming Events</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <div className="text-2xl font-bold text-green-600">{bookings.summary.totalOpportunities}</div>
+                      <div className="text-sm text-gray-600">Opportunities</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <div className="text-2xl font-bold text-gray-600">{bookings.summary.totalPast}</div>
+                      <div className="text-sm text-gray-600">Past Events</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Upcoming Events */}
+                {bookings.bookings.upcoming.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Calendar className="h-5 w-5" />
+                        Upcoming Events
+                      </CardTitle>
+                      <CardDescription>Your confirmed speaking engagements</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {bookings.bookings.upcoming.map((event: any) => (
+                          <div key={`${event.type}-${event.id}`} className="border rounded-lg p-4 hover:bg-gray-50">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h3 className="font-semibold text-lg">{event.title}</h3>
+                                <p className="text-gray-600">{event.client} • {event.company}</p>
+                              </div>
+                              <div className="text-right">
+                                <Badge variant={event.classification === 'virtual' ? 'secondary' : event.classification === 'travel' ? 'destructive' : 'default'}>
+                                  {event.classification || event.eventType}
+                                </Badge>
+                                <p className="text-sm text-gray-500 mt-1">{event.status}</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <strong>Date:</strong> {event.eventDate ? new Date(event.eventDate).toLocaleDateString() : 'TBD'}
+                              </div>
+                              <div>
+                                <strong>Location:</strong> {event.location || 'TBD'}
+                              </div>
+                              <div>
+                                <strong>Attendees:</strong> {event.attendeeCount || 'TBD'}
+                              </div>
+                            </div>
+                            {event.fee && (
+                              <div className="mt-2 text-sm">
+                                <strong>Speaker Fee:</strong> ${event.fee.toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Opportunities */}
+                {bookings.bookings.opportunities.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Award className="h-5 w-5" />
+                        Opportunities
+                      </CardTitle>
+                      <CardDescription>Potential speaking engagements in progress</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {bookings.bookings.opportunities.map((opportunity: any) => (
+                          <div key={`${opportunity.type}-${opportunity.id}`} className="border rounded-lg p-4 hover:bg-gray-50">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h3 className="font-semibold text-lg">{opportunity.title}</h3>
+                                <p className="text-gray-600">{opportunity.client} • {opportunity.company}</p>
+                              </div>
+                              <div className="text-right">
+                                <Badge variant={
+                                  opportunity.status === 'won' ? 'default' : 
+                                  opportunity.status === 'negotiation' ? 'secondary' : 
+                                  'outline'
+                                }>
+                                  {opportunity.status}
+                                </Badge>
+                                <p className="text-sm text-gray-500 mt-1">Deal</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <strong>Date:</strong> {opportunity.eventDate ? new Date(opportunity.eventDate).toLocaleDateString() : 'TBD'}
+                              </div>
+                              <div>
+                                <strong>Location:</strong> {opportunity.location || 'TBD'}
+                              </div>
+                              <div>
+                                <strong>Budget:</strong> {opportunity.budgetRange || 'TBD'}
+                              </div>
+                            </div>
+                            {opportunity.estimatedFee && (
+                              <div className="mt-2 text-sm">
+                                <strong>Estimated Value:</strong> ${opportunity.estimatedFee.toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Past Events */}
+                {bookings.bookings.past.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Past Events
+                      </CardTitle>
+                      <CardDescription>Your completed speaking engagements</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {bookings.bookings.past.slice(0, 5).map((event: any) => (
+                          <div key={`${event.type}-${event.id}`} className="border rounded-lg p-4 bg-gray-50">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h3 className="font-semibold">{event.title}</h3>
+                                <p className="text-gray-600 text-sm">{event.client} • {event.company}</p>
+                              </div>
+                              <div className="text-right text-sm text-gray-500">
+                                {event.eventDate ? new Date(event.eventDate).toLocaleDateString() : 'Date TBD'}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {bookings.bookings.past.length > 5 && (
+                          <p className="text-center text-gray-500 text-sm">
+                            And {bookings.bookings.past.length - 5} more past events...
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Empty State */}
+                {bookings.summary.totalUpcoming === 0 && bookings.summary.totalOpportunities === 0 && bookings.summary.totalPast === 0 && (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No Events Yet</h3>
+                      <p className="text-gray-600 mb-4">
+                        You haven't been assigned to any speaking events yet. Make sure your profile is complete to attract opportunities!
+                      </p>
+                      <Button onClick={() => window.location.href = '#profile'} variant="outline">
+                        Complete Your Profile
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  {bookingsLoading ? (
+                    <div>
+                      <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+                      <p className="text-gray-600">Loading your events...</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <Button onClick={fetchBookings}>
+                        Load My Events
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
           <TabsContent value="profile" className="space-y-6">
             <Card>

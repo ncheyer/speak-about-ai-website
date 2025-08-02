@@ -56,6 +56,7 @@ export interface Project {
   venue_contact_phone?: string
   
   // Speaker Program Details
+  speaker_id?: number
   requested_speaker_name?: string
   program_topic?: string
   program_type?: string

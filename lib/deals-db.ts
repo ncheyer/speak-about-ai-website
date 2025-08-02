@@ -18,6 +18,7 @@ export interface Deal {
   event_date: string
   event_location: string
   event_type: string
+  speaker_id?: number
   speaker_requested?: string
   attendee_count: number
   budget_range: string
