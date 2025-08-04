@@ -160,10 +160,21 @@ export default function MasterAdminPanel() {
   const loadSpeakers = async () => {
     try {
       setSpeakersLoading(true)
+      console.log('Admin: Loading speakers...')
       const response = await fetch("/api/admin/speakers")
+      console.log('Admin: Speakers response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('Admin: Speakers data received:', { 
+          success: data.success, 
+          speakerCount: data.speakers?.length || 0,
+          firstSpeaker: data.speakers?.[0] || null
+        })
         setSpeakers(data.speakers || [])
+      } else {
+        const errorData = await response.text()
+        console.error('Admin: Speakers API error:', response.status, errorData)
       }
     } catch (error) {
       console.error("Error loading speakers:", error)
@@ -264,9 +275,22 @@ export default function MasterAdminPanel() {
 
   // Filter functions
   const filteredSpeakers = speakers.filter((speaker) => {
-    const matchesSearch = speaker.name.toLowerCase().includes(speakerSearch.toLowerCase()) ||
+    console.log('Filtering speaker:', speaker.name, { topics: speaker.topics, active: speaker.active, featured: speaker.featured })
+    
+    // Handle topics that might be string, array, or null
+    let topicsMatch = false
+    if (speaker.topics) {
+      if (Array.isArray(speaker.topics)) {
+        topicsMatch = speaker.topics.some(topic => topic.toLowerCase().includes(speakerSearch.toLowerCase()))
+      } else if (typeof speaker.topics === 'string') {
+        topicsMatch = speaker.topics.toLowerCase().includes(speakerSearch.toLowerCase())
+      }
+    }
+    
+    const matchesSearch = !speakerSearch || 
+      speaker.name.toLowerCase().includes(speakerSearch.toLowerCase()) ||
       speaker.email.toLowerCase().includes(speakerSearch.toLowerCase()) ||
-      speaker.topics.some(topic => topic.toLowerCase().includes(speakerSearch.toLowerCase()))
+      topicsMatch
     
     const matchesActive = speakerActiveFilter === "all" || 
       (speakerActiveFilter === "active" && speaker.active) ||
@@ -276,7 +300,10 @@ export default function MasterAdminPanel() {
       (speakerFeaturedFilter === "featured" && speaker.featured) ||
       (speakerFeaturedFilter === "not-featured" && !speaker.featured)
     
-    return matchesSearch && matchesActive && matchesFeatured
+    const result = matchesSearch && matchesActive && matchesFeatured
+    console.log('Filter result for', speaker.name, ':', result, { matchesSearch, matchesActive, matchesFeatured })
+    
+    return result
   })
 
   const filteredDeals = deals.filter((deal) => {
@@ -500,15 +527,27 @@ export default function MasterAdminPanel() {
                 <span className="ml-2">Loading speakers...</span>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredSpeakers.slice(0, 9).map((speaker) => (
-                  <Card key={speaker.id} className="hover:shadow-lg transition-shadow">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={speaker.headshot_url} alt={speaker.name} />
-                          <AvatarFallback>{speaker.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                        </Avatar>
+              <div>
+                <div className="mb-4 text-sm text-gray-600">
+                  Debug: Total speakers: {speakers.length}, Filtered: {filteredSpeakers.length}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredSpeakers.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-gray-500">No speakers found matching current filters</p>
+                      <div className="mt-2 text-sm text-gray-400">
+                        Search: "{speakerSearch}", Active: {speakerActiveFilter}, Featured: {speakerFeaturedFilter}
+                      </div>
+                    </div>
+                  ) : (
+                    filteredSpeakers.slice(0, 9).map((speaker) => (
+                    <Card key={speaker.id} className="hover:shadow-lg transition-shadow">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={speaker.headshot_url} alt={speaker.name} />
+                            <AvatarFallback>{speaker.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          </Avatar>
                         <div className="flex-1">
                           <CardTitle className="text-lg">{speaker.name}</CardTitle>
                           <div className="flex gap-1 mt-1">
@@ -568,9 +607,11 @@ export default function MasterAdminPanel() {
                           </Link>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                    ))
+                  )}
+                </div>
               </div>
             )}
 
