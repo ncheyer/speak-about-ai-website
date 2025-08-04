@@ -6,13 +6,29 @@ export async function POST(request: NextRequest) {
     const { speakerId, sessionId: bodySessionId } = await request.json()
     console.log('API: Add to wishlist request:', { speakerId, sessionId: bodySessionId })
 
-    if (!speakerId || typeof speakerId !== 'number') {
-      console.log('API: Invalid speaker ID')
+    if (!speakerId) {
+      console.log('API: Speaker ID is missing')
       return NextResponse.json(
         { error: 'Speaker ID is required' },
         { status: 400 }
       )
     }
+
+    // Convert speakerId to number if it's not already
+    let numericSpeakerId: number
+    if (typeof speakerId === 'number') {
+      numericSpeakerId = speakerId
+    } else if (typeof speakerId === 'string' && !isNaN(Number(speakerId))) {
+      numericSpeakerId = Number(speakerId)
+    } else {
+      console.log('API: Invalid speaker ID format:', typeof speakerId, speakerId)
+      return NextResponse.json(
+        { error: 'Speaker ID must be a valid number' },
+        { status: 400 }
+      )
+    }
+
+    console.log('API: Using numeric speaker ID:', numericSpeakerId)
 
     // Get session ID from request body first, fallback to cookies
     let sessionId = bodySessionId
@@ -40,8 +56,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('API: Calling addToWishlist with:', { sessionId, speakerId, visitorId })
-    const success = await addToWishlist(sessionId, speakerId, visitorId)
+    console.log('API: Calling addToWishlist with:', { sessionId, speakerId: numericSpeakerId, visitorId })
+    const success = await addToWishlist(sessionId, numericSpeakerId, visitorId)
     console.log('API: addToWishlist result:', success)
 
     if (success) {

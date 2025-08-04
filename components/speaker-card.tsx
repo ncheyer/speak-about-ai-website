@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import type { Speaker } from "@/lib/speakers-data"
 import { CalendarCheck, User, ChevronDown, ChevronUp } from "lucide-react"
 import { WishlistButton } from "@/components/wishlist-button"
+import { getSpeakerId } from "@/lib/speaker-id-utils"
 
 interface UnifiedSpeakerCardProps {
   speaker: Speaker
@@ -220,7 +221,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
                   </Link>
                 </Button>
                 <WishlistButton 
-                  speakerId={speaker.id || 0} 
+                  speakerId={getSpeakerId(speaker)} 
                   speakerName={name}
                   variant="outline"
                   size="sm"

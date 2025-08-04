@@ -5,9 +5,22 @@ export async function POST(request: NextRequest) {
   try {
     const { speakerId, sessionId: bodySessionId } = await request.json()
 
-    if (!speakerId || typeof speakerId !== 'number') {
+    if (!speakerId) {
       return NextResponse.json(
         { error: 'Speaker ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Convert speakerId to number if it's not already
+    let numericSpeakerId: number
+    if (typeof speakerId === 'number') {
+      numericSpeakerId = speakerId
+    } else if (typeof speakerId === 'string' && !isNaN(Number(speakerId))) {
+      numericSpeakerId = Number(speakerId)
+    } else {
+      return NextResponse.json(
+        { error: 'Speaker ID must be a valid number' },
         { status: 400 }
       )
     }
@@ -25,7 +38,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const success = await removeFromWishlist(sessionId, speakerId)
+    const success = await removeFromWishlist(sessionId, numericSpeakerId)
 
     if (success) {
       return NextResponse.json({ success: true })
