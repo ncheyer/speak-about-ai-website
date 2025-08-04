@@ -112,15 +112,15 @@ export default function AdminDashboard() {
     nextFollowUp: "",
   })
 
-  // Check authentication and redirect to master admin panel
+  // Check authentication and load deals
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
     if (!isAdminLoggedIn) {
       router.push("/admin")
       return
     }
-    // Redirect to master admin panel as the default dashboard
-    router.push("/admin/manage")
+    setIsLoggedIn(true)
+    loadDeals()
   }, [router])
 
   const loadDeals = async () => {
