@@ -173,8 +173,23 @@ export default function MasterAdminPanel() {
         })
         setSpeakers(data.speakers || [])
       } else {
-        const errorData = await response.text()
-        console.error('Admin: Speakers API error:', response.status, errorData)
+        try {
+          const errorData = await response.json()
+          console.error('Admin: Speakers API error:', response.status, errorData)
+          toast({
+            title: "Speakers Loading Error",
+            description: `${errorData.error || 'Failed to load speakers'} (${response.status})`,
+            variant: "destructive",
+          })
+        } catch (parseError) {
+          const errorText = await response.text()
+          console.error('Admin: Speakers API error (non-JSON):', response.status, errorText)
+          toast({
+            title: "Speakers Loading Error",
+            description: `Server error (${response.status}): ${errorText.substring(0, 100)}...`,
+            variant: "destructive",
+          })
+        }
       }
     } catch (error) {
       console.error("Error loading speakers:", error)
