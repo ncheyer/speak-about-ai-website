@@ -51,11 +51,20 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const addToWishlist = async (speakerId: number): Promise<boolean> => {
     try {
       const sessionId = getSessionId()
+      console.log('Adding to wishlist:', { speakerId, sessionId })
+      
       const response = await fetch('/api/wishlist/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ speakerId, sessionId })
       })
+
+      console.log('Add response:', response.status, response.statusText)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Add to wishlist failed:', errorData)
+      }
 
       if (response.ok) {
         await refreshWishlist()

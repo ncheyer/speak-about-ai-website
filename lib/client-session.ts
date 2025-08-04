@@ -30,6 +30,7 @@ function generateSessionId(): string {
 export function getOrCreateSession(): SessionData {
   if (typeof window === 'undefined') {
     // Server-side rendering - return a temporary session
+    console.log('getOrCreateSession: Running on server, returning temp session')
     return {
       id: 'ssr-temp',
       createdAt: Date.now(),
@@ -40,16 +41,21 @@ export function getOrCreateSession(): SessionData {
   try {
     // Try to get existing session from localStorage
     const stored = localStorage.getItem(SESSION_KEY)
+    console.log('getOrCreateSession: Stored session:', stored ? 'exists' : 'not found')
     
     if (stored) {
       const session: SessionData = JSON.parse(stored)
+      console.log('getOrCreateSession: Parsed session:', session.id)
       
       // Check if session is still valid (not expired)
       if (Date.now() - session.createdAt < SESSION_DURATION) {
         // Update last activity
         session.lastActivity = Date.now()
         localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+        console.log('getOrCreateSession: Using existing session:', session.id)
         return session
+      } else {
+        console.log('getOrCreateSession: Session expired, creating new one')
       }
     }
   } catch (error) {
@@ -63,8 +69,11 @@ export function getOrCreateSession(): SessionData {
     lastActivity: Date.now()
   }
 
+  console.log('getOrCreateSession: Creating new session:', newSession.id)
+
   try {
     localStorage.setItem(SESSION_KEY, JSON.stringify(newSession))
+    console.log('getOrCreateSession: Saved new session to localStorage')
   } catch (error) {
     console.warn('Failed to save session to localStorage:', error)
   }

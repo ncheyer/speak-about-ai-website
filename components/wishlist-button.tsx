@@ -33,13 +33,16 @@ export function WishlistButton({
     e.preventDefault()
     e.stopPropagation()
     
+    console.log('Wishlist button clicked:', { speakerId, inWishlist })
     setIsLoading(true)
     
     try {
       let success = false
       
       if (inWishlist) {
+        console.log('Removing from wishlist...')
         success = await removeFromWishlist(speakerId)
+        console.log('Remove result:', success)
         if (success) {
           toast({
             title: "Removed from wishlist",
@@ -47,7 +50,9 @@ export function WishlistButton({
           })
         }
       } else {
+        console.log('Adding to wishlist...')
         success = await addToWishlist(speakerId)
+        console.log('Add result:', success)
         if (success) {
           toast({
             title: "Added to wishlist",
