@@ -399,44 +399,71 @@ let allSpeakersCache: Speaker[] | null = null
 let lastFetchTime: number | null = null
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
-async function fetchAllSpeakersFromSheet(): Promise<Speaker[]> {
-  if (!SPREADSHEET_ID || !API_KEY || !SHEET_NAME) {
-    console.warn(
-      "Missing required environment variables (SPREADSHEET_ID, API_KEY, SHEET_NAME). " +
-        "Falling back to local speakers.",
-    )
-    return localSpeakers
-  }
-
-  const range = SHEET_NAME // e.g., 'Sheet1'
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`
-
+async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
   try {
-    const response = await fetch(url)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                   (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')
+    
+    const response = await fetch(`${baseUrl}/api/speakers`, {
+      cache: 'no-store' // Always fetch fresh data for now
+    })
+
     if (!response.ok) {
-      console.error("Failed to fetch data from Google Sheets. " + `Status: ${response.status}, ${response.statusText}.`)
+      console.error("Failed to fetch speakers from database API. " + 
+                   `Status: ${response.status}, ${response.statusText}.`)
       return localSpeakers
     }
+
     const data = await response.json()
-    const rows = data.values as any[][]
-    if (!rows || rows.length === 0) {
-      console.warn("No data found in the Google Sheet. Falling back to local speakers.")
+    
+    if (!data.success || !data.speakers) {
+      console.warn("Invalid response format from speakers API. Falling back to local speakers.")
       return localSpeakers
     }
-    return mapGoogleSheetDataToSpeakers(rows)
+
+    // Convert API response to Speaker interface format
+    const speakers: Speaker[] = data.speakers.map((speaker: any) => ({
+      slug: speaker.slug,
+      name: speaker.name,
+      title: speaker.title,
+      bio: speaker.bio,
+      image: speaker.image,
+      imagePosition: speaker.imagePosition,
+      imageOffsetY: speaker.imageOffsetY,
+      programs: speaker.programs || [],
+      industries: speaker.industries || [],
+      fee: speaker.fee,
+      feeRange: speaker.feeRange,
+      location: speaker.location,
+      website: speaker.website,
+      featured: speaker.featured,
+      videos: speaker.videos || [],
+      testimonials: speaker.testimonials || [],
+      topics: speaker.topics || [],
+      listed: speaker.listed,
+      expertise: speaker.expertise || [],
+      ranking: speaker.ranking || 0,
+      // Additional fields that might be useful
+      linkedin: speaker.socialMedia?.linkedin,
+      twitter: speaker.socialMedia?.twitter,
+    }))
+
+    console.log(`🎯 Fetched ${speakers.length} speakers from database`)
+    return speakers
+
   } catch (error) {
-    console.error("Error fetching or processing data from Google Sheets:", error)
+    console.error("Error fetching speakers from database:", error)
     return localSpeakers
   }
 }
 
 export async function getAllSpeakers(): Promise<Speaker[]> {
-  console.log("🔄 getAllSpeakers called - forcing fresh fetch for debugging") // Currently forces fresh fetch
+  console.log("🔄 getAllSpeakers called - fetching from database")
 
   try {
-    const fetchedSpeakers = await fetchAllSpeakersFromSheet()
+    const fetchedSpeakers = await fetchAllSpeakersFromDatabase()
     allSpeakersCache = fetchedSpeakers
-    lastFetchTime = Date.now() // Related to the commented-out cache logic
+    lastFetchTime = Date.now()
     return allSpeakersCache
       .filter((speaker) => speaker.listed !== false) // Filters out unlisted speakers
       .sort((a, b) => (b.ranking || 0) - (a.ranking || 0)) // Sorts by ranking

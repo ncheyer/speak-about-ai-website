@@ -6,33 +6,56 @@ const sql = neon(process.env.DATABASE_URL!)
 
 export async function GET(request: NextRequest) {
   try {
-    // Get all active speakers for dropdown/selection purposes
+    // Get all active and listed speakers with full data for website display
     const speakers = await sql`
       SELECT 
-        id, 
-        name, 
-        email,
-        one_liner,
-        speaking_fee_range,
-        topics,
-        active,
-        email_verified
+        id, name, email, bio, short_bio, one_liner, headshot_url, website,
+        social_media, topics, speaking_fee_range, travel_preferences,
+        technical_requirements, dietary_restrictions, emergency_contact,
+        active, email_verified, slug, title, featured, location, programs,
+        listed, industries, ranking, image_position, image_offset,
+        videos, testimonials, created_at, updated_at
       FROM speakers
-      WHERE active = true AND email_verified = true
-      ORDER BY name ASC
+      WHERE active = true AND listed = true
+      ORDER BY ranking DESC NULLS LAST, name ASC
     `
 
     return NextResponse.json({
       success: true,
       speakers: speakers.map(speaker => ({
         id: speaker.id,
+        slug: speaker.slug,
         name: speaker.name,
-        email: speaker.email,
+        title: speaker.title || speaker.one_liner,
+        bio: speaker.bio,
+        shortBio: speaker.short_bio,
         oneLiner: speaker.one_liner,
-        speakingFeeRange: speaker.speaking_fee_range,
+        image: speaker.headshot_url,
+        imagePosition: speaker.image_position || 'center',
+        imageOffsetY: speaker.image_offset || '0%',
+        website: speaker.website,
+        socialMedia: speaker.social_media || {},
         topics: speaker.topics || [],
+        programs: speaker.programs ? speaker.programs.split(',').map((p: string) => p.trim()).filter((p: string) => p) : [],
+        industries: speaker.industries || [],
+        expertise: speaker.topics || [], // Using topics as expertise for compatibility
+        fee: speaker.speaking_fee_range || 'Please Inquire',
+        feeRange: speaker.speaking_fee_range,
+        speakingFeeRange: speaker.speaking_fee_range,
+        location: speaker.location,
+        travelPreferences: speaker.travel_preferences,
+        technicalRequirements: speaker.technical_requirements,
+        dietaryRestrictions: speaker.dietary_restrictions,
+        emergencyContact: speaker.emergency_contact,
+        featured: speaker.featured || false,
+        listed: speaker.listed !== false,
+        ranking: speaker.ranking || 0,
+        videos: speaker.videos || [],
+        testimonials: speaker.testimonials || [],
         active: speaker.active,
-        emailVerified: speaker.email_verified
+        emailVerified: speaker.email_verified,
+        createdAt: speaker.created_at,
+        updatedAt: speaker.updated_at
       }))
     })
 
