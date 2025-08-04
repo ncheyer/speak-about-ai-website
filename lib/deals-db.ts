@@ -6,8 +6,10 @@ let databaseAvailable = false
 
 try {
   if (process.env.DATABASE_URL) {
+    console.log("Deals DB: Initializing Neon client...")
     sql = neon(process.env.DATABASE_URL)
     databaseAvailable = true
+    console.log("Deals DB: Neon client initialized successfully")
   } else {
     console.warn("DATABASE_URL environment variable is not set - deals database unavailable")
   }

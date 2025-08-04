@@ -7,7 +7,11 @@ import { getAllSpeakers } from '@/lib/speakers-data'
 let sql: any = null
 try {
   if (process.env.DATABASE_URL) {
+    console.log('Admin speakers: Initializing Neon client...')
     sql = neon(process.env.DATABASE_URL)
+    console.log('Admin speakers: Neon client initialized successfully')
+  } else {
+    console.log('Admin speakers: No DATABASE_URL found')
   }
 } catch (error) {
   console.error('Failed to initialize Neon client for admin speakers:', error)
@@ -18,6 +22,9 @@ export async function GET(request: NextRequest) {
     // Require admin authentication
     const authError = requireAdminAuth(request)
     if (authError) return authError
+    
+    console.log('Admin speakers: DATABASE_URL available:', !!process.env.DATABASE_URL)
+    console.log('Admin speakers: sql client initialized:', !!sql)
     
     // Check if database is available
     if (!sql) {
@@ -67,7 +74,22 @@ export async function GET(request: NextRequest) {
       }
     }
     
+    // Test basic connection first
+    console.log('Admin speakers: Testing database connection...')
+    try {
+      await sql`SELECT 1 as test`
+      console.log('Admin speakers: Database connection successful')
+    } catch (connError) {
+      console.error('Admin speakers: Database connection failed:', connError)
+      return NextResponse.json({
+        success: false,
+        error: 'Database connection failed',
+        details: connError instanceof Error ? connError.message : 'Unknown connection error'
+      }, { status: 500 })
+    }
+    
     // Get all speakers with full details
+    console.log('Admin speakers: Querying speakers table...')
     const speakers = await sql`
       SELECT 
         id, name, email, bio, short_bio, one_liner, headshot_url, website,
@@ -81,6 +103,8 @@ export async function GET(request: NextRequest) {
         ranking DESC,
         name ASC
     `
+    
+    console.log(`Admin speakers: Found ${speakers.length} speakers`)
 
     return NextResponse.json({
       success: true,
