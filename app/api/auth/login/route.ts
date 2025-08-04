@@ -49,11 +49,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate secure JWT token
-    const sessionToken = createToken({
-      email: ADMIN_EMAIL,
-      role: "admin"
-    }, 24) // 24 hour expiration
+    // Generate secure JWT token (with error handling for missing JWT_SECRET)
+    let sessionToken: string
+    try {
+      sessionToken = createToken({
+        email: ADMIN_EMAIL,
+        role: "admin"
+      }, 24) // 24 hour expiration
+    } catch (tokenError) {
+      console.error("JWT token creation failed:", tokenError)
+      return NextResponse.json(
+        { error: "Authentication service configuration error" },
+        { status: 503 }
+      )
+    }
 
     // Return success response
     const response = NextResponse.json({
