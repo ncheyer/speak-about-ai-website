@@ -1,8 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { updateProject, deleteProject, getAllProjects } from "@/lib/projects-db"
+import { requireAdminAuth } from "@/lib/auth-middleware"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Require admin authentication
+    const authError = requireAdminAuth(request)
+    if (authError) return authError
     const id = parseInt(params.id)
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid project ID" }, { status: 400 })
@@ -30,6 +34,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Require admin authentication
+    const authError = requireAdminAuth(request)
+    if (authError) return authError
     const id = parseInt(params.id)
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid project ID" }, { status: 400 })
@@ -102,8 +109,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Require admin authentication
+    const authError = requireAdminAuth(request)
+    if (authError) return authError
     const id = parseInt(params.id)
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid project ID" }, { status: 400 })

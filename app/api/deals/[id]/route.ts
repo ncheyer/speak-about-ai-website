@@ -2,9 +2,13 @@ import { type NextRequest, NextResponse } from "next/server"
 import { updateDeal, deleteDeal } from "@/lib/deals-db"
 import { createProject } from "@/lib/projects-db"
 import { getAutomaticProjectStatus } from "@/lib/project-status-utils"
+import { requireAdminAuth } from "@/lib/auth-middleware"
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Require admin authentication
+    const authError = requireAdminAuth(request)
+    if (authError) return authError
     const id = Number.parseInt(params.id)
     if (Number.isNaN(id)) {
       return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
@@ -112,6 +116,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Require admin authentication
+    const authError = requireAdminAuth(request)
+    if (authError) return authError
     const id = Number.parseInt(params.id)
     if (Number.isNaN(id)) {
       return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
@@ -219,6 +226,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Require admin authentication
+    const authError = requireAdminAuth(request)
+    if (authError) return authError
     const id = Number.parseInt(params.id)
     if (Number.isNaN(id)) {
       return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })

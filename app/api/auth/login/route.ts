@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createHash } from "crypto"
-
-// Admin credentials
-const ADMIN_EMAIL = "human@speakabout.ai"
-const ADMIN_PASSWORD = "StrongCheyer2025!"
-
-// Simple hash function for password verification
-function hashPassword(password: string): string {
-  return createHash('sha256').update(password + 'admin_salt_2025').digest('hex')
-}
+import { verifyPassword } from "@/lib/password-utils"
+import { createToken } from "@/lib/jwt-utils"
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,30 +15,59 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get admin credentials from environment variables
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL
+    const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH
+    
+    if (!ADMIN_EMAIL || !ADMIN_PASSWORD_HASH) {
+      console.error("Admin credentials not configured in environment variables")
+      return NextResponse.json({ error: "Server configuration error" }, { status: 500 })
+    }
+
     // Add small delay to prevent brute force attacks
     await new Promise(resolve => setTimeout(resolve, 1000))
 
     // Check credentials
-    if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() || password !== ADMIN_PASSWORD) {
+    if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() || !verifyPassword(password, ADMIN_PASSWORD_HASH)) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
       )
     }
 
-    // Generate session token
-    const sessionToken = Buffer.from(`${email}:${Date.now()}`).toString('base64')
+    // Generate secure JWT token
+    const sessionToken = createToken({
+      email: ADMIN_EMAIL,
+      role: "admin"
+    }, 24) // 24 hour expiration
 
     // Return success response
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: {
         email: ADMIN_EMAIL,
-        name: "Adam Cheyer",
+        name: "Admin User",
         role: "admin"
       },
       sessionToken
     })
+
+    // Set HTTP-only cookie for additional security
+    response.cookies.set('adminLoggedIn', 'true', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 // 24 hours
+    })
+
+    response.cookies.set('adminSessionToken', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 // 24 hours
+    })
+
+    return response
 
   } catch (error) {
     console.error("Login error:", error)

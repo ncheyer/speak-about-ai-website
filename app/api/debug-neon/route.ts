@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
+import { requireAdminAuth } from "@/lib/auth-middleware"
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Only allow in development or with admin authentication
+  if (process.env.NODE_ENV === 'production') {
+    const authError = requireAdminAuth(request as any)
+    if (authError) return authError
+  }
   try {
     // Check if DATABASE_URL exists
     if (!process.env.DATABASE_URL) {

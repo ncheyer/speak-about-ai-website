@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
+import { requireAdminAuth } from '@/lib/auth-middleware'
 
 // Initialize Neon client
 const sql = neon(process.env.DATABASE_URL!)
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if admin is authenticated (you can implement proper auth middleware)
-    const authHeader = request.headers.get('authorization')
-    const adminLoggedIn = request.cookies.get('adminLoggedIn')
-    
-    // For now, we'll check if admin is logged in via cookie or session
-    // In production, implement proper JWT validation
+    // Require admin authentication
+    const authError = requireAdminAuth(request)
+    if (authError) return authError
     
     // Get all speakers with full details
     const speakers = await sql`
