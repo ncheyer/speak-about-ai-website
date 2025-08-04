@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { getImageUrl } from "@/lib/utils"
+import { getImageUrl, formatDate } from "@/lib/utils"
 import type { BlogPost } from "@/lib/contentful-blog" // Assuming BlogPost is exported from here
 
 interface FeaturedBlogPostCardProps {
@@ -44,11 +44,7 @@ export function FeaturedBlogPostCard({ post }: FeaturedBlogPostCardProps) {
           <span>By {post.author?.name || "Speak About AI"}</span>
           <span className="mx-2">•</span>
           <span>
-            {new Date(post.publishedDate).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+            {formatDate(post.publishedDate)}
           </span>
         </div>
         <Link href={`/blog/${post.slug}`} className="text-blue-600 hover:underline font-semibold self-start text-base">

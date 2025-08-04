@@ -43,7 +43,7 @@ export interface LandingPage {
 
   // Hero Section
   heroHeadline: string
-  heroSubheadline: string // Changed from Document to string based on JSON
+  heroSubheadline: Document // Rich Text
   heroBulletPoints?: string[]
   heroImage?: Asset
 

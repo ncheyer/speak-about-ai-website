@@ -49,9 +49,11 @@ export default async function CatchAllPage({ params }: CatchAllPageProps) {
 export async function generateStaticParams() {
   try {
     const speakers = await getAllSpeakers()
-    return speakers.map((speaker) => ({
-      slug: speaker.slug,
-    }))
+    return speakers
+      .filter((speaker) => typeof speaker.slug === 'string' && speaker.slug.trim().length > 0)
+      .map((speaker) => ({
+        slug: speaker.slug,
+      }))
   } catch (error) {
     console.error("Error generating static params:", error)
     return []

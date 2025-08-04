@@ -5,7 +5,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { getImageUrl } from "@/lib/utils"
+import { getImageUrl, formatDate } from "@/lib/utils"
 import type { BlogPost } from "@/lib/contentful-blog"
 
 interface BlogCardProps {
@@ -51,11 +51,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
             </>
           )}
           <span>
-            {new Date(post.publishedDate).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
+            {formatDate(post.publishedDate)}
           </span>
         </div>
         {post.categories && post.categories.length > 0 && (

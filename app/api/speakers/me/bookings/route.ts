@@ -154,13 +154,6 @@ export async function GET(request: NextRequest) {
         }
       })
 
-    } catch (decodeError) {
-      return NextResponse.json(
-        { error: 'Invalid session token' },
-        { status: 401 }
-      )
-    }
-
   } catch (error) {
     console.error('Get speaker bookings error:', error)
     return NextResponse.json(

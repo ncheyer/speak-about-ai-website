@@ -34,13 +34,42 @@ export async function GET(request: NextRequest) {
     console.log('Admin speakers: sql client initialized:', !!sql)
     
     // Check if database is available
-    if (!sql) {
-      console.error('Admin speakers: Database not available but DATABASE_URL is set - this should not happen')
+    if (!sql || !process.env.DATABASE_URL) {
+      console.log('Admin speakers: Database not available, using fallback data from getAllSpeakers()')
+      
+      // Use the static speaker data as fallback
+      const fallbackSpeakers = await getAllSpeakers()
+      
+      // Transform the data to match the expected format from database
+      const speakers = fallbackSpeakers.map((speaker, index) => ({
+        id: index + 1,
+        name: speaker.name,
+        email: `${speaker.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+        bio: speaker.bio || '',
+        short_bio: speaker.bio ? speaker.bio.substring(0, 200) : '',
+        one_liner: speaker.title || '',
+        headshot_url: speaker.image || '',
+        website: speaker.website || '',
+        location: speaker.location || '',
+        topics: speaker.topics || [],
+        industries: speaker.industries || [],
+        videos: speaker.videos || [],
+        testimonials: speaker.testimonials || [],
+        speaking_fee_range: speaker.feeRange || speaker.fee || '',
+        featured: speaker.featured || false,
+        active: speaker.listed !== false, // Default to true if not specified
+        listed: speaker.listed !== false,
+        ranking: speaker.ranking || 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }))
+      
+      console.log(`Admin speakers: Returning ${speakers.length} speakers from fallback data`)
+      
       return NextResponse.json({
-        success: false,
-        error: 'Database initialization failed',
-        message: 'DATABASE_URL is set but database client failed to initialize'
-      }, { status: 500 })
+        success: true,
+        speakers: speakers
+      })
     }
     
     // Test basic connection first

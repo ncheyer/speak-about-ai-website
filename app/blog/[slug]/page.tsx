@@ -3,7 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { marked } from "marked"
-import { getImageUrl } from "@/lib/utils"
+import { getImageUrl, formatDate } from "@/lib/utils"
 import { documentToHtmlString, type Options } from "@contentful/rich-text-html-renderer"
 import { BLOCKS, INLINES, MARKS } from "@contentful/rich-text-types"
 import type { Document, Block, Inline } from "@contentful/rich-text-types"
@@ -203,11 +203,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <span>By {post.author?.name || "Speak About AI"}</span>
           <span className="mx-2">•</span>
           <span>
-            {new Date(post.publishedDate).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+            {formatDate(post.publishedDate)}
           </span>
           {post.readTime && (
             <>

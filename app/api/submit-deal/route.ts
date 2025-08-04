@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createDeal, getDealById } from '@/lib/deals-utils'
 import { sendNewDealNotification } from '@/lib/email-utils'
-import { getWishlist, clearWishlist, transferWishlistToVisitor } from '@/lib/wishlist-utils'
+// import { getWishlist, clearWishlist, transferWishlistToVisitor } from '@/lib/wishlist-utils'
 import { recordEvent } from '@/lib/analytics-db'
 
 export async function POST(request: NextRequest) {
@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
     // Get wishlist speakers from session
     let wishlistSpeakers: Array<{id: number, name: string}> = []
     if (sessionId) {
-      const wishlist = await getWishlist(sessionId)
+      // const wishlist = await getWishlist(sessionId)
+      const wishlist: any[] = []
       wishlistSpeakers = wishlist.map(item => ({
         id: item.speakerId,
         name: item.speaker?.name || `Speaker ${item.speakerId}`
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     // Transfer wishlist to visitor if we have visitor ID
     if (sessionId && visitorId) {
       try {
-        await transferWishlistToVisitor(sessionId, visitorId)
+        // await transferWishlistToVisitor(sessionId, visitorId)
       } catch (transferError) {
         console.error('Failed to transfer wishlist:', transferError)
       }
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
     // Clear wishlist after successful submission
     if (sessionId) {
       try {
-        await clearWishlist(sessionId)
+        // await clearWishlist(sessionId)
       } catch (clearError) {
         console.error('Failed to clear wishlist:', clearError)
       }

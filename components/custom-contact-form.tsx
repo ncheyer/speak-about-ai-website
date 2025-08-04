@@ -10,11 +10,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Calendar, Mail, MapPin, Building, User, Phone, DollarSign, MessageSquare, Heart, CheckCircle, AlertCircle } from 'lucide-react'
-import { useWishlist } from '@/contexts/wishlist-context'
+// import { useWishlist } from '@/contexts/wishlist-context'
 import { useToast } from '@/hooks/use-toast'
 
 export function CustomContactForm() {
-  const { wishlist, wishlistCount } = useWishlist()
+  // const { wishlist, wishlistCount } = useWishlist()
+  const wishlist: any[] = []
+  const wishlistCount = 0
   const { toast } = useToast()
   
   const [isSubmitting, setIsSubmitting] = useState(false)

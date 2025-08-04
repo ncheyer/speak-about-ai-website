@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 import { requireAdminAuth } from '@/lib/auth-middleware'
+import { getAllSpeakers } from '@/lib/speakers-data'
 
 // Initialize Neon client
 let sql: any = null
@@ -41,13 +42,54 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     console.log('Admin speaker detail: sql client initialized:', !!sql)
     
     // Check if database is available
-    if (!sql) {
-      console.error('Admin speaker detail: Database not available but DATABASE_URL is set - this should not happen')
+    if (!sql || !process.env.DATABASE_URL) {
+      console.log('Admin speaker detail: Database not available, using fallback data')
+      
+      // Use fallback data from getAllSpeakers
+      const allSpeakers = await getAllSpeakers()
+      const speaker = allSpeakers.find((s, index) => (index + 1) === speakerId)
+      
+      if (!speaker) {
+        console.log(`Admin speaker detail: Speaker ${speakerId} not found in fallback data`)
+        return NextResponse.json({
+          error: 'Speaker not found'
+        }, { status: 404 })
+      }
+      
+      // Transform to match database format
+      const transformedSpeaker = {
+        id: speakerId,
+        name: speaker.name,
+        email: `${speaker.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+        bio: speaker.bio || '',
+        short_bio: speaker.bio ? speaker.bio.substring(0, 200) : '',
+        one_liner: speaker.title || '',
+        headshot_url: speaker.image || '',
+        website: speaker.website || '',
+        location: speaker.location || '',
+        programs: speaker.programs || [],
+        topics: speaker.topics || [],
+        industries: speaker.industries || [],
+        videos: speaker.videos || [],
+        testimonials: speaker.testimonials || [],
+        speaking_fee_range: speaker.feeRange || speaker.fee || '',
+        travel_preferences: '',
+        technical_requirements: '',
+        dietary_restrictions: '',
+        featured: speaker.featured || false,
+        active: speaker.listed !== false,
+        listed: speaker.listed !== false,
+        ranking: speaker.ranking || 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      
+      console.log(`Admin speaker detail: Returning fallback data for ${speaker.name}`)
+      
       return NextResponse.json({
-        success: false,
-        error: 'Database initialization failed',
-        message: 'DATABASE_URL is set but database client failed to initialize'
-      }, { status: 500 })
+        success: true,
+        speaker: transformedSpeaker
+      })
     }
     
     // Test basic connection first
@@ -88,12 +130,29 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const speaker = speakers[0]
     console.log(`Admin speaker detail: Found speaker ${speaker.name}`)
 
-    // Ensure arrays are properly parsed
-    speaker.programs = speaker.programs ? (Array.isArray(speaker.programs) ? speaker.programs : JSON.parse(speaker.programs)) : []
-    speaker.topics = speaker.topics ? (Array.isArray(speaker.topics) ? speaker.topics : JSON.parse(speaker.topics)) : []
-    speaker.industries = speaker.industries ? (Array.isArray(speaker.industries) ? speaker.industries : JSON.parse(speaker.industries)) : []
-    speaker.videos = speaker.videos ? (Array.isArray(speaker.videos) ? speaker.videos : JSON.parse(speaker.videos)) : []
-    speaker.testimonials = speaker.testimonials ? (Array.isArray(speaker.testimonials) ? speaker.testimonials : JSON.parse(speaker.testimonials)) : []
+    // Ensure arrays are properly parsed with error handling
+    const parseFieldAsArray = (field: any, fieldName: string): any[] => {
+      if (!field) return []
+      if (Array.isArray(field)) return field
+      if (typeof field === 'string') {
+        try {
+          // Try to parse as JSON
+          const parsed = JSON.parse(field)
+          return Array.isArray(parsed) ? parsed : []
+        } catch (e) {
+          // If it's not valid JSON, treat it as a single string item
+          console.log(`Admin speaker detail: Field ${fieldName} is not valid JSON, treating as string: ${field.substring(0, 50)}...`)
+          return fieldName === 'programs' ? [field] : []
+        }
+      }
+      return []
+    }
+    
+    speaker.programs = parseFieldAsArray(speaker.programs, 'programs')
+    speaker.topics = parseFieldAsArray(speaker.topics, 'topics')
+    speaker.industries = parseFieldAsArray(speaker.industries, 'industries')
+    speaker.videos = parseFieldAsArray(speaker.videos, 'videos')
+    speaker.testimonials = parseFieldAsArray(speaker.testimonials, 'testimonials')
 
     return NextResponse.json({
       success: true,

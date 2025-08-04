@@ -44,3 +44,30 @@ export function getImageUrl(imagePath?: string | null): string | null {
   // Fallback for other cases (e.g. a local public path that doesn't start with / but is treated as relative by browser)
   return imagePath
 }
+
+/**
+ * Formats a date string consistently for both server and client to prevent hydration mismatches.
+ * Uses UTC to ensure consistent formatting regardless of server/client timezone differences.
+ * @param dateString The date string to format
+ * @returns Formatted date string in "MMM DD, YYYY" format
+ */
+export function formatDate(dateString: string): string {
+  if (!dateString) return ""
+  
+  try {
+    const date = new Date(dateString)
+    
+    // Use UTC methods to ensure consistent formatting across server/client
+    const month = date.toLocaleDateString("en-US", { 
+      month: "short",
+      timeZone: "UTC"
+    })
+    const day = date.getUTCDate()
+    const year = date.getUTCFullYear()
+    
+    return `${month} ${day}, ${year}`
+  } catch (error) {
+    console.warn(`formatDate: Invalid date string "${dateString}"`)
+    return dateString
+  }
+}

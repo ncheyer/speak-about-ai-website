@@ -100,6 +100,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/new-ai-logo.png" />
         <TrackingScripts />
         <script async src="/analytics.js"></script>
+        {process.env.NODE_ENV === 'development' && (
+          <script src="http://localhost:8097"></script>
+        )}
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
