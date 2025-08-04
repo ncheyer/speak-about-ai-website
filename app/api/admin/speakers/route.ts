@@ -3,13 +3,30 @@ import { neon } from '@neondatabase/serverless'
 import { requireAdminAuth } from '@/lib/auth-middleware'
 
 // Initialize Neon client
-const sql = neon(process.env.DATABASE_URL!)
+let sql: any = null
+try {
+  if (process.env.DATABASE_URL) {
+    sql = neon(process.env.DATABASE_URL)
+  }
+} catch (error) {
+  console.error('Failed to initialize Neon client for admin speakers:', error)
+}
 
 export async function GET(request: NextRequest) {
   try {
     // Require admin authentication
     const authError = requireAdminAuth(request)
     if (authError) return authError
+    
+    // Check if database is available
+    if (!sql) {
+      console.warn('Admin speakers: DATABASE_URL not configured, returning empty speakers list')
+      return NextResponse.json({
+        success: true,
+        speakers: [],
+        message: 'Database not configured - speakers managed via Google Sheets'
+      })
+    }
     
     // Get all speakers with full details
     const speakers = await sql`

@@ -1,12 +1,19 @@
 import { neon } from "@neondatabase/serverless"
 
-// Check if DATABASE_URL is available
-if (!process.env.DATABASE_URL) {
-  console.error("DATABASE_URL environment variable is not set")
-  throw new Error("DATABASE_URL environment variable is required")
-}
+// Initialize Neon client with error handling
+let sql: any = null
+let databaseAvailable = false
 
-const sql = neon(process.env.DATABASE_URL)
+try {
+  if (process.env.DATABASE_URL) {
+    sql = neon(process.env.DATABASE_URL)
+    databaseAvailable = true
+  } else {
+    console.warn("DATABASE_URL environment variable is not set - deals database unavailable")
+  }
+} catch (error) {
+  console.error("Failed to initialize Neon client for deals:", error)
+}
 
 export interface Deal {
   id: number
@@ -34,6 +41,11 @@ export interface Deal {
 }
 
 export async function getAllDeals(): Promise<Deal[]> {
+  if (!databaseAvailable || !sql) {
+    console.warn("getAllDeals: Database not available")
+    return []
+  }
+  
   try {
     console.log("Fetching all deals from database...")
     const deals = await sql`
@@ -56,6 +68,10 @@ export async function getAllDeals(): Promise<Deal[]> {
 }
 
 export async function createDeal(dealData: Omit<Deal, "id" | "created_at" | "updated_at">): Promise<Deal | null> {
+  if (!databaseAvailable || !sql) {
+    console.warn("createDeal: Database not available")
+    return null
+  }
   try {
     console.log("Creating new deal:", dealData.event_title)
     const [deal] = await sql`
@@ -129,6 +145,10 @@ export async function deleteDeal(id: number): Promise<boolean> {
 }
 
 export async function getDealsByStatus(status: string): Promise<Deal[]> {
+  if (!databaseAvailable || !sql) {
+    console.warn("getDealsByStatus: Database not available")
+    return []
+  }
   try {
     console.log("Fetching deals by status:", status)
     const deals = await sql`
@@ -145,6 +165,10 @@ export async function getDealsByStatus(status: string): Promise<Deal[]> {
 }
 
 export async function searchDeals(searchTerm: string): Promise<Deal[]> {
+  if (!databaseAvailable || !sql) {
+    console.warn("searchDeals: Database not available")
+    return []
+  }
   try {
     console.log("Searching deals for term:", searchTerm)
     const deals = await sql`
