@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         listed, industries, ranking, image_position, image_offset,
         videos, testimonials, created_at, updated_at
       FROM speakers
-      WHERE active = true AND listed = true
+      WHERE active = true
       ORDER BY ranking DESC NULLS LAST, name ASC
     `
 
