@@ -215,25 +215,25 @@ INSERT INTO speakers (
 ) VALUES (
     ${escapeSQL(truncatedName)},
     ${escapeSQL(placeholderEmail)}, -- PLACEHOLDER - UPDATE WITH REAL EMAIL
-    ${escapeSQL(speaker[COLUMN_MAPPING.bio])},
-    ${escapeSQL(shortBio)},
-    ${escapeSQL(truncatedOneLinr)},
-    ${escapeSQL(speaker[COLUMN_MAPPING.headshot_url])},
-    ${formatTopics(speaker[COLUMN_MAPPING.topics])},
-    ${escapeSQL(truncatedFeeRange)},
-    ${escapeSQL(speaker[COLUMN_MAPPING.slug])},
-    ${escapeSQL(truncatedTitle)},
-    ${formatBoolean(speaker[COLUMN_MAPPING.featured])},
-    ${escapeSQL(truncatedLocation)},
-    ${escapeSQL(speaker[COLUMN_MAPPING.programs])},
-    ${speaker[COLUMN_MAPPING.listed] === 'FALSE' || speaker[COLUMN_MAPPING.listed] === '0' ? 'false' : 'true'},
-    ${formatTopics(speaker[COLUMN_MAPPING.industries])},
-    ${speaker[COLUMN_MAPPING.ranking] ? parseInt(speaker[COLUMN_MAPPING.ranking]) || 'NULL' : 'NULL'},
-    ${escapeSQL(speaker[COLUMN_MAPPING.image_position])},
-    ${escapeSQL(speaker[COLUMN_MAPPING.image_offset])},
-    ${formatJSONField(speaker[COLUMN_MAPPING.videos])},
-    ${formatJSONField(speaker[COLUMN_MAPPING.testimonials])},
-    true,
+    ${escapeSQL(speaker[COLUMN_MAPPING.bio])}, -- Full biography
+    ${escapeSQL(shortBio)}, -- Short bio from full bio
+    ${escapeSQL(truncatedOneLinr)}, -- One-liner from title
+    ${escapeSQL(speaker[COLUMN_MAPPING.headshot_url])}, -- Image URL
+    ${formatTopics(speaker[COLUMN_MAPPING.topics])}, -- Topics as JSON array
+    ${escapeSQL(truncatedFeeRange)}, -- Speaking fee range
+    ${escapeSQL(speaker[COLUMN_MAPPING.slug])}, -- URL slug
+    ${escapeSQL(truncatedTitle)}, -- Professional title
+    ${formatBoolean(speaker[COLUMN_MAPPING.featured])}, -- Featured boolean
+    ${escapeSQL(truncatedLocation)}, -- Location
+    ${escapeSQL(speaker[COLUMN_MAPPING.programs])}, -- Programs
+    ${speaker[COLUMN_MAPPING.listed] === 'FALSE' || speaker[COLUMN_MAPPING.listed] === '0' ? 'false' : 'true'}, -- Listed boolean
+    ${formatTopics(speaker[COLUMN_MAPPING.industries])}, -- Industries as JSON array
+    ${speaker[COLUMN_MAPPING.ranking] ? parseInt(speaker[COLUMN_MAPPING.ranking]) || 'NULL' : 'NULL'}, -- Ranking number
+    ${escapeSQL(speaker[COLUMN_MAPPING.image_position])}, -- Image position
+    ${escapeSQL(speaker[COLUMN_MAPPING.image_offset])}, -- Image offset
+    ${formatJSONField(speaker[COLUMN_MAPPING.videos])}, -- Videos JSON
+    ${formatJSONField(speaker[COLUMN_MAPPING.testimonials])}, -- Testimonials JSON
+    true, -- Active
     false  -- They'll need to register and verify email
 );
 
