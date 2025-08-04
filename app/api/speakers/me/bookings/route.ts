@@ -1,83 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
+import { authenticateSpeaker } from '@/lib/speaker-auth'
 
 // Initialize Neon client
 const sql = neon(process.env.DATABASE_URL!)
 
 export async function GET(request: NextRequest) {
   try {
-    // Get session token from Authorization header
-    const authHeader = request.headers.get('authorization')
-    const sessionToken = authHeader?.replace('Bearer ', '')
+    // Authenticate speaker and get speaker ID
+    const authResult = authenticateSpeaker(request)
+    if (!('speakerId' in authResult)) {
+      return authResult // Return the error response
+    }
+    
+    const { speakerId } = authResult
 
-    if (!sessionToken) {
+    // Get speaker info first
+    const speakers = await sql`
+      SELECT id, email, name FROM speakers
+      WHERE id = ${speakerId} AND active = true
+      LIMIT 1
+    `
+
+    if (speakers.length === 0) {
       return NextResponse.json(
-        { error: 'No session token provided' },
-        { status: 401 }
+        { error: 'Speaker not found' },
+        { status: 404 }
       )
     }
 
-    // Decode session token to get speaker ID
-    try {
-      const decoded = Buffer.from(sessionToken, 'base64').toString('utf-8')
-      const [type, speakerId, timestamp] = decoded.split(':')
-      
-      if (type !== 'speaker' || !speakerId) {
-        throw new Error('Invalid token format')
-      }
+    const speaker = speakers[0]
 
-      const speakerIdInt = parseInt(speakerId)
+    // Fetch projects where speaker is assigned (by ID or name match)
+    const projects = await sql`
+      SELECT 
+        id, project_name, client_name, company, event_date, event_location,
+        status, priority, deadline, speaker_fee, event_classification,
+        event_type, attendee_count, program_topic, program_type,
+        venue_name, venue_address, event_start_time, event_end_time,
+        speaker_arrival_time, program_start_time, program_length,
+        travel_required, accommodation_required, requested_speaker_name,
+        created_at, updated_at
+      FROM projects 
+      WHERE (
+        speaker_id = ${speakerId} 
+        OR LOWER(requested_speaker_name) = LOWER(${speaker.name})
+        OR LOWER(requested_speaker_name) LIKE LOWER(${'%' + speaker.name + '%'})
+      )
+      AND status NOT IN ('cancelled')
+      ORDER BY event_date ASC, created_at DESC
+    `
 
-      // Get speaker info first
-      const speakers = await sql`
-        SELECT id, email, name FROM speakers
-        WHERE id = ${speakerIdInt} AND active = true
-        LIMIT 1
-      `
-
-      if (speakers.length === 0) {
-        return NextResponse.json(
-          { error: 'Speaker not found' },
-          { status: 404 }
-        )
-      }
-
-      const speaker = speakers[0]
-
-      // Fetch projects where speaker is assigned (by ID or name match)
-      const projects = await sql`
-        SELECT 
-          id, project_name, client_name, company, event_date, event_location,
-          status, priority, deadline, speaker_fee, event_classification,
-          event_type, attendee_count, program_topic, program_type,
-          venue_name, venue_address, event_start_time, event_end_time,
-          speaker_arrival_time, program_start_time, program_length,
-          travel_required, accommodation_required, requested_speaker_name,
-          created_at, updated_at
-        FROM projects 
-        WHERE (
-          speaker_id = ${speakerIdInt} 
-          OR LOWER(requested_speaker_name) = LOWER(${speaker.name})
-          OR LOWER(requested_speaker_name) LIKE LOWER(${'%' + speaker.name + '%'})
-        )
-        AND status NOT IN ('cancelled')
-        ORDER BY event_date ASC, created_at DESC
-      `
-
-      // Fetch deals where speaker is requested (by ID or name match)
-      const deals = await sql`
-        SELECT 
-          id, client_name, company, event_title, event_date, event_location,
-          event_type, status, priority, deal_value, attendee_count,
-          speaker_requested, budget_range, source, notes,
-          created_at, updated_at
-        FROM deals 
-        WHERE (
-          speaker_id = ${speakerIdInt}
-          OR LOWER(speaker_requested) = LOWER(${speaker.name})
-          OR LOWER(speaker_requested) LIKE LOWER(${'%' + speaker.name + '%'})
-        )
-        AND status NOT IN ('lost')
+    // Fetch deals where speaker is requested (by ID or name match)
+    const deals = await sql`
+      SELECT 
+        id, client_name, company, event_title, event_date, event_location,
+        event_type, status, priority, deal_value, attendee_count,
+        speaker_requested, budget_range, source, notes,
+        created_at, updated_at
+      FROM deals 
+      WHERE (
+        speaker_id = ${speakerId}
+        OR LOWER(speaker_requested) = LOWER(${speaker.name})
+        OR LOWER(speaker_requested) LIKE LOWER(${'%' + speaker.name + '%'})
+      )
+      AND status NOT IN ('lost')
         ORDER BY event_date ASC, created_at DESC
       `
 

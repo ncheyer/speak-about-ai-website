@@ -1,12 +1,21 @@
 import { handleUpload } from "@vercel/blob/client"
 import { type NextRequest, NextResponse } from "next/server"
+import { getAuthenticatedUser } from "@/lib/auth-middleware"
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // Require authentication for file uploads
+    const user = getAuthenticatedUser(request)
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required for file uploads', code: 'NO_AUTH' },
+        { status: 401 }
+      )
+    }
     // Check if the Blob token is set
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
       console.error("BLOB_READ_WRITE_TOKEN is not set")
-      return NextResponse.json({ error: "Server configuration error: Blob token is not set" }, { status: 500 })
+      return NextResponse.json({ error: "File upload service unavailable" }, { status: 503 })
     }
 
     const body = await request.json()

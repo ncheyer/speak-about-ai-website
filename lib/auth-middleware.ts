@@ -92,3 +92,33 @@ export function getAuthenticatedUser(request: NextRequest) {
   
   return verifyToken(token)
 }
+
+/**
+ * Get speaker ID from authenticated speaker token
+ * For backwards compatibility with existing speaker auth system
+ */
+export function getSpeakerIdFromToken(token: string): number | null {
+  try {
+    // Handle legacy base64 tokens for backwards compatibility
+    if (!token.includes('.')) {
+      const decoded = Buffer.from(token, 'base64').toString()
+      const parts = decoded.split(':')
+      if (parts.length >= 2) {
+        const speakerId = parseInt(parts[1])
+        return isNaN(speakerId) ? null : speakerId
+      }
+    }
+    
+    // Handle new JWT tokens
+    const payload = verifyToken(token)
+    if (payload && payload.role === 'speaker') {
+      // Extract speaker ID from email or add speaker_id to JWT payload in future
+      // For now, return null to maintain compatibility
+      return null
+    }
+    
+    return null
+  } catch {
+    return null
+  }
+}
