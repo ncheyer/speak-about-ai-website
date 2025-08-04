@@ -32,8 +32,32 @@ import {
   AlertTriangle,
   Utensils,
   CreditCard,
-  LogOut
+  LogOut,
+  Video,
+  MessageSquare,
+  Calendar,
+  Building,
+  Edit2,
+  Trash2,
+  ExternalLink
 } from "lucide-react"
+
+interface Video {
+  id: string
+  title: string
+  url: string
+  thumbnail?: string
+  source?: string
+  duration?: string
+}
+
+interface Testimonial {
+  quote: string
+  author: string
+  position?: string
+  company?: string
+  event?: string
+}
 
 interface Speaker {
   id: number
@@ -44,6 +68,8 @@ interface Speaker {
   one_liner?: string
   headshot_url?: string
   website?: string
+  location?: string
+  programs?: string
   social_media?: {
     twitter?: string
     linkedin?: string
@@ -51,6 +77,9 @@ interface Speaker {
     youtube?: string
   }
   topics?: string[]
+  industries?: string[]
+  videos?: Video[]
+  testimonials?: Testimonial[]
   speaking_fee_range?: string
   travel_preferences?: string
   technical_requirements?: string
@@ -82,6 +111,8 @@ export default function SpeakerHub() {
     one_liner: "",
     headshot_url: "",
     website: "",
+    location: "",
+    programs: "",
     social_media: {
       twitter: "",
       linkedin: "",
@@ -89,6 +120,9 @@ export default function SpeakerHub() {
       youtube: ""
     },
     topics: [] as string[],
+    industries: [] as string[],
+    videos: [] as Video[],
+    testimonials: [] as Testimonial[],
     speaking_fee_range: "",
     travel_preferences: "",
     technical_requirements: "",
@@ -99,6 +133,12 @@ export default function SpeakerHub() {
       relationship: ""
     }
   })
+
+  const [newIndustry, setNewIndustry] = useState("")
+  const [editingVideo, setEditingVideo] = useState<Video | null>(null)
+  const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null)
+  const [newVideo, setNewVideo] = useState<Video>({ id: "", title: "", url: "" })
+  const [newTestimonial, setNewTestimonial] = useState<Testimonial>({ quote: "", author: "" })
 
   useEffect(() => {
     const fetchSpeakerData = async () => {
@@ -141,8 +181,13 @@ export default function SpeakerHub() {
           one_liner: speakerData.one_liner || "",
           headshot_url: speakerData.headshot_url || "",
           website: speakerData.website || "",
+          location: speakerData.location || "",
+          programs: speakerData.programs || "",
           social_media: speakerData.social_media || { twitter: "", linkedin: "", instagram: "", youtube: "" },
           topics: speakerData.topics || [],
+          industries: speakerData.industries || [],
+          videos: speakerData.videos || [],
+          testimonials: speakerData.testimonials || [],
           speaking_fee_range: speakerData.speaking_fee_range || "",
           travel_preferences: speakerData.travel_preferences || "",
           technical_requirements: speakerData.technical_requirements || "",
@@ -231,6 +276,84 @@ export default function SpeakerHub() {
     })
   }
 
+  // Industry management
+  const addIndustry = () => {
+    if (newIndustry.trim() && !formData.industries.includes(newIndustry.trim())) {
+      setFormData({
+        ...formData,
+        industries: [...formData.industries, newIndustry.trim()]
+      })
+      setNewIndustry("")
+    }
+  }
+
+  const removeIndustry = (industryToRemove: string) => {
+    setFormData({
+      ...formData,
+      industries: formData.industries.filter(industry => industry !== industryToRemove)
+    })
+  }
+
+  // Video management
+  const addVideo = () => {
+    if (newVideo.title.trim() && newVideo.url.trim()) {
+      const videoToAdd = {
+        ...newVideo,
+        id: newVideo.id || `video_${Date.now()}`
+      }
+      setFormData({
+        ...formData,
+        videos: [...formData.videos, videoToAdd]
+      })
+      setNewVideo({ id: "", title: "", url: "" })
+    }
+  }
+
+  const removeVideo = (videoId: string) => {
+    setFormData({
+      ...formData,
+      videos: formData.videos.filter(video => video.id !== videoId)
+    })
+  }
+
+  const updateVideo = (videoId: string, updatedVideo: Video) => {
+    setFormData({
+      ...formData,
+      videos: formData.videos.map(video => 
+        video.id === videoId ? updatedVideo : video
+      )
+    })
+    setEditingVideo(null)
+  }
+
+  // Testimonial management
+  const addTestimonial = () => {
+    if (newTestimonial.quote.trim() && newTestimonial.author.trim()) {
+      setFormData({
+        ...formData,
+        testimonials: [...formData.testimonials, newTestimonial]
+      })
+      setNewTestimonial({ quote: "", author: "" })
+    }
+  }
+
+  const removeTestimonial = (testimonialIndex: number) => {
+    setFormData({
+      ...formData,
+      testimonials: formData.testimonials.filter((_, index) => index !== testimonialIndex)
+    })
+  }
+
+  const updateTestimonial = (testimonialIndex: number, updatedTestimonial: Testimonial) => {
+    setFormData({
+      ...formData,
+      testimonials: formData.testimonials.map((testimonial, index) => 
+        index === testimonialIndex ? updatedTestimonial : testimonial
+      )
+    })
+    setEditingTestimonial(null)
+  }
+
   const fetchBookings = async () => {
     setBookingsLoading(true)
     try {
@@ -315,12 +438,10 @@ export default function SpeakerHub() {
 
         {/* Main Content */}
         <Tabs defaultValue="events" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto">
             <TabsTrigger value="events">My Events</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="promotion">Promotion</TabsTrigger>
             <TabsTrigger value="logistics">Logistics</TabsTrigger>
-            <TabsTrigger value="financial">Financial</TabsTrigger>
           </TabsList>
 
           <TabsContent value="events" className="space-y-6">
@@ -522,6 +643,7 @@ export default function SpeakerHub() {
           </TabsContent>
 
           <TabsContent value="profile" className="space-y-6">
+            {/* Basic Information */}
             <Card>
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
@@ -559,14 +681,35 @@ export default function SpeakerHub() {
                   />
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Website</Label>
+                    <Input
+                      id="website"
+                      type="url"
+                      placeholder="https://your-website.com"
+                      value={formData.website}
+                      onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      placeholder="San Francisco, CA"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="website">Website</Label>
+                  <Label htmlFor="programs">Signature Programs/Presentations</Label>
                   <Input
-                    id="website"
-                    type="url"
-                    placeholder="https://your-website.com"
-                    value={formData.website}
-                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                    id="programs"
+                    placeholder="AI Leadership Masterclass, Future of Work Workshop"
+                    value={formData.programs}
+                    onChange={(e) => setFormData({ ...formData, programs: e.target.value })}
                   />
                 </div>
 
@@ -593,6 +736,354 @@ export default function SpeakerHub() {
               </CardContent>
             </Card>
 
+            {/* Biography Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Biography</CardTitle>
+                <CardDescription>Your speaker biography for event promotions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="short_bio">Short Bio (50-100 words)</Label>
+                  <Textarea
+                    id="short_bio"
+                    placeholder="A brief bio for event listings and quick introductions"
+                    value={formData.short_bio}
+                    onChange={(e) => setFormData({ ...formData, short_bio: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Full Biography</Label>
+                  <Textarea
+                    id="bio"
+                    placeholder="Your complete speaker biography"
+                    value={formData.bio}
+                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    rows={8}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Speaking Topics */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Speaking Topics</CardTitle>
+                <CardDescription>Topics you speak about</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add a topic"
+                    value={newTopic}
+                    onChange={(e) => setNewTopic(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTopic())}
+                  />
+                  <Button onClick={addTopic} size="icon">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {formData.topics.map((topic, index) => (
+                    <Badge key={index} variant="secondary" className="px-3 py-1">
+                      {topic}
+                      <button
+                        onClick={() => removeTopic(topic)}
+                        className="ml-2 hover:text-red-500"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Industries */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Industries</CardTitle>
+                <CardDescription>Industries you serve and understand</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add an industry"
+                    value={newIndustry}
+                    onChange={(e) => setNewIndustry(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addIndustry())}
+                  />
+                  <Button onClick={addIndustry} size="icon">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {formData.industries.map((industry, index) => (
+                    <Badge key={index} variant="outline" className="px-3 py-1">
+                      {industry}
+                      <button
+                        onClick={() => removeIndustry(industry)}
+                        className="ml-2 hover:text-red-500"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Speaking Videos */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Speaking Videos</CardTitle>
+                <CardDescription>Your speaking videos for event organizers to review</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Add new video form */}
+                <div className="p-4 border border-dashed border-gray-300 rounded-lg">
+                  <h4 className="font-semibold mb-4 flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add New Video
+                  </h4>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="video_title">Video Title</Label>
+                        <Input
+                          id="video_title"
+                          placeholder="Keynote at AI Summit 2024"
+                          value={newVideo.title}
+                          onChange={(e) => setNewVideo({ ...newVideo, title: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="video_url">Video URL</Label>
+                        <Input
+                          id="video_url"
+                          placeholder="https://youtube.com/watch?v=..."
+                          value={newVideo.url}
+                          onChange={(e) => setNewVideo({ ...newVideo, url: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="video_source">Source</Label>
+                        <Input
+                          id="video_source"
+                          placeholder="YouTube"
+                          value={newVideo.source || ""}
+                          onChange={(e) => setNewVideo({ ...newVideo, source: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="video_duration">Duration</Label>
+                        <Input
+                          id="video_duration"
+                          placeholder="18:14"
+                          value={newVideo.duration || ""}
+                          onChange={(e) => setNewVideo({ ...newVideo, duration: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="video_thumbnail">Thumbnail URL</Label>
+                        <Input
+                          id="video_thumbnail"
+                          placeholder="https://..."
+                          value={newVideo.thumbnail || ""}
+                          onChange={(e) => setNewVideo({ ...newVideo, thumbnail: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <Button onClick={addVideo} className="w-full">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Video
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Existing videos list */}
+                <div className="space-y-4">
+                  {formData.videos.map((video, index) => (
+                    <Card key={video.id || index} className="p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-lg">{video.title}</h4>
+                          <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                            <span className="flex items-center gap-1">
+                              <Video className="h-3 w-3" />
+                              {video.source || 'Video'}
+                            </span>
+                            {video.duration && (
+                              <span>{video.duration}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(video.url, '_blank')}
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingVideo(video)}
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeVideo(video.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      {video.thumbnail && (
+                        <img 
+                          src={video.thumbnail} 
+                          alt={video.title}
+                          className="w-full max-w-sm h-auto rounded-lg mt-2"
+                        />
+                      )}
+                    </Card>
+                  ))}
+                  
+                  {formData.videos.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      <Video className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No videos added yet. Add your first speaking video above!</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Client Testimonials */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Client Testimonials</CardTitle>
+                <CardDescription>Testimonials from past speaking engagements</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Add new testimonial form */}
+                <div className="p-4 border border-dashed border-gray-300 rounded-lg">
+                  <h4 className="font-semibold mb-4 flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add New Testimonial
+                  </h4>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="testimonial_quote">Quote</Label>
+                      <Textarea
+                        id="testimonial_quote"
+                        placeholder="The speaker delivered an outstanding presentation that truly inspired our team..."
+                        value={newTestimonial.quote}
+                        onChange={(e) => setNewTestimonial({ ...newTestimonial, quote: e.target.value })}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="testimonial_author">Author</Label>
+                        <Input
+                          id="testimonial_author"
+                          placeholder="Jane Smith"
+                          value={newTestimonial.author}
+                          onChange={(e) => setNewTestimonial({ ...newTestimonial, author: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="testimonial_position">Position</Label>
+                        <Input
+                          id="testimonial_position"
+                          placeholder="CEO"
+                          value={newTestimonial.position || ""}
+                          onChange={(e) => setNewTestimonial({ ...newTestimonial, position: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="testimonial_company">Company</Label>
+                        <Input
+                          id="testimonial_company"
+                          placeholder="Tech Innovations Inc."
+                          value={newTestimonial.company || ""}
+                          onChange={(e) => setNewTestimonial({ ...newTestimonial, company: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="testimonial_event">Event</Label>
+                        <Input
+                          id="testimonial_event"
+                          placeholder="AI Leadership Summit 2024"
+                          value={newTestimonial.event || ""}
+                          onChange={(e) => setNewTestimonial({ ...newTestimonial, event: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <Button onClick={addTestimonial} className="w-full">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Testimonial
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Existing testimonials list */}
+                <div className="space-y-4">
+                  {formData.testimonials.map((testimonial, index) => (
+                    <Card key={index} className="p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <blockquote className="text-lg italic text-gray-700 mb-3">
+                            "{testimonial.quote}"
+                          </blockquote>
+                          <div className="text-sm text-gray-600">
+                            <div className="font-semibold">{testimonial.author}</div>
+                            {testimonial.position && <div>{testimonial.position}</div>}
+                            {testimonial.company && <div>{testimonial.company}</div>}
+                            {testimonial.event && <div className="italic">{testimonial.event}</div>}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingTestimonial(testimonial)}
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeTestimonial(index)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                  
+                  {formData.testimonials.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No testimonials added yet. Add your first testimonial above!</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Social Media */}
             <Card>
               <CardHeader>
                 <CardTitle>Social Media</CardTitle>
@@ -665,72 +1156,30 @@ export default function SpeakerHub() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="promotion" className="space-y-6">
+          <TabsContent value="logistics" className="space-y-6">
+            {/* Speaking Fees */}
             <Card>
               <CardHeader>
-                <CardTitle>Biography</CardTitle>
-                <CardDescription>Your speaker biography for event promotions</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="short_bio">Short Bio (50-100 words)</Label>
-                  <Textarea
-                    id="short_bio"
-                    placeholder="A brief bio for event listings and quick introductions"
-                    value={formData.short_bio}
-                    onChange={(e) => setFormData({ ...formData, short_bio: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Full Biography</Label>
-                  <Textarea
-                    id="bio"
-                    placeholder="Your complete speaker biography"
-                    value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    rows={8}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Speaking Topics</CardTitle>
-                <CardDescription>Topics you speak about</CardDescription>
+                <CardTitle>Speaking Fees</CardTitle>
+                <CardDescription>Your speaking fee information for event organizers</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex gap-2">
+                <div className="space-y-2">
+                  <Label htmlFor="speaking_fee_range">Speaking Fee Range</Label>
                   <Input
-                    placeholder="Add a topic"
-                    value={newTopic}
-                    onChange={(e) => setNewTopic(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTopic())}
+                    id="speaking_fee_range"
+                    placeholder="$5,000 - $15,000"
+                    value={formData.speaking_fee_range}
+                    onChange={(e) => setFormData({ ...formData, speaking_fee_range: e.target.value })}
                   />
-                  <Button onClick={addTopic} size="icon">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.topics.map((topic, index) => (
-                    <Badge key={index} variant="secondary" className="px-3 py-1">
-                      {topic}
-                      <button
-                        onClick={() => removeTopic(topic)}
-                        className="ml-2 hover:text-red-500"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
+                  <p className="text-sm text-gray-500">
+                    This helps event organizers understand your fee structure
+                  </p>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="logistics" className="space-y-6">
+            {/* Travel & Technical Requirements */}
             <Card>
               <CardHeader>
                 <CardTitle>Travel & Technical Requirements</CardTitle>
@@ -749,10 +1198,10 @@ export default function SpeakerHub() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="technical_requirements">Technical Requirements</Label>
+                  <Label htmlFor="technical_requirements">AV & Technical Requirements</Label>
                   <Textarea
                     id="technical_requirements"
-                    placeholder="HDMI connection, wireless microphone, specific stage setup, etc."
+                    placeholder="HDMI connection, wireless microphone, specific stage setup, lighting preferences, etc."
                     value={formData.technical_requirements}
                     onChange={(e) => setFormData({ ...formData, technical_requirements: e.target.value })}
                     rows={3}
@@ -771,10 +1220,11 @@ export default function SpeakerHub() {
               </CardContent>
             </Card>
 
+            {/* Emergency Contact */}
             <Card>
               <CardHeader>
                 <CardTitle>Emergency Contact</CardTitle>
-                <CardDescription>Emergency contact information for travel</CardDescription>
+                <CardDescription>Emergency contact information for travel and events</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -782,6 +1232,7 @@ export default function SpeakerHub() {
                     <Label htmlFor="emergency_name">Contact Name</Label>
                     <Input
                       id="emergency_name"
+                      placeholder="Full name"
                       value={formData.emergency_contact.name}
                       onChange={(e) => setFormData({ 
                         ...formData, 
@@ -794,6 +1245,7 @@ export default function SpeakerHub() {
                     <Input
                       id="emergency_phone"
                       type="tel"
+                      placeholder="+1 (555) 123-4567"
                       value={formData.emergency_contact.phone}
                       onChange={(e) => setFormData({ 
                         ...formData, 
@@ -816,30 +1268,8 @@ export default function SpeakerHub() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="financial" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Speaking Fees</CardTitle>
-                <CardDescription>Your speaking fee information</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="speaking_fee_range">Speaking Fee Range</Label>
-                  <Input
-                    id="speaking_fee_range"
-                    placeholder="$5,000 - $15,000"
-                    value={formData.speaking_fee_range}
-                    onChange={(e) => setFormData({ ...formData, speaking_fee_range: e.target.value })}
-                  />
-                  <p className="text-sm text-gray-500">
-                    This helps event organizers understand your fee structure
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
+            {/* Payment Information */}
             <Card>
               <CardHeader>
                 <CardTitle>Payment Information</CardTitle>
@@ -849,7 +1279,7 @@ export default function SpeakerHub() {
                 <Alert>
                   <CreditCard className="h-4 w-4" />
                   <AlertDescription>
-                    Contact your account manager to update payment information securely.
+                    Contact your account manager to update payment and tax information securely. All financial data is encrypted and handled according to industry standards.
                   </AlertDescription>
                 </Alert>
               </CardContent>

@@ -30,9 +30,10 @@ export async function GET(request: NextRequest) {
       const speakers = await sql`
         SELECT 
           id, email, name, bio, short_bio, one_liner, headshot_url, website,
-          social_media, topics, speaking_fee_range, travel_preferences,
-          technical_requirements, dietary_restrictions, emergency_contact,
-          active, email_verified, created_at, updated_at
+          location, programs, social_media, topics, industries, videos, testimonials,
+          speaking_fee_range, travel_preferences, technical_requirements, 
+          dietary_restrictions, emergency_contact, active, email_verified, 
+          created_at, updated_at
         FROM speakers
         WHERE id = ${parseInt(speakerId)} AND active = true
         LIMIT 1
@@ -58,8 +59,13 @@ export async function GET(request: NextRequest) {
           one_liner: speaker.one_liner,
           headshot_url: speaker.headshot_url,
           website: speaker.website,
+          location: speaker.location,
+          programs: speaker.programs,
           social_media: speaker.social_media || {},
           topics: speaker.topics || [],
+          industries: speaker.industries || [],
+          videos: speaker.videos || [],
+          testimonials: speaker.testimonials || [],
           speaking_fee_range: speaker.speaking_fee_range,
           travel_preferences: speaker.travel_preferences,
           technical_requirements: speaker.technical_requirements,
@@ -121,8 +127,13 @@ export async function PUT(request: NextRequest) {
           one_liner = COALESCE(${updateData.one_liner || null}, one_liner),
           headshot_url = COALESCE(${updateData.headshot_url || null}, headshot_url),
           website = COALESCE(${updateData.website || null}, website),
+          location = COALESCE(${updateData.location || null}, location),
+          programs = COALESCE(${updateData.programs || null}, programs),
           social_media = COALESCE(${JSON.stringify(updateData.social_media) || null}, social_media),
           topics = COALESCE(${JSON.stringify(updateData.topics) || null}, topics),
+          industries = COALESCE(${JSON.stringify(updateData.industries) || null}, industries),
+          videos = COALESCE(${JSON.stringify(updateData.videos) || null}, videos),
+          testimonials = COALESCE(${JSON.stringify(updateData.testimonials) || null}, testimonials),
           speaking_fee_range = COALESCE(${updateData.speaking_fee_range || null}, speaking_fee_range),
           travel_preferences = COALESCE(${updateData.travel_preferences || null}, travel_preferences),
           technical_requirements = COALESCE(${updateData.technical_requirements || null}, technical_requirements),
@@ -132,9 +143,9 @@ export async function PUT(request: NextRequest) {
         WHERE id = ${parseInt(speakerId)} AND active = true
         RETURNING 
           id, email, name, bio, short_bio, one_liner, headshot_url, website,
-          social_media, topics, speaking_fee_range, travel_preferences,
-          technical_requirements, dietary_restrictions, emergency_contact,
-          active, email_verified, updated_at
+          location, programs, social_media, topics, industries, videos, testimonials,
+          speaking_fee_range, travel_preferences, technical_requirements, 
+          dietary_restrictions, emergency_contact, active, email_verified, updated_at
       `
 
       if (!updatedSpeaker) {
@@ -156,8 +167,13 @@ export async function PUT(request: NextRequest) {
           one_liner: updatedSpeaker.one_liner,
           headshot_url: updatedSpeaker.headshot_url,
           website: updatedSpeaker.website,
+          location: updatedSpeaker.location,
+          programs: updatedSpeaker.programs,
           social_media: updatedSpeaker.social_media || {},
           topics: updatedSpeaker.topics || [],
+          industries: updatedSpeaker.industries || [],
+          videos: updatedSpeaker.videos || [],
+          testimonials: updatedSpeaker.testimonials || [],
           speaking_fee_range: updatedSpeaker.speaking_fee_range,
           travel_preferences: updatedSpeaker.travel_preferences,
           technical_requirements: updatedSpeaker.technical_requirements,
