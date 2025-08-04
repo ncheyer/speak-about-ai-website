@@ -20,58 +20,25 @@ try {
 export async function GET(request: NextRequest) {
   try {
     // Require admin authentication
+    console.log('Admin speakers: Checking authentication...')
     const authError = requireAdminAuth(request)
-    if (authError) return authError
+    if (authError) {
+      console.log('Admin speakers: Authentication failed')
+      return authError
+    }
+    console.log('Admin speakers: Authentication successful')
     
     console.log('Admin speakers: DATABASE_URL available:', !!process.env.DATABASE_URL)
     console.log('Admin speakers: sql client initialized:', !!sql)
     
     // Check if database is available
     if (!sql) {
-      console.warn('Admin speakers: DATABASE_URL not configured, loading speakers from Google Sheets')
-      try {
-        const googleSheetsSpeakers = await getAllSpeakers()
-        // Convert Google Sheets speakers to admin format
-        const adminSpeakers = googleSheetsSpeakers.map((speaker, index) => ({
-          id: index + 1, // Generate a simple ID
-          name: speaker.name,
-          email: `${speaker.slug}@example.com`, // Placeholder email
-          bio: speaker.bio || '',
-          short_bio: speaker.bio?.substring(0, 200) || '',
-          one_liner: speaker.title || '',
-          headshot_url: speaker.image || '',
-          website: speaker.website || '',
-          location: speaker.location || '',
-          programs: speaker.programs || [],
-          topics: speaker.topics || [],
-          industries: speaker.industries || [],
-          videos: speaker.videos || [],
-          testimonials: speaker.testimonials || [],
-          speaking_fee_range: speaker.feeRange || speaker.fee || '',
-          travel_preferences: '',
-          technical_requirements: '',
-          dietary_restrictions: '',
-          featured: speaker.featured || false,
-          active: true,
-          listed: speaker.listed !== false,
-          ranking: speaker.ranking || 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }))
-        
-        return NextResponse.json({
-          success: true,
-          speakers: adminSpeakers,
-          message: 'Speakers loaded from Google Sheets'
-        })
-      } catch (error) {
-        console.error('Failed to load Google Sheets speakers:', error)
-        return NextResponse.json({
-          success: true,
-          speakers: [],
-          message: 'Failed to load speakers from Google Sheets'
-        })
-      }
+      console.error('Admin speakers: Database not available but DATABASE_URL is set - this should not happen')
+      return NextResponse.json({
+        success: false,
+        error: 'Database initialization failed',
+        message: 'DATABASE_URL is set but database client failed to initialize'
+      }, { status: 500 })
     }
     
     // Test basic connection first
