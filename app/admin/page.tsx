@@ -85,7 +85,7 @@ export default function AdminLoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="human@speakabout.ai"
+                placeholder="admin@company.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"

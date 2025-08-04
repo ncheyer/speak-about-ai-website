@@ -40,7 +40,7 @@ async function main() {
   
   console.log('\n📝 Environment Variables to Set:');
   console.log('================================');
-  console.log('ADMIN_EMAIL="human@speakabout.ai"');
+  console.log('ADMIN_EMAIL="admin@yourcompany.com"');
   console.log(`ADMIN_PASSWORD_HASH="${hashedPassword}"`);
   console.log(`JWT_SECRET="${jwtSecret}"`);
   
