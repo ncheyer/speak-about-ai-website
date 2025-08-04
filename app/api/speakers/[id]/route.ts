@@ -22,7 +22,7 @@ export async function GET(
         headshot_url, website, social_media, topics,
         speaking_fee_range, travel_preferences,
         technical_requirements, dietary_restrictions,
-        emergency_contact, active
+        active
       FROM speakers
       WHERE id = ${speakerId}
       LIMIT 1
@@ -74,7 +74,6 @@ export async function PUT(
         travel_preferences = ${data.travel_preferences},
         technical_requirements = ${data.technical_requirements},
         dietary_restrictions = ${data.dietary_restrictions},
-        emergency_contact = ${JSON.stringify(data.emergency_contact || {})},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${speakerId}
       RETURNING id, email, name, updated_at

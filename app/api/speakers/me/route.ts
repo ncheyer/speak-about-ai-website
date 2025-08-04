@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
           id, email, name, bio, short_bio, one_liner, headshot_url, website,
           location, programs, social_media, topics, industries, videos, testimonials,
           speaking_fee_range, travel_preferences, technical_requirements, 
-          dietary_restrictions, emergency_contact, active, email_verified, 
+          dietary_restrictions, active, email_verified, 
           created_at, updated_at
         FROM speakers
         WHERE id = ${parseInt(speakerId)} AND active = true
@@ -70,7 +70,6 @@ export async function GET(request: NextRequest) {
           travel_preferences: speaker.travel_preferences,
           technical_requirements: speaker.technical_requirements,
           dietary_restrictions: speaker.dietary_restrictions,
-          emergency_contact: speaker.emergency_contact || {},
           active: speaker.active,
           email_verified: speaker.email_verified,
           created_at: speaker.created_at,
@@ -138,14 +137,13 @@ export async function PUT(request: NextRequest) {
           travel_preferences = COALESCE(${updateData.travel_preferences || null}, travel_preferences),
           technical_requirements = COALESCE(${updateData.technical_requirements || null}, technical_requirements),
           dietary_restrictions = COALESCE(${updateData.dietary_restrictions || null}, dietary_restrictions),
-          emergency_contact = COALESCE(${JSON.stringify(updateData.emergency_contact) || null}, emergency_contact),
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ${parseInt(speakerId)} AND active = true
         RETURNING 
           id, email, name, bio, short_bio, one_liner, headshot_url, website,
           location, programs, social_media, topics, industries, videos, testimonials,
           speaking_fee_range, travel_preferences, technical_requirements, 
-          dietary_restrictions, emergency_contact, active, email_verified, updated_at
+          dietary_restrictions, active, email_verified, updated_at
       `
 
       if (!updatedSpeaker) {
@@ -178,7 +176,6 @@ export async function PUT(request: NextRequest) {
           travel_preferences: updatedSpeaker.travel_preferences,
           technical_requirements: updatedSpeaker.technical_requirements,
           dietary_restrictions: updatedSpeaker.dietary_restrictions,
-          emergency_contact: updatedSpeaker.emergency_contact || {},
           active: updatedSpeaker.active,
           email_verified: updatedSpeaker.email_verified,
           updated_at: updatedSpeaker.updated_at

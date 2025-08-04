@@ -84,11 +84,6 @@ interface Speaker {
   travel_preferences?: string
   technical_requirements?: string
   dietary_restrictions?: string
-  emergency_contact?: {
-    name?: string
-    phone?: string
-    relationship?: string
-  }
   active: boolean
 }
 
@@ -127,11 +122,6 @@ export default function SpeakerHub() {
     travel_preferences: "",
     technical_requirements: "",
     dietary_restrictions: "",
-    emergency_contact: {
-      name: "",
-      phone: "",
-      relationship: ""
-    }
   })
 
   const [newIndustry, setNewIndustry] = useState("")
@@ -192,7 +182,6 @@ export default function SpeakerHub() {
           travel_preferences: speakerData.travel_preferences || "",
           technical_requirements: speakerData.technical_requirements || "",
           dietary_restrictions: speakerData.dietary_restrictions || "",
-          emergency_contact: speakerData.emergency_contact || { name: "", phone: "", relationship: "" }
         })
       } catch (error) {
         console.error("Error fetching speaker data:", error)
@@ -1220,54 +1209,6 @@ export default function SpeakerHub() {
               </CardContent>
             </Card>
 
-            {/* Emergency Contact */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Emergency Contact</CardTitle>
-                <CardDescription>Emergency contact information for travel and events</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="emergency_name">Contact Name</Label>
-                    <Input
-                      id="emergency_name"
-                      placeholder="Full name"
-                      value={formData.emergency_contact.name}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        emergency_contact: { ...formData.emergency_contact, name: e.target.value }
-                      })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="emergency_phone">Phone Number</Label>
-                    <Input
-                      id="emergency_phone"
-                      type="tel"
-                      placeholder="+1 (555) 123-4567"
-                      value={formData.emergency_contact.phone}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        emergency_contact: { ...formData.emergency_contact, phone: e.target.value }
-                      })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="emergency_relationship">Relationship</Label>
-                    <Input
-                      id="emergency_relationship"
-                      placeholder="Spouse, parent, etc."
-                      value={formData.emergency_contact.relationship}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        emergency_contact: { ...formData.emergency_contact, relationship: e.target.value }
-                      })}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Payment Information */}
             <Card>

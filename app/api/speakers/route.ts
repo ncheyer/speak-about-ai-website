@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       SELECT 
         id, name, email, bio, short_bio, one_liner, headshot_url, website,
         social_media, topics, speaking_fee_range, travel_preferences,
-        technical_requirements, dietary_restrictions, emergency_contact,
+        technical_requirements, dietary_restrictions,
         active, email_verified, slug, title, featured, location, programs,
         listed, industries, ranking, image_position, image_offset,
         videos, testimonials, created_at, updated_at
@@ -46,7 +46,6 @@ export async function GET(request: NextRequest) {
         travelPreferences: speaker.travel_preferences,
         technicalRequirements: speaker.technical_requirements,
         dietaryRestrictions: speaker.dietary_restrictions,
-        emergencyContact: speaker.emergency_contact,
         featured: speaker.featured || false,
         listed: speaker.listed !== false,
         ranking: speaker.ranking || 0,
