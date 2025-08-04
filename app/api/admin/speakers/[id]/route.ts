@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const speakers = await sql`
       SELECT 
         id, name, email, bio, short_bio, one_liner, headshot_url, website,
-        location, programs, social_media, topics, industries, videos, testimonials,
+        location, programs, topics, industries, videos, testimonials,
         speaking_fee_range, travel_preferences, technical_requirements, 
         dietary_restrictions, featured, active, listed, ranking,
         created_at, updated_at
@@ -43,7 +43,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         website: speaker.website,
         location: speaker.location,
         programs: speaker.programs,
-        social_media: speaker.social_media || {},
         topics: speaker.topics || [],
         industries: speaker.industries || [],
         videos: speaker.videos || [],
@@ -86,8 +85,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         headshot_url = COALESCE(${updateData.headshot_url || null}, headshot_url),
         website = COALESCE(${updateData.website || null}, website),
         location = COALESCE(${updateData.location || null}, location),
-        programs = COALESCE(${updateData.programs || null}, programs),
-        social_media = COALESCE(${JSON.stringify(updateData.social_media) || null}, social_media),
+        programs = COALESCE(${JSON.stringify(updateData.programs) || null}, programs),
         topics = COALESCE(${JSON.stringify(updateData.topics) || null}, topics),
         industries = COALESCE(${JSON.stringify(updateData.industries) || null}, industries),
         videos = COALESCE(${JSON.stringify(updateData.videos) || null}, videos),
@@ -104,7 +102,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       WHERE id = ${parseInt(speakerId)}
       RETURNING 
         id, name, email, bio, short_bio, one_liner, headshot_url, website,
-        location, programs, social_media, topics, industries, videos, testimonials,
+        location, programs, topics, industries, videos, testimonials,
         speaking_fee_range, travel_preferences, technical_requirements, 
         dietary_restrictions, featured, active, listed, ranking, updated_at
     `

@@ -52,7 +52,7 @@ interface Speaker {
   headshot_url: string
   website: string
   location: string
-  programs: string
+  programs: string[]
   topics: string[]
   industries: string[]
   videos: Video[]
@@ -65,7 +65,6 @@ interface Speaker {
   active: boolean
   listed: boolean
   ranking: number
-  social_media: Record<string, string>
   created_at: string
   updated_at: string
 }
@@ -251,27 +250,6 @@ export default function AdminSpeakerViewPage() {
               </CardContent>
             </Card>
 
-            {/* Social Media */}
-            {speaker.social_media && Object.keys(speaker.social_media).length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Social Media</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {Object.entries(speaker.social_media).map(([platform, url]) => (
-                      <div key={platform} className="flex items-center gap-2">
-                        <span className="text-sm font-medium capitalize">{platform}:</span>
-                        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm flex items-center gap-1">
-                          {url}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Right Column - Detailed Info */}
@@ -350,13 +328,17 @@ export default function AdminSpeakerViewPage() {
             </div>
 
             {/* Programs */}
-            {speaker.programs && (
+            {speaker.programs && speaker.programs.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Programs</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700">{speaker.programs}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {speaker.programs.map((program, index) => (
+                      <Badge key={index} variant="outline">{program}</Badge>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             )}

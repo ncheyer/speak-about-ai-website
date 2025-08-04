@@ -55,7 +55,7 @@ interface Speaker {
   headshot_url: string
   website: string
   location: string
-  programs: string
+  programs: string[]
   topics: string[]
   industries: string[]
   videos: Video[]
@@ -68,7 +68,6 @@ interface Speaker {
   active: boolean
   listed: boolean
   ranking: number
-  social_media: Record<string, string>
 }
 
 export default function AdminSpeakerEditPage() {
@@ -90,7 +89,7 @@ export default function AdminSpeakerEditPage() {
     headshot_url: "",
     website: "",
     location: "",
-    programs: "",
+    programs: [] as string[],
     topics: [] as string[],
     industries: [] as string[],
     videos: [] as Video[],
@@ -103,16 +102,14 @@ export default function AdminSpeakerEditPage() {
     active: true,
     listed: true,
     ranking: 0,
-    social_media: {} as Record<string, string>
   })
 
   // Form inputs for adding new items
   const [newTopic, setNewTopic] = useState("")
   const [newIndustry, setNewIndustry] = useState("")
+  const [newProgram, setNewProgram] = useState("")
   const [newVideo, setNewVideo] = useState<Video>({ id: "", title: "", url: "" })
   const [newTestimonial, setNewTestimonial] = useState<Testimonial>({ quote: "", author: "" })
-  const [newSocialPlatform, setNewSocialPlatform] = useState("")
-  const [newSocialUrl, setNewSocialUrl] = useState("")
 
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
@@ -142,7 +139,7 @@ export default function AdminSpeakerEditPage() {
           headshot_url: speakerData.headshot_url || "",
           website: speakerData.website || "",
           location: speakerData.location || "",
-          programs: speakerData.programs || "",
+          programs: speakerData.programs || [],
           topics: speakerData.topics || [],
           industries: speakerData.industries || [],
           videos: speakerData.videos || [],
@@ -155,7 +152,6 @@ export default function AdminSpeakerEditPage() {
           active: speakerData.active || true,
           listed: speakerData.listed || true,
           ranking: speakerData.ranking || 0,
-          social_media: speakerData.social_media || {}
         })
       } else {
         const errorData = await response.json()
@@ -289,29 +285,21 @@ export default function AdminSpeakerEditPage() {
     }))
   }
 
-  const addSocialMedia = () => {
-    if (newSocialPlatform.trim() && newSocialUrl.trim()) {
+  const addProgram = () => {
+    if (newProgram.trim() && !formData.programs.includes(newProgram.trim())) {
       setFormData(prev => ({
         ...prev,
-        social_media: {
-          ...prev.social_media,
-          [newSocialPlatform.trim()]: newSocialUrl.trim()
-        }
+        programs: [...prev.programs, newProgram.trim()]
       }))
-      setNewSocialPlatform("")
-      setNewSocialUrl("")
+      setNewProgram("")
     }
   }
 
-  const removeSocialMedia = (platform: string) => {
-    setFormData(prev => {
-      const newSocialMedia = { ...prev.social_media }
-      delete newSocialMedia[platform]
-      return {
-        ...prev,
-        social_media: newSocialMedia
-      }
-    })
+  const removeProgram = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      programs: prev.programs.filter((_, i) => i !== index)
+    }))
   }
 
   if (!isLoggedIn || loading) {
@@ -494,56 +482,36 @@ export default function AdminSpeakerEditPage() {
 
                 <div>
                   <Label htmlFor="programs">Programs</Label>
-                  <Textarea
-                    id="programs"
-                    value={formData.programs}
-                    onChange={(e) => setFormData(prev => ({ ...prev, programs: e.target.value }))}
-                    rows={3}
-                    placeholder="Speaking programs and offerings"
-                  />
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {formData.programs.map((program, index) => (
+                        <Badge key={index} variant="outline" className="flex items-center gap-2">
+                          {program}
+                          <button
+                            onClick={() => removeProgram(index)}
+                            className="ml-1 hover:text-red-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newProgram}
+                        onChange={(e) => setNewProgram(e.target.value)}
+                        placeholder="Add new program"
+                        onKeyPress={(e) => e.key === 'Enter' && addProgram()}
+                      />
+                      <Button onClick={addProgram} size="sm">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Social Media */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Social Media</CardTitle>
-                <CardDescription>Social media profiles and links</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(formData.social_media).map(([platform, url]) => (
-                    <Badge key={platform} variant="secondary" className="flex items-center gap-2">
-                      {platform}: {url}
-                      <button
-                        onClick={() => removeSocialMedia(platform)}
-                        className="ml-1 hover:text-red-600"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    value={newSocialPlatform}
-                    onChange={(e) => setNewSocialPlatform(e.target.value)}
-                    placeholder="Platform (e.g., LinkedIn, Twitter)"
-                    className="flex-1"
-                  />
-                  <Input
-                    value={newSocialUrl}
-                    onChange={(e) => setNewSocialUrl(e.target.value)}
-                    placeholder="URL"
-                    className="flex-1"
-                  />
-                  <Button onClick={addSocialMedia} size="sm">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* Content Tab */}

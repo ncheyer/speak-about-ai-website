@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       const speakers = await sql`
         SELECT 
           id, email, name, bio, short_bio, one_liner, headshot_url, website,
-          location, programs, social_media, topics, industries, videos, testimonials,
+          location, programs, topics, industries, videos, testimonials,
           speaking_fee_range, travel_preferences, technical_requirements, 
           dietary_restrictions, active, email_verified, 
           created_at, updated_at
@@ -60,8 +60,7 @@ export async function GET(request: NextRequest) {
           headshot_url: speaker.headshot_url,
           website: speaker.website,
           location: speaker.location,
-          programs: speaker.programs,
-          social_media: speaker.social_media || {},
+          programs: speaker.programs || [],
           topics: speaker.topics || [],
           industries: speaker.industries || [],
           videos: speaker.videos || [],
@@ -127,8 +126,7 @@ export async function PUT(request: NextRequest) {
           headshot_url = COALESCE(${updateData.headshot_url || null}, headshot_url),
           website = COALESCE(${updateData.website || null}, website),
           location = COALESCE(${updateData.location || null}, location),
-          programs = COALESCE(${updateData.programs || null}, programs),
-          social_media = COALESCE(${JSON.stringify(updateData.social_media) || null}, social_media),
+          programs = COALESCE(${JSON.stringify(updateData.programs) || null}, programs),
           topics = COALESCE(${JSON.stringify(updateData.topics) || null}, topics),
           industries = COALESCE(${JSON.stringify(updateData.industries) || null}, industries),
           videos = COALESCE(${JSON.stringify(updateData.videos) || null}, videos),
@@ -141,7 +139,7 @@ export async function PUT(request: NextRequest) {
         WHERE id = ${parseInt(speakerId)} AND active = true
         RETURNING 
           id, email, name, bio, short_bio, one_liner, headshot_url, website,
-          location, programs, social_media, topics, industries, videos, testimonials,
+          location, programs, topics, industries, videos, testimonials,
           speaking_fee_range, travel_preferences, technical_requirements, 
           dietary_restrictions, active, email_verified, updated_at
       `
@@ -166,8 +164,7 @@ export async function PUT(request: NextRequest) {
           headshot_url: updatedSpeaker.headshot_url,
           website: updatedSpeaker.website,
           location: updatedSpeaker.location,
-          programs: updatedSpeaker.programs,
-          social_media: updatedSpeaker.social_media || {},
+          programs: updatedSpeaker.programs || [],
           topics: updatedSpeaker.topics || [],
           industries: updatedSpeaker.industries || [],
           videos: updatedSpeaker.videos || [],

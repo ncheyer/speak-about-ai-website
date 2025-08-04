@@ -23,10 +23,6 @@ import {
   Loader2,
   Plus,
   X,
-  Twitter,
-  Linkedin,
-  Instagram,
-  Youtube,
   MapPin,
   Phone,
   AlertTriangle,
@@ -69,13 +65,7 @@ interface Speaker {
   headshot_url?: string
   website?: string
   location?: string
-  programs?: string
-  social_media?: {
-    twitter?: string
-    linkedin?: string
-    instagram?: string
-    youtube?: string
-  }
+  programs?: string[]
   topics?: string[]
   industries?: string[]
   videos?: Video[]
@@ -107,13 +97,7 @@ export default function SpeakerHub() {
     headshot_url: "",
     website: "",
     location: "",
-    programs: "",
-    social_media: {
-      twitter: "",
-      linkedin: "",
-      instagram: "",
-      youtube: ""
-    },
+    programs: [] as string[],
     topics: [] as string[],
     industries: [] as string[],
     videos: [] as Video[],
@@ -125,6 +109,7 @@ export default function SpeakerHub() {
   })
 
   const [newIndustry, setNewIndustry] = useState("")
+  const [newProgram, setNewProgram] = useState("")
   const [editingVideo, setEditingVideo] = useState<Video | null>(null)
   const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null)
   const [newVideo, setNewVideo] = useState<Video>({ id: "", title: "", url: "" })
@@ -172,8 +157,7 @@ export default function SpeakerHub() {
           headshot_url: speakerData.headshot_url || "",
           website: speakerData.website || "",
           location: speakerData.location || "",
-          programs: speakerData.programs || "",
-          social_media: speakerData.social_media || { twitter: "", linkedin: "", instagram: "", youtube: "" },
+          programs: speakerData.programs || [],
           topics: speakerData.topics || [],
           industries: speakerData.industries || [],
           videos: speakerData.videos || [],
@@ -262,6 +246,24 @@ export default function SpeakerHub() {
     setFormData({
       ...formData,
       topics: formData.topics.filter(topic => topic !== topicToRemove)
+    })
+  }
+
+  // Program management
+  const addProgram = () => {
+    if (newProgram.trim() && !formData.programs.includes(newProgram.trim())) {
+      setFormData({
+        ...formData,
+        programs: [...formData.programs, newProgram.trim()]
+      })
+      setNewProgram("")
+    }
+  }
+
+  const removeProgram = (programToRemove: string) => {
+    setFormData({
+      ...formData,
+      programs: formData.programs.filter(program => program !== programToRemove)
     })
   }
 
@@ -694,12 +696,31 @@ export default function SpeakerHub() {
 
                 <div className="space-y-2">
                   <Label htmlFor="programs">Signature Programs/Presentations</Label>
-                  <Input
-                    id="programs"
-                    placeholder="AI Leadership Masterclass, Future of Work Workshop"
-                    value={formData.programs}
-                    onChange={(e) => setFormData({ ...formData, programs: e.target.value })}
-                  />
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      id="programs"
+                      placeholder="AI Leadership Masterclass"
+                      value={newProgram}
+                      onChange={(e) => setNewProgram(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addProgram())}
+                    />
+                    <Button onClick={addProgram} size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.programs.map((program, index) => (
+                      <Badge key={index} variant="secondary" className="px-3 py-1">
+                        {program}
+                        <button
+                          onClick={() => removeProgram(program)}
+                          className="ml-2 hover:text-red-500"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -1072,77 +1093,6 @@ export default function SpeakerHub() {
               </CardContent>
             </Card>
 
-            {/* Social Media */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Social Media</CardTitle>
-                <CardDescription>Your social media profiles for promotion</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="twitter" className="flex items-center gap-2">
-                      <Twitter className="h-4 w-4" />
-                      Twitter/X
-                    </Label>
-                    <Input
-                      id="twitter"
-                      placeholder="@username"
-                      value={formData.social_media.twitter}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        social_media: { ...formData.social_media, twitter: e.target.value }
-                      })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="linkedin" className="flex items-center gap-2">
-                      <Linkedin className="h-4 w-4" />
-                      LinkedIn
-                    </Label>
-                    <Input
-                      id="linkedin"
-                      placeholder="linkedin.com/in/username"
-                      value={formData.social_media.linkedin}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        social_media: { ...formData.social_media, linkedin: e.target.value }
-                      })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="instagram" className="flex items-center gap-2">
-                      <Instagram className="h-4 w-4" />
-                      Instagram
-                    </Label>
-                    <Input
-                      id="instagram"
-                      placeholder="@username"
-                      value={formData.social_media.instagram}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        social_media: { ...formData.social_media, instagram: e.target.value }
-                      })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="youtube" className="flex items-center gap-2">
-                      <Youtube className="h-4 w-4" />
-                      YouTube
-                    </Label>
-                    <Input
-                      id="youtube"
-                      placeholder="youtube.com/@channel"
-                      value={formData.social_media.youtube}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        social_media: { ...formData.social_media, youtube: e.target.value }
-                      })}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="logistics" className="space-y-6">

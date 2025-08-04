@@ -19,7 +19,7 @@ export async function GET(
     const speakers = await sql`
       SELECT 
         id, email, name, bio, short_bio, one_liner,
-        headshot_url, website, social_media, topics,
+        headshot_url, website, topics,
         speaking_fee_range, travel_preferences,
         technical_requirements, dietary_restrictions,
         active
@@ -68,7 +68,6 @@ export async function PUT(
         one_liner = ${data.one_liner},
         headshot_url = ${data.headshot_url},
         website = ${data.website},
-        social_media = ${JSON.stringify(data.social_media || {})},
         topics = ${JSON.stringify(data.topics || [])},
         speaking_fee_range = ${data.speaking_fee_range},
         travel_preferences = ${data.travel_preferences},

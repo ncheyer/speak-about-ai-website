@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const speakers = await sql`
       SELECT 
         id, name, email, bio, short_bio, one_liner, headshot_url, website,
-        social_media, topics, speaking_fee_range, travel_preferences,
+        topics, speaking_fee_range, travel_preferences,
         technical_requirements, dietary_restrictions,
         active, email_verified, slug, title, featured, location, programs,
         listed, industries, ranking, image_position, image_offset,
@@ -34,9 +34,8 @@ export async function GET(request: NextRequest) {
         imagePosition: speaker.image_position || 'center',
         imageOffsetY: speaker.image_offset || '0%',
         website: speaker.website,
-        socialMedia: speaker.social_media || {},
         topics: speaker.topics || [],
-        programs: speaker.programs ? speaker.programs.split(',').map((p: string) => p.trim()).filter((p: string) => p) : [],
+        programs: speaker.programs || [],
         industries: speaker.industries || [],
         expertise: speaker.topics || [], // Using topics as expertise for compatibility
         fee: speaker.speaking_fee_range || 'Please Inquire',

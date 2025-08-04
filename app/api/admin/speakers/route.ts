@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const speakers = await sql`
       SELECT 
         id, name, email, bio, short_bio, one_liner, headshot_url, website,
-        location, programs, social_media, topics, industries, videos, testimonials,
+        location, programs, topics, industries, videos, testimonials,
         speaking_fee_range, travel_preferences, technical_requirements, 
         dietary_restrictions, featured, active, listed, ranking,
         created_at, updated_at
