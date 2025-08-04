@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
     const sessionToken = localStorage.getItem("adminSessionToken")
     if (isAdminLoggedIn && sessionToken) {
-      router.push("/admin/dashboard")
+      router.push("/admin/manage")
     }
   }, [router])
 
@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
         localStorage.setItem("adminUser", JSON.stringify(data.user))
         
         // Redirect to dashboard
-        router.push("/admin/dashboard")
+        router.push("/admin/manage")
       } else {
         setError(data.error || "Authentication failed")
       }
