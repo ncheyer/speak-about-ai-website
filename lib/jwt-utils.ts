@@ -11,10 +11,12 @@ export interface JWTPayload {
   exp: number
 }
 
-const JWT_SECRET = process.env.JWT_SECRET
-
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required for security. Please set a strong random secret.')
+function getJWTSecret(): string {
+  const JWT_SECRET = process.env.JWT_SECRET
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required for security. Please set a strong random secret.')
+  }
+  return JWT_SECRET
 }
 
 /**
@@ -32,7 +34,7 @@ export function createToken(payload: Omit<JWTPayload, 'iat' | 'exp'>, expiresInH
   const payloadB64 = Buffer.from(JSON.stringify(fullPayload)).toString('base64url')
   
   const signature = createHash('sha256')
-    .update(`${header}.${payloadB64}.${JWT_SECRET}`)
+    .update(`${header}.${payloadB64}.${getJWTSecret()}`)
     .digest('base64url')
   
   return `${header}.${payloadB64}.${signature}`
@@ -50,7 +52,7 @@ export function verifyToken(token: string): JWTPayload | null {
     
     // Verify signature using constant-time comparison to prevent timing attacks
     const expectedSignature = createHash('sha256')
-      .update(`${header}.${payload}.${JWT_SECRET}`)
+      .update(`${header}.${payload}.${getJWTSecret()}`)
       .digest('base64url')
     
     // Convert to buffers for constant-time comparison
