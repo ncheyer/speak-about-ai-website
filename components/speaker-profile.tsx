@@ -265,7 +265,7 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                   <div className="prose prose-lg max-w-none font-montserrat">{formatBio(speaker.bio || "")}</div>
                 </div>
 
-                {speaker.programs && speaker.programs.length > 0 && (
+                {speaker.programs && Array.isArray(speaker.programs) && speaker.programs.length > 0 && (
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Keynote Options</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

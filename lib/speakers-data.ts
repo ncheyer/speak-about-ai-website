@@ -281,10 +281,12 @@ function mapGoogleSheetDataToSpeakers(data: any[][]): Speaker[] {
           imagePosition: speakerData.image_position?.trim() || "center",
           imageOffsetY: speakerData.image_offset_y?.trim() || "0%",
           programs: speakerData.programs
-            ? String(speakerData.programs)
-                .split(",")
-                .map((s: string) => s.trim())
-                .filter((s) => s)
+            ? Array.isArray(speakerData.programs)
+              ? speakerData.programs
+              : String(speakerData.programs)
+                  .split(",")
+                  .map((s: string) => s.trim())
+                  .filter((s) => s)
             : [],
           industries: speakerData.industries
             ? String(speakerData.industries)
