@@ -28,7 +28,10 @@ import {
   TrendingUp,
   CheckSquare,
   Calendar,
-  AlertTriangle
+  AlertTriangle,
+  BarChart3,
+  Activity,
+  MousePointer
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -118,11 +121,14 @@ export default function MasterAdminPanel() {
   const [speakers, setSpeakers] = useState<Speaker[]>([])
   const [deals, setDeals] = useState<Deal[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [analyticsData, setAnalyticsData] = useState<any>(null)
+  const [realTimeData, setRealTimeData] = useState<any>(null)
   
   // Loading states
   const [speakersLoading, setSpeakersLoading] = useState(true)
   const [dealsLoading, setDealsLoading] = useState(true)
   const [projectsLoading, setProjectsLoading] = useState(true)
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
   
   // Filter states
   const [speakerSearch, setSpeakerSearch] = useState("")
@@ -148,6 +154,7 @@ export default function MasterAdminPanel() {
     loadSpeakers()
     loadDeals()
     loadProjects()
+    loadAnalytics()
   }, [router])
 
   const loadSpeakers = async () => {
@@ -207,6 +214,35 @@ export default function MasterAdminPanel() {
       })
     } finally {
       setProjectsLoading(false)
+    }
+  }
+
+  const loadAnalytics = async () => {
+    try {
+      setAnalyticsLoading(true)
+      
+      // Load overview data
+      const overviewResponse = await fetch("/api/analytics/overview?days=30")
+      if (overviewResponse.ok) {
+        const overviewData = await overviewResponse.json()
+        setAnalyticsData(overviewData.data)
+      }
+      
+      // Load real-time data
+      const realTimeResponse = await fetch("/api/analytics/realtime")
+      if (realTimeResponse.ok) {
+        const realTimeData = await realTimeResponse.json()
+        setRealTimeData(realTimeData.data)
+      }
+    } catch (error) {
+      console.error("Error loading analytics:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load analytics data",
+        variant: "destructive",
+      })
+    } finally {
+      setAnalyticsLoading(false)
     }
   }
 
@@ -294,6 +330,13 @@ export default function MasterAdminPanel() {
     totalBudget: projects.reduce((sum, project) => sum + project.budget, 0)
   }
 
+  const analyticsStats = {
+    totalPageViews: analyticsData?.overview?.total_page_views || 0,
+    uniqueVisitors: analyticsData?.overview?.unique_visitors || 0,
+    activeVisitors: realTimeData?.stats?.active_visitors || 0,
+    avgDuration: analyticsData?.overview?.avg_duration || 0
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -320,7 +363,7 @@ export default function MasterAdminPanel() {
         </div>
 
         {/* Overview Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className={`cursor-pointer transition-all ${activeTab === 'speakers' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`} 
                 onClick={() => setActiveTab('speakers')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -362,11 +405,25 @@ export default function MasterAdminPanel() {
               </p>
             </CardContent>
           </Card>
+
+          <Card className={`cursor-pointer transition-all ${activeTab === 'analytics' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`}
+                onClick={() => setActiveTab('analytics')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Analytics</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analyticsStats.uniqueVisitors}</div>
+              <p className="text-xs text-muted-foreground">
+                {analyticsStats.totalPageViews} views • {analyticsStats.activeVisitors} active
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Tabbed Interface */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="speakers" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Speakers ({speakerStats.total})
@@ -378,6 +435,10 @@ export default function MasterAdminPanel() {
             <TabsTrigger value="projects" className="flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
               Projects ({projectStats.total})
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
             </TabsTrigger>
           </TabsList>
 
@@ -678,6 +739,213 @@ export default function MasterAdminPanel() {
                   <ProjectsKanban />
                 </CardContent>
               </Card>
+            )}
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Website Analytics</h2>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={loadAnalytics}>
+                  <Activity className="mr-2 h-4 w-4" />
+                  Refresh
+                </Button>
+              </div>
+            </div>
+
+            {analyticsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span className="ml-2">Loading analytics...</span>
+              </div>
+            ) : (
+              <>
+                {/* Real-time Stats */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Activity className="h-5 w-5" />
+                      Real-time Overview
+                    </CardTitle>
+                    <CardDescription>Live visitor activity in the last hour</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-green-600">
+                          {realTimeData?.stats?.active_visitors || 0}
+                        </div>
+                        <p className="text-sm text-gray-600">Active Visitors</p>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-blue-600">
+                          {realTimeData?.stats?.page_views_last_hour || 0}
+                        </div>
+                        <p className="text-sm text-gray-600">Page Views (1h)</p>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-purple-600">
+                          {realTimeData?.stats?.pages_viewed || 0}
+                        </div>
+                        <p className="text-sm text-gray-600">Pages Viewed</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Overview Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Page Views</CardTitle>
+                      <MousePointer className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {new Intl.NumberFormat('en-US').format(analyticsStats.totalPageViews)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Last 30 days</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Unique Visitors</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {new Intl.NumberFormat('en-US').format(analyticsStats.uniqueVisitors)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Last 30 days</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Avg. Session Duration</CardTitle>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {Math.round(analyticsStats.avgDuration / 60)}m
+                      </div>
+                      <p className="text-xs text-muted-foreground">Average time on site</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Sessions</CardTitle>
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {new Intl.NumberFormat('en-US').format(analyticsData?.overview?.total_sessions || 0)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Last 30 days</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Top Pages and Traffic Sources */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Top Pages</CardTitle>
+                      <CardDescription>Most visited pages in the last 30 days</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {analyticsData?.topPages?.slice(0, 5).map((page: any, index: number) => (
+                          <div key={page.page_path} className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="font-medium truncate">{page.page_path}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold">{page.views}</p>
+                              <p className="text-xs text-gray-500">views</p>
+                            </div>
+                          </div>
+                        )) || (
+                          <p className="text-gray-500 text-center py-4">No page data available</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Traffic Sources</CardTitle>
+                      <CardDescription>Where your visitors are coming from</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {analyticsData?.trafficSources?.slice(0, 5).map((source: any, index: number) => (
+                          <div key={source.source} className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="font-medium capitalize">{source.source}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold">{source.visits}</p>
+                              <p className="text-xs text-gray-500">visits</p>
+                            </div>
+                          </div>
+                        )) || (
+                          <p className="text-gray-500 text-center py-4">No traffic source data available</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Device Breakdown */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Device Types</CardTitle>
+                    <CardDescription>Breakdown of visitor devices</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-6">
+                      {analyticsData?.deviceBreakdown?.map((device: any) => (
+                        <div key={device.device_type} className="text-center">
+                          <div className="text-2xl font-bold">
+                            {device.count}
+                          </div>
+                          <p className="text-sm text-gray-600 capitalize">{device.device_type}</p>
+                        </div>
+                      )) || (
+                        <p className="text-gray-500 text-center py-4 col-span-3">No device data available</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Recent Active Pages */}
+                {realTimeData?.recentPages && realTimeData.recentPages.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Currently Popular Pages</CardTitle>
+                      <CardDescription>Pages with recent activity (last hour)</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {realTimeData.recentPages.map((page: any, index: number) => (
+                          <div key={page.page_path} className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="font-medium truncate">{page.page_path}</p>
+                            </div>
+                            <div className="text-right">
+                              <Badge variant="secondary">{page.views} views</Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
           </TabsContent>
         </Tabs>

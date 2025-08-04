@@ -1,0 +1,145 @@
+// Simple analytics tracking script for Speak About AI website
+(function() {
+  'use strict';
+
+  // Track page view with additional client-side data
+  function trackPageView() {
+    try {
+      // Get page title and send it to the middleware via header
+      const pageTitle = document.title;
+      
+      // Send page title via fetch to a tracking endpoint
+      // This allows us to capture the title after client-side rendering
+      fetch('/api/analytics/page-view', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pageTitle: pageTitle,
+          screenResolution: `${screen.width}x${screen.height}`,
+          viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+          referrer: document.referrer || undefined
+        })
+      }).catch(() => {
+        // Fail silently - don't break the site if analytics fails
+      });
+    } catch (error) {
+      // Fail silently
+    }
+  }
+
+  // Track custom events
+  function trackEvent(eventName, eventCategory, eventValue, metadata) {
+    try {
+      fetch('/api/analytics/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventName,
+          eventCategory,
+          eventValue,
+          metadata
+        })
+      }).catch(() => {
+        // Fail silently
+      });
+    } catch (error) {
+      // Fail silently
+    }
+  }
+
+  // Auto-track common events
+  function setupEventTracking() {
+    // Track contact form submissions
+    document.addEventListener('submit', function(e) {
+      if (e.target.matches('form[data-track="contact"]') || 
+          e.target.querySelector('input[type="email"]')) {
+        trackEvent('contact_form_submit', 'conversion', null, {
+          form: e.target.action || window.location.pathname
+        });
+      }
+    });
+
+    // Track speaker card interactions
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('[data-speaker-id]')) {
+        const speakerId = e.target.closest('[data-speaker-id]').dataset.speakerId;
+        trackEvent('speaker_view', 'engagement', null, {
+          speakerId: speakerId,
+          page: window.location.pathname
+        });
+      }
+    });
+
+    // Track external link clicks
+    document.addEventListener('click', function(e) {
+      const link = e.target.closest('a[href]');
+      if (link && link.hostname !== window.location.hostname) {
+        trackEvent('external_link_click', 'engagement', null, {
+          url: link.href,
+          text: link.textContent?.trim() || 'unknown'
+        });
+      }
+    });
+
+    // Track video plays (if any)
+    document.addEventListener('play', function(e) {
+      if (e.target.tagName === 'VIDEO') {
+        trackEvent('video_play', 'engagement', null, {
+          src: e.target.src || e.target.currentSrc,
+          duration: e.target.duration || null
+        });
+      }
+    }, true);
+
+    // Track scroll depth
+    let maxScroll = 0;
+    let scrollTracked = false;
+    
+    function trackScrollDepth() {
+      const scrollPercent = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+      maxScroll = Math.max(maxScroll, scrollPercent);
+      
+      // Track at 25%, 50%, 75%, and 100% scroll
+      if (!scrollTracked && (maxScroll >= 75)) {
+        scrollTracked = true;
+        trackEvent('scroll_depth', 'engagement', maxScroll, {
+          page: window.location.pathname
+        });
+      }
+    }
+
+    window.addEventListener('scroll', trackScrollDepth, { passive: true });
+  }
+
+  // Initialize when page loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      trackPageView();
+      setupEventTracking();
+    });
+  } else {
+    trackPageView();
+    setupEventTracking();
+  }
+
+  // Track page changes in SPA
+  let lastPath = window.location.pathname;
+  
+  function checkForPageChange() {
+    if (window.location.pathname !== lastPath) {
+      lastPath = window.location.pathname;
+      trackPageView();
+    }
+  }
+
+  // Monitor for navigation changes (for SPA behavior)
+  setInterval(checkForPageChange, 1000);
+
+  // Expose trackEvent function globally for manual tracking
+  window.trackEvent = trackEvent;
+
+})();
