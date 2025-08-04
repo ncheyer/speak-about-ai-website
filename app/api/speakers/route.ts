@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 
-// Initialize Neon client
-const sql = neon(process.env.DATABASE_URL!)
-
 export async function GET(request: NextRequest) {
   try {
+    // Check if DATABASE_URL is configured
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL environment variable is not configured')
+      return NextResponse.json(
+        { error: 'Database configuration missing' },
+        { status: 503 }
+      )
+    }
+
+    // Initialize Neon client
+    const sql = neon(process.env.DATABASE_URL)
     // Get all active and listed speakers with full data for website display
     const speakers = await sql`
       SELECT 
@@ -59,9 +67,12 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Get speakers error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch speakers' },
-      { status: 500 }
-    )
+    
+    // Return empty array as fallback to prevent site from breaking
+    return NextResponse.json({
+      success: false,
+      speakers: [],
+      error: 'Database temporarily unavailable'
+    })
   }
 }
