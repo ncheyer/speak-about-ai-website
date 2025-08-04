@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 import { requireAdminAuth } from '@/lib/auth-middleware'
+import { getAllSpeakers } from '@/lib/speakers-data'
 
 // Initialize Neon client
 let sql: any = null
@@ -20,12 +21,50 @@ export async function GET(request: NextRequest) {
     
     // Check if database is available
     if (!sql) {
-      console.warn('Admin speakers: DATABASE_URL not configured, returning empty speakers list')
-      return NextResponse.json({
-        success: true,
-        speakers: [],
-        message: 'Database not configured - speakers managed via Google Sheets'
-      })
+      console.warn('Admin speakers: DATABASE_URL not configured, loading speakers from Google Sheets')
+      try {
+        const googleSheetsSpeakers = await getAllSpeakers()
+        // Convert Google Sheets speakers to admin format
+        const adminSpeakers = googleSheetsSpeakers.map((speaker, index) => ({
+          id: index + 1, // Generate a simple ID
+          name: speaker.name,
+          email: `${speaker.slug}@example.com`, // Placeholder email
+          bio: speaker.bio || '',
+          short_bio: speaker.bio?.substring(0, 200) || '',
+          one_liner: speaker.title || '',
+          headshot_url: speaker.image || '',
+          website: speaker.website || '',
+          location: speaker.location || '',
+          programs: speaker.programs || [],
+          topics: speaker.topics || [],
+          industries: speaker.industries || [],
+          videos: speaker.videos || [],
+          testimonials: speaker.testimonials || [],
+          speaking_fee_range: speaker.feeRange || speaker.fee || '',
+          travel_preferences: '',
+          technical_requirements: '',
+          dietary_restrictions: '',
+          featured: speaker.featured || false,
+          active: true,
+          listed: speaker.listed !== false,
+          ranking: speaker.ranking || 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }))
+        
+        return NextResponse.json({
+          success: true,
+          speakers: adminSpeakers,
+          message: 'Speakers loaded from Google Sheets'
+        })
+      } catch (error) {
+        console.error('Failed to load Google Sheets speakers:', error)
+        return NextResponse.json({
+          success: true,
+          speakers: [],
+          message: 'Failed to load speakers from Google Sheets'
+        })
+      }
     }
     
     // Get all speakers with full details

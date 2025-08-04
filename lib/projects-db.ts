@@ -1,13 +1,20 @@
 import { neon } from "@neondatabase/serverless"
 import { getAutomaticProjectStatus, type ProjectStatus } from "./project-status-utils"
 
-// Check if DATABASE_URL is available
-if (!process.env.DATABASE_URL) {
-  console.error("DATABASE_URL environment variable is not set")
-  throw new Error("DATABASE_URL environment variable is required")
-}
+// Initialize Neon client with error handling
+let sql: any = null
+let databaseAvailable = false
 
-const sql = neon(process.env.DATABASE_URL)
+try {
+  if (process.env.DATABASE_URL) {
+    sql = neon(process.env.DATABASE_URL)
+    databaseAvailable = true
+  } else {
+    console.warn("DATABASE_URL environment variable is not set - projects database unavailable")
+  }
+} catch (error) {
+  console.error("Failed to initialize Neon client for projects:", error)
+}
 
 export interface Project {
   id: number
@@ -155,6 +162,11 @@ export interface Project {
 }
 
 export async function getAllProjects(): Promise<Project[]> {
+  if (!databaseAvailable || !sql) {
+    console.warn("getAllProjects: Database not available")
+    return []
+  }
+  
   try {
     console.log("Fetching all projects from database...")
     const projects = await sql`
@@ -177,6 +189,10 @@ export async function getAllProjects(): Promise<Project[]> {
 }
 
 export async function createProject(projectData: Omit<Project, "id" | "created_at" | "updated_at">): Promise<Project | null> {
+  if (!databaseAvailable || !sql) {
+    console.warn("createProject: Database not available")
+    return null
+  }
   try {
     console.log("Creating new project:", projectData.project_name)
     
@@ -414,6 +430,10 @@ export async function deleteProject(id: number): Promise<boolean> {
 }
 
 export async function getProjectsByStatus(status: string): Promise<Project[]> {
+  if (!databaseAvailable || !sql) {
+    console.warn("getProjectsByStatus: Database not available")
+    return []
+  }
   try {
     console.log("Fetching projects by status:", status)
     const projects = await sql`
@@ -430,6 +450,10 @@ export async function getProjectsByStatus(status: string): Promise<Project[]> {
 }
 
 export async function searchProjects(searchTerm: string): Promise<Project[]> {
+  if (!databaseAvailable || !sql) {
+    console.warn("searchProjects: Database not available")
+    return []
+  }
   try {
     console.log("Searching projects for term:", searchTerm)
     const projects = await sql`
@@ -451,6 +475,10 @@ export async function searchProjects(searchTerm: string): Promise<Project[]> {
 
 // Get active projects (not completed or cancelled)
 export async function getActiveProjects(): Promise<Project[]> {
+  if (!databaseAvailable || !sql) {
+    console.warn("getActiveProjects: Database not available")
+    return []
+  }
   try {
     console.log("Fetching active projects...")
     const projects = await sql`
@@ -512,6 +540,10 @@ export async function updateAllProjectStatuses(): Promise<{ updated: number, err
 
 // Get projects by priority
 export async function getProjectsByPriority(priority: string): Promise<Project[]> {
+  if (!databaseAvailable || !sql) {
+    console.warn("getProjectsByPriority: Database not available")
+    return []
+  }
   try {
     console.log("Fetching projects by priority:", priority)
     const projects = await sql`
@@ -529,6 +561,10 @@ export async function getProjectsByPriority(priority: string): Promise<Project[]
 
 // Get overdue projects
 export async function getOverdueProjects(): Promise<Project[]> {
+  if (!databaseAvailable || !sql) {
+    console.warn("getOverdueProjects: Database not available")
+    return []
+  }
   try {
     console.log("Fetching overdue projects...")
     const projects = await sql`
