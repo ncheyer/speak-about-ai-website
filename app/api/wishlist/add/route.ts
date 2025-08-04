@@ -28,8 +28,18 @@ export async function POST(request: NextRequest) {
     if (success) {
       return NextResponse.json({ success: true })
     } else {
+      // Add more context for debugging
+      const hasDatabase = !!process.env.DATABASE_URL
       return NextResponse.json(
-        { error: 'Failed to add to wishlist' },
+        { 
+          error: 'Failed to add to wishlist',
+          debug: {
+            hasDatabase,
+            message: hasDatabase 
+              ? 'Database connection failed - check credentials' 
+              : 'DATABASE_URL not configured'
+          }
+        },
         { status: 500 }
       )
     }

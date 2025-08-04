@@ -5,6 +5,9 @@ let sql: any = null
 try {
   if (process.env.DATABASE_URL) {
     sql = neon(process.env.DATABASE_URL)
+    console.log('Wishlist: Neon client initialized successfully')
+  } else {
+    console.warn('Wishlist: DATABASE_URL not found in environment variables')
   }
 } catch (error) {
   console.error('Failed to initialize Neon client for wishlist:', error)
