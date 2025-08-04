@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster"
 import TrackingScripts from "@/components/tracking-scripts"
 import PipedriveChat from "@/components/pipedrive-chat"
 import { ScrollToTopProvider } from "@/components/scroll-to-top-provider"
+import { CookieConsent } from "@/components/cookie-consent"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -98,6 +99,7 @@ export default function RootLayout({
         <link rel="icon" href="/new-ai-logo.png" sizes="any" />
         <link rel="apple-touch-icon" href="/new-ai-logo.png" />
         <TrackingScripts />
+        <script async src="/analytics.js"></script>
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
@@ -109,6 +111,7 @@ export default function RootLayout({
             </div>
             <Toaster />
             <PipedriveChat />
+            <CookieConsent />
           </ScrollToTopProvider>
         </ThemeProvider>
       </body>

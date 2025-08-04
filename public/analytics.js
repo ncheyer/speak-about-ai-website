@@ -2,8 +2,22 @@
 (function() {
   'use strict';
 
+  // Check if analytics is opted in
+  function hasAnalyticsConsent() {
+    try {
+      const consent = localStorage.getItem('cookie-consent');
+      if (!consent) return false;
+      const parsed = JSON.parse(consent);
+      return parsed.analytics === true;
+    } catch {
+      return false;
+    }
+  }
+
   // Track page view with additional client-side data
   function trackPageView() {
+    if (!hasAnalyticsConsent()) return;
+    
     try {
       // Get page title and send it to the middleware via header
       const pageTitle = document.title;
@@ -31,6 +45,8 @@
 
   // Track custom events
   function trackEvent(eventName, eventCategory, eventValue, metadata) {
+    if (!hasAnalyticsConsent()) return;
+    
     try {
       fetch('/api/analytics/events', {
         method: 'POST',

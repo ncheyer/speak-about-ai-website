@@ -14,6 +14,24 @@ export async function middleware(request: NextRequest) {
     return response
   }
 
+  // Check if user has consented to analytics cookies
+  const cookieConsent = request.cookies.get('cookie-consent')?.value
+  let hasAnalyticsConsent = false
+  
+  if (cookieConsent) {
+    try {
+      const consent = JSON.parse(cookieConsent)
+      hasAnalyticsConsent = consent.analytics === true
+    } catch {
+      hasAnalyticsConsent = false
+    }
+  }
+
+  // If no analytics consent, skip tracking
+  if (!hasAnalyticsConsent) {
+    return response
+  }
+
   try {
     // Get or generate visitor ID from cookies
     let visitorId = request.cookies.get('visitor_id')?.value

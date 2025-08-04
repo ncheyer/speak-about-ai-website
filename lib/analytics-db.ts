@@ -1,13 +1,25 @@
 import { neon } from '@neondatabase/serverless'
 import { AnalyticsData, EventData } from './analytics-utils'
 
-// Initialize Neon client
-const sql = neon(process.env.DATABASE_URL!)
+// Initialize Neon client with error handling
+let sql: any = null
+try {
+  if (process.env.DATABASE_URL) {
+    sql = neon(process.env.DATABASE_URL)
+  }
+} catch (error) {
+  console.error('Failed to initialize Neon client:', error)
+}
 
 /**
  * Record a page view
  */
 export async function recordPageView(data: AnalyticsData): Promise<void> {
+  if (!sql) {
+    console.warn('Analytics database not available')
+    return
+  }
+  
   try {
     await sql`
       INSERT INTO page_views (
@@ -25,6 +37,10 @@ export async function recordPageView(data: AnalyticsData): Promise<void> {
     `
   } catch (error) {
     console.error('Failed to record page view:', error)
+    // If the error is about missing tables, provide helpful message
+    if (error instanceof Error && error.message.includes('relation') && error.message.includes('does not exist')) {
+      console.error('Analytics tables do not exist. Please run the database migration script from scripts/create-analytics-tables.sql')
+    }
   }
 }
 
@@ -32,6 +48,11 @@ export async function recordPageView(data: AnalyticsData): Promise<void> {
  * Record an event
  */
 export async function recordEvent(data: EventData): Promise<void> {
+  if (!sql) {
+    console.warn('Analytics database not available')
+    return
+  }
+  
   try {
     await sql`
       INSERT INTO events (
@@ -64,6 +85,11 @@ export async function updateSession(sessionId: string, data: Partial<{
   browser: string
   isConversion: boolean
 }>): Promise<void> {
+  if (!sql) {
+    console.warn('Analytics database not available')
+    return
+  }
+  
   try {
     // Try to update existing session first
     const result = await sql`
@@ -100,6 +126,17 @@ export async function updateSession(sessionId: string, data: Partial<{
  * Get analytics overview
  */
 export async function getAnalyticsOverview(days: number = 30) {
+  if (!sql) {
+    console.warn('Analytics database not available')
+    return {
+      overview: {},
+      topPages: [],
+      trafficSources: [],
+      deviceBreakdown: [],
+      dailyStats: []
+    }
+  }
+  
   try {
     const endDate = new Date()
     const startDate = new Date(endDate.getTime() - (days * 24 * 60 * 60 * 1000))
@@ -192,6 +229,11 @@ export async function getAnalyticsOverview(days: number = 30) {
  * Get conversion events
  */
 export async function getConversionEvents(days: number = 30) {
+  if (!sql) {
+    console.warn('Analytics database not available')
+    return []
+  }
+  
   try {
     const endDate = new Date()
     const startDate = new Date(endDate.getTime() - (days * 24 * 60 * 60 * 1000))
@@ -220,6 +262,14 @@ export async function getConversionEvents(days: number = 30) {
  * Get real-time stats (last hour)
  */
 export async function getRealTimeStats() {
+  if (!sql) {
+    console.warn('Analytics database not available')
+    return {
+      stats: {},
+      recentPages: []
+    }
+  }
+  
   try {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
 

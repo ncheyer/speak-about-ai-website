@@ -123,18 +123,59 @@ export default function PrivacyPolicyPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Cookies and Tracking Technologies</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                We use cookies and similar tracking technologies to enhance your experience on our website. Cookies are
-                small data files stored on your device that help us:
+                We use cookies and similar tracking technologies to enhance your experience on our website. We respect your 
+                privacy choices and provide clear options for managing your cookie preferences.
+              </p>
+
+              <h3 className="text-xl font-medium text-gray-900 mb-3">Types of Cookies We Use</h3>
+              
+              <div className="space-y-4 mb-6">
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Necessary Cookies (Required)</h4>
+                  <p className="text-gray-700 leading-relaxed">
+                    These cookies are essential for the website to function properly. They enable basic functionality 
+                    such as page navigation, authentication, and security features. These cookies cannot be disabled 
+                    as they are necessary for the service to work.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Analytics Cookies (Optional)</h4>
+                  <p className="text-gray-700 leading-relaxed">
+                    With your consent, we use analytics cookies to understand how visitors interact with our website. 
+                    This helps us improve user experience and website performance. We collect data such as:
+                  </p>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-1 mt-2">
+                    <li>Page views and session duration</li>
+                    <li>Device type, browser, and operating system</li>
+                    <li>General location (country/city level)</li>
+                    <li>Referrer information and traffic sources</li>
+                    <li>User interactions and behavior patterns</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Marketing Cookies (Optional)</h4>
+                  <p className="text-gray-700 leading-relaxed">
+                    These cookies track visitors across websites to provide relevant advertising and measure campaign 
+                    effectiveness. You can opt out of these cookies without affecting core website functionality.
+                  </p>
+                </div>
+              </div>
+
+              <h3 className="text-xl font-medium text-gray-900 mb-3">Managing Your Cookie Preferences</h3>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                We provide you with clear choices about cookies:
               </p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>Remember your preferences and settings</li>
-                <li>Analyze website traffic and usage patterns</li>
-                <li>Provide personalized content and advertisements</li>
-                <li>Improve our website functionality</li>
+                <li>A cookie consent banner appears when you first visit our site</li>
+                <li>You can accept all cookies, necessary cookies only, or customize your preferences</li>
+                <li>You can change your preferences at any time by clearing your browser cookies</li>
+                <li>Your consent is stored locally and respected across your browsing session</li>
               </ul>
               <p className="text-gray-700 leading-relaxed">
-                You can control cookies through your browser settings, but disabling cookies may affect your ability to
-                use certain features of our website.
+                You can also control cookies through your browser settings, but disabling necessary cookies may affect 
+                your ability to use certain features of our website.
               </p>
             </section>
 
