@@ -30,3 +30,10 @@ next-env.d.ts
 
 # Data files
 /data/
+
+# Script files (Node.js scripts not needed for web app)
+/scripts/*.js
+/scripts/*.ts
+/scripts/*.tsx
+/scripts/node_modules/
+/scripts/package*.json
