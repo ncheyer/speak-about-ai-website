@@ -30,24 +30,24 @@ INSERT INTO speakers (
 ) VALUES (
     'Peter Norvig',
     'peter-norvig@speakaboutai.com', -- PLACEHOLDER - UPDATE WITH REAL EMAIL
-    'https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/peter-norvig-headshot-1749608907310.jpg', -- Full biography
-    'https://oo7gkn3bwcev8cb0.', -- Short bio from full bio
-    'Co-Author of Artificial Intelligence: A Modern Approach, Stanford Researcher', -- One-liner from title
-    'TRUE', -- Image URL
-    '["TRUE"]', -- Topics as JSON array
-    'Peter Norvig, a distinguished American computer scientist, is widely recognized for his profound ...', -- Speaking fee range
+    'Past Present & Future of AI', -- Full biography
+    'Past Present & Future of AI.', -- Short bio from full bio
+    'Co-Author of "Artificial Intelligence: A Modern Approach," Stanford Researcher, and Director of Research and Search Quality at Google,TRUE,https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/peter-norvig-headshot-1749608907310.jpg,"Peter Norvig, a ...', -- One-liner from title
+    'San Francisco CA', -- Image URL
+    '[]', -- Topics as JSON array
+    'TRUE', -- Speaking fee range
     'peter-norvig', -- URL slug
-    'Co-Author of Artificial Intelligence: A Modern Approach, Stanford Researcher', -- Professional title
+    'Co-Author of "Artificial Intelligence: A Modern Approach," Stanford Researcher, and Director of Research and Search Quality at Google,TRUE,https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/peter-norvig-headshot-1749608907310.jpg,"Peter Norvig, a ...', -- Professional title
     false, -- Featured boolean
-    '$20k to $50k', -- Location
-    'San Francisco CA', -- Programs
+    'AI Research, Machine Learning, Natural Language Processing, Computer Science Education, Search Algorithms, Academic Leadership', -- Location
+    'Technology, Academia, Aerospace, Education Technology', -- Programs
     true, -- Listed boolean
-    '["AI Research","Machine Learning","Natural Language Processing","Computer Science Education","Search Algorithms","Academic Leadership"]', -- Industries as JSON array
+    '["[{\"id\": \"peternorvigvideo1\"","\"title\": \"The Future of AI: A Fireside Chat Between Peter Norvig & Adam Cheyer\"","\"url\": \"https://www.youtube.com/watch?v=mSmJkzKwVCw\"","\"thumbnail\": \"https://i.ytimg.com/vi/mSmJkzKwVCw/hqdefault.jpg\"","\"source\": \"YouTube\"","\"duration\": \"18:14\"}","{\"id\": \"peternorvigvideo2\"","\"title\": \"Peter Norvig: The 100","000-student classroom\"","\"url\": \"https://www.youtube.com/watch?v=tYclUdcsdeo\"","\"thumbnail\": \"https://i.ytimg.com/vi/tYclUdcsdeo/hqdefault.jpg\"","\"source\": \"YouTube\"","\"duration\": \"6:11\"}]"]', -- Industries as JSON array
     NULL, -- Ranking number
-    '100', -- Image position
+    NULL, -- Image position
     NULL, -- Image offset
-    '[{"id":"peternorvigvideo1","title":"The Future of AI: A Fireside Chat Between Peter Norvig & Adam Cheyer","url":"https://www.youtube.com/watch?v=mSmJkzKwVCw","thumbnail":"https://i.ytimg.com/vi/mSmJkzKwVCw/hqdefault.jpg","source":"YouTube","duration":"18:14"},{"id":"peternorvigvideo2","title":"Peter Norvig: The 100,000-student classroom","url":"https://www.youtube.com/watch?v=tYclUdcsdeo","thumbnail":"https://i.ytimg.com/vi/tYclUdcsdeo/hqdefault.jpg","source":"YouTube","duration":"6:11"}]', -- Videos JSON
-    '[{"quote":"The event was great!! We had incredible interest and saw strong numbers. The process was smooth and your communication was fantastic. Truly, I don‚Äôt know if there‚Äôs anything I could think of to improve!","author":"Rachel F.","position":"Marketing Campaign Manager","company":"Juniper Networks","event":"AI Gamechangers"}]', -- Testimonials JSON
+    '[]', -- Videos JSON
+    '[]', -- Testimonials JSON
     true, -- Active
     false  -- They'll need to register and verify email
 );

@@ -3,11 +3,22 @@
 
 // INSTRUCTIONS:
 // 1. Save your Google Sheets export as 'speakers.csv' in the same folder as this script
-// 2. Run: node csv-to-sql-converter.js
-// 3. Copy the generated SQL statements to your Neon console
+// 2. Run: npm install csv-parser (if not already installed)
+// 3. Run: node csv-to-sql-converter.js
+// 4. Copy the generated SQL statements to your Neon console
 
 const fs = require('fs');
 const path = require('path');
+
+// Try to use csv-parser if available, fall back to custom parser
+let csvParser;
+try {
+  csvParser = require('csv-parser');
+} catch (e) {
+  console.log('📦 csv-parser not found. Install with: npm install csv-parser');
+  console.log('🔧 Using built-in parser (less reliable for complex data)');
+  csvParser = null;
+}
 
 // Configuration - Updated to match your Google Sheets headers
 const COLUMN_MAPPING = {
@@ -38,7 +49,23 @@ const COLUMN_MAPPING = {
   testimonials: 'TESTIMONIALS'
 };
 
-function parseCSV(csvText) {
+async function parseCSVWithLibrary(csvPath) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    fs.createReadStream(csvPath)
+      .pipe(csvParser())
+      .on('data', (data) => results.push(data))
+      .on('end', () => {
+        console.log(`📊 Parsed ${results.length} rows using csv-parser library`);
+        resolve(results);
+      })
+      .on('error', reject);
+  });
+}
+
+function parseCSVManual(csvText) {
+  console.log('⚠️ Using manual CSV parser - may have issues with complex data');
+  
   const rows = [];
   let currentRow = [];
   let currentField = '';
@@ -108,6 +135,21 @@ function parseCSV(csvText) {
   }
   
   return speakers;
+}
+
+async function parseCSV(csvPath) {
+  if (csvParser) {
+    try {
+      return await parseCSVWithLibrary(csvPath);
+    } catch (error) {
+      console.log('❌ csv-parser failed, falling back to manual parser');
+      console.log('Error:', error.message);
+    }
+  }
+  
+  // Fallback to manual parsing
+  const csvContent = fs.readFileSync(csvPath, 'utf8');
+  return parseCSVManual(csvContent);
 }
 
 
@@ -262,39 +304,95 @@ AND speaker_id IS NULL;
   return sql;
 }
 
-// Main execution
-try {
-  const csvPath = path.join(__dirname, 'speakers.csv');
+function validateSpeakerData(speakers) {
+  console.log('\n🔍 Validating speaker data...');
   
-  if (!fs.existsSync(csvPath)) {
-    console.log('❌ speakers.csv not found!');
-    console.log('Please export your Google Sheets as CSV and save it as "speakers.csv" in this folder.');
+  for (let i = 0; i < speakers.length; i++) {
+    const speaker = speakers[i];
+    const name = speaker[COLUMN_MAPPING.name];
+    
+    if (!name) {
+      console.log(`⚠️ Speaker ${i + 1}: Missing name`);
+      continue;
+    }
+    
+    // Check key fields
+    const bio = speaker[COLUMN_MAPPING.bio];
+    const image = speaker[COLUMN_MAPPING.headshot_url];
+    const fee = speaker[COLUMN_MAPPING.speaking_fee_range];
+    
+    console.log(`✅ ${name}:`);
+    console.log(`   Bio: ${bio ? `${bio.substring(0, 50)}...` : 'Missing'}`);
+    console.log(`   Image: ${image ? 'Present' : 'Missing'}`);
+    console.log(`   Fee: ${fee || 'Not specified'}`);
+    
+    // Validate JSON fields
+    const videos = speaker[COLUMN_MAPPING.videos];
+    const testimonials = speaker[COLUMN_MAPPING.testimonials];
+    
+    if (videos) {
+      try {
+        JSON.parse(videos);
+        console.log(`   Videos: Valid JSON`);
+      } catch (e) {
+        console.log(`   Videos: ⚠️ Invalid JSON - will be skipped`);
+      }
+    }
+    
+    if (testimonials) {
+      try {
+        JSON.parse(testimonials);
+        console.log(`   Testimonials: Valid JSON`);
+      } catch (e) {
+        console.log(`   Testimonials: ⚠️ Invalid JSON - will be skipped`);
+      }
+    }
+    
+    console.log('');
+  }
+}
+
+// Main execution
+async function main() {
+  try {
+    const csvPath = path.join(__dirname, 'speakers.csv');
+    
+    if (!fs.existsSync(csvPath)) {
+      console.log('❌ speakers.csv not found!');
+      console.log('Please export your Google Sheets as CSV and save it as "speakers.csv" in this folder.');
+      process.exit(1);
+    }
+
+    const speakers = await parseCSV(csvPath);
+    
+    console.log(`📊 Found ${speakers.length} speakers in CSV`);
+    
+    // Show column mapping
+    console.log('\n📋 Column Mapping (update COLUMN_MAPPING in script if needed):');
+    Object.entries(COLUMN_MAPPING).forEach(([dbField, csvColumn]) => {
+      console.log(`  ${dbField} ← "${csvColumn}"`);
+    });
+
+    // Validate data before generating SQL
+    validateSpeakerData(speakers);
+    
+    const sql = generateSQL(speakers);
+    
+    const outputPath = path.join(__dirname, 'speakers-migration.sql');
+    fs.writeFileSync(outputPath, sql);
+    
+    console.log(`\n✅ Generated SQL file: ${outputPath}`);
+    console.log('📝 Next steps:');
+    console.log('1. Review the generated SQL file');
+    console.log('2. Copy and paste the SQL into your Neon database console');
+    console.log('3. Run the SQL to import your speakers');
+    
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    console.error(error.stack);
     process.exit(1);
   }
-
-  const csvContent = fs.readFileSync(csvPath, 'utf8');
-  const speakers = parseCSV(csvContent);
-  
-  console.log(`📊 Found ${speakers.length} speakers in CSV`);
-  
-  // Show column mapping
-  console.log('\n📋 Column Mapping (update COLUMN_MAPPING in script if needed):');
-  Object.entries(COLUMN_MAPPING).forEach(([dbField, csvColumn]) => {
-    console.log(`  ${dbField} ← "${csvColumn}"`);
-  });
-
-  const sql = generateSQL(speakers);
-  
-  const outputPath = path.join(__dirname, 'speakers-migration.sql');
-  fs.writeFileSync(outputPath, sql);
-  
-  console.log(`\n✅ Generated SQL file: ${outputPath}`);
-  console.log('📝 Next steps:');
-  console.log('1. Review the generated SQL file');
-  console.log('2. Copy and paste the SQL into your Neon database console');
-  console.log('3. Run the SQL to import your speakers');
-  
-} catch (error) {
-  console.error('❌ Error:', error.message);
-  process.exit(1);
 }
+
+// Run the main function
+main();
