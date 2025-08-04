@@ -10,7 +10,6 @@ import TrackingScripts from "@/components/tracking-scripts"
 import PipedriveChat from "@/components/pipedrive-chat"
 import { ScrollToTopProvider } from "@/components/scroll-to-top-provider"
 import { CookieConsent } from "@/components/cookie-consent"
-import { WishlistProvider } from "@/contexts/wishlist-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -104,8 +103,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-          <WishlistProvider>
-            <ScrollToTopProvider>
+          <ScrollToTopProvider>
               <div className="flex min-h-screen flex-col">
                 <Header />
                 <main className="flex-1">{children}</main>
@@ -115,7 +113,6 @@ export default function RootLayout({
               <PipedriveChat />
               <CookieConsent />
             </ScrollToTopProvider>
-          </WishlistProvider>
         </ThemeProvider>
       </body>
     </html>

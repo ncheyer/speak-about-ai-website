@@ -5,7 +5,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { Menu, X, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button" // Import the Button component
-import { WishlistDrawer } from "@/components/wishlist-drawer"
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -47,7 +46,6 @@ export default function Header() {
 
           {/* CTA Button - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
-            <WishlistDrawer />
             <a
               href="tel:+1-510-435-3947"
               className="flex items-center text-gray-600 hover:text-[#1E68C6] transition-colors"
@@ -112,9 +110,6 @@ export default function Header() {
                 Blog
               </Link>
               <div className="pt-4 border-t border-gray-100 space-y-3">
-                <div className="flex justify-center">
-                  <WishlistDrawer />
-                </div>
                 <Button
                   asChild
                   variant="gold"
