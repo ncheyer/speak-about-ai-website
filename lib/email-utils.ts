@@ -191,41 +191,72 @@ function generateNewDealEmailBody(deal: Deal, formData: DealFormData): string {
 }
 
 /**
- * Send email using appropriate service
+ * Send email using your own email service
  */
 async function sendEmail(to: string, subject: string, htmlBody: string): Promise<boolean> {
-  // For now, we'll log the email content and return true
-  // In production, you'd integrate with a service like SendGrid, AWS SES, or Resend
-  
-  console.log('=== EMAIL NOTIFICATION ===')
-  console.log(`To: ${to}`)
-  console.log(`Subject: ${subject}`)
-  console.log('Body:', htmlBody)
-  console.log('=== END EMAIL ===')
-  
-  // TODO: Implement actual email sending
-  // Example with SendGrid:
-  /*
   try {
-    const sgMail = require('@sendgrid/mail')
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY)
-    
-    const msg = {
-      to: to,
-      from: 'notifications@speakaboutai.com',
-      subject: subject,
-      html: htmlBody,
+    // Option 1: Use a simple email service like Resend (easiest)
+    if (process.env.RESEND_API_KEY) {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'notifications@speakaboutai.com', // Use your domain
+          to: [to],
+          subject: subject,
+          html: htmlBody,
+        }),
+      })
+      
+      if (response.ok) {
+        console.log(`✅ Email sent successfully to ${to}`)
+        return true
+      } else {
+        const error = await response.text()
+        console.error('Resend API error:', error)
+        return false
+      }
     }
     
-    await sgMail.send(msg)
+    // Option 2: Use Gmail SMTP (if you want to use your Gmail)
+    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+      const nodemailer = require('nodemailer')
+      
+      const transporter = nodemailer.createTransporter({
+        service: 'gmail',
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_APP_PASSWORD, // Gmail App Password, not regular password
+        },
+      })
+      
+      await transporter.sendMail({
+        from: process.env.GMAIL_USER,
+        to: to,
+        subject: subject,
+        html: htmlBody,
+      })
+      
+      console.log(`✅ Email sent via Gmail to ${to}`)
+      return true
+    }
+    
+    // Fallback: Log to console
+    console.log('=== EMAIL NOTIFICATION (No email service configured) ===')
+    console.log(`To: ${to}`)
+    console.log(`Subject: ${subject}`)
+    console.log('Add RESEND_API_KEY or GMAIL_USER/GMAIL_APP_PASSWORD to .env to send real emails')
+    console.log('=== END EMAIL ===')
+    
     return true
+    
   } catch (error) {
-    console.error('SendGrid error:', error)
+    console.error('Email sending error:', error)
     return false
   }
-  */
-  
-  return true // Return true for now (simulated success)
 }
 
 /**
