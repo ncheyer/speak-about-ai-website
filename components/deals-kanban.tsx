@@ -3,8 +3,10 @@
 import { useState, useEffect, DragEvent } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, DollarSign, Users, Building2, MapPin } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Calendar, DollarSign, Users, Building2, MapPin, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
 
 interface Deal {
   id: number
@@ -186,6 +188,16 @@ export function DealsKanban() {
                           {formatCurrency(Number(deal.deal_value))}
                         </div>
                       </div>
+                      {deal.status === 'won' && (
+                        <div className="pt-3 border-t">
+                          <Link href="/admin/contracts">
+                            <Button size="sm" className="w-full text-xs" variant="outline">
+                              <FileText className="h-3 w-3 mr-1" />
+                              Create Contract
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}

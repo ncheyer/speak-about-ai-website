@@ -9,6 +9,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // GitHub Codespaces configuration
+  allowedDevOrigins: ['*'],
 }
 
 export default nextConfig

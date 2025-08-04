@@ -69,6 +69,25 @@ export async function getAllDeals(): Promise<Deal[]> {
   }
 }
 
+export async function getDealById(id: number): Promise<Deal | null> {
+  if (!databaseAvailable || !sql) {
+    console.warn("getDealById: Database not available")
+    return null
+  }
+  
+  try {
+    console.log("Fetching deal by ID:", id)
+    const [deal] = await sql`
+      SELECT * FROM deals 
+      WHERE id = ${id}
+    `
+    return deal as Deal || null
+  } catch (error) {
+    console.error("Error fetching deal by ID:", error)
+    return null
+  }
+}
+
 export async function createDeal(dealData: Omit<Deal, "id" | "created_at" | "updated_at">): Promise<Deal | null> {
   if (!databaseAvailable || !sql) {
     console.warn("createDeal: Database not available")

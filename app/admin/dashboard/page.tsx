@@ -32,6 +32,7 @@ import {
   AlertTriangle,
   Database,
   ExternalLink,
+  FileText,
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -387,6 +388,12 @@ export default function AdminDashboard() {
               <Button variant="outline">
                 <CheckSquare className="mr-2 h-4 w-4" />
                 Project Management
+              </Button>
+            </Link>
+            <Link href="/admin/contracts">
+              <Button variant="outline">
+                <FileText className="mr-2 h-4 w-4" />
+                Contract Management
               </Button>
             </Link>
             <Link href="/debug-neon">
