@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { WishlistItem } from '@/lib/wishlist-utils'
+import { getSessionId } from '@/lib/client-session'
 
 interface WishlistContextType {
   wishlist: WishlistItem[]
@@ -29,7 +30,12 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const refreshWishlist = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch('/api/wishlist')
+      const sessionId = getSessionId()
+      const response = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      })
       if (response.ok) {
         const data = await response.json()
         setWishlist(data.wishlist || [])
@@ -44,10 +50,11 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   const addToWishlist = async (speakerId: number): Promise<boolean> => {
     try {
+      const sessionId = getSessionId()
       const response = await fetch('/api/wishlist/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ speakerId })
+        body: JSON.stringify({ speakerId, sessionId })
       })
 
       if (response.ok) {
@@ -63,10 +70,11 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   const removeFromWishlist = async (speakerId: number): Promise<boolean> => {
     try {
+      const sessionId = getSessionId()
       const response = await fetch('/api/wishlist/remove', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ speakerId })
+        body: JSON.stringify({ speakerId, sessionId })
       })
 
       if (response.ok) {
@@ -82,9 +90,11 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   const clearWishlist = async (): Promise<boolean> => {
     try {
+      const sessionId = getSessionId()
       const response = await fetch('/api/wishlist/clear', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
       })
 
       if (response.ok) {

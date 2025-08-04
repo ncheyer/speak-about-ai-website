@@ -27,3 +27,30 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    // Accept session ID from request body
+    const { sessionId } = await request.json()
+
+    if (!sessionId) {
+      return NextResponse.json({ wishlist: [], count: 0 })
+    }
+
+    const wishlist = await getWishlist(sessionId)
+    const count = await getWishlistCount(sessionId)
+
+    return NextResponse.json({
+      success: true,
+      wishlist,
+      count
+    })
+
+  } catch (error) {
+    console.error('Wishlist POST error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch wishlist' },
+      { status: 500 }
+    )
+  }
+}

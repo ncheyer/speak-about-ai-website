@@ -3,7 +3,7 @@ import { addToWishlist } from '@/lib/wishlist-utils'
 
 export async function POST(request: NextRequest) {
   try {
-    const { speakerId } = await request.json()
+    const { speakerId, sessionId: bodySessionId } = await request.json()
 
     if (!speakerId || typeof speakerId !== 'number') {
       return NextResponse.json(
@@ -12,22 +12,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get session ID from cookies
-    const sessionId = request.cookies.get('session_id')?.value
+    // Get session ID from request body first, fallback to cookies
+    let sessionId = bodySessionId
     const visitorId = request.cookies.get('visitor_id')?.value
 
+    // If no session ID in body, try cookies
     if (!sessionId) {
-      // Debug: Check all cookies
-      const allCookies = request.cookies.getAll()
-      console.log('Debug - All cookies:', allCookies.map(c => c.name))
-      
+      sessionId = request.cookies.get('session_id')?.value
+    }
+
+    if (!sessionId) {
       return NextResponse.json(
         { 
           error: 'Session not found',
           debug: {
-            message: 'No session_id cookie found',
-            cookieNames: allCookies.map(c => c.name),
-            hint: 'Session cookie may not be set properly in this environment'
+            message: 'No session ID provided in request body or cookies',
+            hint: 'Session ID should be passed in request body'
           }
         },
         { status: 400 }

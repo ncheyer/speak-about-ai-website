@@ -3,7 +3,7 @@ import { removeFromWishlist } from '@/lib/wishlist-utils'
 
 export async function POST(request: NextRequest) {
   try {
-    const { speakerId } = await request.json()
+    const { speakerId, sessionId: bodySessionId } = await request.json()
 
     if (!speakerId || typeof speakerId !== 'number') {
       return NextResponse.json(
@@ -12,8 +12,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get session ID from cookies
-    const sessionId = request.cookies.get('session_id')?.value
+    // Get session ID from request body first, fallback to cookies
+    let sessionId = bodySessionId
+    if (!sessionId) {
+      sessionId = request.cookies.get('session_id')?.value
+    }
 
     if (!sessionId) {
       return NextResponse.json(
