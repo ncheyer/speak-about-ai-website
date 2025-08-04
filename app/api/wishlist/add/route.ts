@@ -17,8 +17,19 @@ export async function POST(request: NextRequest) {
     const visitorId = request.cookies.get('visitor_id')?.value
 
     if (!sessionId) {
+      // Debug: Check all cookies
+      const allCookies = request.cookies.getAll()
+      console.log('Debug - All cookies:', allCookies.map(c => c.name))
+      
       return NextResponse.json(
-        { error: 'Session not found' },
+        { 
+          error: 'Session not found',
+          debug: {
+            message: 'No session_id cookie found',
+            cookieNames: allCookies.map(c => c.name),
+            hint: 'Session cookie may not be set properly in this environment'
+          }
+        },
         { status: 400 }
       )
     }

@@ -5,12 +5,25 @@ import { recordPageView, updateSession } from './lib/analytics-db'
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next()
+  
+  // Check if this is an API route
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
 
   // Extract analytics data from the request
   const analyticsData = extractAnalyticsFromRequest(request)
   
-  // Check if we should track this request
-  if (!shouldTrackRequest(request, analyticsData)) {
+  // Check if we should track this request (skip for API routes)
+  if (isApiRoute || !shouldTrackRequest(request, analyticsData)) {
+    // For API routes, we still want to ensure session cookie is set
+    if (isApiRoute && !request.cookies.get('session_id')?.value) {
+      const sessionId = generateSessionId()
+      response.cookies.set('session_id', sessionId, {
+        maxAge: 30 * 60, // 30 minutes
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      })
+    }
     return response
   }
 
@@ -99,12 +112,13 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder files
+     * 
+     * Note: We now include API routes to ensure session cookies are set
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\..*$).*)',
   ],
 }
