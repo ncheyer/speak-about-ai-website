@@ -6,7 +6,7 @@ export default function Footer() {
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Company Info */}
           <div className="col-span-1 md:col-span-2">
             <div className="mb-6">
@@ -91,6 +91,28 @@ export default function Footer() {
                   className="text-[#EAEAEE] hover:text-white"
                 >
                   Technology & Enterprise
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Portals */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Portals</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/portal/client" className="text-[#EAEAEE] hover:text-white">
+                  Client Portal
+                </Link>
+              </li>
+              <li>
+                <Link href="/portal/speaker" className="text-[#EAEAEE] hover:text-white">
+                  Speaker Portal
+                </Link>
+              </li>
+              <li>
+                <Link href="/admin" className="text-[#EAEAEE] hover:text-white">
+                  Admin Panel
                 </Link>
               </li>
             </ul>
