@@ -371,6 +371,12 @@ export default function AdminDashboard() {
             <p className="mt-2 text-gray-600">Manage deals and event bookings</p>
           </div>
           <div className="flex gap-4">
+            <Link href="/admin/manage">
+              <Button>
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Master Admin Panel
+              </Button>
+            </Link>
             <Link href="/admin/speakers">
               <Button variant="outline">
                 <Users className="mr-2 h-4 w-4" />
