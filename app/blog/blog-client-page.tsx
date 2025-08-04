@@ -3,13 +3,11 @@
 import { useMemo, useState } from "react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
-import { SearchIcon } from "lucide-react"
-import { BlogCard } from "@/components/blog-card"
+import { SearchIcon, Filter, Grid3X3, List, TrendingUp } from "lucide-react"
 import { ContentCard } from "@/components/content-card"
-import { FeaturedBlogPostCard } from "@/components/featured-blog-post-card"
+import { FeaturedContentHero } from "@/components/featured-content-hero"
 import PaginationControls from "@/components/pagination-controls"
-import type { ContentItem, getCategoriesFromContent } from "@/lib/combined-content"
-import type { BlogPost } from "@/lib/blog-data"
+import type { ContentItem } from "@/lib/combined-content"
 
 const POSTS_PER_PAGE = 9
 
@@ -18,22 +16,17 @@ interface BlogClientPageProps {
 }
 
 export default function BlogClientPage({ initialContent }: BlogClientPageProps) {
-  // Initialize state with the data passed from the server component.
   const [content, setContent] = useState<ContentItem[]>(initialContent)
-  const [loading, setLoading] = useState(false) // No initial loading needed
-  
-
-  // UI state remains the same
+  const [loading, setLoading] = useState(false)
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [currentPage, setCurrentPage] = useState<number>(1)
 
-  // The initial useEffect fetch is no longer needed.
-
-  // Derived data calculations for combined content
-  const featuredBlogPosts = useMemo(() => 
-    content.filter((item) => item.type === 'blog' && item.featured)
-  , [content])
+  // Get featured content for hero section
+  const featuredContent = useMemo(() => {
+    const featured = content.filter((item) => item.featured || item.type === 'landing')
+    return featured.slice(0, 3) // Show up to 3 featured items
+  }, [content])
 
   const categories = useMemo(() => {
     const map = new Map<string, {slug: string, name: string}>()
@@ -45,23 +38,22 @@ export default function BlogClientPage({ initialContent }: BlogClientPageProps) 
     return Array.from(map.values())
   }, [content])
 
-  // Create primary tabs in order
+  // Enhanced tab system with better organization
   const primaryTabs = [
-    { slug: "all", name: "All Content" },
-    { slug: "blog", name: "Articles" },
-    { slug: "tools", name: "Tools" }
+    { slug: "all", name: "All Content", icon: Grid3X3 },
+    { slug: "blog", name: "Articles", icon: List },
+    { slug: "tools", name: "Tools", icon: TrendingUp }
   ]
   
-  // Add category tabs (excluding tools-resources which we handle separately)
   const categoryTabs = categories.filter(cat => 
     cat.slug !== "tools-resources" && 
     ["AI Speakers", "Industry Insights", "Event Planning", "Speaker Spotlight", "Company News"].includes(cat.name)
-  )
+  ).map(cat => ({ ...cat, icon: Filter }))
   
   const orderedTabs = [...primaryTabs, ...categoryTabs]
 
   const filteredContent = useMemo(() => {
-    let list = content.filter((item) => item.type !== 'blog' || !item.featured)
+    let list = content.filter((item) => !item.featured) // Exclude featured items from regular listing
     
     if (selectedCategorySlug === "blog") {
       list = list.filter((item) => item.type === 'blog')
@@ -85,7 +77,6 @@ export default function BlogClientPage({ initialContent }: BlogClientPageProps) 
     return list
   }, [content, selectedCategorySlug, searchTerm])
 
-  // Pagination logic updated for combined content
   const totalPages = Math.ceil(filteredContent.length / POSTS_PER_PAGE)
   const paginatedContent = useMemo(() => {
     const start = (currentPage - 1) * POSTS_PER_PAGE
@@ -97,79 +88,138 @@ export default function BlogClientPage({ initialContent }: BlogClientPageProps) 
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
+  const getActiveTabLabel = () => {
+    const activeTab = orderedTabs.find(tab => tab.slug === selectedCategorySlug)
+    return activeTab?.name || "Content"
+  }
+
+
   return (
-    <div className="bg-white text-gray-800">
-      <main className="max-w-7xl mx-auto p-4 md:p-6">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center text-gray-900">AI Insights & Tools</h1>
-        <p className="text-lg md:text-xl text-center text-gray-600 mb-10 md:mb-12 max-w-3xl mx-auto">
-          Explore expert articles, event planning tools, and cutting-edge resources in artificial intelligence and event management.
-        </p>
-
-        {featuredBlogPosts.length > 0 && (
-          <section className="mb-12 md:mb-16 space-y-8">
-            {featuredBlogPosts.map((item) => (
-              <FeaturedBlogPostCard key={item.id} post={item.originalData as BlogPost} />
-            ))}
-          </section>
-        )}
-
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
-            {selectedCategorySlug === "all" && !searchTerm ? "All Content" : 
-             selectedCategorySlug === "blog" ? "Articles" :
-             selectedCategorySlug === "tools" ? "Tools" : "Filtered Content"}
-             <span className="text-sm text-gray-500 ml-2">({selectedCategorySlug})</span>
-          </h2>
-
-          <div className="relative w-full md:w-auto md:max-w-xs">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+    <div className="min-h-screen bg-slate-50/50">
+      {/* Hero Header */}
+      <header className="bg-[#1E68C6] py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-8 font-neue-haas">
+            AI Insights & Tools
+          </h1>
+          <p className="text-xl text-white text-opacity-90 max-w-4xl mx-auto leading-relaxed font-montserrat">
+            Discover expert articles, cutting-edge tools, and premium resources for AI-powered events and speaker management
+          </p>
+          
+          
+          {/* Enhanced Search */}
+          <div className="max-w-2xl mx-auto relative mt-8">
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-500" />
             <Input
               type="search"
-              placeholder="Search content..."
+              placeholder="Search articles, tools, and resources..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value)
                 setCurrentPage(1)
               }}
-              className="pl-10 w-full bg-white border-gray-300"
+              className="pl-12 pr-4 py-4 text-lg bg-white border-gray-300 text-black placeholder:text-gray-500 rounded-xl shadow-sm focus:shadow-md focus:border-white transition-all font-montserrat"
               aria-label="Search content"
             />
           </div>
         </div>
+      </header>
 
-        {orderedTabs.length > 1 && (
-          <Tabs
-            value={selectedCategorySlug}
-            onValueChange={(v) => {
-              setSelectedCategorySlug(v)
-              setCurrentPage(1)
-            }}
-            className="mb-8 md:mb-10"
-          >
-            <TabsList className="flex flex-wrap justify-center gap-2">
-              {orderedTabs.map((t) => (
-                <TabsTrigger key={t.slug} value={t.slug}>
-                  {t.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        )}
+      {/* Featured Content Hero */}
+      {featuredContent.length > 0 && (
+        <FeaturedContentHero items={featuredContent} />
+      )}
 
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-12">
+        {/* Content Controls */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              {getActiveTabLabel()}
+            </h2>
+          </div>
+
+          {/* Enhanced Tabs */}
+          {orderedTabs.length > 1 && (
+            <Tabs
+              value={selectedCategorySlug}
+              onValueChange={(v) => {
+                setSelectedCategorySlug(v)
+                setCurrentPage(1)
+              }}
+              className="w-full lg:w-auto"
+            >
+              <TabsList className="grid grid-cols-3 lg:flex lg:flex-wrap bg-white shadow-sm border border-gray-200 rounded-xl p-1">
+                {orderedTabs.map((tab) => {
+                  const Icon = tab.icon
+                  return (
+                    <TabsTrigger 
+                      key={tab.slug} 
+                      value={tab.slug}
+                      className="flex items-center gap-2 data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white rounded-lg px-4 py-2 text-sm font-medium transition-all font-montserrat hover:bg-gray-100"
+                    >
+                      {Icon && <Icon className="w-4 h-4" />}
+                      <span className="hidden sm:inline">{tab.name}</span>
+                      <span className="sm:hidden">{tab.name.split(' ')[0]}</span>
+                    </TabsTrigger>
+                  )
+                })}
+              </TabsList>
+            </Tabs>
+          )}
+        </div>
+
+        {/* Content Grid */}
         {loading ? (
-          <p className="text-center text-gray-500 py-10">Loading content...</p>
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading content...</p>
+            </div>
+          </div>
         ) : paginatedContent.length > 0 ? (
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {paginatedContent.map((item) => (
-              <ContentCard key={item.id} item={item} />
-            ))}
-          </section>
-        ) : (
-          <p className="text-center text-gray-500 py-10">No content found.</p>
-        )}
+          <>
+            <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-12">
+              {paginatedContent.map((item) => (
+                <ContentCard key={item.id} item={item} />
+              ))}
+            </section>
 
-        {totalPages > 1 && (
-          <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+            {totalPages > 1 && (
+              <div className="flex justify-center">
+                <PaginationControls 
+                  currentPage={currentPage} 
+                  totalPages={totalPages} 
+                  onPageChange={handlePageChange} 
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-20">
+            <div className="max-w-md mx-auto">
+              <SearchIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No content found</h3>
+              <p className="text-gray-600 mb-6">
+                {searchTerm 
+                  ? `No results match "${searchTerm}". Try different keywords or browse all content.`
+                  : "No content available in this category."
+                }
+              </p>
+              {searchTerm && (
+                <button
+                  onClick={() => {
+                    setSearchTerm("")
+                    setCurrentPage(1)
+                  }}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Clear search
+                </button>
+              )}
+            </div>
+          </div>
         )}
       </main>
     </div>

@@ -61,10 +61,11 @@ export async function getAllLandingPages(): Promise<Entry<LandingPage>[]> {
   }
 
   try {
+    console.log("[Contentful] Initialising Contentful client …")
     const entries: EntryCollection<LandingPage> = await client.getEntries({
       content_type: "landingPage",
-      select: ["sys.id", "fields.pageTitle", "fields.urlSlug"],
       order: ["fields.pageTitle"],
+      include: 10, // Include linked entries for images and other assets
     })
 
     return entries.items || []
