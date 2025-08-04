@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Speaker } from "@/lib/speakers-data"
 import { CalendarCheck, User, ChevronDown, ChevronUp } from "lucide-react"
+import { WishlistButton } from "@/components/wishlist-button"
 
 interface UnifiedSpeakerCardProps {
   speaker: Speaker
@@ -211,12 +212,22 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
                   <span>Book Speaker Today</span>
                 </Link>
               </Button>
-              <Button asChild variant="outline" className={commonButtonClasses}>
-                <Link href={profileLink}>
-                  <User size={16} />
-                  <span>View Profile</span>
-                </Link>
-              </Button>
+              <div className="flex gap-2">
+                <Button asChild variant="outline" className={`${commonButtonClasses} flex-1`}>
+                  <Link href={profileLink}>
+                    <User size={16} />
+                    <span>View Profile</span>
+                  </Link>
+                </Button>
+                <WishlistButton 
+                  speakerId={speaker.id || 0} 
+                  speakerName={name}
+                  variant="outline"
+                  size="sm"
+                  showText={false}
+                  className="px-3"
+                />
+              </div>
             </div>
           </div>
         </div>
