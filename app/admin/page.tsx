@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, AlertCircle } from "lucide-react"
+import { Shield, AlertCircle, Key } from "lucide-react"
+import Link from "next/link"
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -123,6 +124,17 @@ export default function AdminLoginPage() {
               {isLoading ? "Authenticating..." : "Access Admin Panel"}
             </Button>
           </form>
+
+          <div className="mt-6 pt-6 border-t border-gray-700">
+            <div className="text-center">
+              <Link href="/admin/reset-password">
+                <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-gray-700">
+                  <Key className="mr-2 h-4 w-4" />
+                  Reset Admin Password
+                </Button>
+              </Link>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

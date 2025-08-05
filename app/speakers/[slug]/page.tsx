@@ -24,10 +24,17 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
 }
 
 export async function generateStaticParams() {
-  const speakers = await getAllSpeakers()
-  return speakers.map((speaker) => ({
-    slug: speaker.slug,
-  }))
+  try {
+    const speakers = await getAllSpeakers()
+    return speakers
+      .filter((speaker) => speaker.slug && typeof speaker.slug === 'string')
+      .map((speaker) => ({
+        slug: speaker.slug,
+      }))
+  } catch (error) {
+    console.error('Error in generateStaticParams:', error)
+    return []
+  }
 }
 
 export async function generateMetadata({ params }: SpeakerPageProps) {

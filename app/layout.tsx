@@ -104,7 +104,7 @@ export default function RootLayout({
           <script src="http://localhost:8097"></script>
         )}
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <ScrollToTopProvider>
               <div className="flex min-h-screen flex-col">

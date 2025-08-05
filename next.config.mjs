@@ -9,8 +9,14 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // GitHub Codespaces configuration
-  allowedDevOrigins: ['*'],
+  // Development configuration for VS Code and localhost
+  allowedDevOrigins: [
+    '127.0.0.1',
+    'localhost',
+    'vscode-webview://vscode-webview',
+    '*.github.dev',
+    '*.codespaces.githubusercontent.com'
+  ],
 }
 
 export default nextConfig
