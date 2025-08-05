@@ -21,7 +21,10 @@ import {
   Home,
   Activity,
   Menu,
-  X
+  X,
+  Heart,
+  Mail,
+  TrendingUp
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -97,6 +100,30 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       description: "File Management",
       color: "text-teal-600",
       bgColor: "bg-teal-50"
+    },
+    {
+      title: "Analytics",
+      href: "/admin/analytics",
+      icon: TrendingUp,
+      description: "Website Stats",
+      color: "text-purple-600",
+      bgColor: "bg-purple-50"
+    },
+    {
+      title: "Wishlists",
+      href: "/admin/wishlists",
+      icon: Heart,
+      description: "Speaker Favorites",
+      color: "text-pink-600",
+      bgColor: "bg-pink-50"
+    },
+    {
+      title: "Emails",
+      href: "/admin/emails",
+      icon: Mail,
+      description: "Notifications",
+      color: "text-cyan-600",
+      bgColor: "bg-cyan-50"
     },
     {
       title: "Database",
