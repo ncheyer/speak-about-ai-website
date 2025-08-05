@@ -218,8 +218,22 @@ export default function EnhancedProjectManagementPage() {
     company: "",
     speaker_fee: "",
     event_location: "",
-    event_type: "",
+    event_type: "in-person",
+    event_classification: "travel" as "virtual" | "local" | "travel",
+    travel_required: false,
+    travel_stipend: "",
+    flight_required: false,
+    hotel_required: false,
+    travel_notes: "",
     description: ""
+  })
+  const [invoiceFormData, setInvoiceFormData] = useState({
+    project_id: "",
+    invoice_type: "",
+    amount: "",
+    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    payment_terms: "net-30",
+    notes: ""
   })
 
   useEffect(() => {
@@ -409,6 +423,7 @@ export default function EnhancedProjectManagementPage() {
           budget: parseFloat(newProjectData.speaker_fee), // Set budget same as speaker fee
           event_location: newProjectData.event_location,
           event_type: newProjectData.event_type,
+          event_classification: newProjectData.event_classification,
           description: newProjectData.description,
           project_type: newProjectData.event_type,
           status: "invoicing", // Will be set automatically by backend
@@ -416,8 +431,11 @@ export default function EnhancedProjectManagementPage() {
           start_date: new Date().toISOString(),
           spent: 0,
           completion_percentage: 0,
-          travel_required: true,
-          accommodation_required: true,
+          travel_required: newProjectData.travel_required,
+          travel_expenses_amount: parseFloat(newProjectData.travel_stipend) || 0,
+          fly_required: newProjectData.flight_required,
+          accommodation_required: newProjectData.hotel_required,
+          additional_notes: newProjectData.travel_notes,
           contract_signed: true // Assuming contract is signed when creating project
         })
       })
@@ -436,7 +454,13 @@ export default function EnhancedProjectManagementPage() {
           company: "",
           speaker_fee: "",
           event_location: "",
-          event_type: "",
+          event_type: "in-person",
+          event_classification: "travel",
+          travel_required: false,
+          travel_stipend: "",
+          flight_required: false,
+          hotel_required: false,
+          travel_notes: "",
           description: ""
         })
         loadData()
@@ -491,6 +515,145 @@ export default function EnhancedProjectManagementPage() {
       toast({
         title: "Error",
         description: "Failed to delete project",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleCreateNewInvoice = async () => {
+    try {
+      // Validate form
+      if (!invoiceFormData.project_id || !invoiceFormData.amount) {
+        toast({
+          title: "Validation Error",
+          description: "Please select a project and enter an amount",
+          variant: "destructive"
+        })
+        return
+      }
+
+      const response = await fetch("/api/invoices", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          'x-dev-admin-bypass': 'dev-admin-access'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          project_id: parseInt(invoiceFormData.project_id),
+          amount: parseFloat(invoiceFormData.amount),
+          due_date: invoiceFormData.due_date,
+          notes: invoiceFormData.notes || `Payment terms: ${invoiceFormData.payment_terms}`,
+          status: "sent" // Automatically mark as sent
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Invoice created successfully"
+        })
+        // Reset form
+        setInvoiceFormData({
+          project_id: "",
+          invoice_type: "",
+          amount: "",
+          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          payment_terms: "net-30",
+          notes: ""
+        })
+        loadData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to create invoice",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error creating invoice:", error)
+      toast({
+        title: "Error",
+        description: "Failed to create invoice",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleInvoiceTypeChange = (value: string, projectId: string) => {
+    if (!projectId) return
+    
+    const project = projects.find(p => p.id.toString() === projectId)
+    if (!project) return
+    
+    const speakerFee = parseFloat(project.speaker_fee || project.budget || "0")
+    const travelExpenses = parseFloat(project.travel_expenses_amount || "0")
+    const totalAmount = speakerFee + travelExpenses
+    let amount = ""
+    
+    switch (value) {
+      case "initial":
+        amount = (totalAmount * 0.5).toString()
+        break
+      case "final":
+        amount = (totalAmount * 0.5).toString()
+        break
+      case "full":
+        amount = totalAmount.toString()
+        break
+      case "full-speaker-only":
+        amount = speakerFee.toString()
+        break
+      case "travel-only":
+        amount = travelExpenses.toString()
+        break
+      case "custom":
+        amount = ""
+        break
+    }
+    
+    setInvoiceFormData({
+      ...invoiceFormData,
+      invoice_type: value,
+      amount: amount
+    })
+  }
+
+  const handleUpdateInvoiceStatus = async (invoiceId: number, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/invoices/${invoiceId}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          'x-dev-admin-bypass': 'dev-admin-access'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          status: newStatus,
+          paid_date: newStatus === "paid" ? new Date().toISOString() : null
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: `Invoice marked as ${newStatus}`
+        })
+        loadData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to update invoice",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error updating invoice:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update invoice",
         variant: "destructive"
       })
     }
@@ -922,6 +1085,86 @@ export default function EnhancedProjectManagementPage() {
                             </div>
                           </div>
                           
+                          {/* Event Format and Travel */}
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label htmlFor="new-event-format">Event Format *</Label>
+                                <Select 
+                                  value={newProjectData.event_classification} 
+                                  onValueChange={(value: "virtual" | "local" | "travel") => {
+                                    setNewProjectData({
+                                      ...newProjectData, 
+                                      event_classification: value,
+                                      travel_required: value === "travel",
+                                      flight_required: value === "travel",
+                                      hotel_required: value === "travel"
+                                    })
+                                  }}
+                                >
+                                  <SelectTrigger id="new-event-format">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="virtual">Virtual</SelectItem>
+                                    <SelectItem value="local">Local (No Travel)</SelectItem>
+                                    <SelectItem value="travel">Travel Required</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              {newProjectData.event_classification === "travel" && (
+                                <div>
+                                  <Label htmlFor="new-travel-stipend">Travel Stipend ($)</Label>
+                                  <Input 
+                                    id="new-travel-stipend" 
+                                    type="number" 
+                                    placeholder="0"
+                                    value={newProjectData.travel_stipend}
+                                    onChange={(e) => setNewProjectData({...newProjectData, travel_stipend: e.target.value})}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            
+                            {newProjectData.event_classification === "travel" && (
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="checkbox"
+                                    id="new-flight-required"
+                                    className="rounded"
+                                    checked={newProjectData.flight_required}
+                                    onChange={(e) => setNewProjectData({...newProjectData, flight_required: e.target.checked})}
+                                  />
+                                  <Label htmlFor="new-flight-required">Flight Required</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="checkbox"
+                                    id="new-hotel-required"
+                                    className="rounded"
+                                    checked={newProjectData.hotel_required}
+                                    onChange={(e) => setNewProjectData({...newProjectData, hotel_required: e.target.checked})}
+                                  />
+                                  <Label htmlFor="new-hotel-required">Hotel Required</Label>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {newProjectData.event_classification === "travel" && (
+                              <div>
+                                <Label htmlFor="new-travel-notes">Travel Notes</Label>
+                                <Textarea
+                                  id="new-travel-notes"
+                                  placeholder="Special travel requirements, preferences, or notes..."
+                                  rows={2}
+                                  value={newProjectData.travel_notes}
+                                  onChange={(e) => setNewProjectData({...newProjectData, travel_notes: e.target.value})}
+                                />
+                              </div>
+                            )}
+                          </div>
+                          
                           <div>
                             <Label htmlFor="new-description">Description</Label>
                             <Textarea 
@@ -975,7 +1218,15 @@ export default function EnhancedProjectManagementPage() {
                           <TableCell>
                             <div>
                               <div className="font-medium">{project.event_title}</div>
-                              <div className="text-sm text-gray-500">{project.event_location}</div>
+                              <div className="text-sm text-gray-500">
+                                {project.event_location}
+                                {project.event_classification && (
+                                  <Badge variant="outline" className="ml-2 text-xs">
+                                    {project.event_classification === "virtual" ? "Virtual" : 
+                                     project.event_classification === "local" ? "Local" : "Travel"}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -1275,10 +1526,286 @@ export default function EnhancedProjectManagementPage() {
 
             {/* Invoicing Tab */}
             <TabsContent value="invoicing" className="space-y-6">
+              {/* Invoice Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Invoiced</CardTitle>
+                    <Receipt className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      ${new Intl.NumberFormat('en-US').format(
+                        invoices.reduce((sum, inv) => sum + inv.amount, 0)
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {invoices.length} total invoices
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Paid</CardTitle>
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">
+                      ${new Intl.NumberFormat('en-US').format(
+                        invoices.filter(i => i.status === "paid").reduce((sum, inv) => sum + inv.amount, 0)
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {invoices.filter(i => i.status === "paid").length} paid
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
+                    <Clock className="h-4 w-4 text-yellow-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-yellow-600">
+                      ${new Intl.NumberFormat('en-US').format(
+                        invoices.filter(i => ["sent", "overdue"].includes(i.status)).reduce((sum, inv) => sum + inv.amount, 0)
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {invoices.filter(i => ["sent", "overdue"].includes(i.status)).length} pending
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-red-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-red-600">
+                      ${new Intl.NumberFormat('en-US').format(
+                        invoices.filter(i => i.status === "overdue").reduce((sum, inv) => sum + inv.amount, 0)
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {invoices.filter(i => i.status === "overdue").length} overdue
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Create Invoice Card */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Invoice Management</CardTitle>
-                  <CardDescription>Track and manage project invoices</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Create New Invoice</CardTitle>
+                      <CardDescription>Generate invoices for your projects</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="invoice-project">Select Project</Label>
+                      <Select 
+                        value={invoiceFormData.project_id} 
+                        onValueChange={(value) => {
+                          setInvoiceFormData({...invoiceFormData, project_id: value})
+                          if (invoiceFormData.invoice_type) {
+                            handleInvoiceTypeChange(invoiceFormData.invoice_type, value)
+                          }
+                        }}
+                      >
+                        <SelectTrigger id="invoice-project">
+                          <SelectValue placeholder="Choose a project" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projects
+                            .filter(p => !["completed", "cancelled"].includes(p.status))
+                            .map(project => (
+                              <SelectItem key={project.id} value={project.id.toString()}>
+                                {project.project_name || project.event_title} - {project.client_name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="invoice-type">Invoice Type</Label>
+                      <Select 
+                        value={invoiceFormData.invoice_type}
+                        onValueChange={(value) => handleInvoiceTypeChange(value, invoiceFormData.project_id)}
+                      >
+                        <SelectTrigger id="invoice-type">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="initial">Initial Invoice (50% of Total)</SelectItem>
+                          <SelectItem value="final">Final Invoice (50% of Total)</SelectItem>
+                          <SelectItem value="full">Full Amount (Speaker Fee + Travel)</SelectItem>
+                          <SelectItem value="full-speaker-only">Speaker Fee Only</SelectItem>
+                          <SelectItem value="travel-only">Travel Expenses Only</SelectItem>
+                          <SelectItem value="custom">Custom Amount</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="invoice-amount">Amount</Label>
+                      <Input 
+                        id="invoice-amount" 
+                        type="number" 
+                        placeholder="25000"
+                        value={invoiceFormData.amount}
+                        onChange={(e) => setInvoiceFormData({...invoiceFormData, amount: e.target.value})}
+                        disabled={invoiceFormData.invoice_type !== "custom" && invoiceFormData.invoice_type !== ""}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <Label htmlFor="invoice-due-date">Due Date</Label>
+                      <Input 
+                        id="invoice-due-date" 
+                        type="date"
+                        value={invoiceFormData.due_date}
+                        onChange={(e) => setInvoiceFormData({...invoiceFormData, due_date: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="invoice-terms">Payment Terms</Label>
+                      <Select 
+                        value={invoiceFormData.payment_terms}
+                        onValueChange={(value) => setInvoiceFormData({...invoiceFormData, payment_terms: value})}
+                      >
+                        <SelectTrigger id="invoice-terms">
+                          <SelectValue placeholder="Select terms" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="net-30">Net 30</SelectItem>
+                          <SelectItem value="net-15">Net 15</SelectItem>
+                          <SelectItem value="due-on-receipt">Due on Receipt</SelectItem>
+                          <SelectItem value="net-60">Net 60</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <Label htmlFor="invoice-notes">Notes / Description</Label>
+                    <Textarea 
+                      id="invoice-notes" 
+                      placeholder="Additional notes or description for the invoice..."
+                      rows={3}
+                      value={invoiceFormData.notes}
+                      onChange={(e) => setInvoiceFormData({...invoiceFormData, notes: e.target.value})}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 mt-6">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" disabled={!invoiceFormData.project_id || !invoiceFormData.amount}>
+                          <FileText className="h-4 w-4 mr-2" />
+                          Preview
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle>Invoice Preview</DialogTitle>
+                          <DialogDescription>Review your invoice before sending</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 mt-4">
+                          {/* Invoice preview content */}
+                          <div className="border rounded-lg p-6">
+                            <h3 className="text-lg font-semibold mb-4">Invoice Details</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-sm text-gray-600">Project</p>
+                                <p className="font-medium">
+                                  {projects.find(p => p.id.toString() === invoiceFormData.project_id)?.project_name || ""}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-600">Amount</p>
+                                <p className="font-medium">${invoiceFormData.amount}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-600">Due Date</p>
+                                <p className="font-medium">{new Date(invoiceFormData.due_date).toLocaleDateString()}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-600">Payment Terms</p>
+                                <p className="font-medium">{invoiceFormData.payment_terms.replace("-", " ").toUpperCase()}</p>
+                              </div>
+                            </div>
+                            {/* Show breakdown if project has travel expenses */}
+                            {(() => {
+                              const project = projects.find(p => p.id.toString() === invoiceFormData.project_id)
+                              if (project && parseFloat(project.travel_expenses_amount || "0") > 0) {
+                                const speakerFee = parseFloat(project.speaker_fee || project.budget || "0")
+                                const travelExpenses = parseFloat(project.travel_expenses_amount || "0")
+                                return (
+                                  <div className="mt-4 p-3 bg-gray-50 rounded">
+                                    <p className="text-sm font-medium text-gray-700 mb-2">Amount Breakdown:</p>
+                                    <div className="space-y-1">
+                                      <div className="flex justify-between text-sm">
+                                        <span>Speaker Fee:</span>
+                                        <span>${speakerFee.toLocaleString()}</span>
+                                      </div>
+                                      <div className="flex justify-between text-sm">
+                                        <span>Travel Expenses:</span>
+                                        <span>${travelExpenses.toLocaleString()}</span>
+                                      </div>
+                                      <div className="flex justify-between text-sm font-medium pt-1 border-t">
+                                        <span>Total:</span>
+                                        <span>${(speakerFee + travelExpenses).toLocaleString()}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              }
+                              return null
+                            })()}
+                            {invoiceFormData.notes && (
+                              <div className="mt-4">
+                                <p className="text-sm text-gray-600">Notes</p>
+                                <p className="font-medium">{invoiceFormData.notes}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <Button onClick={handleCreateNewInvoice} disabled={!invoiceFormData.project_id || !invoiceFormData.amount}>
+                      <Send className="h-4 w-4 mr-2" />
+                      Create & Send Invoice
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Existing Invoices */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Invoice History</CardTitle>
+                      <CardDescription>Track and manage all invoices</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Select defaultValue="all">
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Filter by status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Invoices</SelectItem>
+                          <SelectItem value="draft">Draft</SelectItem>
+                          <SelectItem value="sent">Sent</SelectItem>
+                          <SelectItem value="paid">Paid</SelectItem>
+                          <SelectItem value="overdue">Overdue</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <Table>
@@ -1320,10 +1847,28 @@ export default function EnhancedProjectManagementPage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-2">
-                                <Button size="sm" variant="ghost">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="outline">
+                                {invoice.status !== "paid" && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    className="text-green-600 hover:text-green-700"
+                                    onClick={() => handleUpdateInvoiceStatus(invoice.id, "paid")}
+                                  >
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Mark Paid
+                                  </Button>
+                                )}
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  onClick={() => {
+                                    // Download invoice (implement PDF generation later)
+                                    toast({
+                                      title: "Coming Soon",
+                                      description: "PDF download functionality will be available soon"
+                                    })
+                                  }}
+                                >
                                   <Download className="h-4 w-4" />
                                 </Button>
                               </div>

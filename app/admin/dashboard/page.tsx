@@ -56,6 +56,11 @@ interface Deal {
   attendee_count: number
   budget_range: string
   deal_value: number
+  travel_required: boolean
+  travel_stipend: number
+  flight_required: boolean
+  hotel_required: boolean
+  travel_notes?: string
   status: "lead" | "qualified" | "proposal" | "negotiation" | "won" | "lost"
   priority: "low" | "medium" | "high" | "urgent"
   source: string
@@ -106,11 +111,16 @@ export default function AdminDashboard() {
     eventTitle: "",
     eventDate: "",
     eventLocation: "",
-    eventType: "",
+    eventType: "in-person",
     speakerRequested: "",
     attendeeCount: "",
     budgetRange: "",
     dealValue: "",
+    travelRequired: false,
+    travelStipend: "",
+    flightRequired: false,
+    hotelRequired: false,
+    travelNotes: "",
     status: "lead" as Deal["status"],
     priority: "medium" as Deal["priority"],
     source: "",
@@ -190,11 +200,16 @@ export default function AdminDashboard() {
       eventTitle: "",
       eventDate: "",
       eventLocation: "",
-      eventType: "",
+      eventType: "in-person",
       speakerRequested: "",
       attendeeCount: "",
       budgetRange: "",
       dealValue: "",
+      travelRequired: false,
+      travelStipend: "",
+      flightRequired: false,
+      hotelRequired: false,
+      travelNotes: "",
       status: "lead",
       priority: "medium",
       source: "",
@@ -241,6 +256,11 @@ export default function AdminDashboard() {
         attendee_count: Number.parseInt(formData.attendeeCount) || 0,
         budget_range: formData.budgetRange,
         deal_value: Number.parseFloat(formData.dealValue) || 0,
+        travel_required: formData.travelRequired,
+        travel_stipend: Number.parseFloat(formData.travelStipend) || 0,
+        flight_required: formData.flightRequired,
+        hotel_required: formData.hotelRequired,
+        travel_notes: formData.travelNotes,
         status: formData.status,
         priority: formData.priority,
         source: formData.source,
@@ -279,11 +299,16 @@ export default function AdminDashboard() {
           eventTitle: "",
           eventDate: "",
           eventLocation: "",
-          eventType: "",
+          eventType: "in-person",
           speakerRequested: "",
           attendeeCount: "",
           budgetRange: "",
           dealValue: "",
+          travelRequired: false,
+          travelStipend: "",
+          flightRequired: false,
+          hotelRequired: false,
+          travelNotes: "",
           status: "lead",
           priority: "medium",
           source: "",
@@ -322,11 +347,16 @@ export default function AdminDashboard() {
       eventTitle: deal.event_title,
       eventDate: deal.event_date,
       eventLocation: deal.event_location,
-      eventType: deal.event_type,
+      eventType: deal.event_type || "in-person",
       speakerRequested: deal.speaker_requested || "",
       attendeeCount: deal.attendee_count.toString(),
       budgetRange: deal.budget_range,
       dealValue: deal.deal_value.toString(),
+      travelRequired: deal.travel_required || false,
+      travelStipend: deal.travel_stipend ? deal.travel_stipend.toString() : "",
+      flightRequired: deal.flight_required || false,
+      hotelRequired: deal.hotel_required || false,
+      travelNotes: deal.travel_notes || "",
       status: deal.status,
       priority: deal.priority,
       source: deal.source,
@@ -565,13 +595,29 @@ export default function AdminDashboard() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="eventType">Event Type</Label>
-                      <Input
-                        id="eventType"
+                      <Label htmlFor="eventType">Event Format</Label>
+                      <Select
                         value={formData.eventType}
-                        onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                        placeholder="Corporate Conference, Workshop, etc."
-                      />
+                        onValueChange={(value) => {
+                          setFormData({ 
+                            ...formData, 
+                            eventType: value,
+                            travelRequired: value === "in-person",
+                            flightRequired: false,
+                            hotelRequired: false,
+                            travelStipend: ""
+                          })
+                        }}
+                      >
+                        <SelectTrigger id="eventType">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="in-person">In-Person</SelectItem>
+                          <SelectItem value="virtual">Virtual</SelectItem>
+                          <SelectItem value="hybrid">Hybrid</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label htmlFor="eventDate">Event Date</Label>
@@ -610,6 +656,55 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </div>
+
+                {/* Travel Information */}
+                {formData.eventType === "in-person" && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Travel Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="flightRequired"
+                          className="rounded"
+                          checked={formData.flightRequired}
+                          onChange={(e) => setFormData({ ...formData, flightRequired: e.target.checked })}
+                        />
+                        <Label htmlFor="flightRequired">Flight Required</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="hotelRequired"
+                          className="rounded"
+                          checked={formData.hotelRequired}
+                          onChange={(e) => setFormData({ ...formData, hotelRequired: e.target.checked })}
+                        />
+                        <Label htmlFor="hotelRequired">Hotel Required</Label>
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="travelStipend">Travel Stipend ($)</Label>
+                        <Input
+                          id="travelStipend"
+                          type="number"
+                          value={formData.travelStipend}
+                          onChange={(e) => setFormData({ ...formData, travelStipend: e.target.value })}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="travelNotes">Travel Notes</Label>
+                        <Textarea
+                          id="travelNotes"
+                          value={formData.travelNotes}
+                          onChange={(e) => setFormData({ ...formData, travelNotes: e.target.value })}
+                          rows={3}
+                          placeholder="Additional travel requirements or notes..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Deal Information */}
                 <div>
