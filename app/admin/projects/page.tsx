@@ -41,7 +41,8 @@ import {
   Camera,
   Mic,
   RefreshCw,
-  CheckSquare
+  CheckSquare,
+  Mail
 } from "lucide-react"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
@@ -61,7 +62,7 @@ interface Project {
   event_location: string
   event_type: string
   attendee_count?: number
-  status: "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "completed" | "cancelled"
+  status: "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled"
   priority: "low" | "medium" | "high" | "urgent"
   budget: number
   invoiced_amount: number
@@ -102,47 +103,46 @@ const PROJECT_STATUSES = {
   invoicing: { 
     label: "Invoicing & Setup", 
     color: "bg-blue-500", 
-    stage: 1,
     description: "Send invoices (net 30 & final), plan kickoff meeting"
   },
   logistics_planning: { 
     label: "Logistics Planning", 
     color: "bg-purple-500", 
-    stage: 2,
     description: "Confirm details, A/V requirements, press pack, calendar, vendor onboarding"
   },
   pre_event: { 
     label: "Pre-Event Ready", 
     color: "bg-yellow-500", 
-    stage: 3,
     description: "All logistics confirmed, speaker prepared"
   },
   event_week: { 
     label: "Event Week", 
     color: "bg-orange-500", 
-    stage: 4,
     description: "Final preparations and event execution"
+  },
+  follow_up: { 
+    label: "Event Follow-up", 
+    color: "bg-indigo-500", 
+    description: "Send follow-up communications and request feedback"
   },
   completed: { 
     label: "Completed", 
     color: "bg-green-500", 
-    stage: 5,
-    description: "Event successfully completed" 
+    description: "Event successfully completed with all follow-up done" 
   },
   cancelled: { 
     label: "Cancelled", 
     color: "bg-red-500", 
-    stage: 0,
     description: "Project cancelled"
   },
   
   // Legacy status values for backward compatibility
-  "2plus_months": { label: "2+ Months Out", color: "bg-blue-500", stage: 1 },
-  "1to2_months": { label: "1-2 Months Out", color: "bg-yellow-500", stage: 2 },
-  "less_than_month": { label: "Less Than Month", color: "bg-orange-500", stage: 3 },
-  "final_week": { label: "Final Week", color: "bg-red-500", stage: 4 },
-  planning: { label: "Planning", color: "bg-blue-500", stage: 1 },
-  contracts_signed: { label: "Contracts Signed", color: "bg-green-500", stage: 2 }
+  "2plus_months": { label: "2+ Months Out", color: "bg-blue-500" },
+  "1to2_months": { label: "1-2 Months Out", color: "bg-yellow-500" },
+  "less_than_month": { label: "Less Than Month", color: "bg-orange-500" },
+  "final_week": { label: "Final Week", color: "bg-red-500" },
+  planning: { label: "Planning", color: "bg-blue-500" },
+  contracts_signed: { label: "Contracts Signed", color: "bg-green-500" }
 }
 
 const INVOICE_STATUSES = {
@@ -385,7 +385,6 @@ export default function EnhancedProjectManagementPage() {
                                 <Badge className={`${config?.color || "bg-gray-500"} text-white`}>
                                   {config?.label || status}
                                 </Badge>
-                                <span className="text-sm text-gray-600">Stage {config?.stage || 0}</span>
                               </div>
                               <span className="font-semibold">{count}</span>
                             </div>
@@ -460,6 +459,7 @@ export default function EnhancedProjectManagementPage() {
                         <SelectItem value="logistics_planning">Logistics Planning</SelectItem>
                         <SelectItem value="pre_event">Pre-Event Ready</SelectItem>
                         <SelectItem value="event_week">Event Week</SelectItem>
+                        <SelectItem value="follow_up">Event Follow-up</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
                       </SelectContent>
@@ -621,12 +621,11 @@ export default function EnhancedProjectManagementPage() {
                   <CardDescription>Detailed checklist for each project stage</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Stage 1: Invoicing & Setup */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {/* Invoicing & Setup */}
                     <Card className="border-l-4 border-l-blue-500">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Badge className="bg-blue-500 text-white">Stage 1</Badge>
+                        <CardTitle className="text-lg">
                           Invoicing & Setup
                         </CardTitle>
                       </CardHeader>
@@ -652,11 +651,10 @@ export default function EnhancedProjectManagementPage() {
                       </CardContent>
                     </Card>
 
-                    {/* Stage 2: Logistics Planning */}
+                    {/* Logistics Planning */}
                     <Card className="border-l-4 border-l-purple-500">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Badge className="bg-purple-500 text-white">Stage 2</Badge>
+                        <CardTitle className="text-lg">
                           Logistics Planning
                         </CardTitle>
                       </CardHeader>
@@ -694,11 +692,10 @@ export default function EnhancedProjectManagementPage() {
                       </CardContent>
                     </Card>
 
-                    {/* Stage 3: Pre-Event Ready */}
+                    {/* Pre-Event Ready */}
                     <Card className="border-l-4 border-l-yellow-500">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Badge className="bg-yellow-500 text-white">Stage 3</Badge>
+                        <CardTitle className="text-lg">
                           Pre-Event Ready
                         </CardTitle>
                       </CardHeader>
@@ -724,11 +721,10 @@ export default function EnhancedProjectManagementPage() {
                       </CardContent>
                     </Card>
 
-                    {/* Stage 4: Event Week */}
+                    {/* Event Week */}
                     <Card className="border-l-4 border-l-orange-500">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Badge className="bg-orange-500 text-white">Stage 4</Badge>
+                        <CardTitle className="text-lg">
                           Event Week
                         </CardTitle>
                       </CardHeader>
@@ -745,6 +741,64 @@ export default function EnhancedProjectManagementPage() {
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-orange-500" />
                             <span>Real-time support</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Event Follow-up */}
+                    <Card className="border-l-4 border-l-indigo-500">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">
+                          Event Follow-up
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-indigo-500" />
+                            <span>Send event follow-up</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-indigo-500" />
+                            <span>Request feedback from client</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-indigo-500" />
+                            <span>Request feedback from speaker</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Document lessons learned</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Completed */}
+                    <Card className="border-l-4 border-l-green-500">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">
+                          Completed
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <span>Event successfully delivered</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <span>All follow-up completed</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <span>Feedback collected</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <span>Project archived</span>
                           </div>
                         </div>
                       </CardContent>
