@@ -400,3 +400,320 @@ Successfully fetched 2 projects
  GET /site.webmanifest 404 in 1505ms
  GET /api/speakers 200 in 1401ms
 🎯 Fetched 74 speakers from database
+ ✓ Compiled in 901ms (1091 modules)
+ GET /admin/projects 200 in 100ms
+ ✓ Compiled /[slug] in 113ms (605 modules)
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ ✓ Compiled /api/speakers in 88ms (622 modules)
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1663ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 2112ms
+ GET /api/speakers 200 in 1476ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled in 574ms (1121 modules)
+ GET /admin/projects 200 in 64ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1436ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1572ms
+ GET /api/speakers 200 in 1396ms
+🎯 Fetched 74 speakers from database
+ GET /admin/projects 200 in 74ms
+ ✓ Compiled in 529ms (1121 modules)
+ GET /admin/projects 200 in 56ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1445ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1561ms
+ GET /api/speakers 200 in 1446ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled in 535ms (1121 modules)
+ GET /admin/projects 200 in 58ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1571ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1682ms
+ GET /api/speakers 200 in 1646ms
+🎯 Fetched 74 speakers from database
+ GET /admin/projects 200 in 125ms
+ ✓ Compiled /api/invoices in 482ms (613 modules)
+ ✓ Compiled (633 modules)
+Fetching all projects from database...
+ POST /api/analytics/page-view 400 in 791ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /admin/projects 200 in 48ms
+ ✓ Compiled /api/speakers in 94ms (635 modules)
+🔄 getAllSpeakers called - fetching from database
+ GET /api/invoices 200 in 1275ms
+Successfully fetched 2 projects
+ GET /api/projects 200 in 1381ms
+ GET /api/speakers 200 in 1402ms
+🎯 Fetched 74 speakers from database
+ GET /api/speakers 200 in 1710ms
+🎯 Fetched 74 speakers from database
+ GET /api/speakers 200 in 2403ms
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 3079ms
+Fetching all projects from database...
+Successfully fetched 2 projects
+ GET /api/projects 200 in 920ms
+ ✓ Compiled in 740ms (1205 modules)
+ GET /admin/projects 200 in 370ms
+ GET /admin/projects 200 in 18ms
+ ✓ Compiled /[slug] in 118ms (627 modules)
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ ✓ Compiled /api/speakers in 65ms (629 modules)
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1522ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1857ms
+ GET /api/speakers 200 in 1506ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled /api/migrate-project-statuses in 437ms (1099 modules)
+Running project status migration...
+Found 2 projects with legacy statuses
+Migration error: Error [NeonDbError]: new row for relation "projects" violates check constraint "projects_status_check"
+    at async POST (app/api/migrate-project-statuses/route.ts:77:6)
+  75 |
+  76 |       // Update the project
+> 77 |       await sql`
+     |      ^
+  78 |         UPDATE projects 
+  79 |         SET 
+  80 |           status = ${newStatus}, {
+  severity: 'ERROR',
+  code: '23514',
+  detail: 'Failing row contains (3, Connect Live 2025 - Modern Utilities: Shaping The Future of Cust..., Fengning Yu, Fengning.Yu@hansencx.com, N/A, Hansen Technologies, Other, Event: Connect Live 2025 - Modern Utilities: Shaping The Future ..., invoicing, high, 2025-07-30, null, 2025-09-13, 25000.00, 0.00, 0, null, null, null, Deal ID: 2\n' +
+    'Original notes: No additional notes, {"Customer Conference",Website}, 2025-08-02 19:34:58.158381+00, 2025-08-05 06:14:39.078928+00, null, 2025-09-13, Columbia, South Carolina, Customer Conference, 200, 25000.00, t, t, null, null, null, null, null, Fengning Yu, null, t, f, f, f, f, null, null, null, null, [], {}, null, null, {}, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, -1, null, null, null, null, f, null, f, f, null, null, null, null, null, null, f, null, f, f, null, null, null, f, null, null, null, null, null, null, null, null, null, null, f, null, f, null, null, null, null, {"invoicing": {"final_invoice_sent": false, "initial_invoice_sen...).',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'projects',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'projects_status_check',
+  file: 'execMain.c',
+  line: '2034',
+  routine: 'ExecConstraints',
+  sourceError: undefined
+}
+ POST /api/migrate-project-statuses 500 in 2031ms
+ ✓ Compiled in 518ms (1203 modules)
+ GET /admin/projects 200 in 341ms
+ GET /admin/projects 200 in 21ms
+ ✓ Compiled /[slug] in 150ms (625 modules)
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ ✓ Compiled /api/speakers in 188ms (627 modules)
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1658ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 2050ms
+ GET /api/speakers 200 in 1416ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled /api/check-status-constraint in 260ms (1114 modules)
+ GET /api/check-status-constraint 200 in 1217ms
+ ✓ Compiled in 587ms (1218 modules)
+ GET /admin/projects 200 in 313ms
+ GET /admin/projects 200 in 16ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1416ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1622ms
+ GET /api/speakers 200 in 1419ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled /api/update-status-constraint in 249ms (1114 modules)
+Updating status constraint...
+Dropped old constraint
+Added new constraint with all status values
+ POST /api/update-status-constraint 200 in 1637ms
+ ✓ Compiled /api/migrate-project-statuses in 112ms (631 modules)
+Running project status migration...
+Found 2 projects with legacy statuses
+Updated project 3 from 1to2_months to invoicing
+Updated project 1 from 2plus_months to invoicing
+ POST /api/migrate-project-statuses 200 in 1939ms
+ ✓ Compiled /api/projects in 237ms (635 modules)
+Fetching all projects from database...
+Successfully fetched 2 projects
+ GET /api/projects 200 in 1113ms
+ GET /admin/projects 200 in 141ms
+ GET /admin/projects 200 in 86ms
+ ✓ Compiled /api/analytics/page-view in 256ms (637 modules)
+ POST /api/analytics/page-view 400 in 281ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ ✓ Compiled /api/invoices in 105ms (639 modules)
+Fetching all projects from database...
+🔄 getAllSpeakers called - fetching from database
+ GET /api/invoices 200 in 873ms
+Successfully fetched 2 projects
+ GET /api/projects 200 in 1066ms
+ GET /api/speakers 200 in 1631ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1778ms
+ GET /api/speakers 200 in 1470ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled /api/analytics/events in 175ms (641 modules)
+ POST /api/analytics/events 400 in 203ms
+ ✓ Compiled in 1406ms (1091 modules)
+ GET /admin/projects 200 in 132ms
+ ✓ Compiled /[slug] in 131ms (605 modules)
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ ✓ Compiled /api/speakers in 142ms (622 modules)
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1752ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 2277ms
+ GET /api/speakers 200 in 1411ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled in 690ms (1121 modules)
+ GET /admin/projects 200 in 62ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1403ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1547ms
+ GET /api/speakers 200 in 1410ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled in 808ms (1125 modules)
+ GET /admin/projects 200 in 52ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1449ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1636ms
+ GET /api/speakers 200 in 1403ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled /api/invoices in 549ms (1125 modules)
+ ✓ Compiled in 0ms (634 modules)
+Fetching all projects from database...
+ GET /admin/projects 200 in 271ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/invoices 200 in 1095ms
+Successfully fetched 2 projects
+ GET /api/projects 200 in 1265ms
+ GET /api/speakers 200 in 1416ms
+🎯 Fetched 74 speakers from database
+ GET /api/speakers 200 in 1519ms
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1610ms
+ GET /api/speakers 200 in 1500ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled in 611ms (1134 modules)
+ GET /admin/projects 200 in 41ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1455ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1561ms
+ GET /api/speakers 200 in 1432ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled in 551ms (1134 modules)
+ GET /admin/projects 200 in 43ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1561ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1653ms
+ GET /api/speakers 200 in 1433ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled in 543ms (1125 modules)
+ GET /admin/projects 200 in 42ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1424ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1508ms
+ GET /api/speakers 200 in 1412ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled in 499ms (1125 modules)
+ GET /admin/projects 200 in 82ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1599ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1699ms
+ GET /api/speakers 200 in 1447ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled in 798ms (1125 modules)
+ GET /admin/projects 200 in 43ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1460ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1610ms
+ GET /api/speakers 200 in 1536ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled in 321ms (500 modules)
+ GET /admin/projects 200 in 23ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1599ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1759ms
+ GET /api/speakers 200 in 1640ms
+🎯 Fetched 74 speakers from database
+ ✓ Compiled in 299ms (500 modules)
+ GET /admin/projects 200 in 26ms
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+🔄 getAllSpeakers called - fetching from database
+ GET /api/speakers 200 in 1469ms
+🎯 Fetched 74 speakers from database
+🎯 Fetched 74 speakers from database
+ GET /site.webmanifest 404 in 1545ms
+ GET /api/speakers 200 in 1550ms
+🎯 Fetched 74 speakers from database
+ ○ Compiling /api/projects/[id] ...
+ ✓ Compiled /api/projects/[id] in 504ms (1103 modules)
+ DELETE /api/projects/1 200 in 2443ms
+ ✓ Compiled /api/projects in 158ms (619 modules)
+ ✓ Compiled (623 modules)
+Fetching all projects from database...
+ GET /api/invoices 200 in 580ms
+Successfully fetched 1 projects
+ GET /api/projects 200 in 876ms

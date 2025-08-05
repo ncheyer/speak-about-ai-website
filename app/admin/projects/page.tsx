@@ -209,6 +209,18 @@ export default function EnhancedProjectManagementPage() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [showCreateInvoice, setShowCreateInvoice] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [showCreateProject, setShowCreateProject] = useState(false)
+  const [newProjectData, setNewProjectData] = useState({
+    project_name: "",
+    event_date: "",
+    client_name: "",
+    client_email: "",
+    company: "",
+    speaker_fee: "",
+    event_location: "",
+    event_type: "",
+    description: ""
+  })
 
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
@@ -366,6 +378,124 @@ export default function EnhancedProjectManagementPage() {
     }
   }
 
+  const handleCreateProject = async () => {
+    try {
+      // Validate required fields
+      if (!newProjectData.project_name || !newProjectData.event_date || !newProjectData.client_name || 
+          !newProjectData.client_email || !newProjectData.company || !newProjectData.speaker_fee ||
+          !newProjectData.event_location || !newProjectData.event_type) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields",
+          variant: "destructive"
+        })
+        return
+      }
+
+      const response = await fetch("/api/projects", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          'x-dev-admin-bypass': 'dev-admin-access'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          project_name: newProjectData.project_name,
+          event_date: newProjectData.event_date,
+          client_name: newProjectData.client_name,
+          client_email: newProjectData.client_email,
+          company: newProjectData.company,
+          speaker_fee: parseFloat(newProjectData.speaker_fee),
+          budget: parseFloat(newProjectData.speaker_fee), // Set budget same as speaker fee
+          event_location: newProjectData.event_location,
+          event_type: newProjectData.event_type,
+          description: newProjectData.description,
+          project_type: newProjectData.event_type,
+          status: "invoicing", // Will be set automatically by backend
+          priority: "medium",
+          start_date: new Date().toISOString(),
+          spent: 0,
+          completion_percentage: 0,
+          travel_required: true,
+          accommodation_required: true,
+          contract_signed: true // Assuming contract is signed when creating project
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Project created successfully"
+        })
+        setShowCreateProject(false)
+        setNewProjectData({
+          project_name: "",
+          event_date: "",
+          client_name: "",
+          client_email: "",
+          company: "",
+          speaker_fee: "",
+          event_location: "",
+          event_type: "",
+          description: ""
+        })
+        loadData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to create project",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error creating project:", error)
+      toast({
+        title: "Error",
+        description: "Failed to create project",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleDeleteProject = async (projectId: number) => {
+    if (!confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "DELETE",
+        headers: {
+          'x-dev-admin-bypass': 'dev-admin-access'
+        },
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Project deleted successfully"
+        })
+        loadData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to delete project",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete project",
+        variant: "destructive"
+      })
+    }
+  }
+
   const filteredProjects = projects.filter(project => {
     const matchesSearch = 
       project.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -488,10 +618,11 @@ export default function EnhancedProjectManagementPage() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 max-w-3xl">
+            <TabsList className="grid w-full grid-cols-6 max-w-4xl">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
+              <TabsTrigger value="tasks">Tasks</TabsTrigger>
               <TabsTrigger value="invoicing">Invoicing</TabsTrigger>
               <TabsTrigger value="logistics">Logistics</TabsTrigger>
             </TabsList>
@@ -655,7 +786,7 @@ export default function EnhancedProjectManagementPage() {
 
             {/* Projects Tab */}
             <TabsContent value="projects" className="space-y-6">
-              {/* Filters */}
+              {/* Filters and Actions */}
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex gap-4">
@@ -685,6 +816,135 @@ export default function EnhancedProjectManagementPage() {
                         <SelectItem value="cancelled">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Dialog open={showCreateProject} onOpenChange={setShowCreateProject}>
+                      <DialogTrigger asChild>
+                        <Button>
+                          <Plus className="h-4 w-4 mr-2" />
+                          New Project
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle>Create New Project</DialogTitle>
+                          <DialogDescription>Add a new event project to the system</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 mt-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="new-project-name">Project Name *</Label>
+                              <Input 
+                                id="new-project-name" 
+                                placeholder="Event name or project title"
+                                value={newProjectData.project_name}
+                                onChange={(e) => setNewProjectData({...newProjectData, project_name: e.target.value})}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="new-event-date">Event Date *</Label>
+                              <Input 
+                                id="new-event-date" 
+                                type="date"
+                                value={newProjectData.event_date}
+                                onChange={(e) => setNewProjectData({...newProjectData, event_date: e.target.value})}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="new-client-name">Client Name *</Label>
+                              <Input 
+                                id="new-client-name" 
+                                placeholder="Client full name"
+                                value={newProjectData.client_name}
+                                onChange={(e) => setNewProjectData({...newProjectData, client_name: e.target.value})}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="new-client-email">Client Email *</Label>
+                              <Input 
+                                id="new-client-email" 
+                                type="email" 
+                                placeholder="client@example.com"
+                                value={newProjectData.client_email}
+                                onChange={(e) => setNewProjectData({...newProjectData, client_email: e.target.value})}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="new-company">Company *</Label>
+                              <Input 
+                                id="new-company" 
+                                placeholder="Client company name"
+                                value={newProjectData.company}
+                                onChange={(e) => setNewProjectData({...newProjectData, company: e.target.value})}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="new-speaker-fee">Speaker Fee *</Label>
+                              <Input 
+                                id="new-speaker-fee" 
+                                type="number" 
+                                placeholder="25000"
+                                value={newProjectData.speaker_fee}
+                                onChange={(e) => setNewProjectData({...newProjectData, speaker_fee: e.target.value})}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="new-event-location">Event Location *</Label>
+                              <Input 
+                                id="new-event-location" 
+                                placeholder="City, State/Country"
+                                value={newProjectData.event_location}
+                                onChange={(e) => setNewProjectData({...newProjectData, event_location: e.target.value})}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="new-event-type">Event Type *</Label>
+                              <Select value={newProjectData.event_type} onValueChange={(value) => setNewProjectData({...newProjectData, event_type: value})}>
+                                <SelectTrigger id="new-event-type">
+                                  <SelectValue placeholder="Select event type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Keynote">Keynote</SelectItem>
+                                  <SelectItem value="Workshop">Workshop</SelectItem>
+                                  <SelectItem value="Panel">Panel</SelectItem>
+                                  <SelectItem value="Conference">Conference</SelectItem>
+                                  <SelectItem value="Corporate Event">Corporate Event</SelectItem>
+                                  <SelectItem value="Other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="new-description">Description</Label>
+                            <Textarea 
+                              id="new-description" 
+                              placeholder="Event details, special requirements, notes..."
+                              rows={4}
+                              value={newProjectData.description}
+                              onChange={(e) => setNewProjectData({...newProjectData, description: e.target.value})}
+                            />
+                          </div>
+                          
+                          <div className="flex justify-end gap-2 mt-6">
+                            <Button variant="outline" type="button" onClick={() => setShowCreateProject(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="button" onClick={handleCreateProject}>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Create Project
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </CardContent>
               </Card>
@@ -759,12 +1019,256 @@ export default function EnhancedProjectManagementPage() {
                                 <Receipt className="h-4 w-4 mr-1" />
                                 Invoice
                               </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleDeleteProject(project.id)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Tasks Tab */}
+            <TabsContent value="tasks" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Task Manager</CardTitle>
+                      <CardDescription>All pending tasks across projects, sorted by priority and due date</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Select defaultValue="all">
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Filter by urgency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Tasks</SelectItem>
+                          <SelectItem value="urgent">Urgent Only</SelectItem>
+                          <SelectItem value="today">Due Today</SelectItem>
+                          <SelectItem value="week">Due This Week</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {/* Generate task list from all projects */}
+                  {(() => {
+                    // Collect all tasks from all projects
+                    const allTasks = []
+                    
+                    projects.forEach(project => {
+                      if (["completed", "cancelled"].includes(project.status)) return
+                      
+                      const stageCompletion = project.stage_completion || {}
+                      const currentStage = project.status
+                      
+                      // Define task priorities based on stage
+                      const stagePriorities = {
+                        invoicing: 5,
+                        logistics_planning: 4,
+                        pre_event: 3,
+                        event_week: 2,
+                        follow_up: 1
+                      }
+                      
+                      // Define tasks for each stage
+                      const stageTasks = {
+                        invoicing: {
+                          initial_invoice_sent: "Send initial invoice (Net 30)",
+                          final_invoice_sent: "Send final invoice",
+                          kickoff_meeting_planned: "Plan kickoff meeting",
+                          project_setup_complete: "Complete project setup"
+                        },
+                        logistics_planning: {
+                          details_confirmed: "Confirm event details",
+                          av_requirements_gathered: "Gather A/V requirements",
+                          press_pack_sent: "Send press pack to client",
+                          calendar_confirmed: "Confirm speaker calendar",
+                          client_contact_obtained: "Obtain client contact info",
+                          speaker_materials_ready: "Prepare speaker materials",
+                          vendor_onboarding_complete: "Complete vendor onboarding"
+                        },
+                        pre_event: {
+                          logistics_confirmed: "Confirm all logistics",
+                          speaker_prepared: "Ensure speaker is prepared",
+                          client_materials_sent: "Send materials to client",
+                          ready_for_execution: "Ready for event execution"
+                        },
+                        event_week: {
+                          final_preparations_complete: "Complete final preparations",
+                          event_executed: "Execute event",
+                          support_provided: "Provide event support"
+                        },
+                        follow_up: {
+                          follow_up_sent: "Send follow-up communications",
+                          client_feedback_requested: "Request client feedback",
+                          speaker_feedback_requested: "Request speaker feedback",
+                          lessons_documented: "Document lessons learned"
+                        }
+                      }
+                      
+                      // Calculate days until event
+                      const daysUntilEvent = project.event_date 
+                        ? Math.ceil((new Date(project.event_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                        : null
+                      
+                      // Add tasks from current stage
+                      if (stageTasks[currentStage]) {
+                        Object.entries(stageTasks[currentStage]).forEach(([taskKey, taskName]) => {
+                          const isCompleted = stageCompletion[currentStage]?.[taskKey] || false
+                          if (!isCompleted) {
+                            allTasks.push({
+                              id: project.id + "-" + taskKey,
+                              projectId: project.id,
+                              projectName: project.project_name || project.event_title,
+                              clientName: project.client_name,
+                              stage: currentStage,
+                              taskKey: taskKey,
+                              taskName: taskName,
+                              priority: stagePriorities[currentStage] || 0,
+                              urgency: (() => {
+                                // For invoicing tasks, they should be done 2 months (60 days) before event
+                                if (currentStage === "invoicing" && daysUntilEvent !== null) {
+                                  if (daysUntilEvent < 60) return "high" // Less than 2 months - urgent!
+                                  if (daysUntilEvent < 90) return "medium" // Less than 3 months
+                                  return "low"
+                                }
+                                // For other stages, use standard urgency
+                                return daysUntilEvent !== null && daysUntilEvent < 30 ? "high" : 
+                                       daysUntilEvent !== null && daysUntilEvent < 60 ? "medium" : "low"
+                              })(),
+                              daysUntilEvent: daysUntilEvent,
+                              eventDate: project.event_date
+                            })
+                          }
+                        })
+                      }
+                    })
+                    
+                    // Sort tasks by urgency, priority, and days until event
+                    allTasks.sort((a, b) => {
+                      // First sort by urgency
+                      const urgencyOrder = { high: 3, medium: 2, low: 1 }
+                      if (urgencyOrder[a.urgency] !== urgencyOrder[b.urgency]) {
+                        return urgencyOrder[b.urgency] - urgencyOrder[a.urgency]
+                      }
+                      
+                      // Then by priority
+                      if (a.priority !== b.priority) {
+                        return b.priority - a.priority
+                      }
+                      
+                      // Finally by days until event (sooner first)
+                      if (a.daysUntilEvent !== null && b.daysUntilEvent !== null) {
+                        return a.daysUntilEvent - b.daysUntilEvent
+                      }
+                      
+                      return 0
+                    })
+                    
+                    if (allTasks.length === 0) {
+                      return (
+                        <div className="text-center py-12 text-gray-500">
+                          <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                          <p>All tasks completed! Great job!</p>
+                        </div>
+                      )
+                    }
+                    
+                    return (
+                      <div className="space-y-4">
+                        {/* Task summary */}
+                        <div className="grid grid-cols-4 gap-4 mb-6">
+                          <div className="text-center p-3 bg-gray-50 rounded-lg">
+                            <div className="text-2xl font-bold">{allTasks.length}</div>
+                            <div className="text-sm text-gray-600">Total Tasks</div>
+                          </div>
+                          <div className="text-center p-3 bg-red-50 rounded-lg">
+                            <div className="text-2xl font-bold text-red-600">
+                              {allTasks.filter(t => t.urgency === "high").length}
+                            </div>
+                            <div className="text-sm text-gray-600">Urgent</div>
+                          </div>
+                          <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                            <div className="text-2xl font-bold text-yellow-600">
+                              {allTasks.filter(t => t.urgency === "medium").length}
+                            </div>
+                            <div className="text-sm text-gray-600">Soon</div>
+                          </div>
+                          <div className="text-center p-3 bg-blue-50 rounded-lg">
+                            <div className="text-2xl font-bold text-blue-600">
+                              {allTasks.filter(t => t.daysUntilEvent !== null && t.daysUntilEvent <= 7).length}
+                            </div>
+                            <div className="text-sm text-gray-600">Within 7 Days</div>
+                          </div>
+                        </div>
+                        
+                        {/* Task list */}
+                        {allTasks.map((task) => (
+                          <div 
+                            key={task.id} 
+                            className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="space-y-1 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-medium">{task.taskName}</h4>
+                                  <Badge 
+                                    variant={task.urgency === "high" ? "destructive" : 
+                                            task.urgency === "medium" ? "warning" : "secondary"}
+                                    className="text-xs"
+                                  >
+                                    {task.urgency === "high" ? "Urgent" : 
+                                     task.urgency === "medium" ? "Soon" : "Normal"}
+                                  </Badge>
+                                  <Badge className={(PROJECT_STATUSES[task.stage]?.color || "bg-gray-500") + " text-white text-xs"}>
+                                    {PROJECT_STATUSES[task.stage]?.label || task.stage}
+                                  </Badge>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  <span className="font-medium">{task.projectName}</span> • {task.clientName}
+                                </div>
+                                {task.daysUntilEvent !== null && (
+                                  <div className="text-sm text-gray-500">
+                                    <CalendarDays className="inline h-3 w-3 mr-1" />
+                                    {task.daysUntilEvent === 0 ? "Event today!" :
+                                     task.daysUntilEvent === 1 ? "Event tomorrow" :
+                                     task.daysUntilEvent < 0 ? Math.abs(task.daysUntilEvent) + " days ago" :
+                                     task.daysUntilEvent + " days until event"}
+                                  </div>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUpdateStageCompletion(
+                                  task.projectId, 
+                                  task.stage, 
+                                  task.taskKey, 
+                                  true
+                                )}
+                                className="ml-4"
+                              >
+                                <Check className="h-4 w-4 mr-1" />
+                                Complete
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  })()}
                 </CardContent>
               </Card>
             </TabsContent>
