@@ -70,11 +70,9 @@ interface Project {
   attendee_count?: number
   status: "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled"
   priority: "low" | "medium" | "high" | "urgent"
-  budget: string
-  speaker_fee?: string
-  spent?: string
-  invoice_sent?: boolean
-  payment_received?: boolean
+  budget: number
+  invoiced_amount: number
+  paid_amount: number
   description?: string
   notes?: string
   created_at: string
@@ -225,18 +223,8 @@ export default function EnhancedProjectManagementPage() {
       setLoading(true)
       
       const [projectsResponse, invoicesResponse] = await Promise.all([
-        fetch("/api/projects", { 
-          credentials: 'include',
-          headers: {
-            'x-dev-admin-bypass': 'dev-admin-access'
-          }
-        }),
-        fetch("/api/invoices", { 
-          credentials: 'include',
-          headers: {
-            'x-dev-admin-bypass': 'dev-admin-access'
-          }
-        })
+        fetch("/api/projects"),
+        fetch("/api/invoices")
       ])
 
       if (projectsResponse.ok) {
@@ -247,10 +235,6 @@ export default function EnhancedProjectManagementPage() {
       if (invoicesResponse.ok) {
         const invoicesData = await invoicesResponse.json()
         setInvoices(invoicesData)
-      } else {
-        // Handle case where invoices API is not working yet
-        console.log("Invoices API not available yet, using empty array")
-        setInvoices([])
       }
     } catch (error) {
       console.error("Error loading project data:", error)
@@ -289,11 +273,7 @@ export default function EnhancedProjectManagementPage() {
     try {
       const response = await fetch(`/api/projects/${projectId}/stage-completion`, {
         method: "PATCH",
-        headers: { 
-          "Content-Type": "application/json",
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           stage,
           task,
@@ -304,7 +284,7 @@ export default function EnhancedProjectManagementPage() {
       if (response.ok) {
         toast({
           title: "Success",
-          description: `Task ${completed ? "completed" : "unmarked"}`
+          description: `Task ${completed ? "completed" : "unmarked"}"
         })
         loadData()
       } else {
@@ -329,11 +309,7 @@ export default function EnhancedProjectManagementPage() {
     try {
       const response = await fetch("/api/invoices", {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           project_id: projectId,
           amount: amount,
@@ -392,17 +368,8 @@ export default function EnhancedProjectManagementPage() {
   // Calculate statistics
   const activeProjects = projects.filter(p => !["completed", "cancelled"].includes(p.status))
   const completedProjects = projects.filter(p => p.status === "completed")
-  const totalRevenue = projects.reduce((sum, p) => {
-    // If payment_received is true, count the speaker_fee as revenue
-    return sum + (p.payment_received ? parseFloat(p.speaker_fee || p.budget || "0") : 0)
-  }, 0)
-  const pendingRevenue = projects.reduce((sum, p) => {
-    // If payment not received and project is active (not completed/cancelled), it's pending revenue
-    if (!p.payment_received && !["completed", "cancelled"].includes(p.status)) {
-      return sum + parseFloat(p.speaker_fee || p.budget || "0")
-    }
-    return sum
-  }, 0)
+  const totalRevenue = projects.reduce((sum, p) => sum + p.paid_amount, 0)
+  const pendingRevenue = projects.reduce((sum, p) => sum + (p.invoiced_amount - p.paid_amount), 0)
   const overdueInvoices = invoices.filter(i => i.status === "overdue").length
 
   return (
@@ -735,10 +702,10 @@ export default function EnhancedProjectManagementPage() {
                           <TableCell>
                             <div>
                               <div className="font-medium">
-                                ${new Intl.NumberFormat('en-US').format(project.payment_received ? parseFloat(project.speaker_fee || project.budget || "0") : 0)}
+                                ${new Intl.NumberFormat('en-US').format(project.paid_amount)}
                               </div>
                               <div className="text-sm text-gray-500">
-                                of ${new Intl.NumberFormat('en-US').format(parseFloat(project.speaker_fee || project.budget || "0"))}
+                                of ${new Intl.NumberFormat('en-US').format(project.budget)}
                               </div>
                             </div>
                           </TableCell>
@@ -754,7 +721,7 @@ export default function EnhancedProjectManagementPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleCreateInvoice(project.id, parseFloat(project.speaker_fee || project.budget || "0"))}
+                                onClick={() => handleCreateInvoice(project.id, project.budget - project.invoiced_amount)}
                               >
                                 <Receipt className="h-4 w-4 mr-1" />
                                 Invoice

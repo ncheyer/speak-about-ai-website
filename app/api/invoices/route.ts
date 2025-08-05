@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const invoices = await sql`
       SELECT 
         i.*,
-        p.event_title as project_title,
+        p.project_name as project_title,
         p.client_name
       FROM invoices i
       LEFT JOIN projects p ON i.project_id = p.id

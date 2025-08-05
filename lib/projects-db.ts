@@ -196,17 +196,22 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
   try {
     console.log("Creating new project:", projectData.project_name)
     
-    // Automatically determine status based on event date
-    const automaticStatus = getAutomaticProjectStatus(
-      projectData.event_date || projectData.deadline || new Date(),
-      projectData.status as ProjectStatus
-    )
-    
-    // Use automatic status if event date exists, otherwise keep provided status
+    // Always start new projects in the invoicing stage
+    // This ensures invoicing and setup is completed first
     const finalProjectData = {
       ...projectData,
-      status: projectData.event_date ? automaticStatus : projectData.status
+      status: "invoicing" // Always start with invoicing & setup
     }
+    // Initialize stage_completion with invoicing tasks marked as due (false = not completed)
+    const initialStageCompletion = {
+      invoicing: {
+        initial_invoice_sent: false,
+        final_invoice_sent: false,
+        kickoff_meeting_planned: false,
+        project_setup_complete: false
+      }
+    }
+    
     const [project] = await sql`
       INSERT INTO projects (
         project_name, client_name, client_email, client_phone, company,
@@ -217,7 +222,7 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         travel_required, accommodation_required, av_requirements, meals_provided,
         special_requests, event_agenda, marketing_materials, contact_person,
         venue_contact, contract_signed, invoice_sent, payment_received,
-        presentation_ready, materials_sent
+        presentation_ready, materials_sent, stage_completion
       ) VALUES (
         ${finalProjectData.project_name}, ${finalProjectData.client_name}, ${finalProjectData.client_email || null}, 
         ${finalProjectData.client_phone || null}, ${finalProjectData.company || null},
@@ -235,7 +240,8 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         ${finalProjectData.marketing_materials || null}, ${finalProjectData.contact_person || null},
         ${finalProjectData.venue_contact || null}, ${finalProjectData.contract_signed || false},
         ${finalProjectData.invoice_sent || false}, ${finalProjectData.payment_received || false},
-        ${finalProjectData.presentation_ready || false}, ${finalProjectData.materials_sent || false}
+        ${finalProjectData.presentation_ready || false}, ${finalProjectData.materials_sent || false},
+        ${JSON.stringify(initialStageCompletion)}
       )
       RETURNING *
     `
