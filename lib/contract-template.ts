@@ -66,7 +66,7 @@ export const DEFAULT_CONTRACT_TEMPLATE: ContractTemplate = {
     {
       id: "compensation",
       title: "Compensation and Payment Terms",
-      content: `**Speaker Fee:** ${{speaker_fee}} USD
+      content: `**Speaker Fee:** ${{deal_value}} USD
 
 **Payment Terms:**
 {{payment_terms}}
