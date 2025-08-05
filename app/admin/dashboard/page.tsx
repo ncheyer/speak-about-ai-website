@@ -33,10 +33,14 @@ import {
   Database,
   ExternalLink,
   FileText,
+  List,
+  Kanban,
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { DealsKanban } from "@/components/deals-kanban"
+import { AdminSidebar } from "@/components/admin-sidebar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface Deal {
   id: number
@@ -92,6 +96,7 @@ export default function AdminDashboard() {
   const [submitting, setSubmitting] = useState(false)
   const [databaseError, setDatabaseError] = useState<string | null>(null)
   const [tableExists, setTableExists] = useState(true)
+  const [viewMode, setViewMode] = useState<"pipeline" | "list">("pipeline")
 
   const [formData, setFormData] = useState({
     clientName: "",
@@ -363,58 +368,31 @@ export default function AdminDashboard() {
     .reduce((sum, deal) => sum + deal.deal_value, 0)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">CRM Dashboard</h1>
-            <p className="mt-2 text-gray-600">Manage deals and event bookings</p>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex-1 ml-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">CRM Dashboard</h1>
+              <p className="mt-2 text-gray-600">Manage deals and event bookings</p>
+            </div>
+            <div className="flex gap-4">
+              <Button 
+                onClick={handleShowCreateForm} 
+                disabled={!tableExists}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                New Deal
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-4">
-            <Link href="/admin/manage">
-              <Button>
-                <BarChart3 className="mr-2 h-4 w-4" />
-                Master Admin Panel
-              </Button>
-            </Link>
-            <Link href="/admin/speakers">
-              <Button variant="outline">
-                <Users className="mr-2 h-4 w-4" />
-                Speaker Management
-              </Button>
-            </Link>
-            <Link href="/admin/projects">
-              <Button variant="outline">
-                <CheckSquare className="mr-2 h-4 w-4" />
-                Project Management
-              </Button>
-            </Link>
-            <Link href="/admin/contracts">
-              <Button variant="outline">
-                <FileText className="mr-2 h-4 w-4" />
-                Contract Management
-              </Button>
-            </Link>
-            <Link href="/debug-neon">
-              <Button variant="outline">
-                <Database className="mr-2 h-4 w-4" />
-                Debug Database
-              </Button>
-            </Link>
-            <Button 
-              onClick={handleShowCreateForm} 
-              disabled={!tableExists}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              New Deal
-            </Button>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
-          </div>
-        </div>
 
         {/* Database Error Alert */}
         {databaseError && !tableExists && (
@@ -741,9 +719,11 @@ export default function AdminDashboard() {
           </Card>
         )}
 
-        {/* Deals Kanban View */}
+        {/* Deals Management Section */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900">Deal Pipeline</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-900">Deal Management</h2>
+          </div>
 
           {!tableExists ? (
             <Card>
@@ -769,7 +749,118 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           ) : (
-            <DealsKanban />
+            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "pipeline" | "list")} className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2 max-w-md">
+                <TabsTrigger value="pipeline" className="flex items-center gap-2">
+                  <Kanban className="h-4 w-4" />
+                  Pipeline View
+                </TabsTrigger>
+                <TabsTrigger value="list" className="flex items-center gap-2">
+                  <List className="h-4 w-4" />
+                  List View
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="pipeline" className="space-y-4">
+                <Card>
+                  <CardContent className="p-6 overflow-x-auto">
+                    <div className="min-w-[1200px]">
+                      <DealsKanban />
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="list" className="space-y-4">
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 border-b">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {filteredDeals.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                                No deals found matching your filters
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredDeals.map((deal) => (
+                              <tr key={deal.id} className="hover:bg-gray-50 transition-colors">
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900">{deal.client_name}</div>
+                                    <div className="text-sm text-gray-500">{deal.company}</div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900">{deal.event_title}</div>
+                                    <div className="text-sm text-gray-500">{deal.event_location}</div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  ${new Intl.NumberFormat('en-US', { 
+                                    minimumFractionDigits: 0,
+                                    maximumFractionDigits: 0 
+                                  }).format(deal.deal_value)}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <Badge 
+                                    className={`${DEAL_STATUSES[deal.status].color} text-white`}
+                                  >
+                                    {DEAL_STATUSES[deal.status].label}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <Badge 
+                                    variant="outline"
+                                    className={PRIORITY_COLORS[deal.priority]}
+                                  >
+                                    {deal.priority.toUpperCase()}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {new Date(deal.event_date).toLocaleDateString()}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => setSelectedDeal(deal)}
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => handleEdit(deal)}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           )}
         </div>
 
@@ -860,6 +951,7 @@ export default function AdminDashboard() {
             </Card>
           </div>
         )}
+        </div>
       </div>
     </div>
   )

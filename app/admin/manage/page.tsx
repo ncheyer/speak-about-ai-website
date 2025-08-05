@@ -37,6 +37,7 @@ import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { DealsKanban } from "@/components/deals-kanban"
 import { ProjectsKanban } from "@/components/projects-kanban"
+import { AdminSidebar } from "@/components/admin-sidebar"
 
 // Type definitions
 interface Speaker {
@@ -380,29 +381,22 @@ export default function MasterAdminPanel() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-4">
-            <Link href="/admin/dashboard">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Dashboard
-              </Button>
-            </Link>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex-1 ml-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Master Admin Panel</h1>
               <p className="mt-2 text-gray-600">Manage speakers, deals, and projects from one place</p>
             </div>
           </div>
-          <div className="flex gap-4">
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
-          </div>
-        </div>
 
         {/* Overview Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -1005,6 +999,7 @@ export default function MasterAdminPanel() {
             )}
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   )

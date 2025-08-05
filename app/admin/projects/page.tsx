@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { ProjectsKanban } from "@/components/projects-kanban"
+import { AdminSidebar } from "@/components/admin-sidebar"
 import { 
   Calendar,
   Clock,
@@ -399,22 +400,20 @@ export default function ProjectManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <div className="flex items-center gap-4">
-              <Link href="/admin/dashboard">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Dashboard
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Project Management</h1>
-                <p className="mt-2 text-gray-600">Track and manage all active projects</p>
-              </div>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex-1 ml-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Project Management</h1>
+              <p className="mt-2 text-gray-600">Track and manage all active projects</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -1088,6 +1087,7 @@ export default function ProjectManagement() {
             </Card>
           </div>
         )}
+        </div>
       </div>
     </div>
   )
