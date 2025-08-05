@@ -61,7 +61,7 @@ interface Project {
   event_location: string
   event_type: string
   attendee_count?: number
-  status: "planning" | "contracts_signed" | "pre_event" | "event_week" | "completed" | "cancelled"
+  status: "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "completed" | "cancelled"
   priority: "low" | "medium" | "high" | "urgent"
   budget: number
   invoiced_amount: number
@@ -99,18 +99,50 @@ interface Invoice {
 }
 
 const PROJECT_STATUSES = {
-  planning: { label: "Planning", color: "bg-blue-500", stage: 1 },
-  contracts_signed: { label: "Contracts Signed", color: "bg-green-500", stage: 2 },
-  pre_event: { label: "Pre-Event", color: "bg-yellow-500", stage: 3 },
-  event_week: { label: "Event Week", color: "bg-orange-500", stage: 4 },
-  completed: { label: "Completed", color: "bg-gray-500", stage: 5 },
-  cancelled: { label: "Cancelled", color: "bg-red-500", stage: 0 },
+  invoicing: { 
+    label: "Invoicing & Setup", 
+    color: "bg-blue-500", 
+    stage: 1,
+    description: "Send invoices (net 30 & final), plan kickoff meeting"
+  },
+  logistics_planning: { 
+    label: "Logistics Planning", 
+    color: "bg-purple-500", 
+    stage: 2,
+    description: "Confirm details, A/V requirements, press pack, calendar, vendor onboarding"
+  },
+  pre_event: { 
+    label: "Pre-Event Ready", 
+    color: "bg-yellow-500", 
+    stage: 3,
+    description: "All logistics confirmed, speaker prepared"
+  },
+  event_week: { 
+    label: "Event Week", 
+    color: "bg-orange-500", 
+    stage: 4,
+    description: "Final preparations and event execution"
+  },
+  completed: { 
+    label: "Completed", 
+    color: "bg-green-500", 
+    stage: 5,
+    description: "Event successfully completed" 
+  },
+  cancelled: { 
+    label: "Cancelled", 
+    color: "bg-red-500", 
+    stage: 0,
+    description: "Project cancelled"
+  },
   
   // Legacy status values for backward compatibility
   "2plus_months": { label: "2+ Months Out", color: "bg-blue-500", stage: 1 },
   "1to2_months": { label: "1-2 Months Out", color: "bg-yellow-500", stage: 2 },
   "less_than_month": { label: "Less Than Month", color: "bg-orange-500", stage: 3 },
-  "final_week": { label: "Final Week", color: "bg-red-500", stage: 4 }
+  "final_week": { label: "Final Week", color: "bg-red-500", stage: 4 },
+  planning: { label: "Planning", color: "bg-blue-500", stage: 1 },
+  contracts_signed: { label: "Contracts Signed", color: "bg-green-500", stage: 2 }
 }
 
 const INVOICE_STATUSES = {
@@ -342,17 +374,24 @@ export default function EnhancedProjectManagementPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {Object.entries(PROJECT_STATUSES).map(([status, config]) => {
+                      {Object.entries(PROJECT_STATUSES)
+                        .filter(([status]) => !["2plus_months", "1to2_months", "less_than_month", "final_week", "planning", "contracts_signed"].includes(status))
+                        .map(([status, config]) => {
                         const count = projects.filter(p => p.status === status).length
                         return (
-                          <div key={status} className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <Badge className={`${config?.color || "bg-gray-500"} text-white`}>
-                                {config?.label || status}
-                              </Badge>
-                              <span className="text-sm text-gray-600">Stage {config?.stage || 0}</span>
+                          <div key={status} className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <Badge className={`${config?.color || "bg-gray-500"} text-white`}>
+                                  {config?.label || status}
+                                </Badge>
+                                <span className="text-sm text-gray-600">Stage {config?.stage || 0}</span>
+                              </div>
+                              <span className="font-semibold">{count}</span>
                             </div>
-                            <span className="font-semibold">{count}</span>
+                            {config?.description && (
+                              <p className="text-xs text-gray-500 ml-2">{config.description}</p>
+                            )}
                           </div>
                         )
                       })}
@@ -417,11 +456,12 @@ export default function EnhancedProjectManagementPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="planning">Planning</SelectItem>
-                        <SelectItem value="contracts_signed">Contracts Signed</SelectItem>
-                        <SelectItem value="pre_event">Pre-Event</SelectItem>
+                        <SelectItem value="invoicing">Invoicing & Setup</SelectItem>
+                        <SelectItem value="logistics_planning">Logistics Planning</SelectItem>
+                        <SelectItem value="pre_event">Pre-Event Ready</SelectItem>
                         <SelectItem value="event_week">Event Week</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -574,18 +614,161 @@ export default function EnhancedProjectManagementPage() {
 
             {/* Logistics Tab */}
             <TabsContent value="logistics" className="space-y-6">
+              {/* Stage Workflow Guide */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Event Logistics Overview</CardTitle>
-                  <CardDescription>Manage event details, travel, and logistics</CardDescription>
+                  <CardTitle>Project Workflow Guide</CardTitle>
+                  <CardDescription>Detailed checklist for each project stage</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Stage 1: Invoicing & Setup */}
+                    <Card className="border-l-4 border-l-blue-500">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Badge className="bg-blue-500 text-white">Stage 1</Badge>
+                          Invoicing & Setup
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Send initial invoice (Net 30)</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Send final invoice</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Plan kickoff meeting</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Initial project setup</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Stage 2: Logistics Planning */}
+                    <Card className="border-l-4 border-l-purple-500">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Badge className="bg-purple-500 text-white">Stage 2</Badge>
+                          Logistics Planning
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Confirm all logistical details</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Get A/V requirements</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Send press pack to client</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Confirm event times in speaker's calendar</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Get client's contact number</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Ensure everything is on-hand for speaker</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Fill out vendor onboarding (if necessary)</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Stage 3: Pre-Event Ready */}
+                    <Card className="border-l-4 border-l-yellow-500">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Badge className="bg-yellow-500 text-white">Stage 3</Badge>
+                          Pre-Event Ready
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <span>All logistics confirmed</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <span>Speaker fully prepared</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <span>Client has all materials</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <span>Ready for event execution</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Stage 4: Event Week */}
+                    <Card className="border-l-4 border-l-orange-500">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Badge className="bg-orange-500 text-white">Stage 4</Badge>
+                          Event Week
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-orange-500" />
+                            <span>Final preparations</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-orange-500" />
+                            <span>Event execution</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-orange-500" />
+                            <span>Real-time support</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Active Projects Logistics */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Active Projects - Logistics Overview</CardTitle>
+                  <CardDescription>Current project status and logistics management</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {activeProjects.map((project) => (
-                      <Card key={project.id} className="border-l-4 border-l-orange-500">
+                      <Card key={project.id} className={`border-l-4 ${PROJECT_STATUSES[project.status]?.color?.replace('bg-', 'border-l-') || 'border-l-gray-500'}`}>
                         <CardHeader className="pb-3">
                           <CardTitle className="text-lg">{project.event_title}</CardTitle>
                           <CardDescription>{project.client_name}</CardDescription>
+                          <Badge className={`${PROJECT_STATUSES[project.status]?.color || "bg-gray-500"} text-white w-fit`}>
+                            {PROJECT_STATUSES[project.status]?.label || project.status}
+                          </Badge>
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <div className="flex items-center gap-2 text-sm">
