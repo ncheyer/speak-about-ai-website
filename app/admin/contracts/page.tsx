@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { ContractsManagement } from "@/components/contracts-management"
+import { AdminSidebar } from "@/components/admin-sidebar"
 
 export default function AdminContractsPage() {
   const router = useRouter()
@@ -65,48 +66,25 @@ export default function AdminContractsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <FileText className="w-8 h-8 text-blue-600" />
-              Contract Management
-            </h1>
-            <p className="mt-2 text-gray-600">Create, manage, and track digital contracts and signatures</p>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex-1 ml-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <FileText className="w-8 h-8 text-blue-600" />
+                Contract Management
+              </h1>
+              <p className="mt-2 text-gray-600">Create, manage, and track digital contracts and signatures</p>
+            </div>
           </div>
-          <div className="flex gap-4">
-            <Link href="/admin/dashboard">
-              <Button variant="outline">
-                <BarChart3 className="mr-2 h-4 w-4" />
-                CRM Dashboard
-              </Button>
-            </Link>
-            <Link href="/admin/manage">
-              <Button variant="outline">
-                <Database className="mr-2 h-4 w-4" />
-                Master Admin Panel
-              </Button>
-            </Link>
-            <Link href="/admin/speakers">
-              <Button variant="outline">
-                <Users className="mr-2 h-4 w-4" />
-                Speaker Management
-              </Button>
-            </Link>
-            <Link href="/admin/projects">
-              <Button variant="outline">
-                <CheckSquare className="mr-2 h-4 w-4" />
-                Project Management
-              </Button>
-            </Link>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
-          </div>
-        </div>
 
         {/* Info Alert */}
         <Alert className="mb-8 border-blue-200 bg-blue-50">
@@ -122,8 +100,9 @@ export default function AdminContractsPage() {
           </AlertDescription>
         </Alert>
 
-        {/* Main Content */}
-        <ContractsManagement />
+          {/* Main Content */}
+          <ContractsManagement />
+        </div>
       </div>
     </div>
   )
