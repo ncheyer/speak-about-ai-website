@@ -54,76 +54,52 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 
   const navigationItems = [
     {
-      title: "Dashboard",
-      href: "/admin/dashboard",
+      title: "Master Panel",
+      href: "/admin/manage",
+      icon: Settings,
+      description: "System Control",
+      color: "text-slate-600",
+      bgColor: "bg-slate-50"
+    },
+    {
+      title: "CRM",
+      href: "/admin/crm",
       icon: BarChart3,
-      description: "CRM & Analytics",
+      description: "Deals & Contracts",
       color: "text-blue-600",
       bgColor: "bg-blue-50"
     },
     {
-      title: "Master Panel",
-      href: "/admin/manage",
-      icon: Settings,
-      description: "Overview & Control",
-      color: "text-purple-600",
-      bgColor: "bg-purple-50"
-    },
-    {
-      title: "Speakers",
-      href: "/admin/speakers",
-      icon: Users,
-      description: "Talent Management",
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50"
-    },
-    {
-      title: "Projects",
+      title: "Project Management",
       href: "/admin/projects",
       icon: CheckSquare,
-      description: "Task Tracking",
+      description: "Live Projects & Invoicing",
       color: "text-orange-600",
       bgColor: "bg-orange-50"
     },
     {
-      title: "Contracts",
-      href: "/admin/contracts",
-      icon: FileText,
-      description: "Legal Documents",
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50"
-    },
-    {
-      title: "Upload",
-      href: "/admin/upload",
-      icon: Upload,
-      description: "File Management",
-      color: "text-teal-600",
-      bgColor: "bg-teal-50"
+      title: "Speaker Management",
+      href: "/admin/speakers",
+      icon: Users,
+      description: "Profiles & Content",
+      color: "text-green-600",
+      bgColor: "bg-green-50"
     },
     {
       title: "Analytics",
       href: "/admin/analytics",
       icon: TrendingUp,
-      description: "Website Stats",
+      description: "Website Insights",
       color: "text-purple-600",
       bgColor: "bg-purple-50"
     },
     {
-      title: "Wishlists",
-      href: "/admin/wishlists",
-      icon: Heart,
-      description: "Speaker Favorites",
-      color: "text-pink-600",
-      bgColor: "bg-pink-50"
-    },
-    {
-      title: "Emails",
-      href: "/admin/emails",
-      icon: Mail,
-      description: "Notifications",
-      color: "text-cyan-600",
-      bgColor: "bg-cyan-50"
+      title: "Client Portal",
+      href: "/admin/clients",
+      icon: Users,
+      description: "Client Access",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50"
     },
     {
       title: "Database",
