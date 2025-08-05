@@ -104,7 +104,13 @@ const PROJECT_STATUSES = {
   pre_event: { label: "Pre-Event", color: "bg-yellow-500", stage: 3 },
   event_week: { label: "Event Week", color: "bg-orange-500", stage: 4 },
   completed: { label: "Completed", color: "bg-gray-500", stage: 5 },
-  cancelled: { label: "Cancelled", color: "bg-red-500", stage: 0 }
+  cancelled: { label: "Cancelled", color: "bg-red-500", stage: 0 },
+  
+  // Legacy status values for backward compatibility
+  "2plus_months": { label: "2+ Months Out", color: "bg-blue-500", stage: 1 },
+  "1to2_months": { label: "1-2 Months Out", color: "bg-yellow-500", stage: 2 },
+  "less_than_month": { label: "Less Than Month", color: "bg-orange-500", stage: 3 },
+  "final_week": { label: "Final Week", color: "bg-red-500", stage: 4 }
 }
 
 const INVOICE_STATUSES = {
@@ -341,10 +347,10 @@ export default function EnhancedProjectManagementPage() {
                         return (
                           <div key={status} className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <Badge className={`${config.color} text-white`}>
-                                {config.label}
+                              <Badge className={`${config?.color || "bg-gray-500"} text-white`}>
+                                {config?.label || status}
                               </Badge>
-                              <span className="text-sm text-gray-600">Stage {config.stage}</span>
+                              <span className="text-sm text-gray-600">Stage {config?.stage || 0}</span>
                             </div>
                             <span className="font-semibold">{count}</span>
                           </div>
@@ -458,8 +464,8 @@ export default function EnhancedProjectManagementPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge className={`${PROJECT_STATUSES[project.status].color} text-white`}>
-                              {PROJECT_STATUSES[project.status].label}
+                            <Badge className={`${PROJECT_STATUSES[project.status]?.color || "bg-gray-500"} text-white`}>
+                              {PROJECT_STATUSES[project.status]?.label || project.status}
                             </Badge>
                           </TableCell>
                           <TableCell>
