@@ -57,6 +57,7 @@
     "graphql": "latest",
     "input-otp": "latest",
     "jspdf": "^2.5.2",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.454.0",
     "marked": "latest",
     "next": "15.2.4",

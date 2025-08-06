@@ -53,6 +53,7 @@ import {
 } from "lucide-react"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
+import { InvoicePDFDialog } from "@/components/invoice-pdf-viewer"
 
 interface Project {
   id: number
@@ -213,6 +214,7 @@ export default function EnhancedProjectManagementPage() {
   const [showCreateInvoice, setShowCreateInvoice] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showCreateProject, setShowCreateProject] = useState(false)
+  const [selectedInvoiceForPDF, setSelectedInvoiceForPDF] = useState<{id: number, number: string} | null>(null)
   const [newProjectData, setNewProjectData] = useState({
     project_name: "",
     event_date: "",
@@ -290,6 +292,17 @@ export default function EnhancedProjectManagementPage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const formatEventDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'N/A'
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return 'N/A'
+      return date.toLocaleDateString()
+    } catch {
+      return 'N/A'
     }
   }
 
@@ -634,7 +647,7 @@ export default function EnhancedProjectManagementPage() {
         credentials: 'include',
         body: JSON.stringify({
           status: newStatus,
-          paid_date: newStatus === "paid" ? new Date().toISOString() : null
+          payment_date: newStatus === "paid" ? new Date().toISOString() : null
         })
       })
 
@@ -657,6 +670,42 @@ export default function EnhancedProjectManagementPage() {
       toast({
         title: "Error",
         description: "Failed to update invoice",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleDeleteInvoice = async (invoiceId: number) => {
+    if (!confirm("Are you sure you want to delete this invoice?")) return
+    
+    try {
+      const response = await fetch(`/api/invoices/${invoiceId}`, {
+        method: "DELETE",
+        headers: { 
+          'x-dev-admin-bypass': 'dev-admin-access'
+        },
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Invoice deleted successfully"
+        })
+        loadData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to delete invoice",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error deleting invoice:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete invoice",
         variant: "destructive"
       })
     }
@@ -841,7 +890,7 @@ export default function EnhancedProjectManagementPage() {
                     <div className="space-y-3">
                       {activeProjects
                         .filter(p => p.event_date)
-                        .sort((a, b) => new Date(a.event_date + 'T00:00:00').getTime() - new Date(b.event_date + 'T00:00:00').getTime())
+                        .sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
                         .slice(0, 5)
                         .map((project) => (
                           <div key={project.id} className="flex items-center justify-between">
@@ -851,10 +900,10 @@ export default function EnhancedProjectManagementPage() {
                             </div>
                             <div className="text-right">
                               <div className="text-sm font-medium">
-                                {project.event_date ? new Date(project.event_date + 'T00:00:00').toLocaleDateString() : 'N/A'}
+                                {formatEventDate(project.event_date)}
                               </div>
                               <div className="text-xs text-gray-500">
-                                {Math.ceil((new Date(project.event_date + 'T00:00:00').getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days
+                                {getTimeUntilEvent(project.event_date).text}
                               </div>
                             </div>
                           </div>
@@ -902,7 +951,7 @@ export default function EnhancedProjectManagementPage() {
                             <CardContent className="space-y-4">
                               <div className="flex items-center gap-2 text-sm">
                                 <CalendarDays className="h-4 w-4 text-gray-500" />
-                                {project.event_date ? new Date(project.event_date + 'T00:00:00').toLocaleDateString() : 'N/A'}
+                                {formatEventDate(project.event_date)}
                               </div>
                               <div className="flex items-center gap-2 text-sm">
                                 <MapPin className="h-4 w-4 text-gray-500" />
@@ -1399,7 +1448,7 @@ export default function EnhancedProjectManagementPage() {
                       
                       // Calculate days until event
                       const daysUntilEvent = project.event_date 
-                        ? Math.ceil((new Date(project.event_date + 'T00:00:00').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                        ? Math.ceil((new Date(project.event_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
                         : null
                       
                       // Add tasks from current stage
@@ -1874,7 +1923,7 @@ export default function EnhancedProjectManagementPage() {
                               {new Date(invoice.due_date).toLocaleDateString()}
                             </TableCell>
                             <TableCell>
-                              <div className="flex gap-2">
+                              <div className="flex gap-1">
                                 {invoice.status !== "paid" && (
                                   <Button 
                                     size="sm" 
@@ -1882,22 +1931,33 @@ export default function EnhancedProjectManagementPage() {
                                     className="text-green-600 hover:text-green-700"
                                     onClick={() => handleUpdateInvoiceStatus(invoice.id, "paid")}
                                   >
-                                    <Check className="h-4 w-4 mr-1" />
-                                    Mark Paid
+                                    <Check className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {invoice.status === "draft" && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    className="text-blue-600 hover:text-blue-700"
+                                    onClick={() => handleUpdateInvoiceStatus(invoice.id, "sent")}
+                                  >
+                                    <Send className="h-4 w-4" />
                                   </Button>
                                 )}
                                 <Button 
                                   size="sm" 
                                   variant="ghost"
-                                  onClick={() => {
-                                    // Download invoice (implement PDF generation later)
-                                    toast({
-                                      title: "Coming Soon",
-                                      description: "PDF download functionality will be available soon"
-                                    })
-                                  }}
+                                  onClick={() => setSelectedInvoiceForPDF({id: invoice.id, number: invoice.invoice_number})}
                                 >
                                   <Download className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  className="text-red-600 hover:text-red-700"
+                                  onClick={() => handleDeleteInvoice(invoice.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
                             </TableCell>
@@ -2181,7 +2241,7 @@ export default function EnhancedProjectManagementPage() {
                 <div>
                   <DialogTitle>Task Management - {selectedProject.event_title}</DialogTitle>
                   <DialogDescription>
-                    Manage stage completion for {selectedProject.client_name} ({selectedProject.event_date ? new Date(selectedProject.event_date + 'T00:00:00').toLocaleDateString() : 'N/A'})
+                    Manage stage completion for {selectedProject.client_name} ({formatEventDate(selectedProject.event_date)})
                   </DialogDescription>
                 </div>
                 <Button
@@ -2416,6 +2476,14 @@ export default function EnhancedProjectManagementPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Invoice PDF Dialog */}
+      <InvoicePDFDialog
+        invoiceId={selectedInvoiceForPDF?.id || null}
+        invoiceNumber={selectedInvoiceForPDF?.number || ""}
+        open={!!selectedInvoiceForPDF}
+        onOpenChange={(open) => !open && setSelectedInvoiceForPDF(null)}
+      />
     </div>
   )
 }
