@@ -1,12 +1,13 @@
 "use client"
 
+import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, Download, Mail } from "lucide-react"
 import Link from "next/link"
 
-export default function ContractSuccessPage() {
+function ContractSuccessContent() {
   const searchParams = useSearchParams()
   const contractNumber = searchParams.get("contract")
 
@@ -55,5 +56,17 @@ export default function ContractSuccessPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function ContractSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">Loading...</div>
+      </div>
+    }>
+      <ContractSuccessContent />
+    </Suspense>
   )
 }

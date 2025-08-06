@@ -1,9 +1,10 @@
 "use client"
 
+import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { ProposalView } from "../[token]/proposal-view"
 
-export default function ProposalPreviewPage() {
+function ProposalPreviewContent() {
   const searchParams = useSearchParams()
   const dataParam = searchParams.get("data")
   
@@ -72,4 +73,16 @@ export default function ProposalPreviewPage() {
       </div>
     )
   }
+}
+
+export default function ProposalPreviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-500">Loading proposal...</p>
+      </div>
+    }>
+      <ProposalPreviewContent />
+    </Suspense>
+  )
 }
