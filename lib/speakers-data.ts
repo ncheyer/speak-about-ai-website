@@ -403,12 +403,47 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
   try {
-    // During build time, use local speakers instead of making API calls
-    if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_BASE_URL) {
-      console.log("Build time: Using local speakers data")
-      return localSpeakers
+    // For server-side rendering and static generation, try to fetch from database directly
+    if (typeof window === 'undefined') {
+      // We're on the server - try to import the database function directly
+      try {
+        const { getAllSpeakers: getAllSpeakersFromDB } = await import('./speakers-db')
+        const dbSpeakers = await getAllSpeakersFromDB()
+        if (dbSpeakers && dbSpeakers.length > 0) {
+          console.log(`Fetched ${dbSpeakers.length} speakers from database directly`)
+          // Transform database speakers to match our Speaker interface
+          return dbSpeakers.map((speaker: any) => ({
+            slug: speaker.slug || speaker.name?.toLowerCase().replace(/\s+/g, '-') || `speaker-${speaker.id}`,
+            name: speaker.name,
+            title: speaker.title || speaker.one_liner || '',
+            bio: speaker.bio || speaker.short_bio || '',
+            image: speaker.headshot_url || speaker.profile_photo_url,
+            imagePosition: speaker.image_position || 'center',
+            imageOffsetY: speaker.image_offset || '0%',
+            programs: speaker.programs || speaker.primary_topics || [],
+            industries: speaker.industries || speaker.industries_served || [],
+            fee: speaker.speaking_fee_range || 'Please Inquire',
+            feeRange: speaker.speaking_fee_range,
+            location: speaker.location || speaker.travel_preferences,
+            linkedin: speaker.social_media?.linkedin,
+            twitter: speaker.social_media?.twitter,
+            website: speaker.website,
+            featured: speaker.featured || speaker.preferred_partner || false,
+            videos: speaker.videos || [],
+            testimonials: speaker.testimonials || [],
+            tags: speaker.keywords || [],
+            topics: speaker.topics || speaker.primary_topics || [],
+            listed: speaker.listed !== false && speaker.active !== false,
+            expertise: speaker.expertise || speaker.primary_topics || [],
+            ranking: speaker.ranking || speaker.internal_rating || 0,
+          }))
+        }
+      } catch (dbError) {
+        console.log("Could not fetch from database directly:", dbError)
+      }
     }
     
+    // Fallback to API call for client-side or if direct DB access fails
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
                    (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')
     
