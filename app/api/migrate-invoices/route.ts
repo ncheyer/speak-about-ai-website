@@ -12,6 +12,9 @@ export async function POST(request: NextRequest) {
 
     console.log("Running invoices and portal tables migration...")
 
+    // Enable pgcrypto extension for gen_random_bytes
+    await sql`CREATE EXTENSION IF NOT EXISTS pgcrypto`
+
     // Create invoices table
     await sql`
       CREATE TABLE IF NOT EXISTS invoices (
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
         client_email VARCHAR(255) UNIQUE NOT NULL,
         client_phone VARCHAR(20),
         company VARCHAR(255),
-        access_token VARCHAR(100) UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(32), 'hex'),
+        access_token VARCHAR(100) UNIQUE NOT NULL DEFAULT substr(md5(random()::text || clock_timestamp()::text), 1, 64),
         is_active BOOLEAN DEFAULT true,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         last_login TIMESTAMP WITH TIME ZONE
@@ -57,7 +60,7 @@ export async function POST(request: NextRequest) {
         speaker_id INTEGER REFERENCES speakers(id) ON DELETE CASCADE,
         speaker_name VARCHAR(255) NOT NULL,
         speaker_email VARCHAR(255) UNIQUE NOT NULL,
-        access_token VARCHAR(100) UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(32), 'hex'),
+        access_token VARCHAR(100) UNIQUE NOT NULL DEFAULT substr(md5(random()::text || clock_timestamp()::text), 1, 64),
         is_active BOOLEAN DEFAULT true,
         profile_status VARCHAR(20) DEFAULT 'approved' CHECK (profile_status IN ('pending', 'approved', 'needs_review')),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

@@ -42,9 +42,35 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // Validate required fields
-    if (!body.project_id || !body.amount) {
+    if (!body.amount) {
       return NextResponse.json(
-        { error: "project_id and amount are required" },
+        { error: "amount is required" },
+        { status: 400 }
+      )
+    }
+
+    // If project_id is provided, fetch project details
+    let clientName = body.client_name
+    let clientEmail = body.client_email
+    let company = body.company
+    
+    if (body.project_id) {
+      const [project] = await sql`
+        SELECT client_name, client_email, company 
+        FROM projects 
+        WHERE id = ${body.project_id}
+      `
+      if (project) {
+        clientName = clientName || project.client_name
+        clientEmail = clientEmail || project.client_email
+        company = company || project.company
+      }
+    }
+
+    // Validate that we have client info
+    if (!clientName || !clientEmail) {
+      return NextResponse.json(
+        { error: "client_name and client_email are required" },
         { status: 400 }
       )
     }
@@ -57,18 +83,24 @@ export async function POST(request: NextRequest) {
       INSERT INTO invoices (
         project_id,
         invoice_number,
+        client_name,
+        client_email,
+        company,
         amount,
         status,
         issue_date,
         due_date,
         notes
       ) VALUES (
-        ${body.project_id},
+        ${body.project_id || null},
         ${invoiceNumber},
+        ${clientName},
+        ${clientEmail},
+        ${company || null},
         ${body.amount},
         ${body.status || 'draft'},
-        ${new Date().toISOString()},
-        ${body.due_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()},
+        ${new Date().toISOString().split('T')[0]},
+        ${body.due_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]},
         ${body.notes || ''}
       )
       RETURNING *
