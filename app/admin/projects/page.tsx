@@ -1339,7 +1339,7 @@ export default function EnhancedProjectManagementPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {project.event_date ? new Date(project.event_date + 'T00:00:00').toLocaleDateString() : 'N/A'}
+                            {formatEventDate(project.event_date)}
                           </TableCell>
                           <TableCell>
                             <div>
@@ -2231,7 +2231,7 @@ export default function EnhancedProjectManagementPage() {
                         <CardContent className="space-y-3">
                           <div className="flex items-center gap-2 text-sm">
                             <Calendar className="h-4 w-4 text-gray-500" />
-                            {project.event_date ? new Date(project.event_date + 'T00:00:00').toLocaleDateString() : 'N/A'}
+                            {formatEventDate(project.event_date)}
                           </div>
                           <div className="flex items-center gap-2 text-sm">
                             <MapPin className="h-4 w-4 text-gray-500" />

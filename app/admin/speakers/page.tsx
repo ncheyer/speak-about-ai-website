@@ -24,11 +24,29 @@ import {
   AlertTriangle,
   Plus,
   Filter,
-  Trash2
+  Trash2,
+  UserPlus,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Send,
+  FileText,
+  Calendar
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 interface Speaker {
   id: number
@@ -64,17 +82,59 @@ interface Speaker {
   updated_at: string
 }
 
+interface SpeakerApplication {
+  id: number
+  first_name: string
+  last_name: string
+  email: string
+  phone?: string
+  website?: string
+  linkedin_url?: string
+  location: string
+  title: string
+  company: string
+  bio: string
+  expertise_areas: string[]
+  speaking_topics: string
+  years_speaking?: number
+  previous_engagements?: string
+  video_links: string[]
+  reference_contacts?: string
+  speaking_fee_range?: string
+  travel_requirements?: string
+  available_formats: string[]
+  status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'invited'
+  admin_notes?: string
+  rejection_reason?: string
+  invitation_sent_at?: string
+  account_created_at?: string
+  created_at: string
+  updated_at: string
+  reviewed_at?: string
+  reviewed_by?: string
+}
+
 export default function AdminSpeakersPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [speakers, setSpeakers] = useState<Speaker[]>([])
+  const [applications, setApplications] = useState<SpeakerApplication[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingApplications, setLoadingApplications] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [searchApplications, setSearchApplications] = useState("")
   const [activeFilter, setActiveFilter] = useState("all")
   const [featuredFilter, setFeaturedFilter] = useState("all")
+  const [applicationStatusFilter, setApplicationStatusFilter] = useState("all")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [selectedApplication, setSelectedApplication] = useState<SpeakerApplication | null>(null)
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
+  const [actionType, setActionType] = useState<'approve' | 'reject' | 'invite' | null>(null)
+  const [adminNotes, setAdminNotes] = useState("")
+  const [rejectionReason, setRejectionReason] = useState("")
+  const [processingAction, setProcessingAction] = useState(false)
 
-  // Check authentication and load speakers
+  // Check authentication and load data
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
     if (!isAdminLoggedIn) {
@@ -83,6 +143,7 @@ export default function AdminSpeakersPage() {
     }
     setIsLoggedIn(true)
     loadSpeakers()
+    loadApplications()
   }, [router])
 
   const handleDeleteSpeaker = async (speakerId: number, speakerName: string) => {
@@ -122,6 +183,93 @@ export default function AdminSpeakersPage() {
         variant: "destructive",
       })
     }
+  }
+
+  const loadApplications = async () => {
+    try {
+      setLoadingApplications(true)
+      const response = await fetch("/api/speaker-applications", {
+        headers: {
+          'x-dev-admin-bypass': 'dev-admin-access'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setApplications(data.applications || [])
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to load applications",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error loading applications:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load applications",
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingApplications(false)
+    }
+  }
+
+  const handleApplicationAction = async () => {
+    if (!selectedApplication || !actionType) return
+
+    setProcessingAction(true)
+    try {
+      const response = await fetch(`/api/speaker-applications/${selectedApplication.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-dev-admin-bypass': 'dev-admin-access'
+        },
+        body: JSON.stringify({
+          action: actionType,
+          admin_notes: adminNotes,
+          rejection_reason: actionType === 'reject' ? rejectionReason : undefined
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast({
+          title: "Success",
+          description: data.message || `Application ${actionType} successfully`,
+        })
+        loadApplications()
+        setReviewDialogOpen(false)
+        setSelectedApplication(null)
+        setAdminNotes("")
+        setRejectionReason("")
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || `Failed to ${actionType} application`,
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error(`Error processing application:`, error)
+      toast({
+        title: "Error",
+        description: `Failed to ${actionType} application`,
+        variant: "destructive",
+      })
+    } finally {
+      setProcessingAction(false)
+    }
+  }
+
+  const openReviewDialog = (application: SpeakerApplication, action: 'approve' | 'reject' | 'invite') => {
+    setSelectedApplication(application)
+    setActionType(action)
+    setReviewDialogOpen(true)
   }
 
   const loadSpeakers = async () => {
@@ -168,6 +316,39 @@ export default function AdminSpeakersPage() {
       localStorage.removeItem("adminUser")
       router.push("/admin")
     }
+  }
+
+  const filteredApplications = applications.filter((app) => {
+    const matchesSearch =
+      app.first_name.toLowerCase().includes(searchApplications.toLowerCase()) ||
+      app.last_name.toLowerCase().includes(searchApplications.toLowerCase()) ||
+      app.email.toLowerCase().includes(searchApplications.toLowerCase()) ||
+      app.company.toLowerCase().includes(searchApplications.toLowerCase()) ||
+      app.speaking_topics.toLowerCase().includes(searchApplications.toLowerCase())
+
+    const matchesStatus = applicationStatusFilter === "all" || app.status === applicationStatusFilter
+
+    return matchesSearch && matchesStatus
+  })
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      pending: { label: 'Pending Review', variant: 'secondary' as const, icon: Clock },
+      under_review: { label: 'Under Review', variant: 'outline' as const, icon: FileText },
+      approved: { label: 'Approved', variant: 'default' as const, icon: CheckCircle },
+      rejected: { label: 'Rejected', variant: 'destructive' as const, icon: XCircle },
+      invited: { label: 'Invited', variant: 'default' as const, icon: Send },
+    }
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending
+    const Icon = config.icon
+
+    return (
+      <Badge variant={config.variant} className="text-xs">
+        <Icon className="mr-1 h-3 w-3" />
+        {config.label}
+      </Badge>
+    )
   }
 
   const filteredSpeakers = speakers.filter((speaker) => {
@@ -221,9 +402,23 @@ export default function AdminSpeakersPage() {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Speaker Management</h1>
-              <p className="mt-2 text-gray-600">Manage speaker profiles and information</p>
+              <p className="mt-2 text-gray-600">Manage speaker profiles and applications</p>
             </div>
           </div>
+
+          <Tabs defaultValue="speakers" className="space-y-6">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="speakers" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Speakers ({speakers.length})
+              </TabsTrigger>
+              <TabsTrigger value="applications" className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                Applications ({applications.filter(a => a.status === 'pending').length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="speakers" className="space-y-6">
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -430,6 +625,347 @@ export default function AdminSpeakersPage() {
             </CardContent>
           </Card>
         )}
+            </TabsContent>
+
+            <TabsContent value="applications" className="space-y-6">
+              {/* Application Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {applications.filter(a => a.status === 'pending').length}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Under Review</CardTitle>
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {applications.filter(a => a.status === 'under_review').length}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Approved</CardTitle>
+                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {applications.filter(a => a.status === 'approved').length}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Invited</CardTitle>
+                    <Send className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {applications.filter(a => a.status === 'invited').length}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+                    <XCircle className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {applications.filter(a => a.status === 'rejected').length}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Application Filters */}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex gap-4 flex-wrap">
+                    <div className="flex-1 min-w-[300px]">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search applications..."
+                          value={searchApplications}
+                          onChange={(e) => setSearchApplications(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+                    <Select value={applicationStatusFilter} onValueChange={setApplicationStatusFilter}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Filter by status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Applications</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="under_review">Under Review</SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="invited">Invited</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Applications List */}
+              {loadingApplications ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                  <span className="ml-2">Loading applications...</span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredApplications.map((application) => (
+                    <Card key={application.id}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-3">
+                              <CardTitle className="text-lg">
+                                {application.first_name} {application.last_name}
+                              </CardTitle>
+                              {getStatusBadge(application.status)}
+                            </div>
+                            <CardDescription>
+                              {application.title} at {application.company}
+                            </CardDescription>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            <Calendar className="inline h-3 w-3 mr-1" />
+                            {new Date(application.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-500 mb-1">Contact</p>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <Mail className="h-3 w-3" />
+                                {application.email}
+                              </div>
+                              {application.phone && (
+                                <div className="flex items-center gap-2">
+                                  <Phone className="h-3 w-3" />
+                                  {application.phone}
+                                </div>
+                              )}
+                              {application.location && (
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="h-3 w-3" />
+                                  {application.location}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 mb-1">Links</p>
+                            <div className="space-y-1">
+                              {application.website && (
+                                <div className="flex items-center gap-2">
+                                  <Globe className="h-3 w-3" />
+                                  <a href={application.website} target="_blank" rel="noopener" className="text-blue-600 hover:underline truncate">
+                                    {application.website}
+                                  </a>
+                                </div>
+                              )}
+                              {application.linkedin_url && (
+                                <div className="flex items-center gap-2">
+                                  <Globe className="h-3 w-3" />
+                                  <a href={application.linkedin_url} target="_blank" rel="noopener" className="text-blue-600 hover:underline truncate">
+                                    LinkedIn Profile
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-gray-500 mb-1 text-sm">Bio</p>
+                          <p className="text-sm line-clamp-3">{application.bio}</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-gray-500 mb-1 text-sm">Expertise Areas</p>
+                            <div className="flex flex-wrap gap-1">
+                              {application.expertise_areas.slice(0, 3).map((area, idx) => (
+                                <Badge key={idx} variant="outline" className="text-xs">
+                                  {area}
+                                </Badge>
+                              ))}
+                              {application.expertise_areas.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{application.expertise_areas.length - 3} more
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 mb-1 text-sm">Experience</p>
+                            <p className="text-sm">
+                              {application.years_speaking ? `${application.years_speaking} years speaking` : 'Not specified'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {application.admin_notes && (
+                          <div className="bg-gray-50 p-3 rounded">
+                            <p className="text-gray-500 mb-1 text-sm">Admin Notes</p>
+                            <p className="text-sm">{application.admin_notes}</p>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end gap-2 pt-2">
+                          <Link href={`/admin/speakers/applications/${application.id}`}>
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-3 w-3 mr-1" />
+                              View Details
+                            </Button>
+                          </Link>
+                          {application.status === 'pending' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => openReviewDialog(application, 'approve')}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => openReviewDialog(application, 'reject')}
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                          {application.status === 'approved' && !application.invitation_sent_at && (
+                            <Button
+                              size="sm"
+                              onClick={() => openReviewDialog(application, 'invite')}
+                            >
+                              <Send className="h-3 w-3 mr-1" />
+                              Send Invitation
+                            </Button>
+                          )}
+                          {application.status === 'invited' && (
+                            <Badge variant="outline" className="text-xs">
+                              Invitation sent {new Date(application.invitation_sent_at!).toLocaleDateString()}
+                            </Badge>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                  {filteredApplications.length === 0 && (
+                    <Card>
+                      <CardContent className="text-center py-12">
+                        <UserPlus className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No applications found</h3>
+                        <p className="text-gray-500">
+                          {searchApplications ? "Try adjusting your search terms or filters." : "No applications match the current filters."}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Review Dialog */}
+        <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>
+                {actionType === 'approve' && 'Approve Application'}
+                {actionType === 'reject' && 'Reject Application'}
+                {actionType === 'invite' && 'Send Invitation'}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedApplication && (
+                  <span>{selectedApplication.first_name} {selectedApplication.last_name} - {selectedApplication.email}</span>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="admin_notes">Admin Notes</Label>
+                <Textarea
+                  id="admin_notes"
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  placeholder="Add any internal notes about this decision..."
+                  rows={3}
+                />
+              </div>
+              {actionType === 'reject' && (
+                <div>
+                  <Label htmlFor="rejection_reason">Rejection Reason</Label>
+                  <Textarea
+                    id="rejection_reason"
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="Provide a reason for rejection (optional)..."
+                    rows={3}
+                  />
+                </div>
+              )}
+              {actionType === 'invite' && (
+                <Alert>
+                  <Send className="h-4 w-4" />
+                  <AlertTitle>Invitation Email</AlertTitle>
+                  <AlertDescription>
+                    An invitation email will be sent with a link to create their speaker account. The link will expire in 7 days.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setReviewDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleApplicationAction}
+                disabled={processingAction}
+                variant={actionType === 'reject' ? 'destructive' : 'default'}
+              >
+                {processingAction ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    {actionType === 'approve' && 'Approve'}
+                    {actionType === 'reject' && 'Reject'}
+                    {actionType === 'invite' && 'Send Invitation'}
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         </div>
       </div>
     </div>
