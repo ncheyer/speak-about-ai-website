@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getProposalById, updateProposalStatus } from "@/lib/proposals-db"
 import { getProposalSentEmailTemplate } from "@/lib/email-templates/proposal-sent"
-import { sendEmail } from "@/lib/email"
+import { sendProposalEmail } from "@/lib/email-service-unified"
 
 export async function POST(
   request: Request,
@@ -29,32 +29,25 @@ export async function POST(
     }
     
     // Send email to client with proposal link
-    const proposalLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/proposal/${proposal.access_token}`
-    
-    const emailTemplate = getProposalSentEmailTemplate({
+    const proposalData = {
       clientName: proposal.client_name,
-      clientCompany: proposal.client_company,
-      proposalTitle: proposal.title || `Speaking Engagement Proposal - ${proposal.event_title}`,
-      proposalNumber: proposal.proposal_number,
-      proposalLink,
-      validUntil: proposal.valid_until,
-      senderName: proposal.created_by,
-      senderTitle: "Business Development"
-    })
+      clientEmail: proposal.client_email,
+      eventTitle: proposal.event_title,
+      eventDate: proposal.event_date,
+      eventLocation: proposal.event_location,
+      speakerName: proposal.speaker_name,
+      token: proposal.access_token
+    }
     
     try {
-      await sendEmail({
-        to: proposal.client_email,
-        subject: emailTemplate.subject,
-        html: emailTemplate.html,
-        text: emailTemplate.text
-      })
-      
+      await sendProposalEmail(proposalData)
       console.log("Proposal email sent successfully to", proposal.client_email)
     } catch (emailError) {
       console.error("Failed to send proposal email:", emailError)
       // Don't fail the entire request if email fails
     }
+    
+    const proposalLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/proposal/${proposal.access_token}`
     
     return NextResponse.json({ 
       success: true,

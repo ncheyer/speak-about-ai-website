@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 import { generateSecureToken, hashPassword, validatePassword } from '@/lib/password-utils'
+import { sendPasswordResetEmail } from '@/lib/email-service-unified'
 
 // Initialize Neon client
 const sql = neon(process.env.DATABASE_URL!)
@@ -51,7 +52,15 @@ export async function POST(request: NextRequest) {
         WHERE id = ${speaker.id}
       `
 
-      // In a real application, send email with reset link here
+      // Send password reset email
+      try {
+        await sendPasswordResetEmail(speaker.email, resetToken)
+        console.log('✅ Password reset email sent to:', speaker.email)
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError)
+        // Don't fail the request if email fails - token is still stored
+      }
+
       const response: any = {
         success: true,
         message: 'Password reset link sent to your email address.'

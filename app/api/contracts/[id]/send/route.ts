@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getContractById, updateContractStatus } from "@/lib/contracts-db"
-import { sendContractSigningEmail } from "@/lib/contract-email"
+import { sendContractEmail } from "@/lib/email-service-unified"
 import { requireAdminAuth } from "@/lib/auth-middleware"
 
 interface RouteParams {
@@ -32,22 +32,25 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       }, { status: 400 })
     }
 
-    // Generate signing links
-    const baseUrl = request.headers.get('origin') || process.env.NEXTAUTH_URL || 'http://localhost:3000'
-    const clientSigningLink = `${baseUrl}/contracts/sign/${contract.client_signing_token}`
-    const speakerSigningLink = contract.speaker_signing_token ? 
-      `${baseUrl}/contracts/sign/${contract.speaker_signing_token}` : null
+    // Prepare contract data with token for signing URL
+    const contractData = {
+      ...contract,
+      token: contract.client_signing_token,
+      speakerToken: contract.speaker_signing_token || undefined
+    }
 
     // Send emails
     const emailResults = []
     
     // Send to client
-    const clientEmailSent = await sendContractSigningEmail(contract, 'client', clientSigningLink)
+    const clientEmailSent = await sendContractEmail(contractData, 'client')
     emailResults.push({ recipient: 'client', sent: clientEmailSent })
 
     // Send to speaker if speaker info exists
-    if (contract.speaker_email && speakerSigningLink) {
-      const speakerEmailSent = await sendContractSigningEmail(contract, 'speaker', speakerSigningLink)
+    if (contract.speaker_email && contract.speaker_signing_token) {
+      // Update token for speaker email
+      contractData.token = contract.speaker_signing_token
+      const speakerEmailSent = await sendContractEmail(contractData, 'speaker')
       emailResults.push({ recipient: 'speaker', sent: speakerEmailSent })
     }
 

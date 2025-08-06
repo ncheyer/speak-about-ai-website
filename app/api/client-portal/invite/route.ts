@@ -2,10 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClientInvitation } from "@/lib/client-portal-auth"
 import { requireAdminAuth } from "@/lib/auth-middleware"
 import { getProjectById } from "@/lib/projects-db"
-
-// Email functionality commented out until Resend is installed
-// import { Resend } from 'resend'
-// const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+import { sendClientPortalInvite } from "@/lib/email-service-unified"
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,32 +32,29 @@ export async function POST(request: NextRequest) {
       adminEmail || 'admin@speakaboutai.com'
     )
 
-    // Generate invitation URL
+    // Send invitation email
+    const invitationData = {
+      token,
+      clientName: project.client_name || 'Valued Client',
+      email: clientEmail
+    }
+    
+    try {
+      await sendClientPortalInvite(invitationData)
+      console.log('✅ Client portal invitation sent to:', clientEmail)
+    } catch (emailError) {
+      console.error('Error sending invitation email:', emailError)
+      // Don't fail the request if email fails
+    }
+    
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `https://${request.headers.get('host')}`
     const invitationUrl = `${baseUrl}/portal/client/accept-invite?token=${token}`
-
-    // Email functionality commented out until Resend is installed
-    // if (resend) {
-    //   try {
-    //     await resend.emails.send({
-    //       from: 'Speak About AI <hello@speakaboutai.com>',
-    //       to: clientEmail,
-    //       subject: `You're invited to manage your event: ${project.event_name || project.project_name}`,
-    //       html: emailHtml
-    //     })
-    //   } catch (emailError) {
-    //     console.error('Error sending invitation email:', emailError)
-    //   }
-    // }
-    
-    console.log('📧 Email would be sent to:', clientEmail)
-    console.log('🔗 Invitation URL:', invitationUrl)
 
     return NextResponse.json({
       success: true,
       invitationId,
       invitationUrl,
-      message: "Invitation created successfully (email will be sent when Resend is configured)"
+      message: "Invitation created and email sent successfully"
     })
 
   } catch (error) {

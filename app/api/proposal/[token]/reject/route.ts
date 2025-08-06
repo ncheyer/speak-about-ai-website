@@ -47,25 +47,9 @@ export async function POST(
     
     // Send notification email to admin about rejection
     try {
-      const { getProposalRejectedEmailTemplate } = await import("@/lib/email-templates/proposal-rejected")
-      const { sendEmail } = await import("@/lib/email")
+      const { sendProposalRejectedEmail } = await import("@/lib/email-service-unified")
       
-      const emailTemplate = getProposalRejectedEmailTemplate({
-        proposalNumber: proposal.proposal_number,
-        proposalTitle: proposal.title || `Speaking Engagement - ${proposal.event_title}`,
-        clientName: proposal.client_name,
-        clientCompany: proposal.client_company,
-        rejectedBy: data.rejected_by,
-        rejectionReason: data.rejection_reason,
-        totalAmount: proposal.total_investment
-      })
-      
-      await sendEmail({
-        to: process.env.ADMIN_EMAIL || 'hello@speakaboutai.com',
-        subject: emailTemplate.subject,
-        html: emailTemplate.html,
-        text: emailTemplate.text
-      })
+      await sendProposalRejectedEmail(proposal, data.rejection_reason)
     } catch (emailError) {
       console.error("Failed to send rejection notification:", emailError)
     }

@@ -55,27 +55,14 @@ export async function POST(
     
     // Send notification email to admin about acceptance
     try {
-      const { getProposalAcceptedEmailTemplate } = await import("@/lib/email-templates/proposal-accepted")
-      const { sendEmail } = await import("@/lib/email")
+      const { sendProposalAcceptedEmail } = await import("@/lib/email-service-unified")
       
-      const emailTemplate = getProposalAcceptedEmailTemplate({
-        proposalNumber: proposal.proposal_number,
-        proposalTitle: proposal.title || `Speaking Engagement - ${proposal.event_title}`,
-        clientName: proposal.client_name,
-        clientCompany: proposal.client_company,
-        acceptedBy: data.accepted_by,
-        acceptedByTitle: data.accepted_by_title,
-        acceptanceNotes: data.acceptance_notes,
-        eventDate: proposal.event_date,
-        totalAmount: proposal.total_investment
-      })
+      const proposalData = {
+        ...proposal,
+        speakerFee: proposal.total_investment
+      }
       
-      await sendEmail({
-        to: process.env.ADMIN_EMAIL || 'hello@speakaboutai.com',
-        subject: emailTemplate.subject,
-        html: emailTemplate.html,
-        text: emailTemplate.text
-      })
+      await sendProposalAcceptedEmail(proposalData)
     } catch (emailError) {
       console.error("Failed to send acceptance notification:", emailError)
     }
