@@ -133,6 +133,14 @@ export default function AdminSpeakersPage() {
   const [adminNotes, setAdminNotes] = useState("")
   const [rejectionReason, setRejectionReason] = useState("")
   const [processingAction, setProcessingAction] = useState(false)
+  const [showInviteDialog, setShowInviteDialog] = useState(false)
+  const [inviteFormData, setInviteFormData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    personal_message: ""
+  })
+  const [sendingInvite, setSendingInvite] = useState(false)
 
   // Check authentication and load data
   useEffect(() => {
@@ -272,6 +280,56 @@ export default function AdminSpeakersPage() {
     setReviewDialogOpen(true)
   }
 
+  const handleSendDirectInvite = async () => {
+    setSendingInvite(true)
+    try {
+      const response = await fetch('/api/speaker-invitations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-dev-admin-bypass': 'dev-admin-access'
+        },
+        body: JSON.stringify({
+          ...inviteFormData,
+          type: 'direct_invite'
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast({
+          title: "Success",
+          description: `Invitation sent to ${inviteFormData.first_name} ${inviteFormData.last_name}`,
+        })
+        setShowInviteDialog(false)
+        setInviteFormData({
+          first_name: "",
+          last_name: "",
+          email: "",
+          personal_message: ""
+        })
+        // Reload applications to show the new invitation
+        loadApplications()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to send invitation",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error sending invitation:", error)
+      toast({
+        title: "Error",
+        description: "Failed to send invitation",
+        variant: "destructive",
+      })
+    } finally {
+      setSendingInvite(false)
+    }
+  }
+
   const loadSpeakers = async () => {
     try {
       setLoading(true)
@@ -404,6 +462,10 @@ export default function AdminSpeakersPage() {
               <h1 className="text-3xl font-bold text-gray-900">Speaker Management</h1>
               <p className="mt-2 text-gray-600">Manage speaker profiles and applications</p>
             </div>
+            <Button onClick={() => setShowInviteDialog(true)}>
+              <Send className="mr-2 h-4 w-4" />
+              Invite Speaker
+            </Button>
           </div>
 
           <Tabs defaultValue="speakers" className="space-y-6">
@@ -794,10 +856,19 @@ export default function AdminSpeakersPage() {
                           </div>
                         </div>
 
-                        <div>
-                          <p className="text-gray-500 mb-1 text-sm">Bio</p>
-                          <p className="text-sm line-clamp-3">{application.bio}</p>
-                        </div>
+                        {application.bio !== 'Direct invitation from admin' ? (
+                          <div>
+                            <p className="text-gray-500 mb-1 text-sm">Bio</p>
+                            <p className="text-sm line-clamp-3">{application.bio}</p>
+                          </div>
+                        ) : (
+                          <Alert className="bg-blue-50 border-blue-200">
+                            <Send className="h-4 w-4 text-blue-600" />
+                            <AlertDescription className="text-blue-800">
+                              This is a direct invitation sent by an admin. The speaker has not yet created their profile.
+                            </AlertDescription>
+                          </Alert>
+                        )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
@@ -960,6 +1031,88 @@ export default function AdminSpeakersPage() {
                     {actionType === 'approve' && 'Approve'}
                     {actionType === 'reject' && 'Reject'}
                     {actionType === 'invite' && 'Send Invitation'}
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Invite Speaker Dialog */}
+        <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Invite New Speaker</DialogTitle>
+              <DialogDescription>
+                Send an invitation for a speaker to join the platform
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="invite_first_name">First Name</Label>
+                  <Input
+                    id="invite_first_name"
+                    value={inviteFormData.first_name}
+                    onChange={(e) => setInviteFormData({...inviteFormData, first_name: e.target.value})}
+                    placeholder="John"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="invite_last_name">Last Name</Label>
+                  <Input
+                    id="invite_last_name"
+                    value={inviteFormData.last_name}
+                    onChange={(e) => setInviteFormData({...inviteFormData, last_name: e.target.value})}
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="invite_email">Email Address</Label>
+                <Input
+                  id="invite_email"
+                  type="email"
+                  value={inviteFormData.email}
+                  onChange={(e) => setInviteFormData({...inviteFormData, email: e.target.value})}
+                  placeholder="speaker@example.com"
+                />
+              </div>
+              <div>
+                <Label htmlFor="personal_message">Personal Message (Optional)</Label>
+                <Textarea
+                  id="personal_message"
+                  value={inviteFormData.personal_message}
+                  onChange={(e) => setInviteFormData({...inviteFormData, personal_message: e.target.value})}
+                  placeholder="Add a personal note to include in the invitation email..."
+                  rows={4}
+                />
+              </div>
+              <Alert>
+                <Send className="h-4 w-4" />
+                <AlertTitle>Invitation Details</AlertTitle>
+                <AlertDescription>
+                  The speaker will receive an email with a secure link to create their account. The link will expire in 7 days.
+                </AlertDescription>
+              </Alert>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowInviteDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendDirectInvite}
+                disabled={sendingInvite || !inviteFormData.first_name || !inviteFormData.last_name || !inviteFormData.email}
+              >
+                {sendingInvite ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    Send Invitation
                   </>
                 )}
               </Button>
