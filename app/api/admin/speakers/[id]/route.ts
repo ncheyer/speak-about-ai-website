@@ -17,6 +17,75 @@ try {
   console.error('Failed to initialize Neon client for admin speaker detail:', error)
 }
 
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    // Require admin authentication
+    const authError = requireAdminAuth(request)
+    if (authError) {
+      console.log('Admin speaker delete: Authentication failed')
+      return authError
+    }
+    
+    const speakerId = parseInt(params.id)
+    if (isNaN(speakerId)) {
+      return NextResponse.json({
+        error: 'Invalid speaker ID'
+      }, { status: 400 })
+    }
+    
+    console.log(`Admin speaker delete: Deleting speaker ${speakerId}`)
+    
+    // Check if database is available
+    if (!sql || !process.env.DATABASE_URL) {
+      return NextResponse.json({
+        error: 'Database not available'
+      }, { status: 503 })
+    }
+    
+    try {
+      // Check if speaker exists
+      const existingResult = await sql`
+        SELECT id, name FROM speakers WHERE id = ${speakerId}
+      `
+      
+      if (!existingResult || existingResult.length === 0) {
+        return NextResponse.json({
+          error: 'Speaker not found'
+        }, { status: 404 })
+      }
+      
+      const speakerName = existingResult[0].name
+      
+      // Delete the speaker
+      await sql`
+        DELETE FROM speakers WHERE id = ${speakerId}
+      `
+      
+      console.log(`Admin speaker delete: Successfully deleted speaker ${speakerId} (${speakerName})`)
+      
+      return NextResponse.json({
+        success: true,
+        message: `Speaker ${speakerName} deleted successfully`,
+        deletedId: speakerId
+      })
+      
+    } catch (dbError: any) {
+      console.error('Database error deleting speaker:', dbError)
+      return NextResponse.json({
+        error: 'Failed to delete speaker',
+        details: dbError.message || 'Unknown database error'
+      }, { status: 500 })
+    }
+    
+  } catch (error: any) {
+    console.error('Error deleting speaker:', error)
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: error.message || 'Unknown error'
+    }, { status: 500 })
+  }
+}
+
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Temporarily bypass authentication for debugging

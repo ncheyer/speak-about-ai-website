@@ -298,17 +298,51 @@ export default function EnhancedProjectManagementPage() {
   const formatEventDate = (dateString: string | null | undefined): string => {
     if (!dateString) return 'N/A'
     try {
-      const date = new Date(dateString)
+      // Handle both ISO strings and date-only strings
+      let date: Date
+      
+      // If it's a date-only string (YYYY-MM-DD), parse it as local date
+      if (dateString.length === 10 && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateString.split('-').map(Number)
+        date = new Date(year, month - 1, day)
+      } else {
+        // For ISO strings with time, extract just the date part to avoid timezone issues
+        const datePart = dateString.split('T')[0]
+        const [year, month, day] = datePart.split('-').map(Number)
+        date = new Date(year, month - 1, day)
+      }
+      
       if (isNaN(date.getTime())) return 'N/A'
-      return date.toLocaleDateString()
-    } catch {
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error)
       return 'N/A'
     }
   }
 
   const getTimeUntilEvent = (eventDate: string) => {
+    if (!eventDate) return { text: 'No date', color: 'text-gray-500', urgency: 'unknown' }
+    
+    // Parse date the same way as formatEventDate to be consistent
+    let event: Date
+    if (eventDate.length === 10 && eventDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = eventDate.split('-').map(Number)
+      event = new Date(year, month - 1, day)
+    } else {
+      const datePart = eventDate.split('T')[0]
+      const [year, month, day] = datePart.split('-').map(Number)
+      event = new Date(year, month - 1, day)
+    }
+    
     const now = new Date()
-    const event = new Date(eventDate)
+    now.setHours(0, 0, 0, 0) // Reset time to start of day for accurate day calculation
+    event.setHours(0, 0, 0, 0) // Reset time to start of day
+    
     const diffTime = event.getTime() - now.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     

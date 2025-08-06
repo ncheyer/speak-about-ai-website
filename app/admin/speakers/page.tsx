@@ -23,7 +23,8 @@ import {
   Loader2,
   AlertTriangle,
   Plus,
-  Filter
+  Filter,
+  Trash2
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -83,6 +84,45 @@ export default function AdminSpeakersPage() {
     setIsLoggedIn(true)
     loadSpeakers()
   }, [router])
+
+  const handleDeleteSpeaker = async (speakerId: number, speakerName: string) => {
+    if (!confirm(`Are you sure you want to delete ${speakerName}? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/speakers/${speakerId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-dev-admin-bypass': 'dev-admin-access'
+        },
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: `${speakerName} has been deleted successfully`,
+        })
+        // Reload speakers list
+        loadSpeakers()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to delete speaker",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error deleting speaker:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete speaker. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
 
   const loadSpeakers = async () => {
     try {
@@ -364,6 +404,14 @@ export default function AdminSpeakersPage() {
                         Edit
                       </Button>
                     </Link>
+                    <Button 
+                      size="sm" 
+                      variant="destructive"
+                      onClick={() => handleDeleteSpeaker(speaker.id, speaker.name)}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </CardContent>
