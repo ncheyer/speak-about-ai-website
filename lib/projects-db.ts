@@ -273,7 +273,7 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         ${finalProjectData.spent}, 
         ${finalProjectData.completion_percentage},
         ${finalProjectData.event_name || finalProjectData.project_name},
-        ${finalProjectData.event_date || finalProjectData.deadline || null},
+        ${finalProjectData.event_date ? finalProjectData.event_date.split('T')[0] : finalProjectData.deadline ? finalProjectData.deadline.split('T')[0] : null},
         ${finalProjectData.event_location || null},
         ${finalProjectData.event_type || finalProjectData.project_type},
         ${finalProjectData.attendee_count || finalProjectData.audience_size || 0},
@@ -356,7 +356,7 @@ export async function updateProject(id: number, projectData: Partial<Project>): 
         -- Event Overview - Additional Fields
         end_client_name = COALESCE(${projectData.end_client_name || null}, end_client_name),
         event_name = COALESCE(${projectData.event_name || null}, event_name),
-        event_date = COALESCE(${projectData.event_date || null}, event_date),
+        event_date = COALESCE(${projectData.event_date ? projectData.event_date.split('T')[0] : null}, event_date),
         event_website = COALESCE(${projectData.event_website || null}, event_website),
         venue_name = COALESCE(${projectData.venue_name || null}, venue_name),
         venue_address = COALESCE(${projectData.venue_address || null}, venue_address),

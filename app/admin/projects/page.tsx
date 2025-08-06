@@ -841,7 +841,7 @@ export default function EnhancedProjectManagementPage() {
                     <div className="space-y-3">
                       {activeProjects
                         .filter(p => p.event_date)
-                        .sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
+                        .sort((a, b) => new Date(a.event_date + 'T00:00:00').getTime() - new Date(b.event_date + 'T00:00:00').getTime())
                         .slice(0, 5)
                         .map((project) => (
                           <div key={project.id} className="flex items-center justify-between">
@@ -851,10 +851,10 @@ export default function EnhancedProjectManagementPage() {
                             </div>
                             <div className="text-right">
                               <div className="text-sm font-medium">
-                                {new Date(project.event_date).toLocaleDateString()}
+                                {project.event_date ? new Date(project.event_date + 'T00:00:00').toLocaleDateString() : 'N/A'}
                               </div>
                               <div className="text-xs text-gray-500">
-                                {Math.ceil((new Date(project.event_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days
+                                {Math.ceil((new Date(project.event_date + 'T00:00:00').getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days
                               </div>
                             </div>
                           </div>
@@ -902,7 +902,7 @@ export default function EnhancedProjectManagementPage() {
                             <CardContent className="space-y-4">
                               <div className="flex items-center gap-2 text-sm">
                                 <CalendarDays className="h-4 w-4 text-gray-500" />
-                                {new Date(project.event_date).toLocaleDateString()}
+                                {project.event_date ? new Date(project.event_date + 'T00:00:00').toLocaleDateString() : 'N/A'}
                               </div>
                               <div className="flex items-center gap-2 text-sm">
                                 <MapPin className="h-4 w-4 text-gray-500" />
@@ -1256,7 +1256,7 @@ export default function EnhancedProjectManagementPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {new Date(project.event_date).toLocaleDateString()}
+                            {project.event_date ? new Date(project.event_date + 'T00:00:00').toLocaleDateString() : 'N/A'}
                           </TableCell>
                           <TableCell>
                             <div>
@@ -1399,7 +1399,7 @@ export default function EnhancedProjectManagementPage() {
                       
                       // Calculate days until event
                       const daysUntilEvent = project.event_date 
-                        ? Math.ceil((new Date(project.event_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                        ? Math.ceil((new Date(project.event_date + 'T00:00:00').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
                         : null
                       
                       // Add tasks from current stage
@@ -2137,7 +2137,7 @@ export default function EnhancedProjectManagementPage() {
                         <CardContent className="space-y-3">
                           <div className="flex items-center gap-2 text-sm">
                             <Calendar className="h-4 w-4 text-gray-500" />
-                            {new Date(project.event_date).toLocaleDateString()}
+                            {project.event_date ? new Date(project.event_date + 'T00:00:00').toLocaleDateString() : 'N/A'}
                           </div>
                           <div className="flex items-center gap-2 text-sm">
                             <MapPin className="h-4 w-4 text-gray-500" />
@@ -2181,7 +2181,7 @@ export default function EnhancedProjectManagementPage() {
                 <div>
                   <DialogTitle>Task Management - {selectedProject.event_title}</DialogTitle>
                   <DialogDescription>
-                    Manage stage completion for {selectedProject.client_name} ({new Date(selectedProject.event_date).toLocaleDateString()})
+                    Manage stage completion for {selectedProject.client_name} ({selectedProject.event_date ? new Date(selectedProject.event_date + 'T00:00:00').toLocaleDateString() : 'N/A'})
                   </DialogDescription>
                 </div>
                 <Button
