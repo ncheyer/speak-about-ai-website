@@ -808,7 +808,12 @@ export default function EnhancedProjectManagementPage() {
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh
               </Button>
-              <Button onClick={() => setShowCreateInvoice(true)}>
+              <Button onClick={() => {
+                const invoiceSection = document.getElementById('invoice-creation-section')
+                if (invoiceSection) {
+                  invoiceSection.scrollIntoView({ behavior: 'smooth' })
+                }
+              }}>
                 <Plus className="mr-2 h-4 w-4" />
                 New Invoice
               </Button>
@@ -1706,7 +1711,7 @@ export default function EnhancedProjectManagementPage() {
               </div>
 
               {/* Create Invoice Card */}
-              <Card>
+              <Card id="invoice-creation-section">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
@@ -1980,10 +1985,11 @@ export default function EnhancedProjectManagementPage() {
                                 )}
                                 <Button 
                                   size="sm" 
-                                  variant="ghost"
+                                  variant="outline"
                                   onClick={() => setSelectedInvoiceForPDF({id: invoice.id, number: invoice.invoice_number})}
+                                  title="Preview Invoice"
                                 >
-                                  <Download className="h-4 w-4" />
+                                  <Eye className="h-4 w-4" />
                                 </Button>
                                 <Button 
                                   size="sm" 
