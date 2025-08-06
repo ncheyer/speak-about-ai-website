@@ -55,6 +55,7 @@
     "glob": "latest",
     "graphql": "latest",
     "input-otp": "latest",
+    "jspdf": "^2.5.2",
     "lucide-react": "^0.454.0",
     "marked": "latest",
     "next": "15.2.4",
