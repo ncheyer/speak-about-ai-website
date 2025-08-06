@@ -1,20 +1,28 @@
 import { neon } from "@neondatabase/serverless"
 
-// Initialize Neon client with error handling
+// Lazy initialization of Neon client
 let sql: any = null
 let databaseAvailable = false
+let initialized = false
 
-try {
-  if (process.env.DATABASE_URL) {
-    console.log("Speakers DB: Initializing Neon client...")
-    sql = neon(process.env.DATABASE_URL)
-    databaseAvailable = true
-    console.log("Speakers DB: Neon client initialized successfully")
-  } else {
-    console.warn("DATABASE_URL environment variable is not set - speakers database unavailable")
+function initializeDatabase() {
+  if (initialized) return
+  
+  try {
+    if (process.env.DATABASE_URL) {
+      console.log("Speakers DB: Initializing Neon client...")
+      sql = neon(process.env.DATABASE_URL)
+      databaseAvailable = true
+      initialized = true
+      console.log("Speakers DB: Neon client initialized successfully")
+    } else {
+      console.warn("DATABASE_URL environment variable is not set - speakers database unavailable")
+      initialized = true
+    }
+  } catch (error) {
+    console.error("Failed to initialize Neon client for speakers:", error)
+    initialized = true
   }
-} catch (error) {
-  console.error("Failed to initialize Neon client for speakers:", error)
 }
 
 export interface Speaker {
@@ -150,6 +158,8 @@ export async function getAllSpeakers(filters?: {
   minFee?: number
   maxFee?: number
 }): Promise<Speaker[]> {
+  initializeDatabase()
+  
   if (!databaseAvailable || !sql) {
     console.warn("getAllSpeakers: Database not available")
     return []
@@ -235,6 +245,8 @@ export async function getAllSpeakers(filters?: {
 
 // Get speaker by ID
 export async function getSpeakerById(id: number): Promise<Speaker | null> {
+  initializeDatabase()
+  
   if (!databaseAvailable || !sql) {
     console.warn("getSpeakerById: Database not available")
     return null
@@ -265,6 +277,8 @@ export async function getSpeakerById(id: number): Promise<Speaker | null> {
 
 // Get speaker by email
 export async function getSpeakerByEmail(email: string): Promise<Speaker | null> {
+  initializeDatabase()
+  
   if (!databaseAvailable || !sql) {
     console.warn("getSpeakerByEmail: Database not available")
     return null
@@ -285,6 +299,8 @@ export async function getSpeakerByEmail(email: string): Promise<Speaker | null> 
 
 // Create new speaker profile
 export async function createSpeaker(speakerData: Omit<Speaker, 'id' | 'created_at' | 'updated_at'>): Promise<Speaker | null> {
+  initializeDatabase()
+  
   if (!databaseAvailable || !sql) {
     console.warn("createSpeaker: Database not available")
     return null
@@ -338,6 +354,8 @@ export async function createSpeaker(speakerData: Omit<Speaker, 'id' | 'created_a
 
 // Update speaker profile
 export async function updateSpeaker(id: number, speakerData: Partial<Speaker>): Promise<Speaker | null> {
+  initializeDatabase()
+  
   if (!databaseAvailable || !sql) {
     console.warn("updateSpeaker: Database not available")
     return null
@@ -418,6 +436,8 @@ export async function updateSpeaker(id: number, speakerData: Partial<Speaker>): 
 
 // Search speakers
 export async function searchSpeakers(searchTerm: string): Promise<Speaker[]> {
+  initializeDatabase()
+  
   if (!databaseAvailable || !sql) {
     console.warn("searchSpeakers: Database not available")
     return []
@@ -600,6 +620,8 @@ export async function deleteSpeaker(id: number, hardDelete: boolean = false): Pr
 
 // Test connection
 export async function testSpeakersConnection(): Promise<boolean> {
+  initializeDatabase()
+  
   if (!databaseAvailable || !sql) {
     return false
   }
