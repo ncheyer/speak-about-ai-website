@@ -100,7 +100,10 @@ interface Project {
       initial_invoice_sent?: boolean
       final_invoice_sent?: boolean
       kickoff_meeting_planned?: boolean
-      project_setup_complete?: boolean
+      client_contacts_documented?: boolean
+      project_folder_created?: boolean
+      internal_team_briefed?: boolean
+      event_details_confirmed?: boolean
     }
     logistics_planning?: {
       details_confirmed?: boolean
@@ -1338,8 +1341,11 @@ export default function EnhancedProjectManagementPage() {
                         invoicing: {
                           initial_invoice_sent: "Send initial invoice (Net 30)",
                           final_invoice_sent: "Send final invoice",
-                          kickoff_meeting_planned: "Plan kickoff meeting",
-                          project_setup_complete: "Complete project setup"
+                          kickoff_meeting_planned: "Schedule kickoff meeting with client",
+                          client_contacts_documented: "Document all client contacts & roles",
+                          project_folder_created: "Create project folder & documentation",
+                          internal_team_briefed: "Brief internal team on project details",
+                          event_details_confirmed: "Confirm & document all event specifications"
                         },
                         logistics_planning: {
                           details_confirmed: "Confirm event details",
@@ -1911,11 +1917,23 @@ export default function EnhancedProjectManagementPage() {
                           </div>
                           <div className="flex items-center gap-2">
                             <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Plan kickoff meeting</span>
+                            <span>Schedule kickoff meeting</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Initial project setup</span>
+                            <span>Document client contacts</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Create project folder</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Brief internal team</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Confirm event details</span>
                           </div>
                         </div>
                       </CardContent>
@@ -2175,8 +2193,11 @@ export default function EnhancedProjectManagementPage() {
                         {[
                           { key: "initial_invoice_sent", label: "Send initial invoice (Net 30)" },
                           { key: "final_invoice_sent", label: "Send final invoice" },
-                          { key: "kickoff_meeting_planned", label: "Plan kickoff meeting" },
-                          { key: "project_setup_complete", label: "Initial project setup" }
+                          { key: "kickoff_meeting_planned", label: "Schedule kickoff meeting with client" },
+                          { key: "client_contacts_documented", label: "Document all client contacts & roles" },
+                          { key: "project_folder_created", label: "Create project folder & documentation" },
+                          { key: "internal_team_briefed", label: "Brief internal team on project details" },
+                          { key: "event_details_confirmed", label: "Confirm & document all event specifications" }
                         ].map((task) => (
                           <div key={task.key} className="flex items-center gap-3">
                             <input

@@ -7,7 +7,6 @@ import Footer from "@/components/footer"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import TrackingScripts from "@/components/tracking-scripts"
-import PipedriveChat from "@/components/pipedrive-chat"
 import { ScrollToTopProvider } from "@/components/scroll-to-top-provider"
 import { CookieConsent } from "@/components/cookie-consent"
 
@@ -113,7 +112,6 @@ export default function RootLayout({
                 <Footer />
               </div>
               <Toaster />
-              <PipedriveChat />
               <CookieConsent />
             </ScrollToTopProvider>
         </ThemeProvider>

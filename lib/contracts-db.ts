@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless"
-import { generateContractContent, generateContractHTML, validateContractData, type ContractData } from "./contract-template"
+import { generateContractContent, generateContractHTML as generateHTMLFromTemplate, validateContractData, type ContractData } from "./contract-template"
 import type { Deal } from "./deals-db"
 
 // Initialize Neon client with error handling
@@ -114,7 +114,8 @@ export async function createContractFromDeal(
   deal: Deal, 
   speakerInfo?: { name: string; email: string; fee?: number },
   additionalTerms?: string,
-  createdBy?: string
+  createdBy?: string,
+  clientSignerInfo?: { name: string; email: string }
 ): Promise<Contract | null> {
   if (!databaseAvailable || !sql) {
     console.warn("createContractFromDeal: Database not available")
@@ -122,7 +123,7 @@ export async function createContractFromDeal(
   }
 
   try {
-    // Prepare contract data
+    // Prepare contract data with travel information
     const contractData: ContractData = {
       ...deal,
       contract_number: generateContractNumber(),
@@ -130,7 +131,12 @@ export async function createContractFromDeal(
       speaker_email: speakerInfo?.email,
       speaker_fee: speakerInfo?.fee || deal.deal_value,
       payment_terms: "Payment due within 30 days of event completion",
-      additional_terms: additionalTerms
+      additional_terms: additionalTerms,
+      // Include travel fields from deal
+      travel_required: deal.travel_required,
+      flight_required: deal.flight_required,
+      hotel_required: deal.hotel_required,
+      travel_stipend: deal.travel_stipend
     }
 
     // Validate contract data
@@ -154,13 +160,17 @@ export async function createContractFromDeal(
 
     console.log("Creating contract for deal:", deal.id)
     
+    const clientSigner = clientSignerInfo || { name: deal.client_name, email: deal.client_email }
+    
     const [contract] = await sql`
       INSERT INTO contracts (
         deal_id, contract_number, title, status, template_version, terms,
         total_amount, payment_terms, event_title, event_date, event_location,
         event_type, attendee_count, client_name, client_email, client_company,
+        client_signer_name, client_signer_email,
         speaker_name, speaker_email, speaker_fee, expires_at,
-        access_token, client_signing_token, speaker_signing_token, created_by
+        access_token, client_signing_token, speaker_signing_token, created_by,
+        sent_at, tokens_expire_at
       ) VALUES (
         ${deal.id}, ${contractData.contract_number}, 
         ${`Speaker Engagement Agreement - ${deal.event_title}`},
@@ -169,9 +179,11 @@ export async function createContractFromDeal(
         ${deal.event_title}, ${deal.event_date}, ${deal.event_location},
         ${deal.event_type}, ${deal.attendee_count},
         ${deal.client_name}, ${deal.client_email}, ${deal.company},
+        ${clientSigner.name}, ${clientSigner.email},
         ${contractData.speaker_name}, ${contractData.speaker_email}, 
         ${contractData.speaker_fee}, ${expiresAt.toISOString()},
-        ${accessToken}, ${clientSigningToken}, ${speakerSigningToken}, ${createdBy}
+        ${accessToken}, ${clientSigningToken}, ${speakerSigningToken}, ${createdBy},
+        NOW(), ${expiresAt.toISOString()}
       )
       RETURNING *
     `
@@ -399,10 +411,11 @@ export async function generateContractHTML(contractId: number): Promise<string |
       speaker_name: contract.speaker_name,
       speaker_email: contract.speaker_email,
       speaker_fee: contract.speaker_fee,
-      payment_terms: contract.payment_terms
+      payment_terms: contract.payment_terms,
+      travel_stipend: 0 // Default value as contracts table might not have this field
     }
     
-    return generateContractHTML(contractData)
+    return generateHTMLFromTemplate(contractData)
   } catch (error) {
     console.error("Error generating contract HTML:", error)
     return null
@@ -425,6 +438,124 @@ export async function deleteContract(id: number): Promise<boolean> {
     return false
   }
 }
+
+// Get contract by ID and token for signing
+export async function getContractByIdAndToken(id: number, token: string): Promise<Contract | null> {
+  if (!databaseAvailable || !sql) {
+    console.warn("getContractByIdAndToken: Database not available")
+    return null
+  }
+  
+  try {
+    const contracts = await sql`
+      SELECT * FROM contracts 
+      WHERE id = ${id} 
+      AND (speaker_signing_token = ${token} OR client_signing_token = ${token})
+    `
+    
+    return contracts.length > 0 ? contracts[0] : null
+  } catch (error) {
+    console.error("Error getting contract by ID and token:", error)
+    return null
+  }
+}
+
+// Sign contract
+export async function signContract(data: {
+  contractId: number
+  signerType: "client" | "speaker"
+  signerName: string
+  signerEmail: string
+  signerTitle?: string
+  ipAddress?: string
+  userAgent?: string
+}): Promise<{ id: number; contractFullyExecuted: boolean } | null> {
+  if (!databaseAvailable || !sql) {
+    console.warn("signContract: Database not available")
+    return null
+  }
+  
+  try {
+    // Create signature record
+    const signature = await sql`
+      INSERT INTO contract_signatures (
+        contract_id,
+        signer_type,
+        signer_name,
+        signer_email,
+        signer_title,
+        signature_method,
+        signed_at,
+        ip_address,
+        user_agent,
+        verified
+      ) VALUES (
+        ${data.contractId},
+        ${data.signerType},
+        ${data.signerName},
+        ${data.signerEmail},
+        ${data.signerTitle || null},
+        'electronic',
+        NOW(),
+        ${data.ipAddress || null},
+        ${data.userAgent || null},
+        true
+      )
+      RETURNING id
+    `
+    
+    // Update contract status and signed dates
+    const updateField = data.signerType === "client" ? "client_signed_at" : "speaker_signed_at"
+    const ipField = data.signerType === "client" ? "client_ip_address" : "speaker_ip_address"
+    
+    await sql`
+      UPDATE contracts 
+      SET 
+        ${sql(updateField)} = NOW(),
+        ${sql(ipField)} = ${data.ipAddress || null},
+        updated_at = NOW()
+      WHERE id = ${data.contractId}
+    `
+    
+    // Check if contract is now fully executed
+    const contract = await sql`
+      SELECT speaker_signed_at, client_signed_at 
+      FROM contracts 
+      WHERE id = ${data.contractId}
+    `
+    
+    const isFullyExecuted = !!(contract[0]?.speaker_signed_at && contract[0]?.client_signed_at)
+    
+    if (isFullyExecuted) {
+      await sql`
+        UPDATE contracts 
+        SET 
+          status = 'fully_executed',
+          completed_at = NOW(),
+          updated_at = NOW()
+        WHERE id = ${data.contractId}
+      `
+    } else {
+      const newStatus = data.signerType === "client" ? "client_signed" : "speaker_signed"
+      await sql`
+        UPDATE contracts 
+        SET 
+          status = ${newStatus},
+          updated_at = NOW()
+        WHERE id = ${data.contractId}
+      `
+    }
+    
+    return {
+      id: signature[0].id,
+      contractFullyExecuted: isFullyExecuted
+    }
+  } catch (error) {
+    console.error("Error signing contract:", error)
+    return null
+  }
+}
+
 
 // Test connection function
 export async function testContractsConnection(): Promise<boolean> {

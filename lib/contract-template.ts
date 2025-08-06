@@ -7,6 +7,27 @@ export interface ContractData extends Deal {
   speaker_fee?: number
   payment_terms?: string
   additional_terms?: string
+  
+  // Virtual event fields
+  event_platform?: string
+  event_timezone?: string
+  presentation_duration?: string
+  recording_usage?: string
+  recording_permission?: string
+  recording_distribution?: string
+  recording_usage_period?: string
+  governing_law?: string
+  
+  // Travel fields
+  travel_required?: boolean
+  flight_required?: boolean
+  flight_class?: string
+  hotel_required?: boolean
+  hotel_dates?: string
+  airport_transfers?: string
+  local_transportation?: string
+  travel_stipend?: number
+  travel_stipend_coverage?: string
 }
 
 export interface ContractTemplate {
@@ -22,9 +43,106 @@ export interface ContractSection {
   required: boolean
 }
 
-export const DEFAULT_CONTRACT_TEMPLATE: ContractTemplate = {
-  version: "v1.0",
-  title: "Speaker Engagement Agreement",
+export const VIRTUAL_EVENT_TEMPLATE: ContractTemplate = {
+  version: "v1.0-virtual",
+  title: "Virtual Speaker Engagement Agreement",
+  sections: [
+    {
+      id: "parties",
+      title: "Parties",
+      content: `This Virtual Speaker Engagement Agreement ("Agreement") is entered into on {{contract_date}} between:
+
+**Client:** {{client_name}} ({{client_company}})
+**Email:** {{client_email}}
+**Phone:** {{client_phone}}
+
+**Speaker:** {{speaker_name}}
+**Email:** {{speaker_email}}
+
+**Event Details:**
+- **Event Title:** {{event_title}}
+- **Event Date:** {{event_date}}
+- **Platform:** {{event_platform}}
+- **Event Type:** Virtual Presentation
+- **Expected Attendees:** {{attendee_count}}
+- **Time Zone:** {{event_timezone}}`,
+      required: true
+    },
+    {
+      id: "services",
+      title: "Services to be Provided",
+      content: `The Speaker agrees to provide the following services:
+
+1. **Virtual Presentation:** Deliver a virtual presentation/keynote via the designated platform
+2. **Duration:** {{presentation_duration}} presentation plus Q&A
+3. **Technical Requirements:** Ensure reliable internet connection and appropriate audio/video setup
+4. **Format:** Virtual presentation with screen sharing capabilities
+5. **Recording:** Agreement to allow recording for {{recording_usage}}
+
+**Virtual Platform Requirements:**
+- Test connection prior to event
+- Professional background/virtual background
+- High-quality audio and video equipment
+- Backup internet connection if possible`,
+      required: true
+    },
+    {
+      id: "compensation",
+      title: "Compensation and Payment Terms",
+      content: `**Speaker Fee:** $\{{deal_value}} USD
+
+**Payment Terms:**
+{{payment_terms}}
+
+**Virtual Event Considerations:**
+- No travel expenses required
+- Fee includes all preparation and presentation time
+- Technical setup is Speaker's responsibility
+
+**Total Contract Value:** $\{{deal_value}} USD`,
+      required: true
+    },
+    {
+      id: "technical_requirements",
+      title: "Technical Requirements and Obligations",
+      content: `**Speaker Technical Obligations:**
+1. Maintain stable internet connection (minimum 10 Mbps upload)
+2. Use professional-grade microphone and camera
+3. Ensure quiet, professional environment
+4. Test platform functionality before event
+5. Have backup plan for technical failures
+
+**Client Technical Obligations:**
+1. Provide platform access and credentials
+2. Arrange technical rehearsal if requested
+3. Provide technical support contact
+4. Manage attendee access and platform settings
+5. Handle recording and distribution (if applicable)`,
+      required: true
+    },
+    {
+      id: "virtual_cancellation",
+      title: "Cancellation and Technical Failure Policy",
+      content: `**Standard Cancellation:**
+- More than 14 days before event: Full refund minus 10% processing fee
+- 7-14 days before event: 50% of speaker fee retained
+- Less than 7 days before event: Full speaker fee retained
+
+**Technical Failure:**
+- If Speaker experiences technical failure preventing presentation: Full refund
+- If Client's platform fails: Full speaker fee paid, option to reschedule
+- Both parties must attempt reasonable troubleshooting before cancellation
+
+**Force Majeure:**
+Including but not limited to internet outages, platform failures, or other technical impediments beyond reasonable control.`,
+      required: true
+    }
+  ]
+}
+
+export const IN_PERSON_EVENT_TEMPLATE: ContractTemplate = {
+  version: "v1.0-inperson",
+  title: "In-Person Speaker Engagement Agreement",
   sections: [
     {
       id: "parties",
@@ -66,7 +184,7 @@ export const DEFAULT_CONTRACT_TEMPLATE: ContractTemplate = {
     {
       id: "compensation",
       title: "Compensation and Payment Terms",
-      content: `**Speaker Fee:** ${{deal_value}} USD
+      content: `**Speaker Fee:** $\{{deal_value}} USD
 
 **Payment Terms:**
 {{payment_terms}}
@@ -76,7 +194,7 @@ export const DEFAULT_CONTRACT_TEMPLATE: ContractTemplate = {
 - Accommodation (if required) as per mutual agreement
 - Other reasonable expenses with prior approval
 
-**Total Contract Value:** ${{deal_value}} USD`,
+**Total Contract Value:** $\{{deal_value}} USD`,
       required: true
     },
     {
@@ -123,6 +241,31 @@ Neither party shall be liable for delays or failures due to circumstances beyond
       required: true
     },
     {
+      id: "travel_arrangements",
+      title: "Travel and Accommodation",
+      content: `**Travel Arrangements:**
+{{travel_details}}
+
+**Flight Details:**
+- Flight Required: {{flight_required}}
+- Booking Responsibility: {{flight_booking_responsibility}}
+- Class of Travel: {{flight_class}}
+
+**Accommodation:**
+- Hotel Required: {{hotel_required}}
+- Hotel Arrangements: {{hotel_arrangements}}
+- Check-in/Check-out: {{hotel_dates}}
+
+**Ground Transportation:**
+- Airport Transfers: {{airport_transfers}}
+- Local Transportation: {{local_transportation}}
+
+**Travel Stipend:**
+- Amount: ${{travel_stipend}} USD
+- Covers: {{travel_stipend_coverage}}`,
+      required: true
+    },
+    {
       id: "intellectual_property",
       title: "Intellectual Property",
       content: `**Speaker's IP:** Speaker retains all rights to their presentation materials, methodologies, and intellectual property.
@@ -141,7 +284,9 @@ Neither party shall be liable for delays or failures due to circumstances beyond
 
 Neither party shall be liable for any indirect, incidental, or consequential damages.
 
-Both parties agree to maintain appropriate insurance coverage for their respective activities.`,
+Both parties agree to maintain appropriate insurance coverage for their respective activities.
+
+**Travel Insurance:** Speaker agrees to maintain appropriate travel insurance for international engagements.`,
       required: true
     },
     {
@@ -186,9 +331,78 @@ Date: ________________`,
   ]
 }
 
-export function generateContractContent(contractData: ContractData, template: ContractTemplate = DEFAULT_CONTRACT_TEMPLATE): string {
+// Add remaining sections to virtual template
+VIRTUAL_EVENT_TEMPLATE.sections.push(
+  {
+    id: "intellectual_property",
+    title: "Intellectual Property and Recording",
+    content: `**Speaker's IP:** Speaker retains all rights to their presentation materials and content.
+
+**Recording Rights:** 
+- Recording permission: {{recording_permission}}
+- Distribution rights: {{recording_distribution}}
+- Usage period: {{recording_usage_period}}
+
+**Platform Content:** Any materials shared via screen share remain property of Speaker.
+
+**Attribution:** Client agrees to provide proper attribution in all uses of recorded content.`,
+    required: true
+  },
+  {
+    id: "general_terms",
+    title: "General Terms",
+    content: `**Governing Law:** This Agreement shall be governed by the laws of {{governing_law}}.
+
+**Time Zone:** All times referenced are in {{event_timezone}} unless otherwise specified.
+
+**Platform Terms:** Both parties agree to abide by the terms of service of the chosen platform.
+
+**Entire Agreement:** This constitutes the entire agreement between the parties.
+
+**Additional Terms:**
+{{additional_terms}}`,
+    required: true
+  },
+  {
+    id: "signatures",
+    title: "Electronic Signatures",
+    content: `By signing below, both parties agree to the terms and conditions set forth in this Virtual Speaker Engagement Agreement.
+
+**Contract Number:** {{contract_number}}
+**Generated Date:** {{contract_date}}
+
+**CLIENT SIGNATURE:**
+_________________________________
+{{client_name}}
+{{client_company}}
+Date: ________________
+
+**SPEAKER SIGNATURE:**
+_________________________________
+{{speaker_name}}
+Date: ________________`,
+    required: true
+  }
+)
+
+export const DEFAULT_CONTRACT_TEMPLATE = IN_PERSON_EVENT_TEMPLATE
+
+export function selectContractTemplate(eventType: string): ContractTemplate {
+  if (eventType === 'virtual' || eventType === 'webinar' || eventType === 'online') {
+    return VIRTUAL_EVENT_TEMPLATE
+  }
+  return IN_PERSON_EVENT_TEMPLATE
+}
+
+export function generateContractContent(contractData: ContractData, template?: ContractTemplate): string {
+  // Select appropriate template if not provided
+  if (!template) {
+    template = selectContractTemplate(contractData.event_type || 'in-person')
+  }
+
   // Create template variables for substitution
-  const templateVars = {
+  const isVirtual = contractData.event_type === 'virtual'
+  const templateVars: Record<string, string> = {
     contract_number: contractData.contract_number,
     contract_date: new Date().toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -226,6 +440,35 @@ export function generateContractContent(contractData: ContractData, template: Co
     additional_terms: contractData.additional_terms || 'No additional terms specified'
   }
 
+  // Add virtual-specific variables
+  if (isVirtual) {
+    Object.assign(templateVars, {
+      event_platform: contractData.event_platform || 'Zoom/Teams/Platform TBD',
+      event_timezone: contractData.event_timezone || 'PST',
+      presentation_duration: contractData.presentation_duration || '60 minutes',
+      recording_usage: contractData.recording_usage || 'internal purposes only',
+      recording_permission: contractData.recording_permission || 'Granted for internal use',
+      recording_distribution: contractData.recording_distribution || 'Internal only',
+      recording_usage_period: contractData.recording_usage_period || '1 year',
+      governing_law: contractData.governing_law || 'California, USA'
+    })
+  } else {
+    // Add in-person specific variables
+    Object.assign(templateVars, {
+      travel_details: contractData.travel_required ? 'Travel arrangements required as detailed below' : 'No travel required',
+      flight_required: contractData.flight_required ? 'Yes' : 'No',
+      flight_booking_responsibility: contractData.flight_required ? 'Client to book and pay directly' : 'N/A',
+      flight_class: contractData.flight_class || 'Economy/Business as agreed',
+      hotel_required: contractData.hotel_required ? 'Yes' : 'No',
+      hotel_arrangements: contractData.hotel_required ? 'Client to book and pay directly' : 'N/A',
+      hotel_dates: contractData.hotel_dates || 'Night before and night of event',
+      airport_transfers: contractData.airport_transfers || 'Provided by Client',
+      local_transportation: contractData.local_transportation || 'Provided by Client',
+      travel_stipend: contractData.travel_stipend?.toLocaleString('en-US') || '0',
+      travel_stipend_coverage: contractData.travel_stipend_coverage || 'Meals and incidentals'
+    })
+  }
+
   // Generate the complete contract content
   let contractContent = `# ${template.title}\n\n`
   
@@ -245,7 +488,7 @@ export function generateContractContent(contractData: ContractData, template: Co
   return contractContent
 }
 
-export function generateContractHTML(contractData: ContractData, template: ContractTemplate = DEFAULT_CONTRACT_TEMPLATE): string {
+export function generateContractHTML(contractData: ContractData, template?: ContractTemplate): string {
   const markdownContent = generateContractContent(contractData, template)
   
   // Convert markdown to HTML (simple conversion)

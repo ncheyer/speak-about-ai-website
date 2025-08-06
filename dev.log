@@ -1002,3 +1002,4 @@ Require stack:
  GET /site.webmanifest 404 in 2186ms
  ✓ Compiled /api/analytics/events in 94ms (634 modules)
  POST /api/analytics/events 400 in 113ms
+[?25h

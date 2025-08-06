@@ -305,3 +305,18 @@ export async function getRealTimeStats() {
     }
   }
 }
+
+// Test connection function
+export async function testAnalyticsConnection(): Promise<boolean> {
+  if (!databaseAvailable || !sql) {
+    return false
+  }
+  
+  try {
+    await sql`SELECT 1`
+    return true
+  } catch (error) {
+    console.error("Analytics database connection test failed:", error)
+    return false
+  }
+}

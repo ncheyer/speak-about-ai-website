@@ -391,11 +391,11 @@ export default function AdminDashboard() {
 
   // Calculate statistics
   const totalDeals = deals.length
-  const totalValue = deals.reduce((sum, deal) => sum + deal.deal_value, 0)
+  const totalValue = deals.reduce((sum, deal) => sum + (typeof deal.deal_value === 'string' ? parseFloat(deal.deal_value) || 0 : deal.deal_value), 0)
   const wonDeals = deals.filter((d) => d.status === "won").length
   const pipelineValue = deals
     .filter((d) => !["won", "lost"].includes(d.status))
-    .reduce((sum, deal) => sum + deal.deal_value, 0)
+    .reduce((sum, deal) => sum + (typeof deal.deal_value === 'string' ? parseFloat(deal.deal_value) || 0 : deal.deal_value), 0)
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -774,7 +774,7 @@ export default function AdminDashboard() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="nextFollowUp">Next Follow-up Date</Label>
+                      <Label htmlFor="nextFollowUp">Expected Close Date</Label>
                       <Input
                         id="nextFollowUp"
                         type="date"

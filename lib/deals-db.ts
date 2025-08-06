@@ -40,6 +40,12 @@ export interface Deal {
   last_contact: string
   next_follow_up?: string
   updated_at: string
+  // Travel fields
+  travel_required?: boolean
+  flight_required?: boolean
+  hotel_required?: boolean
+  travel_stipend?: number
+  travel_notes?: string
 }
 
 export async function getAllDeals(): Promise<Deal[]> {
@@ -100,13 +106,16 @@ export async function createDeal(dealData: Omit<Deal, "id" | "created_at" | "upd
         client_name, client_email, client_phone, company,
         event_title, event_date, event_location, event_type,
         speaker_requested, attendee_count, budget_range, deal_value,
-        status, priority, source, notes, last_contact, next_follow_up
+        status, priority, source, notes, last_contact, next_follow_up,
+        travel_required, flight_required, hotel_required, travel_stipend, travel_notes
       ) VALUES (
         ${dealData.client_name}, ${dealData.client_email}, ${dealData.client_phone}, ${dealData.company},
         ${dealData.event_title}, ${dealData.event_date}, ${dealData.event_location}, ${dealData.event_type},
         ${dealData.speaker_requested || null}, ${dealData.attendee_count}, ${dealData.budget_range}, ${dealData.deal_value},
         ${dealData.status}, ${dealData.priority}, ${dealData.source}, ${dealData.notes}, 
-        ${dealData.last_contact}, ${dealData.next_follow_up || null}
+        ${dealData.last_contact}, ${dealData.next_follow_up || null},
+        ${dealData.travel_required || false}, ${dealData.flight_required || false}, 
+        ${dealData.hotel_required || false}, ${dealData.travel_stipend || 0}, ${dealData.travel_notes || null}
       )
       RETURNING *
     `
@@ -121,6 +130,7 @@ export async function createDeal(dealData: Omit<Deal, "id" | "created_at" | "upd
 export async function updateDeal(id: number, dealData: Partial<Deal>): Promise<Deal | null> {
   try {
     console.log("Updating deal ID:", id)
+    console.log("Update data received:", JSON.stringify(dealData, null, 2))
     const [deal] = await sql`
       UPDATE deals SET
         client_name = COALESCE(${dealData.client_name || null}, client_name),
@@ -141,6 +151,11 @@ export async function updateDeal(id: number, dealData: Partial<Deal>): Promise<D
         notes = COALESCE(${dealData.notes || null}, notes),
         last_contact = COALESCE(${dealData.last_contact || null}, last_contact),
         next_follow_up = COALESCE(${dealData.next_follow_up || null}, next_follow_up),
+        travel_required = ${dealData.travel_required !== undefined ? dealData.travel_required : sql`travel_required`},
+        flight_required = ${dealData.flight_required !== undefined ? dealData.flight_required : sql`flight_required`},
+        hotel_required = ${dealData.hotel_required !== undefined ? dealData.hotel_required : sql`hotel_required`},
+        travel_stipend = ${dealData.travel_stipend !== undefined ? dealData.travel_stipend : sql`travel_stipend`},
+        travel_notes = COALESCE(${dealData.travel_notes || null}, travel_notes),
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${id}
       RETURNING *

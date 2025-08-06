@@ -585,3 +585,18 @@ export async function getOverdueProjects(): Promise<Project[]> {
     return []
   }
 }
+
+// Test connection function
+export async function testProjectsConnection(): Promise<boolean> {
+  if (!databaseAvailable || !sql) {
+    return false
+  }
+  
+  try {
+    await sql`SELECT 1`
+    return true
+  } catch (error) {
+    console.error("Projects database connection test failed:", error)
+    return false
+  }
+}

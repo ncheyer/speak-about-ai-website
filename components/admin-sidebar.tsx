@@ -65,7 +65,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       title: "CRM",
       href: "/admin/crm",
       icon: BarChart3,
-      description: "Deals & Contracts",
+      description: "Deals, Proposals & Contracts",
       color: "text-blue-600",
       bgColor: "bg-blue-50"
     },
