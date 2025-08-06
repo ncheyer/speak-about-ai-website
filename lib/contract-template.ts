@@ -261,7 +261,7 @@ Neither party shall be liable for delays or failures due to circumstances beyond
 - Local Transportation: {{local_transportation}}
 
 **Travel Stipend:**
-- Amount: ${{travel_stipend}} USD
+- Amount: $\{{travel_stipend}} USD
 - Covers: {{travel_stipend_coverage}}`,
       required: true
     },

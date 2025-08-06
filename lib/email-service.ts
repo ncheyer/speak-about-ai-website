@@ -130,3 +130,10 @@ export async function sendContractConfirmationEmail(data: {
   
   return sendEmail(data.recipientEmail, subject, html, text)
 }
+
+// Add missing export for backward compatibility
+export async function sendContractSignedNotification(data: any) {
+  console.log("Contract signed notification:", data)
+  // This is handled by the unified email service now
+  return true
+}

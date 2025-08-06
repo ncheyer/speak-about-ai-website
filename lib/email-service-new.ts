@@ -1,14 +1,16 @@
 // Resend email service configuration
 import { Deal, DealFormData } from './deals-utils'
 
-// Initialize Resend client - uncomment after installing resend
+// Initialize Resend client - optional dependency
 let resend: any = null
-try {
-  // Dynamically import Resend only if installed
-  const { Resend } = require('resend')
-  resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-} catch (error) {
-  console.warn('Resend not installed. Run: npm install resend')
+if (typeof window === 'undefined') { // Only on server side
+  try {
+    // Dynamically import Resend only if installed
+    const { Resend } = require('resend')
+    resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+  } catch (error) {
+    console.warn('Resend not installed. Run: npm install resend')
+  }
 }
 
 /**

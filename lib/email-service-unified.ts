@@ -14,11 +14,13 @@ try {
 
 // Initialize Resend client
 let resend: any = null
-try {
-  const { Resend } = require('resend')
-  resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-} catch (error) {
-  console.warn('Resend not installed or configured. Email sending disabled.')
+if (typeof window === 'undefined') { // Only on server side
+  try {
+    const { Resend } = require('resend')
+    resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+  } catch (error) {
+    console.warn('Resend not installed or configured. Email sending disabled.')
+  }
 }
 
 /**
