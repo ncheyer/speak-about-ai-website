@@ -64,28 +64,35 @@ export async function createDeal(formData: DealFormData, sessionId?: string): Pr
     // Create the main deal record
     const dealResult = await sql`
       INSERT INTO deals (
-        client_name, client_email, phone, organization_name, company,
-        event_title, event_date, event_location, deal_value, event_budget,
-        status, priority, specific_speaker, additional_info, 
-        wishlist_speakers, source, created_at
+        client_name, client_email, client_phone, phone, organization_name, company,
+        event_title, event_date, event_location, event_type, attendee_count,
+        budget_range, deal_value, event_budget,
+        status, priority, specific_speaker, speaker_requested, additional_info, 
+        wishlist_speakers, source, created_at, last_contact
       ) VALUES (
         ${formData.clientName},
         ${formData.clientEmail},
         ${formData.phone || null},
+        ${formData.phone || null},
         ${formData.organizationName || null},
-        ${formData.organizationName || null}, -- Use org name as company for now
-        ${'AI Keynote Speaking Engagement'}, -- Default event title
-        ${formData.eventDate || null},
-        ${formData.eventLocation || null},
+        ${formData.organizationName || 'Unknown'},
+        ${'AI Keynote Speaking Engagement'},
+        ${formData.eventDate || new Date().toISOString().split('T')[0]},
+        ${formData.eventLocation || 'TBD'},
+        ${'Keynote'},
+        ${100},
+        ${formData.eventBudget || 'TBD'},
         ${dealValue},
         ${formData.eventBudget || null},
-        ${'lead'}, -- New deals start as leads
+        ${'lead'},
         ${determinePriority(formData)},
+        ${formData.specificSpeaker || null},
         ${formData.specificSpeaker || null},
         ${formData.additionalInfo || null},
         ${JSON.stringify(formData.wishlistSpeakers || [])},
         ${'website_form'},
-        CURRENT_TIMESTAMP
+        CURRENT_TIMESTAMP,
+        CURRENT_DATE
       )
       RETURNING id
     `
@@ -98,7 +105,6 @@ export async function createDeal(formData: DealFormData, sessionId?: string): Pr
         await sql`
           INSERT INTO deal_speaker_interests (deal_id, speaker_id, interest_type)
           VALUES (${dealId}, ${speaker.id}, 'wishlist')
-          ON CONFLICT (deal_id, speaker_id, interest_type) DO NOTHING
         `
       }
     }

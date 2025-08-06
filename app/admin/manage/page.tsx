@@ -31,13 +31,42 @@ import {
   AlertTriangle,
   BarChart3,
   Activity,
-  MousePointer
+  MousePointer,
+  FileText,
+  Send,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Link as LinkIcon,
+  ExternalLink,
+  Download,
+  Copy,
+  Trash2,
+  MoreHorizontal
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { DealsKanban } from "@/components/deals-kanban"
 import { ProjectsKanban } from "@/components/projects-kanban"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { formatCurrency, formatDate } from "@/lib/utils"
+import type { Proposal } from "@/lib/proposals-db"
 
 // Type definitions
 interface Speaker {
@@ -122,6 +151,7 @@ export default function MasterAdminPanel() {
   const [speakers, setSpeakers] = useState<Speaker[]>([])
   const [deals, setDeals] = useState<Deal[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [proposals, setProposals] = useState<Proposal[]>([])
   const [analyticsData, setAnalyticsData] = useState<any>(null)
   const [realTimeData, setRealTimeData] = useState<any>(null)
   
@@ -129,6 +159,7 @@ export default function MasterAdminPanel() {
   const [speakersLoading, setSpeakersLoading] = useState(true)
   const [dealsLoading, setDealsLoading] = useState(true)
   const [projectsLoading, setProjectsLoading] = useState(true)
+  const [proposalsLoading, setProposalsLoading] = useState(true)
   const [analyticsLoading, setAnalyticsLoading] = useState(true)
   
   // Filter states
@@ -141,6 +172,9 @@ export default function MasterAdminPanel() {
   
   const [projectSearch, setProjectSearch] = useState("")
   const [projectStatusFilter, setProjectStatusFilter] = useState("all")
+  
+  const [proposalSearch, setProposalSearch] = useState("")
+  const [proposalStatusFilter, setProposalStatusFilter] = useState("all")
 
   // Check authentication
   useEffect(() => {
@@ -155,6 +189,7 @@ export default function MasterAdminPanel() {
     loadSpeakers()
     loadDeals()
     loadProjects()
+    loadProposals()
     loadAnalytics()
   }, [router])
 
@@ -241,6 +276,26 @@ export default function MasterAdminPanel() {
       })
     } finally {
       setProjectsLoading(false)
+    }
+  }
+
+  const loadProposals = async () => {
+    try {
+      setProposalsLoading(true)
+      const response = await fetch("/api/proposals")
+      if (response.ok) {
+        const data = await response.json()
+        setProposals(Array.isArray(data) ? data : [])
+      }
+    } catch (error) {
+      console.error("Error loading proposals:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load proposals",
+        variant: "destructive",
+      })
+    } finally {
+      setProposalsLoading(false)
     }
   }
 
@@ -342,6 +397,18 @@ export default function MasterAdminPanel() {
     return matchesSearch && matchesStatus
   })
 
+  const filteredProposals = proposals.filter((proposal) => {
+    const matchesSearch = 
+      proposal.client_name.toLowerCase().includes(proposalSearch.toLowerCase()) ||
+      (proposal.client_company?.toLowerCase().includes(proposalSearch.toLowerCase()) || false) ||
+      proposal.title.toLowerCase().includes(proposalSearch.toLowerCase()) ||
+      proposal.proposal_number.toLowerCase().includes(proposalSearch.toLowerCase())
+    
+    const matchesStatus = proposalStatusFilter === "all" || proposal.status === proposalStatusFilter
+    
+    return matchesSearch && matchesStatus
+  })
+
   if (!isLoggedIn) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -371,6 +438,18 @@ export default function MasterAdminPanel() {
     active: projects.filter(p => !["completed", "cancelled"].includes(p.status)).length,
     completed: projects.filter(p => p.status === "completed").length,
     totalBudget: projects.reduce((sum, project) => sum + project.budget, 0)
+  }
+
+  const proposalStats = {
+    total: proposals.length,
+    sent: proposals.filter(p => ["sent", "viewed", "accepted", "rejected"].includes(p.status)).length,
+    accepted: proposals.filter(p => p.status === "accepted").length,
+    totalValue: proposals
+      .filter(p => p.status === "accepted")
+      .reduce((sum, p) => sum + p.total_investment, 0),
+    conversionRate: proposals.filter(p => ["sent", "viewed", "accepted", "rejected"].includes(p.status)).length > 0 
+      ? (proposals.filter(p => p.status === "accepted").length / proposals.filter(p => ["sent", "viewed", "accepted", "rejected"].includes(p.status)).length) * 100 
+      : 0
   }
 
   const analyticsStats = {
@@ -459,7 +538,7 @@ export default function MasterAdminPanel() {
 
         {/* Tabbed Interface */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="speakers" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Speakers ({speakerStats.total})
@@ -471,6 +550,10 @@ export default function MasterAdminPanel() {
             <TabsTrigger value="projects" className="flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
               Projects ({projectStats.total})
+            </TabsTrigger>
+            <TabsTrigger value="proposals" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Proposals ({proposalStats.total})
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
@@ -790,6 +873,257 @@ export default function MasterAdminPanel() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Proposals Tab */}
+          <TabsContent value="proposals" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Proposal Management</h2>
+              <Button onClick={() => router.push("/admin/proposals/new")}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Proposal
+              </Button>
+            </div>
+
+            {/* Proposal Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Proposals</p>
+                    <p className="text-2xl font-bold">{proposalStats.total}</p>
+                  </div>
+                  <FileText className="h-8 w-8 text-gray-400" />
+                </div>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Sent</p>
+                    <p className="text-2xl font-bold">{proposalStats.sent}</p>
+                  </div>
+                  <Send className="h-8 w-8 text-blue-400" />
+                </div>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Accepted</p>
+                    <p className="text-2xl font-bold">{proposalStats.accepted}</p>
+                  </div>
+                  <CheckCircle className="h-8 w-8 text-green-400" />
+                </div>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Conversion Rate</p>
+                    <p className="text-2xl font-bold">{proposalStats.conversionRate.toFixed(1)}%</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-purple-400" />
+                </div>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Value</p>
+                    <p className="text-2xl font-bold">{formatCurrency(proposalStats.totalValue)}</p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-green-400" />
+                </div>
+              </Card>
+            </div>
+
+            {/* Search and Filters */}
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search by client, company, title, or proposal number..."
+                  value={proposalSearch}
+                  onChange={(e) => setProposalSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={proposalStatusFilter} onValueChange={setProposalStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="sent">Sent</SelectItem>
+                  <SelectItem value="viewed">Viewed</SelectItem>
+                  <SelectItem value="accepted">Accepted</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Proposals Table */}
+            <Card>
+              {proposalsLoading ? (
+                <div className="p-8 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                  <p className="text-gray-500">Loading proposals...</p>
+                </div>
+              ) : filteredProposals.length === 0 ? (
+                <div className="p-8 text-center">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-4">No proposals found</p>
+                  <Button onClick={() => router.push("/admin/proposals/new")}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Proposal
+                  </Button>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Proposal</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Event</TableHead>
+                      <TableHead>Value</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Views</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Valid Until</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredProposals.map((proposal) => (
+                      <TableRow key={proposal.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{proposal.proposal_number}</p>
+                            <p className="text-sm text-gray-500">{proposal.title}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{proposal.client_name}</p>
+                            <p className="text-sm text-gray-500">{proposal.client_company}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="text-sm">{proposal.event_title}</p>
+                            {proposal.event_date && (
+                              <p className="text-xs text-gray-500">
+                                <Calendar className="h-3 w-3 inline mr-1" />
+                                {formatDate(proposal.event_date)}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{formatCurrency(proposal.total_investment)}</TableCell>
+                        <TableCell>
+                          {(() => {
+                            switch (proposal.status) {
+                              case "draft":
+                                return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Draft</Badge>
+                              case "sent":
+                                return <Badge className="bg-blue-100 text-blue-800"><Send className="h-3 w-3 mr-1" />Sent</Badge>
+                              case "viewed":
+                                return <Badge className="bg-purple-100 text-purple-800"><Eye className="h-3 w-3 mr-1" />Viewed</Badge>
+                              case "accepted":
+                                return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Accepted</Badge>
+                              case "rejected":
+                                return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Rejected</Badge>
+                              case "expired":
+                                return <Badge variant="secondary" className="bg-gray-100"><Clock className="h-3 w-3 mr-1" />Expired</Badge>
+                              default:
+                                return null
+                            }
+                          })()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            {proposal.views}
+                          </div>
+                        </TableCell>
+                        <TableCell>{formatDate(proposal.created_at)}</TableCell>
+                        <TableCell>
+                          {proposal.valid_until ? (
+                            <span className={new Date(proposal.valid_until) < new Date() ? "text-red-600" : ""}>
+                              {formatDate(proposal.valid_until)}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => router.push(`/admin/proposals/${proposal.id}`)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => router.push(`/admin/proposals/${proposal.id}/edit`)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={async () => {
+                                const link = `${window.location.origin}/proposal/${proposal.access_token}`
+                                await navigator.clipboard.writeText(link)
+                                toast({
+                                  title: "Link copied",
+                                  description: "Proposal link copied to clipboard"
+                                })
+                              }}>
+                                <LinkIcon className="h-4 w-4 mr-2" />
+                                Copy Link
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => window.open(`/proposal/${proposal.access_token}`, '_blank')}
+                              >
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Preview
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {proposal.status === "draft" && (
+                                <DropdownMenuItem onClick={async () => {
+                                  try {
+                                    const response = await fetch(`/api/proposals/${proposal.id}/send`, {
+                                      method: "POST"
+                                    })
+                                    if (response.ok) {
+                                      await loadProposals()
+                                      toast({
+                                        title: "Success",
+                                        description: "Proposal sent to client"
+                                      })
+                                    }
+                                  } catch (error) {
+                                    toast({
+                                      title: "Error",
+                                      description: "Failed to send proposal",
+                                      variant: "destructive"
+                                    })
+                                  }
+                                }}>
+                                  <Send className="h-4 w-4 mr-2" />
+                                  Send to Client
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </Card>
           </TabsContent>
 
           {/* Analytics Tab */}

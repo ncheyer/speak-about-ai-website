@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -8,25 +8,52 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Calendar, Mail, MapPin, Building, User, Phone, DollarSign, MessageSquare, Heart, CheckCircle, AlertCircle } from 'lucide-react'
-// import { useWishlist } from '@/contexts/wishlist-context'
+import { 
+  Calendar, 
+  Mail, 
+  MapPin, 
+  Building, 
+  User, 
+  Phone, 
+  DollarSign, 
+  MessageSquare, 
+  CheckCircle,
+  Users,
+  Sparkles,
+  Clock,
+  Target,
+  X,
+  Search,
+  ChevronDown,
+  Loader2,
+  Send
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
+
+interface Speaker {
+  id: number
+  name: string
+  title?: string
+  oneLiner?: string
+}
 
 export function CustomContactForm() {
-  // const { wishlist, wishlistCount } = useWishlist()
-  const wishlist: any[] = []
-  const wishlistCount = 0
   const { toast } = useToast()
   
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [speakers, setSpeakers] = useState<Speaker[]>([])
+  const [loadingSpeakers, setLoadingSpeakers] = useState(true)
+  const [selectedSpeakers, setSelectedSpeakers] = useState<Speaker[]>([])
+  const [speakerSearchTerm, setSpeakerSearchTerm] = useState('')
+  const [showSpeakerDropdown, setShowSpeakerDropdown] = useState(false)
+  
   const [formData, setFormData] = useState({
     clientName: '',
     clientEmail: '',
     phone: '',
     organizationName: '',
-    specificSpeaker: '',
     eventDate: '',
     eventLocation: '',
     eventBudget: '',
@@ -34,13 +61,31 @@ export function CustomContactForm() {
   })
 
   const budgetOptions = [
-    'Under $10k',
-    '$10k - $25k',
-    '$25k - $50k',
-    '$50k - $100k',
-    'Over $100k',
-    'Let\'s discuss'
+    { value: 'under-10k', label: 'Under $10,000' },
+    { value: '10k-25k', label: '$10,000 - $25,000' },
+    { value: '25k-50k', label: '$25,000 - $50,000' },
+    { value: '50k-100k', label: '$50,000 - $100,000' },
+    { value: 'over-100k', label: 'Over $100,000' },
+    { value: 'discuss', label: "Let's discuss" }
   ]
+
+  useEffect(() => {
+    fetchSpeakers()
+  }, [])
+
+  const fetchSpeakers = async () => {
+    try {
+      const response = await fetch('/api/speakers')
+      const data = await response.json()
+      if (data.success) {
+        setSpeakers(data.speakers || [])
+      }
+    } catch (error) {
+      console.error('Error fetching speakers:', error)
+    } finally {
+      setLoadingSpeakers(false)
+    }
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -49,13 +94,31 @@ export function CustomContactForm() {
     }))
   }
 
+  const toggleSpeaker = (speaker: Speaker) => {
+    setSelectedSpeakers(prev => {
+      const exists = prev.find(s => s.id === speaker.id)
+      if (exists) {
+        return prev.filter(s => s.id !== speaker.id)
+      }
+      return [...prev, speaker]
+    })
+  }
+
+  const removeSpeaker = (speakerId: number) => {
+    setSelectedSpeakers(prev => prev.filter(s => s.id !== speakerId))
+  }
+
+  const filteredSpeakers = speakers.filter(speaker =>
+    speaker.name.toLowerCase().includes(speakerSearchTerm.toLowerCase())
+  )
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.clientName || !formData.clientEmail) {
+    if (!formData.clientName || !formData.clientEmail || !formData.organizationName) {
       toast({
         title: "Required fields missing",
-        description: "Please fill in your name and email address.",
+        description: "Please fill in your name, email address, and organization.",
         variant: "destructive"
       })
       return
@@ -69,7 +132,10 @@ export function CustomContactForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          specificSpeaker: selectedSpeakers.map(s => s.name).join(', ')
+        })
       })
 
       const result = await response.json()
@@ -87,12 +153,12 @@ export function CustomContactForm() {
           clientEmail: '',
           phone: '',
           organizationName: '',
-          specificSpeaker: '',
           eventDate: '',
           eventLocation: '',
           eventBudget: '',
           additionalInfo: ''
         })
+        setSelectedSpeakers([])
       } else {
         throw new Error(result.error || 'Failed to submit')
       }
@@ -111,12 +177,12 @@ export function CustomContactForm() {
   if (isSuccess) {
     return (
       <Card className="max-w-2xl mx-auto">
-        <CardContent className="pt-6">
+        <CardContent className="pt-8">
           <div className="text-center">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Request Submitted Successfully!</h2>
-            <p className="text-gray-600 mb-4">
-              Thank you for your interest in our AI keynote speakers. We've received your request and will be in touch within 24 hours with personalized recommendations.
+            <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-3">Request Submitted Successfully!</h2>
+            <p className="text-gray-600 mb-6">
+              Thank you for your interest. We'll be in touch within 24 hours with personalized speaker recommendations for your event.
             </p>
             <Button onClick={() => setIsSuccess(false)} variant="outline">
               Submit Another Request
@@ -128,272 +194,307 @@ export function CustomContactForm() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-3xl mx-auto space-y-8">
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-4">Book an AI Keynote Speaker</h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Please be as detailed as possible about your event to help us quickly identify the right expert for you.
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold text-gray-900">
+          Book an AI Keynote Speaker
+        </h1>
+        <p className="text-lg text-gray-600">
+          Tell us about your event and we'll match you with the perfect AI expert
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Main Form */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Event Details</CardTitle>
-              <CardDescription>
-                Tell us about your event and speaker requirements
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Contact Information */}
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="clientName" className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      Name *
-                    </Label>
-                    <Input
-                      id="clientName"
-                      value={formData.clientName}
-                      onChange={(e) => handleInputChange('clientName', e.target.value)}
-                      placeholder="Your full name"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="clientEmail" className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      Email *
-                    </Label>
-                    <Input
-                      id="clientEmail"
-                      type="email"
-                      value={formData.clientEmail}
-                      onChange={(e) => handleInputChange('clientEmail', e.target.value)}
-                      placeholder="your.email@company.com"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="phone" className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      Phone (optional)
-                    </Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="(555) 123-4567"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="organizationName" className="flex items-center gap-2">
-                      <Building className="h-4 w-4" />
-                      Organization Name
-                    </Label>
-                    <Input
-                      id="organizationName"
-                      value={formData.organizationName}
-                      onChange={(e) => handleInputChange('organizationName', e.target.value)}
-                      placeholder="Your company or organization"
-                    />
-                  </div>
-                </div>
-
-                {/* Event Details */}
-                <div>
-                  <Label htmlFor="specificSpeaker" className="flex items-center gap-2">
-                    <Heart className="h-4 w-4" />
-                    Do you have a specific speaker in mind?
-                  </Label>
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-2xl">Event Information</CardTitle>
+          <CardDescription>
+            Please provide as much detail as possible about your event
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Contact Section */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="clientName">Your Name *</Label>
                   <Input
-                    id="specificSpeaker"
-                    value={formData.specificSpeaker}
-                    onChange={(e) => handleInputChange('specificSpeaker', e.target.value)}
-                    placeholder="Speaker name or type of expertise you're looking for"
+                    id="clientName"
+                    value={formData.clientName}
+                    onChange={(e) => handleInputChange('clientName', e.target.value)}
+                    placeholder="John Smith"
+                    required
+                    className="h-12"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="clientEmail">Email Address *</Label>
+                  <Input
+                    id="clientEmail"
+                    type="email"
+                    value={formData.clientEmail}
+                    onChange={(e) => handleInputChange('clientEmail', e.target.value)}
+                    placeholder="john@company.com"
+                    required
+                    className="h-12"
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="eventDate" className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Event Date (optional)
-                    </Label>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="(555) 123-4567"
+                    className="h-12"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="organizationName">Organization *</Label>
+                  <Input
+                    id="organizationName"
+                    value={formData.organizationName}
+                    onChange={(e) => handleInputChange('organizationName', e.target.value)}
+                    placeholder="Acme Corporation"
+                    required
+                    className="h-12"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Speaker Selection */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold mb-4">Speaker Preferences</h3>
+
+              <div className="space-y-2">
+                <Label>Speakers You're Interested In</Label>
+                <div className="relative">
+                  <div 
+                    className={cn(
+                      "min-h-[48px] w-full rounded-lg border bg-white px-3 py-2 cursor-pointer",
+                      "hover:border-gray-400 transition-colors",
+                      showSpeakerDropdown && "border-blue-500 ring-2 ring-blue-100"
+                    )}
+                    onClick={() => setShowSpeakerDropdown(!showSpeakerDropdown)}
+                  >
+                    {selectedSpeakers.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedSpeakers.map(speaker => (
+                          <Badge 
+                            key={speaker.id}
+                            variant="secondary"
+                            className="bg-blue-100 text-blue-700 hover:bg-blue-200"
+                          >
+                            {speaker.name}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                removeSpeaker(speaker.id)
+                              }}
+                              className="ml-1 hover:text-blue-900"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between text-gray-500">
+                        <span>Select speakers or browse all options</span>
+                        <ChevronDown className="h-4 w-4" />
+                      </div>
+                    )}
+                  </div>
+
+                  {showSpeakerDropdown && (
+                    <div className="absolute z-10 w-full mt-2 bg-white border rounded-lg shadow-xl max-h-80 overflow-hidden">
+                      <div className="sticky top-0 bg-white border-b p-3">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            type="text"
+                            placeholder="Search speakers..."
+                            value={speakerSearchTerm}
+                            onChange={(e) => setSpeakerSearchTerm(e.target.value)}
+                            className="pl-10"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </div>
+                      <div className="overflow-y-auto max-h-60">
+                        {loadingSpeakers ? (
+                          <div className="p-8 text-center">
+                            <Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" />
+                            <p className="text-sm text-gray-500 mt-2">Loading speakers...</p>
+                          </div>
+                        ) : filteredSpeakers.length > 0 ? (
+                          filteredSpeakers.map(speaker => {
+                            const isSelected = selectedSpeakers.find(s => s.id === speaker.id)
+                            return (
+                              <div
+                                key={speaker.id}
+                                className={cn(
+                                  "px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors",
+                                  isSelected && "bg-blue-50"
+                                )}
+                                onClick={() => toggleSpeaker(speaker)}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="font-medium">{speaker.name}</div>
+                                    {speaker.title && (
+                                      <div className="text-sm text-gray-500">{speaker.title}</div>
+                                    )}
+                                  </div>
+                                  {isSelected && (
+                                    <CheckCircle className="h-5 w-5 text-blue-600" />
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })
+                        ) : (
+                          <div className="p-8 text-center text-gray-500">
+                            No speakers found matching "{speakerSearchTerm}"
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600">
+                  Can't find who you're looking for? Describe your ideal speaker in the additional information section below.
+                </p>
+              </div>
+            </div>
+
+            {/* Event Details */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold mb-4">Event Details</h3>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="eventDate">Event Date</Label>
+                  <div className="relative">
                     <Input
                       id="eventDate"
                       type="date"
                       value={formData.eventDate}
                       onChange={(e) => handleInputChange('eventDate', e.target.value)}
+                      className="h-12 pl-10"
                     />
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   </div>
-                  
-                  <div>
-                    <Label htmlFor="eventLocation" className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      Event Location (optional)
-                    </Label>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="eventLocation">Event Location</Label>
+                  <div className="relative">
                     <Input
                       id="eventLocation"
                       value={formData.eventLocation}
                       onChange={(e) => handleInputChange('eventLocation', e.target.value)}
                       placeholder="City, State or Virtual"
+                      className="h-12 pl-10"
                     />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="eventBudget" className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" />
-                    Event Budget
-                  </Label>
-                  <Select value={formData.eventBudget} onValueChange={(value) => handleInputChange('eventBudget', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your budget range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {budgetOptions.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="additionalInfo" className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    Additional Information
-                  </Label>
-                  <Textarea
-                    id="additionalInfo"
-                    value={formData.additionalInfo}
-                    onChange={(e) => handleInputChange('additionalInfo', e.target.value)}
-                    placeholder="What additional information would you like us to know about your organization, industry, or event?"
-                    rows={4}
-                  />
-                </div>
-
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                  size="lg"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit Request'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Wishlist Sidebar */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-24">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Heart className="h-5 w-5" />
-                Your Speaker Wishlist
-                {wishlistCount > 0 && (
-                  <Badge variant="destructive">{wishlistCount}</Badge>
-                )}
-              </CardTitle>
-              <CardDescription>
-                {wishlistCount === 0 
-                  ? "Add speakers you're interested in while browsing"
-                  : `${wishlistCount} speaker${wishlistCount === 1 ? '' : 's'} selected`
-                }
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {wishlist.length === 0 ? (
-                <div className="text-center py-6">
-                  <Heart className="h-8 w-8 text-gray-300 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500 mb-4">
-                    No speakers in your wishlist yet. Browse our speakers and add the ones you're interested in.
-                  </p>
-                  <Button variant="outline" size="sm" asChild>
-                    <a href="/speakers">Browse Speakers</a>
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {wishlist.slice(0, 3).map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage 
-                          src={item.speaker?.headshot_url} 
-                          alt={item.speaker?.name}
-                        />
-                        <AvatarFallback className="text-xs">
-                          {item.speaker?.name?.split(' ').map(n => n[0]).join('').toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {item.speaker?.name}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {wishlist.length > 3 && (
-                    <p className="text-xs text-gray-500 text-center">
-                      +{wishlist.length - 3} more speakers
-                    </p>
-                  )}
-                  
-                  <div className="pt-2 border-t border-gray-200">
-                    <p className="text-xs text-gray-500">
-                      These speakers will be included in your request and we'll provide personalized recommendations based on your selections.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Contact Info */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Need Help?</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 text-blue-600" />
-                  <div>
-                    <p className="font-medium">Call us directly</p>
-                    <a href="tel:+1-510-435-3947" className="text-blue-600 hover:underline">
-                      (510) 435-3947
-                    </a>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Mail className="h-4 w-4 text-blue-600" />
-                  <div>
-                    <p className="font-medium">Email us</p>
-                    <a href="mailto:human@speakabout.ai" className="text-blue-600 hover:underline">
-                      human@speakabout.ai
-                    </a>
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="eventBudget">Speaker Budget Range</Label>
+                <Select value={formData.eventBudget} onValueChange={(value) => handleInputChange('eventBudget', value)}>
+                  <SelectTrigger className="h-12">
+                    <SelectValue placeholder="Select your budget range" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {budgetOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Additional Info */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold mb-4">Additional Information</h3>
+
+              <div className="space-y-2">
+                <Label htmlFor="additionalInfo">
+                  Tell us more about your event
+                </Label>
+                <Textarea
+                  id="additionalInfo"
+                  value={formData.additionalInfo}
+                  onChange={(e) => handleInputChange('additionalInfo', e.target.value)}
+                  placeholder="Share details about your audience, event theme, specific topics of interest, or any special requirements..."
+                  rows={5}
+                  className="resize-none"
+                />
+              </div>
+            </div>
+
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="w-full"
+              size="lg"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                'Submit Request'
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Contact Info Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Need Help?</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="flex items-start gap-3">
+              <Phone className="h-5 w-5 text-gray-400 mt-0.5" />
+              <div>
+                <p className="font-medium text-gray-900">Call us directly</p>
+                <a href="tel:+1-510-435-3947" className="text-blue-600 hover:underline">
+                  (510) 435-3947
+                </a>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
+              <div>
+                <p className="font-medium text-gray-900">Email us</p>
+                <a href="mailto:human@speakabout.ai" className="text-blue-600 hover:underline">
+                  human@speakabout.ai
+                </a>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -238,7 +238,7 @@ export function ProposalView({ proposal, isPreview = false }: ProposalViewProps)
                     
                     {/* Speaker Info Overlay */}
                     <div className="relative h-full flex items-center">
-                      <div className="max-w-2xl px-8 py-12">
+                      <div className="w-1/2 px-8 py-12">
                         <h3 className="text-4xl font-bold text-white mb-2">
                           {speaker.name}
                         </h3>

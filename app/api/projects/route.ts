@@ -64,31 +64,37 @@ export async function POST(request: NextRequest) {
     
     const body = await request.json()
 
-    // Validate required fields
+    // Validate required fields (matching what frontend sends)
     const requiredFields = [
       "project_name",
       "client_name",
-      "project_type",
-      "status",
-      "priority",
-      "start_date",
-      "budget",
-      "spent",
-      "completion_percentage"
+      "client_email",
+      "event_date",
+      "event_location",
+      "event_type"
     ]
 
     for (const field of requiredFields) {
-      if (body[field] === undefined || body[field] === null) {
+      if (body[field] === undefined || body[field] === null || body[field] === "") {
         return NextResponse.json({ error: `Missing required field: ${field}` }, { status: 400 })
       }
     }
 
-    // Set default values
+    // Set default values and map frontend fields to database fields
     const projectData = {
       ...body,
-      budget: parseFloat(body.budget) || 0,
+      project_type: body.event_type || body.project_type || "speaking_engagement",
+      status: body.status || "invoicing",
+      priority: body.priority || "medium",
+      start_date: body.start_date || body.event_date || new Date().toISOString(),
+      budget: parseFloat(body.budget) || parseFloat(body.speaker_fee) || 0,
       spent: parseFloat(body.spent) || 0,
-      completion_percentage: parseInt(body.completion_percentage) || 0
+      completion_percentage: parseInt(body.completion_percentage) || 0,
+      speaker_fee: parseFloat(body.speaker_fee) || 0,
+      // Handle optional fields
+      travel_required: body.travel_required || false,
+      flight_required: body.flight_required || body.fly_required || false,
+      accommodation_required: body.accommodation_required || body.hotel_required || false
     }
 
     const project = await createProject(projectData)

@@ -65,7 +65,8 @@ export default function NewProposalPage() {
   console.log("Proposal form mode:", {
     editId,
     isEditMode,
-    url: typeof window !== 'undefined' ? window.location.href : 'server'
+    url: typeof window !== 'undefined' ? window.location.href : 'server',
+    searchParamsAll: typeof window !== 'undefined' ? window.location.search : 'server'
   })
   
   // Form state
@@ -490,19 +491,27 @@ export default function NewProposalPage() {
         status,
         event_date: formData.event_date?.toISOString().split('T')[0],
         attendee_count: parseInt(formData.attendee_count) || 0,
-        speakers: proposalSpeakers,
-        services,
-        deliverables,
+        speakers: proposalSpeakers || [],
+        services: services || [],
+        deliverables: deliverables || [],
         subtotal: calculateTotal(),
         total_investment: calculateTotal(),
-        payment_schedule: paymentSchedule,
-        testimonials,
-        case_studies: caseStudies,
+        payment_schedule: paymentSchedule || [],
+        testimonials: testimonials || [],
+        case_studies: caseStudies || [],
         valid_until: validUntil.toISOString().split('T')[0],
         created_by: "Admin" // TODO: Get from auth
       }
 
       console.log(`${isEditMode ? 'Updating' : 'Creating'} proposal data:`, proposalData)
+      console.log('Proposal data details:', {
+        hasClientName: !!proposalData.client_name,
+        hasClientEmail: !!proposalData.client_email,
+        hasTotalInvestment: proposalData.total_investment !== undefined,
+        totalInvestmentValue: proposalData.total_investment,
+        speakersCount: proposalData.speakers?.length || 0,
+        servicesCount: proposalData.services?.length || 0
+      })
 
       const url = isEditMode ? `/api/proposals/${editId}` : "/api/proposals"
       const method = isEditMode ? "PUT" : "POST"
@@ -535,13 +544,23 @@ export default function NewProposalPage() {
         router.push(`/admin/proposals/${proposal.id}`)
       } else {
         let errorMessage = `Failed to ${isEditMode ? 'update' : 'create'} proposal`
+        let responseBody = null
+        
         try {
-          const errorData = await response.json()
-          errorMessage = errorData.error || errorMessage
-          console.error("API Error Response:", response.status, errorData)
+          // Clone the response to read it twice if needed
+          const clonedResponse = response.clone()
+          responseBody = await response.json()
+          errorMessage = responseBody.error || errorMessage
+          console.error("API Error Response (JSON):", response.status, responseBody)
         } catch (e) {
-          const errorText = await response.text()
-          console.error("API Error Response (text):", response.status, errorText)
+          // If JSON parsing fails, try to read as text
+          try {
+            const errorText = await response.clone().text()
+            console.error("API Error Response (text):", response.status, errorText)
+            console.error("Response headers:", Object.fromEntries(response.headers.entries()))
+          } catch (textError) {
+            console.error("Failed to read error response:", textError)
+          }
         }
         throw new Error(errorMessage)
       }
@@ -585,7 +604,7 @@ export default function NewProposalPage() {
             <Save className="h-4 w-4 mr-2" />
             Save Draft
           </Button>
-          <Button onClick={() => handleSubmit("draft")} disabled={loading}>
+          <Button onClick={() => handleSubmit("sent")} disabled={loading}>
             <FileText className="h-4 w-4 mr-2" />
             Publish
           </Button>
@@ -1239,7 +1258,7 @@ export default function NewProposalPage() {
                     Save as Draft
                   </Button>
                   <Button 
-                    onClick={() => handleSubmit("draft")}
+                    onClick={() => handleSubmit("sent")}
                     disabled={loading}
                   >
                     <FileText className="h-4 w-4 mr-2" />

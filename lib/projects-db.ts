@@ -25,7 +25,7 @@ export interface Project {
   company?: string
   project_type: string
   description?: string
-  status: "2plus_months" | "1to2_months" | "less_than_month" | "final_week" | "completed" | "cancelled"
+  status: "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled" | "2plus_months" | "1to2_months" | "less_than_month" | "final_week"
   priority: "low" | "medium" | "high" | "urgent"
   start_date: string
   end_date?: string
@@ -188,19 +188,36 @@ export async function getAllProjects(): Promise<Project[]> {
   }
 }
 
+export async function getProjectById(id: number): Promise<Project | null> {
+  if (!databaseAvailable || !sql) {
+    console.warn("getProjectById: Database not available")
+    return null
+  }
+  
+  try {
+    const [project] = await sql`
+      SELECT * FROM projects 
+      WHERE id = ${id}
+    `
+    return project as Project || null
+  } catch (error) {
+    console.error("Error fetching project by id:", error)
+    throw error
+  }
+}
+
 export async function createProject(projectData: Omit<Project, "id" | "created_at" | "updated_at">): Promise<Project | null> {
   if (!databaseAvailable || !sql) {
-    console.warn("createProject: Database not available")
+    console.error("createProject: Database not available - databaseAvailable:", databaseAvailable, "sql:", !!sql)
     return null
   }
   try {
-    console.log("Creating new project:", projectData.project_name)
+    console.log("Creating new project with data:", JSON.stringify(projectData, null, 2))
     
-    // Always start new projects in the invoicing stage
-    // This ensures invoicing and setup is completed first
+    // Use the status provided or default to invoicing
     const finalProjectData = {
       ...projectData,
-      status: "invoicing" // Always start with invoicing & setup
+      status: projectData.status || "invoicing" // Use provided status or default to invoicing
     }
     // Initialize stage_completion with invoicing tasks marked as due (false = not completed)
     const initialStageCompletion = {
@@ -212,43 +229,73 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
       }
     }
     
+    // Insert with all essential and event fields
     const [project] = await sql`
       INSERT INTO projects (
-        project_name, client_name, client_email, client_phone, company,
-        project_type, description, status, priority, start_date,
-        end_date, deadline, budget, spent, completion_percentage,
-        team_members, deliverables, milestones, notes, tags,
-        event_date, event_location, event_type, attendee_count, speaker_fee,
-        travel_required, accommodation_required, av_requirements, meals_provided,
-        special_requests, event_agenda, marketing_materials, contact_person,
-        venue_contact, contract_signed, invoice_sent, payment_received,
-        presentation_ready, materials_sent, stage_completion
+        project_name, 
+        client_name, 
+        client_email,
+        client_phone,
+        company,
+        project_type,
+        description,
+        status, 
+        priority, 
+        start_date,
+        deadline,
+        budget, 
+        spent, 
+        completion_percentage,
+        event_name,
+        event_date,
+        event_location,
+        event_type,
+        attendee_count,
+        speaker_fee,
+        notes,
+        billing_contact_name,
+        billing_contact_email,
+        billing_contact_phone,
+        requested_speaker_name
       ) VALUES (
-        ${finalProjectData.project_name}, ${finalProjectData.client_name}, ${finalProjectData.client_email || null}, 
-        ${finalProjectData.client_phone || null}, ${finalProjectData.company || null},
-        ${finalProjectData.project_type}, ${finalProjectData.description || null}, ${finalProjectData.status}, 
-        ${finalProjectData.priority}, ${finalProjectData.start_date},
-        ${finalProjectData.end_date || null}, ${finalProjectData.deadline || null}, ${finalProjectData.budget}, 
-        ${finalProjectData.spent}, ${finalProjectData.completion_percentage},
-        ${finalProjectData.team_members || null}, ${finalProjectData.deliverables || null}, 
-        ${finalProjectData.milestones || null}, ${finalProjectData.notes || null}, ${finalProjectData.tags || null},
-        ${finalProjectData.event_date || null}, ${finalProjectData.event_location || null}, 
-        ${finalProjectData.event_type || null}, ${finalProjectData.attendee_count || null}, ${finalProjectData.speaker_fee || null},
-        ${finalProjectData.travel_required || false}, ${finalProjectData.accommodation_required || false},
-        ${finalProjectData.av_requirements || null}, ${finalProjectData.meals_provided || null},
-        ${finalProjectData.special_requests || null}, ${finalProjectData.event_agenda || null},
-        ${finalProjectData.marketing_materials || null}, ${finalProjectData.contact_person || null},
-        ${finalProjectData.venue_contact || null}, ${finalProjectData.contract_signed || false},
-        ${finalProjectData.invoice_sent || false}, ${finalProjectData.payment_received || false},
-        ${finalProjectData.presentation_ready || false}, ${finalProjectData.materials_sent || false},
-        ${JSON.stringify(initialStageCompletion)}
+        ${finalProjectData.project_name}, 
+        ${finalProjectData.client_name}, 
+        ${finalProjectData.client_email || null},
+        ${finalProjectData.client_phone || null},
+        ${finalProjectData.company || null},
+        ${finalProjectData.project_type},
+        ${finalProjectData.description || null},
+        ${finalProjectData.status}, 
+        ${finalProjectData.priority}, 
+        ${finalProjectData.start_date},
+        ${finalProjectData.deadline || null},
+        ${finalProjectData.budget}, 
+        ${finalProjectData.spent}, 
+        ${finalProjectData.completion_percentage},
+        ${finalProjectData.event_name || finalProjectData.project_name},
+        ${finalProjectData.event_date || finalProjectData.deadline || null},
+        ${finalProjectData.event_location || null},
+        ${finalProjectData.event_type || finalProjectData.project_type},
+        ${finalProjectData.attendee_count || finalProjectData.audience_size || 0},
+        ${finalProjectData.speaker_fee || 0},
+        ${finalProjectData.notes || null},
+        ${finalProjectData.billing_contact_name || finalProjectData.client_name},
+        ${finalProjectData.billing_contact_email || finalProjectData.client_email || null},
+        ${finalProjectData.billing_contact_phone || finalProjectData.client_phone || null},
+        ${finalProjectData.requested_speaker_name || null}
       )
       RETURNING *
     `
     console.log("Successfully created project with ID:", project.id)
     return project as Project
-  } catch (error) {
-    console.error("Error creating project:", error)
+  } catch (error: any) {
+    console.error("Error creating project - Full error:", error)
+    console.error("Error message:", error.message)
+    console.error("Error code:", error.code)
+    if (error.message?.includes('column')) {
+      console.error("Database column error - the projects table may be missing some columns")
+    }
+    // Return null instead of throwing to prevent 500 error
     return null
   }
 }

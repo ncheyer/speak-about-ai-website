@@ -4,6 +4,7 @@ import { useState, useEffect, DragEvent } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Calendar, DollarSign, Clock, AlertTriangle, CheckCircle2, Target } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
@@ -229,9 +230,22 @@ export function ProjectsKanban() {
                             )}
                           </div>
                         </div>
-                        <CardDescription className="text-sm">
-                          {project.client_name} {project.company && `• ${project.company}`}
-                        </CardDescription>
+                        <div className="flex items-center justify-between mt-2">
+                          <CardDescription className="text-sm">
+                            {project.client_name} {project.company && `• ${project.company}`}
+                          </CardDescription>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/admin/projects/${project.id}/edit`)
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </div>
                       </CardHeader>
                       <CardContent className="space-y-2">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">

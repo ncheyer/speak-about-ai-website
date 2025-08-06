@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createDeal, getDealById } from '@/lib/deals-utils'
-import { sendNewDealNotification } from '@/lib/email-utils'
+import { sendNewInquiryEmail } from '@/lib/email-service-new'
 // import { getWishlist, clearWishlist, transferWishlistToVisitor } from '@/lib/wishlist-utils'
 import { recordEvent } from '@/lib/analytics-db'
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     // Send email notifications
     try {
-      await sendNewDealNotification(deal, dealData)
+      await sendNewInquiryEmail(deal, dealData)
     } catch (emailError) {
       console.error('Failed to send email notifications:', emailError)
       // Don't fail the request if email fails

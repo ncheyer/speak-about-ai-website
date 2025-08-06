@@ -25,7 +25,9 @@ import {
   Monitor,
   Plane,
   DollarSign,
-  FileText
+  FileText,
+  Mail,
+  Send
 } from "lucide-react"
 import Link from "next/link"
 
@@ -63,6 +65,7 @@ interface Project {
   end_client_name?: string
   event_name?: string
   event_date?: string
+  event_location?: string
   event_website?: string
   venue_name?: string
   venue_address?: string
@@ -182,6 +185,8 @@ export default function ProjectEditPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [isSendingInvite, setIsSendingInvite] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState("")
 
   useEffect(() => {
     loadProject()
@@ -233,6 +238,47 @@ export default function ProjectEditPage() {
       setError("Failed to update project")
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleSendInvite = async () => {
+    const emailToUse = inviteEmail || formData.client_email || project?.client_email
+    
+    if (!emailToUse) {
+      setError("Please provide a client email address")
+      return
+    }
+
+    setIsSendingInvite(true)
+    setError("")
+    setSuccess("")
+
+    try {
+      const response = await fetch("/api/client-portal/invite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          projectId: params.id,
+          clientEmail: emailToUse,
+          adminEmail: "admin@speakaboutai.com"
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSuccess(`Client portal invitation sent to ${emailToUse}`)
+        setInviteEmail("")
+      } else {
+        setError(data.error || "Failed to send invitation")
+      }
+    } catch (error) {
+      console.error("Error sending invitation:", error)
+      setError("Failed to send invitation")
+    } finally {
+      setIsSendingInvite(false)
     }
   }
 
@@ -295,6 +341,18 @@ export default function ProjectEditPage() {
               <p className="text-gray-600 mt-1">{project.project_name}</p>
             </div>
             <div className="flex gap-3">
+              <Button 
+                onClick={handleSendInvite} 
+                disabled={isSendingInvite}
+                variant="outline"
+              >
+                {isSendingInvite ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="mr-2 h-4 w-4" />
+                )}
+                {isSendingInvite ? "Sending..." : "Send Client Portal Invite"}
+              </Button>
               <Button onClick={handleSave} disabled={isSaving}>
                 {isSaving ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -517,6 +575,15 @@ export default function ProjectEditPage() {
                       type="date"
                       value={formData.event_date?.split('T')[0] || ""}
                       onChange={(e) => updateField("event_date", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="event_location">Event Location</Label>
+                    <Input
+                      id="event_location"
+                      value={formData.event_location || ""}
+                      onChange={(e) => updateField("event_location", e.target.value)}
+                      placeholder="e.g., San Francisco, CA or Virtual"
                     />
                   </div>
                   <div>

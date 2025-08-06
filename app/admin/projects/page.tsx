@@ -48,6 +48,7 @@ import {
   Timer,
   Check,
   X,
+  Trash2,
   AlertCircle
 } from "lucide-react"
 import { AdminSidebar } from "@/components/admin-sidebar"
@@ -85,7 +86,6 @@ interface Project {
   av_requirements?: string
   travel_arrangements?: string
   accommodation_details?: string
-  speaker_fee?: number
   expenses_budget?: number
   
   // Timeline milestones
@@ -436,7 +436,7 @@ export default function EnhancedProjectManagementPage() {
           completion_percentage: 0,
           travel_required: newProjectData.travel_required,
           travel_expenses_amount: parseFloat(newProjectData.travel_stipend) || 0,
-          fly_required: newProjectData.flight_required,
+          flight_required: newProjectData.flight_required,
           accommodation_required: newProjectData.hotel_required,
           additional_notes: newProjectData.travel_notes,
           contract_signed: true // Assuming contract is signed when creating project
@@ -664,9 +664,12 @@ export default function EnhancedProjectManagementPage() {
 
   const filteredProjects = projects.filter(project => {
     const matchesSearch = 
-      project.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.event_title.toLowerCase().includes(searchTerm.toLowerCase())
+      (project.project_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (project.client_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (project.event_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (project.event_title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (project.event_location?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (project.requested_speaker_name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
     
     const matchesStatus = statusFilter === "all" || project.status === statusFilter
     return matchesSearch && matchesStatus
@@ -843,7 +846,7 @@ export default function EnhancedProjectManagementPage() {
                         .map((project) => (
                           <div key={project.id} className="flex items-center justify-between">
                             <div>
-                              <div className="font-medium">{project.event_title}</div>
+                              <div className="font-medium">{project.event_name || project.event_title || project.project_name}</div>
                               <div className="text-sm text-gray-500">{project.client_name}</div>
                             </div>
                             <div className="text-right">
@@ -883,7 +886,7 @@ export default function EnhancedProjectManagementPage() {
                           <Card key={project.id} className={"border-l-4 " + (currentStageData?.color?.replace('bg-', 'border-l-') || 'border-l-gray-500')}>
                             <CardHeader className="pb-3">
                               <div className="flex items-center justify-between">
-                                <CardTitle className="text-lg">{project.event_title}</CardTitle>
+                                <CardTitle className="text-lg">{project.event_name || project.event_title || project.project_name}</CardTitle>
                                 <Badge className={timeInfo.color + " bg-opacity-10 border-current"}>
                                   <Timer className="h-3 w-3 mr-1" />
                                   {timeInfo.text}
@@ -1209,6 +1212,7 @@ export default function EnhancedProjectManagementPage() {
                       <TableRow>
                         <TableHead>Event</TableHead>
                         <TableHead>Client</TableHead>
+                        <TableHead>Speaker</TableHead>
                         <TableHead>Stage</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Revenue</TableHead>
@@ -1220,9 +1224,9 @@ export default function EnhancedProjectManagementPage() {
                         <TableRow key={project.id}>
                           <TableCell>
                             <div>
-                              <div className="font-medium">{project.event_title}</div>
+                              <div className="font-medium">{project.event_name || project.event_title || project.project_name}</div>
                               <div className="text-sm text-gray-500">
-                                {project.event_location}
+                                {project.event_location || "Location TBD"}
                                 {project.event_classification && (
                                   <Badge variant="outline" className="ml-2 text-xs">
                                     {project.event_classification === "virtual" ? "Virtual" : 
@@ -1236,6 +1240,14 @@ export default function EnhancedProjectManagementPage() {
                             <div>
                               <div className="font-medium">{project.client_name}</div>
                               <div className="text-sm text-gray-500">{project.company}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Mic className="h-4 w-4 text-gray-400" />
+                              <span className="text-sm">
+                                {project.requested_speaker_name || "TBD"}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -1262,8 +1274,17 @@ export default function EnhancedProjectManagementPage() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => setSelectedProject(project)}
+                                title="View Details"
                               >
                                 <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => router.push(`/admin/projects/${project.id}/edit`)}
+                                title="Edit Project"
+                              >
+                                <Edit className="h-4 w-4" />
                               </Button>
                               <Button
                                 size="sm"
@@ -1278,8 +1299,9 @@ export default function EnhancedProjectManagementPage() {
                                 variant="ghost"
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
                                 onClick={() => handleDeleteProject(project.id)}
+                                title="Delete Project"
                               >
-                                <X className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>
@@ -1388,7 +1410,7 @@ export default function EnhancedProjectManagementPage() {
                             allTasks.push({
                               id: project.id + "-" + taskKey,
                               projectId: project.id,
-                              projectName: project.project_name || project.event_title,
+                              projectName: project.event_name || project.event_title || project.project_name,
                               clientName: project.client_name,
                               stage: currentStage,
                               taskKey: taskKey,
@@ -1631,7 +1653,7 @@ export default function EnhancedProjectManagementPage() {
                             .filter(p => !["completed", "cancelled"].includes(p.status))
                             .map(project => (
                               <SelectItem key={project.id} value={project.id.toString()}>
-                                {project.project_name || project.event_title} - {project.client_name}
+                                {project.event_name || project.event_title || project.project_name} - {project.client_name}
                               </SelectItem>
                             ))}
                         </SelectContent>
@@ -2106,7 +2128,7 @@ export default function EnhancedProjectManagementPage() {
                     {activeProjects.map((project) => (
                       <Card key={project.id} className={"border-l-4 " + (PROJECT_STATUSES[project.status]?.color?.replace('bg-', 'border-l-') || 'border-l-gray-500')}>
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-lg">{project.event_title}</CardTitle>
+                          <CardTitle className="text-lg">{project.event_name || project.event_title || project.project_name}</CardTitle>
                           <CardDescription>{project.client_name}</CardDescription>
                           <Badge className={(PROJECT_STATUSES[project.status]?.color || "bg-gray-500") + " text-white w-fit"}>
                             {PROJECT_STATUSES[project.status]?.label || project.status}
@@ -2155,10 +2177,25 @@ export default function EnhancedProjectManagementPage() {
         <Dialog open={!!selectedProject} onOpenChange={() => setSelectedProject(null)}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Task Management - {selectedProject.event_title}</DialogTitle>
-              <DialogDescription>
-                Manage stage completion for {selectedProject.client_name} ({new Date(selectedProject.event_date).toLocaleDateString()})
-              </DialogDescription>
+              <div className="flex items-start justify-between">
+                <div>
+                  <DialogTitle>Task Management - {selectedProject.event_title}</DialogTitle>
+                  <DialogDescription>
+                    Manage stage completion for {selectedProject.client_name} ({new Date(selectedProject.event_date).toLocaleDateString()})
+                  </DialogDescription>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    router.push(`/admin/projects/${selectedProject.id}/edit`)
+                    setSelectedProject(null)
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Project
+                </Button>
+              </div>
             </DialogHeader>
             
             <div className="space-y-6">

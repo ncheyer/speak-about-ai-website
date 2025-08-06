@@ -41,7 +41,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
                        deal.event_type === "Keynote" ? "Speaking" :
                        deal.event_type === "Consulting" ? "Consulting" : "Other",
           description: `Event: ${deal.event_title}\nLocation: ${deal.event_location}\nAttendees: ${deal.attendee_count}\n\n${deal.notes}`,
-          status: getAutomaticProjectStatus(deal.event_date) as const,
+          // Set status to invoicing for new projects (deals just won need invoicing first)
+          status: "invoicing" as const,
           priority: deal.priority,
           start_date: new Date().toISOString().split('T')[0],
           deadline: deal.event_date,
@@ -94,7 +95,17 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
                               deal.event_location?.toLowerCase().includes('remote') ? 'virtual' : 'local'
         }
         
-        await createProject(projectData)
+        const project = await createProject(projectData)
+        if (project) {
+          console.log(`Successfully created project "${project.project_name}" from won deal #${deal.id}`)
+          // Return the deal with additional info about the project creation
+          return NextResponse.json({
+            ...deal,
+            projectCreated: true,
+            projectId: project.id,
+            message: `Deal updated to Won and project "${project.project_name}" was automatically created`
+          })
+        }
       } catch (error) {
         console.error("Error creating project from won deal:", error)
         // Don't fail the deal update if project creation fails
@@ -151,7 +162,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
                        deal.event_type === "Keynote" ? "Speaking" :
                        deal.event_type === "Consulting" ? "Consulting" : "Other",
           description: `Event: ${deal.event_title}\nLocation: ${deal.event_location}\nAttendees: ${deal.attendee_count}\n\n${deal.notes}`,
-          status: getAutomaticProjectStatus(deal.event_date) as const,
+          // Set status to invoicing for new projects (deals just won need invoicing first)
+          status: "invoicing" as const,
           priority: deal.priority,
           start_date: new Date().toISOString().split('T')[0],
           deadline: deal.event_date,
@@ -204,7 +216,17 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
                               deal.event_location?.toLowerCase().includes('remote') ? 'virtual' : 'local'
         }
         
-        await createProject(projectData)
+        const project = await createProject(projectData)
+        if (project) {
+          console.log(`Successfully created project "${project.project_name}" from won deal #${deal.id}`)
+          // Return the deal with additional info about the project creation
+          return NextResponse.json({
+            ...deal,
+            projectCreated: true,
+            projectId: project.id,
+            message: `Deal updated to Won and project "${project.project_name}" was automatically created`
+          })
+        }
       } catch (error) {
         console.error("Error creating project from won deal:", error)
         // Don't fail the deal update if project creation fails

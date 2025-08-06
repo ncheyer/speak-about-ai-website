@@ -58,9 +58,16 @@ export async function POST(request: Request) {
     return NextResponse.json(proposal)
   } catch (error) {
     console.error("Error creating proposal:", error)
-    return NextResponse.json(
-      { error: `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}` },
-      { status: 500 }
-    )
+    console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace')
+    
+    // Return more detailed error information
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorDetails = {
+      error: `Internal server error: ${errorMessage}`,
+      type: error?.constructor?.name || 'UnknownError',
+      details: process.env.NODE_ENV === 'development' ? error : undefined
+    }
+    
+    return NextResponse.json(errorDetails, { status: 500 })
   }
 }
