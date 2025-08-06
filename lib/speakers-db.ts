@@ -158,37 +158,73 @@ export async function getAllSpeakers(filters?: {
   try {
     console.log("Fetching all speakers from database...")
     
-    let query = `SELECT * FROM speakers WHERE 1=1`
-    const params: any[] = []
-    let paramCount = 1
+    // Use tagged template literals for Neon queries
+    let speakers: Speaker[]
     
-    if (filters?.status) {
-      query += ` AND status = $${paramCount}`
-      params.push(filters.status)
-      paramCount++
+    if (!filters || Object.keys(filters).length === 0) {
+      // Simple query without filters
+      speakers = await sql`
+        SELECT * FROM speakers 
+        ORDER BY created_at DESC
+      `
+    } else {
+      // Build query with filters using safe interpolation
+      if (filters.status && filters.availability && filters.minFee !== undefined && filters.maxFee !== undefined) {
+        speakers = await sql`
+          SELECT * FROM speakers 
+          WHERE status = ${filters.status}
+          AND availability_status = ${filters.availability}
+          AND speaking_fee_min >= ${filters.minFee}
+          AND speaking_fee_max <= ${filters.maxFee}
+          ORDER BY created_at DESC
+        `
+      } else if (filters.status && filters.availability) {
+        speakers = await sql`
+          SELECT * FROM speakers 
+          WHERE status = ${filters.status}
+          AND availability_status = ${filters.availability}
+          ORDER BY created_at DESC
+        `
+      } else if (filters.status) {
+        speakers = await sql`
+          SELECT * FROM speakers 
+          WHERE status = ${filters.status}
+          ORDER BY created_at DESC
+        `
+      } else if (filters.availability) {
+        speakers = await sql`
+          SELECT * FROM speakers 
+          WHERE availability_status = ${filters.availability}
+          ORDER BY created_at DESC
+        `
+      } else if (filters.minFee !== undefined && filters.maxFee !== undefined) {
+        speakers = await sql`
+          SELECT * FROM speakers 
+          WHERE speaking_fee_min >= ${filters.minFee}
+          AND speaking_fee_max <= ${filters.maxFee}
+          ORDER BY created_at DESC
+        `
+      } else if (filters.minFee !== undefined) {
+        speakers = await sql`
+          SELECT * FROM speakers 
+          WHERE speaking_fee_min >= ${filters.minFee}
+          ORDER BY created_at DESC
+        `
+      } else if (filters.maxFee !== undefined) {
+        speakers = await sql`
+          SELECT * FROM speakers 
+          WHERE speaking_fee_max <= ${filters.maxFee}
+          ORDER BY created_at DESC
+        `
+      } else {
+        // Fallback to no filters
+        speakers = await sql`
+          SELECT * FROM speakers 
+          ORDER BY created_at DESC
+        `
+      }
     }
     
-    if (filters?.availability) {
-      query += ` AND availability_status = $${paramCount}`
-      params.push(filters.availability)
-      paramCount++
-    }
-    
-    if (filters?.minFee !== undefined) {
-      query += ` AND speaking_fee_min >= $${paramCount}`
-      params.push(filters.minFee)
-      paramCount++
-    }
-    
-    if (filters?.maxFee !== undefined) {
-      query += ` AND speaking_fee_max <= $${paramCount}`
-      params.push(filters.maxFee)
-      paramCount++
-    }
-    
-    query += ` ORDER BY created_at DESC`
-    
-    const speakers = await sql(query, params)
     console.log(`Successfully fetched ${speakers.length} speakers`)
     return speakers as Speaker[]
   } catch (error) {

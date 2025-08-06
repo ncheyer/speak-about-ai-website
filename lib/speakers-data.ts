@@ -412,7 +412,7 @@ async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
         if (dbSpeakers && dbSpeakers.length > 0) {
           console.log(`Fetched ${dbSpeakers.length} speakers from database directly`)
           // Transform database speakers to match our Speaker interface
-          return dbSpeakers.map((speaker: any) => ({
+          const transformedSpeakers = dbSpeakers.map((speaker: any) => ({
             slug: speaker.slug || speaker.name?.toLowerCase().replace(/\s+/g, '-') || `speaker-${speaker.id}`,
             name: speaker.name,
             title: speaker.title || speaker.one_liner || '',
@@ -437,15 +437,18 @@ async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
             expertise: speaker.expertise || speaker.primary_topics || [],
             ranking: speaker.ranking || speaker.internal_rating || 0,
           }))
+          return transformedSpeakers
         }
+        console.log("No speakers found in database")
+        return localSpeakers
       } catch (dbError) {
-        console.log("Could not fetch from database directly:", dbError)
+        console.log("Could not fetch from database directly, using local speakers:", dbError)
+        return localSpeakers
       }
     }
     
-    // Fallback to API call for client-side or if direct DB access fails
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-                   (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')
+    // Client-side: fetch from API
+    const baseUrl = window.location.origin
     
     const response = await fetch(`${baseUrl}/api/speakers`, {
       next: { revalidate: 3600 } // Cache for 1 hour instead of no-store
