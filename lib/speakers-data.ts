@@ -403,11 +403,17 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
   try {
+    // During build time, use local speakers instead of making API calls
+    if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_BASE_URL) {
+      console.log("Build time: Using local speakers data")
+      return localSpeakers
+    }
+    
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
                    (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')
     
     const response = await fetch(`${baseUrl}/api/speakers`, {
-      cache: 'no-store' // Always fetch fresh data for now
+      next: { revalidate: 3600 } // Cache for 1 hour instead of no-store
     })
 
     if (!response.ok) {

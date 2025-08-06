@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -45,7 +45,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-export default function NewProposalPage() {
+function NewProposalPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -1426,5 +1426,14 @@ export default function NewProposalPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+// Wrap with Suspense to handle useSearchParams
+export default function NewProposalPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <NewProposalPageContent />
+    </Suspense>
   )
 }
