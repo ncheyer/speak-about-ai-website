@@ -2,8 +2,10 @@ import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
 import { requireAdminAuth } from "@/lib/auth-middleware"
 import crypto from 'crypto'
+import { Resend } from 'resend'
 
 const sql = neon(process.env.DATABASE_URL!)
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   try {
@@ -126,11 +128,26 @@ export async function POST(request: NextRequest) {
     `
 
     // Send invitation email
-    await sendInvitationEmail({
-      ...application,
-      personal_message,
-      type
-    })
+    console.log('Attempting to send invitation email to:', application.email)
+    try {
+      const emailResult = await sendInvitationEmail({
+        ...application,
+        personal_message,
+        type
+      })
+      console.log('Email sent successfully:', emailResult)
+    } catch (emailError) {
+      console.error('Failed to send email:', emailError)
+      // Don't fail the whole request if email fails - invitation is already saved in DB
+      // But include warning in response
+      return NextResponse.json({
+        success: true,
+        message: "Invitation recorded but email sending failed. Please check logs.",
+        applicationId: application.id,
+        token: token,
+        emailError: emailError instanceof Error ? emailError.message : "Unknown email error"
+      })
+    }
 
     return NextResponse.json({
       success: true,
@@ -152,51 +169,121 @@ export async function POST(request: NextRequest) {
 }
 
 async function sendInvitationEmail(data: any) {
-  const inviteUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/create-account?token=${data.invitation_token}`
-  
-  // TODO: Implement actual email sending using Resend or similar service
-  console.log(`Sending invitation email to ${data.email}`)
-  console.log(`Invitation URL: ${inviteUrl}`)
-  console.log(`Type: ${data.type}`)
+  const inviteUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://speakabout.ai'}/create-account?token=${data.invitation_token}`
   
   const isAccountCreation = data.type === 'account_creation'
   
-  // For now, just log the email content
-  const emailContent = `
-    Dear ${data.first_name} ${data.last_name},
-
-    ${isAccountCreation 
-      ? "Your speaker profile is already set up on Speak About AI! We're inviting you to create your account so you can manage your profile and access the speaker portal."
-      : "You've been invited to join Speak About AI as a speaker!"
-    }
-
-    ${!isAccountCreation && "We're excited to welcome you to our exclusive network of AI and technology thought leaders."}
-
-    ${data.personal_message ? `\nPersonal message:\n${data.personal_message}\n` : ''}
-
-    Please click the link below to create your ${isAccountCreation ? 'account' : 'speaker account'}:
-    ${inviteUrl}
-
-    This invitation link will expire in 7 days.
-
-    ${isAccountCreation 
-      ? "Once you create your account, you'll be able to:\n- View and edit your speaker profile\n- Access the speaker portal\n- Manage your speaking engagements\n- Update your availability and preferences"
-      : ""
-    }
-
-    If you have any questions, please don't hesitate to reach out.
-
-    Best regards,
-    The Speak About AI Team
+  // Create HTML email content
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${isAccountCreation ? 'Create Your Speak About AI Account' : 'Invitation to Join Speak About AI'}</title>
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 28px;">Speak About AI</h1>
+        <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">AI & Technology Speaker Bureau</p>
+      </div>
+      
+      <div style="background: white; padding: 40px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px;">
+        <h2 style="color: #1f2937; margin-top: 0;">Dear ${data.first_name} ${data.last_name},</h2>
+        
+        <p style="color: #4b5563; font-size: 16px;">
+          ${isAccountCreation 
+            ? "Your speaker profile is already set up on Speak About AI! We're inviting you to create your account so you can manage your profile and access the speaker portal."
+            : "You've been invited to join Speak About AI as a featured speaker!"
+          }
+        </p>
+        
+        ${!isAccountCreation ? `
+          <p style="color: #4b5563; font-size: 16px;">
+            We're excited to welcome you to our exclusive network of AI and technology thought leaders.
+          </p>
+        ` : ''}
+        
+        ${data.personal_message ? `
+          <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="color: #6b7280; margin: 0 0 10px 0; font-size: 14px; font-weight: 600;">Personal Message:</p>
+            <p style="color: #4b5563; margin: 0;">${data.personal_message}</p>
+          </div>
+        ` : ''}
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${inviteUrl}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+            ${isAccountCreation ? 'Create Your Account' : 'Accept Invitation'}
+          </a>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; text-align: center;">
+          Or copy and paste this link into your browser:
+        </p>
+        <p style="color: #3b82f6; font-size: 14px; word-break: break-all; text-align: center;">
+          ${inviteUrl}
+        </p>
+        
+        ${isAccountCreation ? `
+          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+            <p style="color: #1e40af; font-weight: 600; margin: 0 0 10px 0;">Once you create your account, you'll be able to:</p>
+            <ul style="color: #3730a3; margin: 10px 0; padding-left: 20px;">
+              <li>View and edit your speaker profile</li>
+              <li>Access the speaker portal dashboard</li>
+              <li>Manage your speaking engagements</li>
+              <li>Update your availability and preferences</li>
+            </ul>
+          </div>
+        ` : ''}
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          <strong>Important:</strong> This invitation link will expire in 7 days.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+        
+        <p style="color: #6b7280; font-size: 14px;">
+          If you have any questions, please don't hesitate to reach out to us at 
+          <a href="mailto:hello@speakabout.ai" style="color: #3b82f6;">hello@speakabout.ai</a>
+        </p>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-bottom: 0;">
+          Best regards,<br>
+          <strong>The Speak About AI Team</strong>
+        </p>
+      </div>
+      
+      <div style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">
+        <p style="margin: 0;">
+          © ${new Date().getFullYear()} Speak About AI. All rights reserved.
+        </p>
+        <p style="margin: 10px 0 0 0;">
+          <a href="https://speakabout.ai" style="color: #6b7280; text-decoration: none;">speakabout.ai</a>
+        </p>
+      </div>
+    </body>
+    </html>
   `
   
-  console.log(emailContent)
-  
-  // In production, use Resend API:
-  // const { data, error } = await resend.emails.send({
-  //   from: 'Speak About AI <hello@speakabout.ai>',
-  //   to: data.email,
-  //   subject: isAccountCreation ? 'Create Your Speak About AI Account' : 'You're Invited to Join Speak About AI',
-  //   html: emailContent
-  // })
+  // Send email using Resend
+  try {
+    const { data: emailData, error } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'Speak About AI <hello@speakabout.ai>',
+      to: data.email,
+      subject: isAccountCreation ? 'Create Your Speak About AI Account' : 'You\'re Invited to Join Speak About AI',
+      html: htmlContent,
+      text: `Dear ${data.first_name} ${data.last_name},\n\n${isAccountCreation ? "Your speaker profile is already set up on Speak About AI! We're inviting you to create your account so you can manage your profile and access the speaker portal." : "You've been invited to join Speak About AI as a speaker!"}\n\n${data.personal_message ? `Personal message:\n${data.personal_message}\n\n` : ''}Please visit the following link to create your account:\n${inviteUrl}\n\nThis invitation link will expire in 7 days.\n\nBest regards,\nThe Speak About AI Team`
+    })
+    
+    if (error) {
+      console.error('Failed to send invitation email:', error)
+      throw new Error(`Failed to send email: ${error.message}`)
+    }
+    
+    console.log('Invitation email sent successfully:', emailData)
+    return emailData
+  } catch (error) {
+    console.error('Error sending invitation email:', error)
+    throw error
+  }
 }
