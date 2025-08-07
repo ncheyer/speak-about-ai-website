@@ -19,10 +19,9 @@ export default function SpeakerPortalLogin() {
 
   // Check if already logged in
   useEffect(() => {
-    const isSpeakerLoggedIn = localStorage.getItem("speakerLoggedIn")
-    const sessionToken = localStorage.getItem("speakerSessionToken")
-    if (isSpeakerLoggedIn && sessionToken) {
-      router.push("/portal/speakers")
+    const token = localStorage.getItem("speakerToken")
+    if (token) {
+      router.push("/speakers/dashboard")
     }
   }, [router])
 
@@ -32,7 +31,7 @@ export default function SpeakerPortalLogin() {
     setError("")
 
     try {
-      const response = await fetch("/api/auth/speaker-login", {
+      const response = await fetch("/api/speakers/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,13 +41,20 @@ export default function SpeakerPortalLogin() {
 
       const data = await response.json()
 
-      if (data.success) {
+      if (response.ok && data.success) {
+        // Store auth token using new system
+        localStorage.setItem("speakerToken", data.token)
+        localStorage.setItem("speakerEmail", data.email)
+        localStorage.setItem("speakerId", data.speakerId)
+        localStorage.setItem("speakerName", data.speakerName)
+        
+        // Also keep old storage for backward compatibility
         localStorage.setItem("speakerLoggedIn", "true")
-        localStorage.setItem("speakerSessionToken", data.sessionToken)
-        localStorage.setItem("speakerUser", JSON.stringify(data.speaker))
-        router.push("/portal/speakers")
+        localStorage.setItem("speakerSessionToken", data.token)
+        
+        router.push("/speakers/dashboard")
       } else {
-        setError(data.error || "Authentication failed")
+        setError(data.error || "Invalid email or password")
       }
     } catch (error) {
       console.error("Login error:", error)
@@ -145,22 +151,23 @@ export default function SpeakerPortalLogin() {
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => router.push("/portal/speaker-register")}
+                  onClick={() => router.push("/apply")}
                 >
-                  Create Speaker Account
+                  Apply to Speak
                 </Button>
               </div>
             </div>
 
             {/* Forgot Password */}
             <div className="mt-4 text-center">
-              <Button
-                variant="link"
-                className="text-sm text-gray-600 hover:text-purple-600"
-                onClick={() => router.push("/portal/speaker-reset-password")}
-              >
-                Forgot your password?
-              </Button>
+              <Link href="/speakers/forgot-password">
+                <Button
+                  variant="link"
+                  className="text-sm text-gray-600 hover:text-purple-600"
+                >
+                  Forgot your password?
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
