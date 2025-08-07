@@ -39,6 +39,7 @@ import {
   Plus,
   X,
   Check,
+  CheckCircle,
   AlertCircle,
   Camera,
   Edit,
