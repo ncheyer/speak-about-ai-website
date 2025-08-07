@@ -135,11 +135,10 @@ export default function AdminSpeakersPage() {
   const [processingAction, setProcessingAction] = useState(false)
   const [showInviteDialog, setShowInviteDialog] = useState(false)
   const [inviteFormData, setInviteFormData] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
+    speaker_id: "",
     personal_message: ""
   })
+  const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null)
   const [sendingInvite, setSendingInvite] = useState(false)
 
   // Check authentication and load data
@@ -281,6 +280,15 @@ export default function AdminSpeakersPage() {
   }
 
   const handleSendDirectInvite = async () => {
+    if (!selectedSpeaker) {
+      toast({
+        title: "Error",
+        description: "Please select a speaker to invite",
+        variant: "destructive",
+      })
+      return
+    }
+
     setSendingInvite(true)
     try {
       const response = await fetch('/api/speaker-invitations', {
@@ -290,8 +298,12 @@ export default function AdminSpeakersPage() {
           'x-dev-admin-bypass': 'dev-admin-access'
         },
         body: JSON.stringify({
-          ...inviteFormData,
-          type: 'direct_invite'
+          speaker_id: selectedSpeaker.id,
+          first_name: selectedSpeaker.name.split(' ')[0],
+          last_name: selectedSpeaker.name.split(' ').slice(1).join(' ') || '',
+          email: selectedSpeaker.email,
+          personal_message: inviteFormData.personal_message,
+          type: 'account_creation'
         })
       })
 
@@ -299,15 +311,14 @@ export default function AdminSpeakersPage() {
         const data = await response.json()
         toast({
           title: "Success",
-          description: `Invitation sent to ${inviteFormData.first_name} ${inviteFormData.last_name}`,
+          description: `Account creation invitation sent to ${selectedSpeaker.name}`,
         })
         setShowInviteDialog(false)
         setInviteFormData({
-          first_name: "",
-          last_name: "",
-          email: "",
+          speaker_id: "",
           personal_message: ""
         })
+        setSelectedSpeaker(null)
         // Reload applications to show the new invitation
         loadApplications()
       } else {
@@ -1042,42 +1053,62 @@ export default function AdminSpeakersPage() {
         <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Invite New Speaker</DialogTitle>
+              <DialogTitle>Invite Speaker to Create Account</DialogTitle>
               <DialogDescription>
-                Send an invitation for a speaker to join the platform
+                Send an account creation invitation to an existing speaker
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="invite_first_name">First Name</Label>
-                  <Input
-                    id="invite_first_name"
-                    value={inviteFormData.first_name}
-                    onChange={(e) => setInviteFormData({...inviteFormData, first_name: e.target.value})}
-                    placeholder="John"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="invite_last_name">Last Name</Label>
-                  <Input
-                    id="invite_last_name"
-                    value={inviteFormData.last_name}
-                    onChange={(e) => setInviteFormData({...inviteFormData, last_name: e.target.value})}
-                    placeholder="Doe"
-                  />
-                </div>
-              </div>
               <div>
-                <Label htmlFor="invite_email">Email Address</Label>
-                <Input
-                  id="invite_email"
-                  type="email"
-                  value={inviteFormData.email}
-                  onChange={(e) => setInviteFormData({...inviteFormData, email: e.target.value})}
-                  placeholder="speaker@example.com"
-                />
+                <Label htmlFor="speaker_select">Select Speaker</Label>
+                <Select
+                  value={inviteFormData.speaker_id}
+                  onValueChange={(value) => {
+                    const speaker = speakers.find(s => s.id.toString() === value)
+                    setInviteFormData({...inviteFormData, speaker_id: value})
+                    setSelectedSpeaker(speaker || null)
+                  }}
+                >
+                  <SelectTrigger id="speaker_select">
+                    <SelectValue placeholder="Choose a speaker to invite" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {speakers
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map(speaker => (
+                        <SelectItem key={speaker.id} value={speaker.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <span>{speaker.name}</span>
+                            <span className="text-gray-500">- {speaker.email}</span>
+                            {speaker.active && (
+                              <Badge variant="outline" className="text-xs ml-2">Active</Badge>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
+              {selectedSpeaker && (
+                <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                  <p className="text-sm font-medium">Speaker Details:</p>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3 w-3" />
+                      <span>{selectedSpeaker.email}</span>
+                    </div>
+                    {selectedSpeaker.location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-3 w-3" />
+                        <span>{selectedSpeaker.location}</span>
+                      </div>
+                    )}
+                    {selectedSpeaker.one_liner && (
+                      <p className="italic">"{selectedSpeaker.one_liner}"</p>
+                    )}
+                  </div>
+                </div>
+              )}
               <div>
                 <Label htmlFor="personal_message">Personal Message (Optional)</Label>
                 <Textarea
@@ -1092,7 +1123,7 @@ export default function AdminSpeakersPage() {
                 <Send className="h-4 w-4" />
                 <AlertTitle>Invitation Details</AlertTitle>
                 <AlertDescription>
-                  The speaker will receive an email with a secure link to create their account. The link will expire in 7 days.
+                  The invitation will be sent to the speaker's registered email address. They will receive a secure link to create their account that expires in 7 days.
                 </AlertDescription>
               </Alert>
             </div>
@@ -1102,7 +1133,7 @@ export default function AdminSpeakersPage() {
               </Button>
               <Button
                 onClick={handleSendDirectInvite}
-                disabled={sendingInvite || !inviteFormData.first_name || !inviteFormData.last_name || !inviteFormData.email}
+                disabled={sendingInvite || !inviteFormData.speaker_id}
               >
                 {sendingInvite ? (
                   <>

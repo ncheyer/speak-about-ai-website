@@ -12,12 +12,12 @@ export async function POST(request: NextRequest) {
     if (authError) return authError
 
     const body = await request.json()
-    const { first_name, last_name, email, personal_message, type } = body
+    const { speaker_id, first_name, last_name, email, personal_message, type } = body
 
     // Validate required fields
-    if (!first_name || !last_name || !email) {
+    if (!email) {
       return NextResponse.json(
-        { error: "First name, last name, and email are required" },
+        { error: "Email is required" },
         { status: 400 }
       )
     }
@@ -31,17 +31,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if speaker already exists
-    const existingSpeaker = await sql`
-      SELECT id FROM speakers 
-      WHERE LOWER(email) = ${email.toLowerCase()}
-    `
+    // For account creation invites, verify the speaker exists in the system
+    if (type === 'account_creation') {
+      if (!speaker_id) {
+        return NextResponse.json(
+          { error: "Speaker ID is required for account creation invitations" },
+          { status: 400 }
+        )
+      }
 
-    if (existingSpeaker.length > 0) {
-      return NextResponse.json(
-        { error: "A speaker with this email already exists" },
-        { status: 400 }
-      )
+      const existingSpeaker = await sql`
+        SELECT id, name, email FROM speakers 
+        WHERE id = ${speaker_id}
+      `
+
+      if (existingSpeaker.length === 0) {
+        return NextResponse.json(
+          { error: "Speaker not found in the system" },
+          { status: 404 }
+        )
+      }
+
+      // Verify the email matches the speaker's registered email
+      if (existingSpeaker[0].email.toLowerCase() !== email.toLowerCase()) {
+        return NextResponse.json(
+          { error: "Email does not match the speaker's registered email address" },
+          { status: 400 }
+        )
+      }
     }
 
     // Check if there's already a pending application or invitation
@@ -89,19 +106,19 @@ export async function POST(request: NextRequest) {
         reviewed_by,
         reviewed_at
       ) VALUES (
-        ${first_name},
-        ${last_name},
+        ${first_name || 'Speaker'},
+        ${last_name || ''},
         ${email.toLowerCase()},
         'invited',
-        ${type === 'direct_invite' ? 'Direct invitation from admin' : 'Invited to join platform'},
-        'To be provided',
+        ${type === 'account_creation' ? 'Account creation invitation for existing speaker' : 'Direct invitation from admin'},
+        ${type === 'account_creation' ? 'Profile already exists in system' : 'To be provided'},
         'To be provided',
         'To be provided',
         'To be provided',
         ${token},
         CURRENT_TIMESTAMP,
         ${expiresAt.toISOString()},
-        ${personal_message || `Direct invitation sent by admin`},
+        ${personal_message || (type === 'account_creation' ? `Account creation invite for speaker ID: ${speaker_id}` : 'Direct invitation sent by admin')},
         'admin',
         CURRENT_TIMESTAMP
       )
@@ -111,7 +128,8 @@ export async function POST(request: NextRequest) {
     // Send invitation email
     await sendInvitationEmail({
       ...application,
-      personal_message
+      personal_message,
+      type
     })
 
     return NextResponse.json({
@@ -139,21 +157,32 @@ async function sendInvitationEmail(data: any) {
   // TODO: Implement actual email sending using Resend or similar service
   console.log(`Sending invitation email to ${data.email}`)
   console.log(`Invitation URL: ${inviteUrl}`)
+  console.log(`Type: ${data.type}`)
+  
+  const isAccountCreation = data.type === 'account_creation'
   
   // For now, just log the email content
   const emailContent = `
     Dear ${data.first_name} ${data.last_name},
 
-    You've been invited to join Speak About AI as a speaker!
+    ${isAccountCreation 
+      ? "Your speaker profile is already set up on Speak About AI! We're inviting you to create your account so you can manage your profile and access the speaker portal."
+      : "You've been invited to join Speak About AI as a speaker!"
+    }
 
-    We're excited to welcome you to our exclusive network of AI and technology thought leaders.
+    ${!isAccountCreation && "We're excited to welcome you to our exclusive network of AI and technology thought leaders."}
 
-    ${data.personal_message ? `Personal message:\n${data.personal_message}\n` : ''}
+    ${data.personal_message ? `\nPersonal message:\n${data.personal_message}\n` : ''}
 
-    Please click the link below to create your speaker account:
+    Please click the link below to create your ${isAccountCreation ? 'account' : 'speaker account'}:
     ${inviteUrl}
 
     This invitation link will expire in 7 days.
+
+    ${isAccountCreation 
+      ? "Once you create your account, you'll be able to:\n- View and edit your speaker profile\n- Access the speaker portal\n- Manage your speaking engagements\n- Update your availability and preferences"
+      : ""
+    }
 
     If you have any questions, please don't hesitate to reach out.
 
@@ -167,7 +196,7 @@ async function sendInvitationEmail(data: any) {
   // const { data, error } = await resend.emails.send({
   //   from: 'Speak About AI <hello@speakabout.ai>',
   //   to: data.email,
-  //   subject: 'You're Invited to Join Speak About AI',
+  //   subject: isAccountCreation ? 'Create Your Speak About AI Account' : 'You're Invited to Join Speak About AI',
   //   html: emailContent
   // })
 }
