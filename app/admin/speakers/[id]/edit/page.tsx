@@ -49,11 +49,19 @@ interface Speaker {
   id: number
   name: string
   email: string
+  phone?: string
+  company?: string
+  title?: string
+  slug?: string
   bio: string
   short_bio: string
   one_liner: string
   headshot_url: string
   website: string
+  linkedin_url?: string
+  twitter_url?: string
+  instagram_url?: string
+  youtube_url?: string
   location: string
   programs: string[]
   topics: string[]
@@ -83,11 +91,19 @@ export default function AdminSpeakerEditPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
+    company: "",
+    title: "",
+    slug: "",
     bio: "",
     short_bio: "",
     one_liner: "",
     headshot_url: "",
     website: "",
+    linkedin_url: "",
+    twitter_url: "",
+    instagram_url: "",
+    youtube_url: "",
     location: "",
     programs: [] as string[],
     topics: [] as string[],
@@ -133,11 +149,19 @@ export default function AdminSpeakerEditPage() {
         setFormData({
           name: speakerData.name || "",
           email: speakerData.email || "",
+          phone: speakerData.phone || "",
+          company: speakerData.company || "",
+          title: speakerData.title || "",
+          slug: speakerData.slug || "",
           bio: speakerData.bio || "",
           short_bio: speakerData.short_bio || "",
           one_liner: speakerData.one_liner || "",
           headshot_url: speakerData.headshot_url || "",
           website: speakerData.website || "",
+          linkedin_url: speakerData.linkedin_url || "",
+          twitter_url: speakerData.twitter_url || "",
+          instagram_url: speakerData.instagram_url || "",
+          youtube_url: speakerData.youtube_url || "",
           location: speakerData.location || "",
           programs: speakerData.programs || [],
           topics: speakerData.topics || [],

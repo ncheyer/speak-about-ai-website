@@ -94,7 +94,9 @@ export async function GET(request: NextRequest) {
     console.log('Admin speakers: Querying speakers table...')
     const speakers = await sql`
       SELECT 
-        id, name, email, bio, short_bio, one_liner, headshot_url, website,
+        id, name, email, phone, company, title, slug, 
+        bio, short_bio, one_liner, headshot_url, website,
+        linkedin_url, twitter_url, instagram_url, youtube_url,
         location, programs, topics, industries, videos, testimonials,
         speaking_fee_range, travel_preferences, technical_requirements, 
         dietary_restrictions, featured, active, listed, ranking,

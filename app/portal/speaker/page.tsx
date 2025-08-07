@@ -158,8 +158,8 @@ export default function SpeakerPortalLogin() {
               </div>
             </div>
 
-            {/* Forgot Password */}
-            <div className="mt-4 text-center">
+            {/* Forgot Password - TODO: Implement password reset */}
+            {/* <div className="mt-4 text-center">
               <Link href="/speakers/forgot-password">
                 <Button
                   variant="link"
@@ -168,7 +168,7 @@ export default function SpeakerPortalLogin() {
                   Forgot your password?
                 </Button>
               </Link>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
       </div>

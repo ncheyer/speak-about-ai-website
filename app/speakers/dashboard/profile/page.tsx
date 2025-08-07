@@ -279,7 +279,7 @@ export default function SpeakerProfilePage() {
   useEffect(() => {
     const token = localStorage.getItem("speakerToken")
     if (!token) {
-      router.push("/speakers/login")
+      router.push("/portal/speaker")
     } else {
       fetchProfile(token)
     }

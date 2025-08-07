@@ -288,7 +288,7 @@ export default function SpeakerEngagementsPage() {
   useEffect(() => {
     const token = localStorage.getItem("speakerToken")
     if (!token) {
-      router.push("/speakers/login")
+      router.push("/portal/speaker")
     } else {
       fetchEngagements(token)
     }

@@ -288,16 +288,24 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       }, { status: 503 })
     }
 
-    // Update speaker profile
+    // Update speaker profile with all fields
     const [updatedSpeaker] = await sql`
       UPDATE speakers SET
         name = COALESCE(${updateData.name || null}, name),
         email = COALESCE(${updateData.email || null}, email),
+        phone = COALESCE(${updateData.phone || null}, phone),
+        company = COALESCE(${updateData.company || null}, company),
+        title = COALESCE(${updateData.title || null}, title),
+        slug = COALESCE(${updateData.slug || null}, slug),
         bio = COALESCE(${updateData.bio || null}, bio),
         short_bio = COALESCE(${updateData.short_bio || null}, short_bio),
         one_liner = COALESCE(${updateData.one_liner || null}, one_liner),
         headshot_url = COALESCE(${updateData.headshot_url || null}, headshot_url),
         website = COALESCE(${updateData.website || null}, website),
+        linkedin_url = COALESCE(${updateData.linkedin_url || null}, linkedin_url),
+        twitter_url = COALESCE(${updateData.twitter_url || null}, twitter_url),
+        instagram_url = COALESCE(${updateData.instagram_url || null}, instagram_url),
+        youtube_url = COALESCE(${updateData.youtube_url || null}, youtube_url),
         location = COALESCE(${updateData.location || null}, location),
         programs = COALESCE(${JSON.stringify(updateData.programs) || null}, programs),
         topics = COALESCE(${JSON.stringify(updateData.topics) || null}, topics),
@@ -315,10 +323,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${parseInt(speakerId)}
       RETURNING 
-        id, name, email, bio, short_bio, one_liner, headshot_url, website,
+        id, name, email, phone, company, title, slug, bio, short_bio, one_liner, 
+        headshot_url, website, linkedin_url, twitter_url, instagram_url, youtube_url,
         location, programs, topics, industries, videos, testimonials,
         speaking_fee_range, travel_preferences, technical_requirements, 
-        dietary_restrictions, featured, active, listed, ranking, updated_at
+        dietary_restrictions, featured, active, listed, ranking, created_at, updated_at
     `
 
     if (!updatedSpeaker) {

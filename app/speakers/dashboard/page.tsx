@@ -20,7 +20,7 @@ export default function SpeakerDashboard() {
     const email = localStorage.getItem("speakerEmail")
     
     if (!token) {
-      router.push("/speakers/login")
+      router.push("/portal/speaker")
       return
     }
     
