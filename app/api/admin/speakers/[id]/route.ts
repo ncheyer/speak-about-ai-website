@@ -3,18 +3,18 @@ import { neon } from '@neondatabase/serverless'
 import { requireAdminAuth } from '@/lib/auth-middleware'
 import { getAllSpeakers } from '@/lib/speakers-data'
 
-// Initialize Neon client
-let sql: any = null
-try {
-  if (process.env.DATABASE_URL) {
-    console.log('Admin speaker detail: Initializing Neon client...')
-    sql = neon(process.env.DATABASE_URL)
-    console.log('Admin speaker detail: Neon client initialized successfully')
-  } else {
+// Get SQL client for each request to avoid connection issues
+const getSqlClient = () => {
+  if (!process.env.DATABASE_URL) {
     console.log('Admin speaker detail: No DATABASE_URL found')
+    return null
   }
-} catch (error) {
-  console.error('Failed to initialize Neon client for admin speaker detail:', error)
+  try {
+    return neon(process.env.DATABASE_URL)
+  } catch (error) {
+    console.error('Failed to initialize Neon client for admin speaker detail:', error)
+    return null
+  }
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
@@ -35,8 +35,11 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     
     console.log(`Admin speaker delete: Deleting speaker ${speakerId}`)
     
+    // Get SQL client
+    const sql = getSqlClient()
+    
     // Check if database is available
-    if (!sql || !process.env.DATABASE_URL) {
+    if (!sql) {
       return NextResponse.json({
         error: 'Database not available'
       }, { status: 503 })
@@ -107,11 +110,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
     
     console.log(`Admin speaker detail: Fetching speaker ${speakerId}`)
+    // Get SQL client
+    const sql = getSqlClient()
+    
     console.log('Admin speaker detail: DATABASE_URL available:', !!process.env.DATABASE_URL)
     console.log('Admin speaker detail: sql client initialized:', !!sql)
     
     // Check if database is available
-    if (!sql || !process.env.DATABASE_URL) {
+    if (!sql) {
       console.log('Admin speaker detail: Database not available, using fallback data')
       
       // Use fallback data from getAllSpeakers
@@ -272,6 +278,15 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     
     const speakerId = params.id
     const updateData = await request.json()
+    
+    // Get SQL client
+    const sql = getSqlClient()
+    
+    if (!sql) {
+      return NextResponse.json({
+        error: 'Database not available'
+      }, { status: 503 })
+    }
 
     // Update speaker profile
     const [updatedSpeaker] = await sql`

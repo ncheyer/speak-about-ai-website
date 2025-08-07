@@ -3,18 +3,18 @@ import { neon } from '@neondatabase/serverless'
 import { requireAdminAuth } from '@/lib/auth-middleware'
 import { getAllSpeakers } from '@/lib/speakers-data'
 
-// Initialize Neon client
-let sql: any = null
-try {
-  if (process.env.DATABASE_URL) {
-    console.log('Admin speakers: Initializing Neon client...')
-    sql = neon(process.env.DATABASE_URL)
-    console.log('Admin speakers: Neon client initialized successfully')
-  } else {
+// Get SQL client for each request to avoid connection issues
+const getSqlClient = () => {
+  if (!process.env.DATABASE_URL) {
     console.log('Admin speakers: No DATABASE_URL found')
+    return null
   }
-} catch (error) {
-  console.error('Failed to initialize Neon client for admin speakers:', error)
+  try {
+    return neon(process.env.DATABASE_URL)
+  } catch (error) {
+    console.error('Failed to initialize Neon client for admin speakers:', error)
+    return null
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -30,12 +30,15 @@ export async function GET(request: NextRequest) {
     // }
     console.log('Admin speakers: Authentication bypassed')
     
+    // Get SQL client
+    const sql = getSqlClient()
+    
     console.log('Admin speakers: DATABASE_URL available:', !!process.env.DATABASE_URL)
     console.log('Admin speakers: sql client initialized:', !!sql)
     
     // Check if database is available
-    if (!sql || !process.env.DATABASE_URL) {
-      console.log('Admin speakers: Database not available, using fallback data from getAllSpeakers()')
+    if (!sql) {
+      console.log('Admin speakers: Database not available, using fallback data')
       
       // Use the static speaker data as fallback
       const fallbackSpeakers = await getAllSpeakers()
@@ -57,7 +60,7 @@ export async function GET(request: NextRequest) {
         testimonials: speaker.testimonials || [],
         speaking_fee_range: speaker.feeRange || speaker.fee || '',
         featured: speaker.featured || false,
-        active: speaker.listed !== false, // Default to true if not specified
+        active: speaker.listed !== false,
         listed: speaker.listed !== false,
         ranking: speaker.ranking || 0,
         created_at: new Date().toISOString(),
@@ -68,7 +71,8 @@ export async function GET(request: NextRequest) {
       
       return NextResponse.json({
         success: true,
-        speakers: speakers
+        speakers: speakers,
+        source: 'fallback'
       })
     }
     
