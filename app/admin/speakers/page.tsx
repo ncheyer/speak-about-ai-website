@@ -300,7 +300,7 @@ export default function AdminSpeakersPage() {
         body: JSON.stringify({
           speaker_id: selectedSpeaker.id,
           first_name: selectedSpeaker?.name ? selectedSpeaker.name.split(' ')[0] : '',
-          last_name: selectedSpeaker?.name ? selectedSpeaker.name.split(' ').slice(1).join(' ') : ''
+          last_name: selectedSpeaker?.name ? selectedSpeaker.name.split(' ').slice(1).join(' ') : '',
           email: selectedSpeaker.email,
           personal_message: inviteFormData.personal_message,
           type: 'account_creation'
