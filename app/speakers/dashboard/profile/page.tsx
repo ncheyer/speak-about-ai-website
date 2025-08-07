@@ -259,9 +259,9 @@ const mockProfile = {
 
 export default function SpeakerProfilePage() {
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [profile, setProfile] = useState(mockProfile)
+  const [profile, setProfile] = useState<any>(null)
   const [activeTab, setActiveTab] = useState("basic")
   const [showSuccess, setShowSuccess] = useState(false)
   const [errors, setErrors] = useState<any>({})
@@ -275,25 +275,73 @@ export default function SpeakerProfilePage() {
     logistics: false
   })
 
-  // Check authentication
+  // Check authentication and fetch profile
   useEffect(() => {
     const token = localStorage.getItem("speakerToken")
     if (!token) {
       router.push("/speakers/login")
+    } else {
+      fetchProfile(token)
     }
   }, [router])
 
+  const fetchProfile = async (token: string) => {
+    try {
+      const response = await fetch('/api/speakers/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile')
+      }
+      
+      const data = await response.json()
+      // Merge fetched data with any missing fields from mockProfile structure
+      setProfile({
+        ...mockProfile, // Use mock as defaults for missing fields
+        ...data.profile // Override with real data from database
+      })
+    } catch (error) {
+      console.error('Error fetching profile:', error)
+      // Fall back to mock data if fetch fails
+      setProfile(mockProfile)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSave = async (section: string) => {
     setIsSaving(true)
+    const token = localStorage.getItem("speakerToken")
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSaving(false)
+    try {
+      const response = await fetch('/api/speakers/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(profile)
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to save profile')
+      }
+      
+      const data = await response.json()
+      console.log('Profile saved successfully:', data)
+      
       setShowSuccess(true)
       setEditMode(prev => ({ ...prev, [section]: false }))
-      
       setTimeout(() => setShowSuccess(false), 3000)
-    }, 1000)
+    } catch (error) {
+      console.error('Error saving profile:', error)
+      alert('Failed to save profile. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleImageUpload = (type: 'headshot' | 'banner') => {
@@ -315,20 +363,47 @@ export default function SpeakerProfilePage() {
     }))
   }
 
-  const profileCompletionItems = [
-    { label: "Basic Information", completed: true },
-    { label: "Professional Background", completed: true },
-    { label: "Expertise & Topics", completed: true },
-    { label: "Speaking Videos", completed: profile.videos.length > 0 },
-    { label: "Publications", completed: profile.publications.length > 0 },
-    { label: "Testimonials", completed: profile.testimonials.length > 0 },
-    { label: "Social Media Links", completed: true },
-    { label: "Speaking Requirements", completed: false }
-  ]
+  const profileCompletionItems = profile ? [
+    { label: "Basic Information", completed: !!(profile.first_name && profile.last_name && profile.email) },
+    { label: "Professional Background", completed: !!(profile.title && profile.company) },
+    { label: "Expertise & Topics", completed: profile.speaking_topics?.length > 0 },
+    { label: "Speaking Videos", completed: profile.videos?.length > 0 },
+    { label: "Publications", completed: profile.publications?.length > 0 },
+    { label: "Testimonials", completed: profile.testimonials?.length > 0 },
+    { label: "Social Media Links", completed: !!(profile.linkedin_url || profile.twitter_url) },
+    { label: "Speaking Requirements", completed: !!(profile.speaking_fee_range && profile.travel_preferences) }
+  ] : []
 
   const completedItems = profileCompletionItems.filter(item => item.completed).length
   const totalItems = profileCompletionItems.length
-  const completionPercentage = Math.round((completedItems / totalItems) * 100)
+  const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-gray-600">Failed to load profile</p>
+          <Button onClick={() => router.push('/speakers/dashboard')} className="mt-4">
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
