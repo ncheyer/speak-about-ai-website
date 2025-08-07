@@ -58,7 +58,27 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
-// Mock data - in production this would come from API
+// Type definitions
+interface Engagement {
+  id: number
+  client_name?: string
+  company: string
+  event_title: string
+  event_date: string
+  event_location: string
+  event_type: string
+  attendee_count?: number
+  budget_range?: string
+  deal_value?: string
+  speaker_fee?: string
+  status?: string
+  priority?: string
+  admin_message?: string
+  created_at: string
+  type: 'request' | 'upcoming' | 'past'
+  needs_response?: boolean
+}
+
 const mockEngagements = {
   upcoming: [
     {
@@ -237,8 +257,19 @@ const mockEngagements = {
 
 export default function SpeakerEngagementsPage() {
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [engagements, setEngagements] = useState(mockEngagements)
+  const [isLoading, setIsLoading] = useState(true)
+  const [engagements, setEngagements] = useState<{
+    upcoming: Engagement[]
+    past: Engagement[]
+    requests: Engagement[]
+  }>({ upcoming: [], past: [], requests: [] })
+  const [stats, setStats] = useState({
+    totalUpcoming: 0,
+    totalPast: 0,
+    pendingRequests: 0,
+    totalEarnings: 0,
+    upcomingEarnings: 0
+  })
   const [selectedEngagement, setSelectedEngagement] = useState<any>(null)
   const [showDetailsDialog, setShowDetailsDialog] = useState(false)
   const [showResponseDialog, setShowResponseDialog] = useState(false)
@@ -253,37 +284,93 @@ export default function SpeakerEngagementsPage() {
     notes: ""
   })
 
-  // Check authentication
+  // Check authentication and fetch data
   useEffect(() => {
     const token = localStorage.getItem("speakerToken")
     if (!token) {
       router.push("/speakers/login")
+    } else {
+      fetchEngagements(token)
     }
   }, [router])
 
-  // Calculate statistics
-  const stats = {
-    totalUpcoming: engagements.upcoming.length,
-    totalPast: engagements.past.length,
-    pendingRequests: engagements.requests.length,
-    totalEarnings: engagements.past.reduce((acc, e) => {
-      const fee = parseInt(e.fee.replace(/[^0-9]/g, '')) || 0
-      return acc + fee
-    }, 0),
-    upcomingEarnings: engagements.upcoming.reduce((acc, e) => {
-      const fee = parseInt(e.fee.replace(/[^0-9]/g, '')) || 0
-      return acc + fee
-    }, 0),
-    averageRating: engagements.past.filter(e => e.rating).reduce((acc, e) => acc + (e.rating || 0), 0) / 
-                   engagements.past.filter(e => e.rating).length || 0
+  const fetchEngagements = async (token: string) => {
+    try {
+      const response = await fetch('/api/speakers/engagements', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch engagements')
+      }
+      
+      const data = await response.json()
+      setEngagements({
+        upcoming: data.upcoming || [],
+        past: data.past || [],
+        requests: data.requests || []
+      })
+      
+      // Update stats from API response
+      setStats({
+        totalUpcoming: data.stats?.totalUpcoming || 0,
+        totalPast: data.stats?.totalPast || 0,
+        pendingRequests: data.stats?.totalRequests || 0,
+        totalEarnings: data.stats?.totalRevenue || 0,
+        upcomingEarnings: data.upcoming?.reduce((acc: number, e: Engagement) => {
+          const fee = parseFloat(e.speaker_fee || e.deal_value || '0')
+          return acc + fee
+        }, 0) || 0
+      })
+    } catch (error) {
+      console.error('Error fetching engagements:', error)
+      // Fall back to mock data if needed
+      setEngagements(mockEngagements)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleAcceptRequest = (request: any) => {
-    // In production, this would make an API call
+  // Stats are now calculated in fetchEngagements
+
+  const handleAcceptRequest = async (request: any) => {
+    setIsLoading(true)
+    const token = localStorage.getItem("speakerToken")
+    
+    try {
+      const response = await fetch('/api/speakers/engagements', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          dealId: request.id,
+          action: 'accept',
+          negotiationNotes: responseMessage
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to accept request')
+      }
+      
+      // Refresh engagements
+      await fetchEngagements(token!)
+    } catch (error) {
+      console.error('Error accepting request:', error)
+      alert('Failed to accept request. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+    
+    // Keep the original logic for UI update
     const newEngagement = {
       ...request,
       status: "confirmed",
-      fee: request.proposed_fee
+      fee: request.budget_range || request.deal_value
     }
     
     setEngagements(prev => ({
@@ -296,7 +383,35 @@ export default function SpeakerEngagementsPage() {
     setResponseMessage("")
   }
 
-  const handleDeclineRequest = (requestId: number) => {
+  const handleDeclineRequest = async (requestId: number) => {
+    setIsLoading(true)
+    const token = localStorage.getItem("speakerToken")
+    
+    try {
+      const response = await fetch('/api/speakers/engagements', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          dealId: requestId,
+          action: 'decline'
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to decline request')
+      }
+      
+      // Refresh engagements
+      await fetchEngagements(token!)
+    } catch (error) {
+      console.error('Error declining request:', error)
+      alert('Failed to decline request. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
     // In production, this would make an API call
     setEngagements(prev => ({
       ...prev,
@@ -476,14 +591,14 @@ export default function SpeakerEngagementsPage() {
           
           <Card className="border-0 shadow-lg">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Avg Rating</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">Total Events</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {stats.averageRating.toFixed(1)}
+                <div className="text-2xl font-bold text-green-600">
+                  {stats.totalUpcoming + stats.totalPast}
                 </div>
-                <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                <CheckCircle className="h-5 w-5 text-green-400" />
               </div>
             </CardContent>
           </Card>
@@ -527,20 +642,20 @@ export default function SpeakerEngagementsPage() {
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
-                        <CardTitle className="text-xl">{request.title}</CardTitle>
+                        <CardTitle className="text-xl">{request.event_title}</CardTitle>
                         <CardDescription className="mt-2">
                           <div className="flex items-center gap-4 text-sm">
                             <span className="flex items-center gap-1">
                               <Building className="h-4 w-4" />
-                              {request.client}
+                              {request.company}
                             </span>
                             <span className="flex items-center gap-1">
                               <CalendarDays className="h-4 w-4" />
-                              {formatDate(request.date)}
+                              {formatDate(request.event_date)}
                             </span>
                             <span className="flex items-center gap-1">
                               <MapPin className="h-4 w-4" />
-                              {request.location}
+                              {request.event_location}
                             </span>
                           </div>
                         </CardDescription>
@@ -552,27 +667,29 @@ export default function SpeakerEngagementsPage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
-                      <p className="text-sm text-purple-900 font-medium mb-2">Message from client:</p>
-                      <p className="text-sm text-gray-700">{request.message}</p>
-                    </div>
+                    {request.admin_message && (
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                        <p className="text-sm text-purple-900 font-medium mb-2">Message from Admin:</p>
+                        <p className="text-sm text-gray-700">{request.admin_message}</p>
+                      </div>
+                    )}
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                       <div>
-                        <p className="text-xs text-gray-500">Duration</p>
-                        <p className="font-medium">{request.duration}</p>
+                        <p className="text-xs text-gray-500">Event Type</p>
+                        <p className="font-medium">{request.event_type}</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Audience Size</p>
-                        <p className="font-medium">{request.audience_size}</p>
+                        <p className="font-medium">{request.attendee_count || 'TBD'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Proposed Fee</p>
-                        <p className="font-medium text-green-600">{request.proposed_fee}</p>
+                        <p className="text-xs text-gray-500">Budget</p>
+                        <p className="font-medium text-green-600">{request.budget_range || `$${request.deal_value}` || 'TBD'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Format</p>
-                        <p className="font-medium">{request.format}</p>
+                        <p className="text-xs text-gray-500">Priority</p>
+                        <p className="font-medium capitalize">{request.priority || 'Normal'}</p>
                       </div>
                     </div>
                     
@@ -817,7 +934,7 @@ export default function SpeakerEngagementsPage() {
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                       <div>
-                        <p className="text-xs text-gray-500">Duration</p>
+                        <p className="text-xs text-gray-500">Event Type</p>
                         <p className="font-medium">{engagement.duration}</p>
                       </div>
                       <div>
@@ -829,7 +946,7 @@ export default function SpeakerEngagementsPage() {
                         <p className="font-medium text-green-600">{engagement.fee}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Format</p>
+                        <p className="text-xs text-gray-500">Priority</p>
                         <p className="font-medium">{engagement.format}</p>
                       </div>
                     </div>
