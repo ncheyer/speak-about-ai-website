@@ -299,8 +299,8 @@ export default function AdminSpeakersPage() {
         },
         body: JSON.stringify({
           speaker_id: selectedSpeaker.id,
-          first_name: selectedSpeaker.name.split(' ')[0],
-          last_name: selectedSpeaker.name.split(' ').slice(1).join(' ') || '',
+          first_name: selectedSpeaker?.name ? selectedSpeaker.name.split(' ')[0] : '',
+          last_name: selectedSpeaker?.name ? selectedSpeaker.name.split(' ').slice(1).join(' ') : ''
           email: selectedSpeaker.email,
           personal_message: inviteFormData.personal_message,
           type: 'account_creation'
@@ -389,11 +389,11 @@ export default function AdminSpeakersPage() {
 
   const filteredApplications = applications.filter((app) => {
     const matchesSearch =
-      app.first_name.toLowerCase().includes(searchApplications.toLowerCase()) ||
-      app.last_name.toLowerCase().includes(searchApplications.toLowerCase()) ||
-      app.email.toLowerCase().includes(searchApplications.toLowerCase()) ||
-      app.company.toLowerCase().includes(searchApplications.toLowerCase()) ||
-      app.speaking_topics.toLowerCase().includes(searchApplications.toLowerCase())
+      (app.first_name || '').toLowerCase().includes(searchApplications.toLowerCase()) ||
+      (app.last_name || '').toLowerCase().includes(searchApplications.toLowerCase()) ||
+      (app.email || '').toLowerCase().includes(searchApplications.toLowerCase()) ||
+      (app.company || '').toLowerCase().includes(searchApplications.toLowerCase()) ||
+      (app.speaking_topics || '').toLowerCase().includes(searchApplications.toLowerCase())
 
     const matchesStatus = applicationStatusFilter === "all" || app.status === applicationStatusFilter
 
@@ -422,11 +422,11 @@ export default function AdminSpeakersPage() {
 
   const filteredSpeakers = speakers.filter((speaker) => {
     const matchesSearch =
-      speaker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      speaker.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      speaker.bio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      speaker.topics.some(topic => topic.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      speaker.industries.some(industry => industry.toLowerCase().includes(searchTerm.toLowerCase()))
+      (speaker.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (speaker.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (speaker.bio || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (speaker.topics || []).some(topic => topic.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (speaker.industries || []).some(industry => industry.toLowerCase().includes(searchTerm.toLowerCase()))
 
     const matchesActive = activeFilter === "all" || 
       (activeFilter === "active" && speaker.active) ||
@@ -594,7 +594,7 @@ export default function AdminSpeakersPage() {
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={speaker.headshot_url} alt={speaker.name} />
-                      <AvatarFallback>{speaker.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      <AvatarFallback>{(speaker.name || '').split(' ').filter(n => n).map(n => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <CardTitle className="text-lg">{speaker.name}</CardTitle>
@@ -637,7 +637,7 @@ export default function AdminSpeakersPage() {
                   <p className="text-sm text-gray-700 line-clamp-2">{speaker.one_liner}</p>
                 )}
 
-                {speaker.topics.length > 0 && (
+                {speaker.topics && speaker.topics.length > 0 && (
                   <div>
                     <p className="text-xs font-medium text-gray-500 mb-1">Topics:</p>
                     <div className="flex flex-wrap gap-1">
@@ -885,15 +885,21 @@ export default function AdminSpeakersPage() {
                           <div>
                             <p className="text-gray-500 mb-1 text-sm">Expertise Areas</p>
                             <div className="flex flex-wrap gap-1">
-                              {application.expertise_areas.slice(0, 3).map((area, idx) => (
-                                <Badge key={idx} variant="outline" className="text-xs">
-                                  {area}
-                                </Badge>
-                              ))}
-                              {application.expertise_areas.length > 3 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{application.expertise_areas.length - 3} more
-                                </Badge>
+                              {application.expertise_areas && application.expertise_areas.length > 0 ? (
+                                <>
+                                  {application.expertise_areas.slice(0, 3).map((area, idx) => (
+                                    <Badge key={idx} variant="outline" className="text-xs">
+                                      {area}
+                                    </Badge>
+                                  ))}
+                                  {application.expertise_areas.length > 3 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{application.expertise_areas.length - 3} more
+                                    </Badge>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-xs text-gray-400">None specified</span>
                               )}
                             </div>
                           </div>

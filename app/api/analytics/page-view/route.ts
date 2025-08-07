@@ -11,11 +11,9 @@ export async function POST(request: NextRequest) {
     const visitorId = request.cookies.get('visitor_id')?.value
     const sessionId = request.cookies.get('session_id')?.value
 
+    // If no cookies, silently succeed to avoid breaking the site
     if (!visitorId || !sessionId) {
-      return NextResponse.json(
-        { error: 'Visitor or session ID not found' },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: true })
     }
 
     // Extract analytics data from the request

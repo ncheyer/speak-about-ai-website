@@ -308,7 +308,7 @@ export async function getRealTimeStats() {
 
 // Test connection function
 export async function testAnalyticsConnection(): Promise<boolean> {
-  if (!databaseAvailable || !sql) {
+  if (!sql) {
     return false
   }
   
