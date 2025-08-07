@@ -39,9 +39,9 @@ export default function SpeakerDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -49,18 +49,19 @@ export default function SpeakerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-lg border-b border-purple-100">
+        <div className="bg-gradient-to-r from-purple-600 to-blue-600 h-1"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Speaker Dashboard</h1>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Speaker Dashboard</h1>
               <p className="text-sm text-gray-600">Welcome back, {speakerName}</p>
             </div>
-            <Button onClick={handleLogout} variant="outline">
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+            <Button onClick={handleLogout} variant="outline" className="border-purple-200 hover:bg-purple-50 hover:border-purple-300">
+              <LogOut className="h-4 w-4 mr-2 text-purple-600" />
+              <span className="text-purple-600">Logout</span>
             </Button>
           </div>
         </div>
@@ -70,43 +71,51 @@ export default function SpeakerDashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Profile Views</CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <User className="h-4 w-4 text-purple-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
+              <div className="text-2xl font-bold text-purple-600">0</div>
               <p className="text-xs text-muted-foreground">This month</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Speaking Requests</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Calendar className="h-4 w-4 text-blue-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
+              <div className="text-2xl font-bold text-blue-600">0</div>
               <p className="text-xs text-muted-foreground">Pending</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Completed Events</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <FileText className="h-4 w-4 text-purple-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
+              <div className="text-2xl font-bold text-purple-600">0</div>
               <p className="text-xs text-muted-foreground">Total</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Profile Status</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 bg-green-100 rounded-lg">
+                <TrendingUp className="h-4 w-4 text-green-600" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">Active</div>
@@ -117,73 +126,79 @@ export default function SpeakerDashboard() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <User className="h-5 w-5 text-purple-600" />
+                </div>
                 Profile Management
               </CardTitle>
               <CardDescription>View and edit your speaker profile</CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/speakers/dashboard/profile">
-                <Button className="w-full">Edit Profile</Button>
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white">Edit Profile</Button>
               </Link>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Calendar className="h-5 w-5 text-blue-600" />
+                </div>
                 Speaking Engagements
               </CardTitle>
               <CardDescription>Manage your speaking events</CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/speakers/dashboard/events">
-                <Button className="w-full">View Events</Button>
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white">View Events</Button>
               </Link>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Settings className="h-5 w-5 text-purple-600" />
+                </div>
                 Account Settings
               </CardTitle>
               <CardDescription>Update your account preferences</CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/speakers/dashboard/settings">
-                <Button className="w-full">Settings</Button>
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white">Settings</Button>
               </Link>
             </CardContent>
           </Card>
         </div>
 
         {/* Recent Activity */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Your latest updates and notifications</CardDescription>
+        <Card className="mt-8 border-0 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-lg">
+            <CardTitle className="text-purple-900">Recent Activity</CardTitle>
+            <CardDescription className="text-purple-700">Your latest updates and notifications</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b">
+              <div className="flex items-center justify-between py-3 border-b border-purple-100 hover:bg-purple-50 px-2 rounded transition-colors">
                 <div>
-                  <p className="font-medium">Account Created</p>
+                  <p className="font-medium text-purple-900">Account Created</p>
                   <p className="text-sm text-gray-600">Your speaker account has been set up</p>
                 </div>
-                <span className="text-sm text-gray-500">Just now</span>
+                <span className="text-sm text-purple-600 font-medium">Just now</span>
               </div>
-              <div className="flex items-center justify-between py-3">
+              <div className="flex items-center justify-between py-3 hover:bg-purple-50 px-2 rounded transition-colors">
                 <div>
-                  <p className="font-medium">Profile Approved</p>
+                  <p className="font-medium text-purple-900">Profile Approved</p>
                   <p className="text-sm text-gray-600">Your profile is now visible in the directory</p>
                 </div>
-                <span className="text-sm text-gray-500">Today</span>
+                <span className="text-sm text-purple-600 font-medium">Today</span>
               </div>
             </div>
           </CardContent>

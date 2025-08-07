@@ -54,20 +54,23 @@ export default function SpeakerLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Speaker Portal</h1>
+          <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-gradient-to-r from-purple-600 to-blue-600">
+            <User className="h-10 w-10 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">Speaker Portal</h1>
           <p className="text-gray-600">Sign in to manage your speaker profile</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card className="border-0 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+            <CardTitle className="flex items-center gap-2 text-white">
               <User className="h-5 w-5" />
               Sign In
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-purple-100">
               Enter your credentials to access your speaker dashboard
             </CardDescription>
           </CardHeader>
@@ -115,17 +118,21 @@ export default function SpeakerLoginPage() {
               )}
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white" 
+                disabled={isLoading}
+              >
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
               
               <div className="text-center space-y-2 text-sm">
-                <Link href="/speakers/forgot-password" className="text-blue-600 hover:underline">
+                <Link href="/speakers/forgot-password" className="text-purple-600 hover:text-purple-700 hover:underline">
                   Forgot your password?
                 </Link>
                 <div className="text-gray-600">
                   Don't have an account?{" "}
-                  <Link href="/apply" className="text-blue-600 hover:underline">
+                  <Link href="/apply" className="text-purple-600 hover:text-purple-700 hover:underline">
                     Apply to join
                   </Link>
                 </div>
@@ -135,7 +142,7 @@ export default function SpeakerLoginPage() {
         </Card>
 
         <div className="mt-8 text-center text-sm text-gray-600">
-          <Link href="/" className="hover:underline">
+          <Link href="/" className="text-purple-600 hover:text-purple-700 hover:underline">
             ← Back to homepage
           </Link>
         </div>
