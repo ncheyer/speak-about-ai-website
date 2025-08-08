@@ -32,7 +32,8 @@ import {
   XCircle,
   Send,
   FileText,
-  Calendar
+  Calendar,
+  Video
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -959,6 +960,32 @@ export default function AdminSpeakersPage() {
                             </p>
                           </div>
                         </div>
+
+                        {application.video_links && application.video_links.length > 0 && (
+                          <div>
+                            <p className="text-gray-500 mb-1 text-sm">Video Links</p>
+                            <div className="space-y-1">
+                              {application.video_links.slice(0, 3).map((link, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <Video className="h-3 w-3 text-gray-400" />
+                                  <a 
+                                    href={link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-sm text-blue-600 hover:underline truncate max-w-md"
+                                  >
+                                    {link}
+                                  </a>
+                                </div>
+                              ))}
+                              {application.video_links.length > 3 && (
+                                <p className="text-xs text-gray-500 ml-5">
+                                  +{application.video_links.length - 3} more videos
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
                         {application.admin_notes && (
                           <div className="bg-gray-50 p-3 rounded">
