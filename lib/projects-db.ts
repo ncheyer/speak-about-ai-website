@@ -225,7 +225,10 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         initial_invoice_sent: false,
         final_invoice_sent: false,
         kickoff_meeting_planned: false,
-        project_setup_complete: false
+        client_contacts_documented: false,
+        project_folder_created: false,
+        internal_team_briefed: false,
+        event_details_confirmed: false
       }
     }
     
@@ -256,7 +259,8 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         billing_contact_name,
         billing_contact_email,
         billing_contact_phone,
-        requested_speaker_name
+        requested_speaker_name,
+        stage_completion
       ) VALUES (
         ${finalProjectData.project_name}, 
         ${finalProjectData.client_name}, 
@@ -273,7 +277,7 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         ${finalProjectData.spent}, 
         ${finalProjectData.completion_percentage},
         ${finalProjectData.event_name || finalProjectData.project_name},
-        ${finalProjectData.event_date ? finalProjectData.event_date.split('T')[0] : finalProjectData.deadline ? finalProjectData.deadline.split('T')[0] : null},
+        ${finalProjectData.event_date ? (typeof finalProjectData.event_date === 'string' ? finalProjectData.event_date.split('T')[0] : finalProjectData.event_date) : finalProjectData.deadline ? (typeof finalProjectData.deadline === 'string' ? finalProjectData.deadline.split('T')[0] : finalProjectData.deadline) : null},
         ${finalProjectData.event_location || null},
         ${finalProjectData.event_type || finalProjectData.project_type},
         ${finalProjectData.attendee_count || finalProjectData.audience_size || 0},
@@ -282,7 +286,8 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         ${finalProjectData.billing_contact_name || finalProjectData.client_name},
         ${finalProjectData.billing_contact_email || finalProjectData.client_email || null},
         ${finalProjectData.billing_contact_phone || finalProjectData.client_phone || null},
-        ${finalProjectData.requested_speaker_name || null}
+        ${finalProjectData.requested_speaker_name || null},
+        ${JSON.stringify(initialStageCompletion)}
       )
       RETURNING *
     `

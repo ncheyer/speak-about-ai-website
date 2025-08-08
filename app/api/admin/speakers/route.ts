@@ -18,6 +18,8 @@ const getSqlClient = () => {
 }
 
 export async function GET(request: NextRequest) {
+  let sql: ReturnType<typeof getSqlClient> = null
+  
   try {
     // Temporarily bypass authentication for debugging
     console.log('Admin speakers: BYPASSING authentication for debugging...')
@@ -31,7 +33,7 @@ export async function GET(request: NextRequest) {
     console.log('Admin speakers: Authentication bypassed')
     
     // Get SQL client
-    const sql = getSqlClient()
+    sql = getSqlClient()
     
     console.log('Admin speakers: DATABASE_URL available:', !!process.env.DATABASE_URL)
     console.log('Admin speakers: sql client initialized:', !!sql)
@@ -90,13 +92,11 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
     
-    // Get all speakers with full details
+    // Get all speakers with only existing columns
     console.log('Admin speakers: Querying speakers table...')
     const speakers = await sql`
       SELECT 
-        id, name, email, phone, company, title, slug, 
-        bio, short_bio, one_liner, headshot_url, website,
-        linkedin_url, twitter_url, instagram_url, youtube_url,
+        id, name, email, bio, short_bio, one_liner, headshot_url, website,
         location, programs, topics, industries, videos, testimonials,
         speaking_fee_range, travel_preferences, technical_requirements, 
         dietary_restrictions, featured, active, listed, ranking,
