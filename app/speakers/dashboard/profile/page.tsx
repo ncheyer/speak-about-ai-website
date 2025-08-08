@@ -120,8 +120,8 @@ const LANGUAGES = [
   "Russian"
 ]
 
-// Mock data - in production this would come from API
-const mockProfile = {
+// Mock data - REMOVED to prevent false information
+/* const mockProfile = {
   id: 1,
   first_name: "Noah",
   last_name: "Cheyer",
@@ -255,7 +255,7 @@ const mockProfile = {
   engagement_requests: 12,
   avg_rating: 4.9,
   total_engagements: 47
-}
+} */
 
 export default function SpeakerProfilePage() {
   const router = useRouter()
@@ -298,15 +298,12 @@ export default function SpeakerProfilePage() {
       }
       
       const data = await response.json()
-      // Merge fetched data with any missing fields from mockProfile structure
-      setProfile({
-        ...mockProfile, // Use mock as defaults for missing fields
-        ...data.profile // Override with real data from database
-      })
+      // Use only real data from database, no mock data merging
+      setProfile(data.profile)
     } catch (error) {
       console.error('Error fetching profile:', error)
-      // Fall back to mock data if fetch fails
-      setProfile(mockProfile)
+      // Don't fall back to mock data - show error instead
+      setError('Failed to load profile. Please try again.')
     } finally {
       setIsLoading(false)
     }

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     const speakerId = decoded.speakerId
     
-    // Fetch speaker data from database
+    // Fetch speaker data from database - only query existing columns
     const speakers = await sql`
       SELECT 
         id, email, name, bio, short_bio, one_liner,
@@ -32,8 +32,7 @@ export async function GET(request: NextRequest) {
         topics, industries, programs,
         speaking_fee_range, 
         travel_preferences, technical_requirements, dietary_restrictions,
-        linkedin_url, twitter_url, instagram_url, youtube_url,
-        title, company, location,
+        location,
         featured, active, listed, ranking,
         created_at, updated_at
       FROM speakers
@@ -59,8 +58,8 @@ export async function GET(request: NextRequest) {
       last_name: lastName,
       email: speaker.email,
       phone: '', // Not in current database
-      title: speaker.title || '',
-      company: speaker.company || '',
+      title: speaker.one_liner || '', // Use one_liner as title since title column doesn't exist
+      company: '', // Not in current database
       location: speaker.location || '',
       timezone: 'PST', // Default, not in current database
       
@@ -93,10 +92,10 @@ export async function GET(request: NextRequest) {
       dietary_restrictions: speaker.dietary_restrictions || '',
       
       website: speaker.website || '',
-      linkedin_url: speaker.linkedin_url || '',
-      twitter_url: speaker.twitter_url || '',
-      youtube_url: speaker.youtube_url || '',
-      instagram_url: speaker.instagram_url || '',
+      linkedin_url: '', // Not in current database
+      twitter_url: '', // Not in current database
+      youtube_url: '', // Not in current database
+      instagram_url: '', // Not in current database
       
       videos: [], // Not in current database
       publications: [], // Not in current database

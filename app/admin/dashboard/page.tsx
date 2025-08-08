@@ -389,13 +389,25 @@ export default function AdminDashboard() {
     )
   }
 
-  // Calculate statistics
+  // Calculate statistics - handle string values from database
   const totalDeals = deals.length
-  const totalValue = deals.reduce((sum, deal) => sum + (typeof deal.deal_value === 'string' ? parseFloat(deal.deal_value) || 0 : deal.deal_value), 0)
+  
+  // Parse deal value whether it's a string or number
+  const parseDealValue = (deal: Deal): number => {
+    if (!deal || !deal.deal_value) return 0
+    if (typeof deal.deal_value === 'number') return deal.deal_value
+    if (typeof deal.deal_value === 'string') {
+      const parsed = parseFloat(deal.deal_value)
+      return isNaN(parsed) ? 0 : parsed
+    }
+    return 0
+  }
+  
+  const totalValue = deals.reduce((sum, deal) => sum + parseDealValue(deal), 0)
   const wonDeals = deals.filter((d) => d.status === "won").length
   const pipelineValue = deals
-    .filter((d) => !["won", "lost"].includes(d.status))
-    .reduce((sum, deal) => sum + (typeof deal.deal_value === 'string' ? parseFloat(deal.deal_value) || 0 : deal.deal_value), 0)
+    .filter((d) => d.status !== "won" && d.status !== "lost")
+    .reduce((sum, deal) => sum + parseDealValue(deal), 0)
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

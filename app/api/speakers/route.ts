@@ -14,12 +14,11 @@ export async function GET(request: NextRequest) {
 
     // Initialize Neon client
     const sql = neon(process.env.DATABASE_URL)
-    // Get all active and listed speakers with full data for website display
+    // Get all active and listed speakers with existing columns only
     const speakers = await sql`
       SELECT 
-        id, name, email, phone, company, title, slug,
+        id, name, email, 
         bio, short_bio, one_liner, headshot_url, website,
-        linkedin_url, twitter_url, instagram_url, youtube_url,
         topics, speaking_fee_range, travel_preferences,
         technical_requirements, dietary_restrictions,
         active, email_verified, featured, location, programs,
@@ -34,12 +33,12 @@ export async function GET(request: NextRequest) {
       success: true,
       speakers: speakers.map(speaker => ({
         id: speaker.id,
-        slug: speaker.slug,
+        slug: speaker.name?.toLowerCase().replace(/\s+/g, '-') || `speaker-${speaker.id}`,
         name: speaker.name,
         email: speaker.email,
-        phone: speaker.phone,
-        company: speaker.company,
-        title: speaker.title || speaker.one_liner,
+        phone: '', // Column doesn't exist yet
+        company: '', // Column doesn't exist yet
+        title: speaker.one_liner,
         bio: speaker.bio,
         shortBio: speaker.short_bio,
         oneLiner: speaker.one_liner,
@@ -47,14 +46,14 @@ export async function GET(request: NextRequest) {
         imagePosition: speaker.image_position || 'center',
         imageOffsetY: speaker.image_offset || '0%',
         website: speaker.website,
-        linkedin: speaker.linkedin_url,
-        linkedinUrl: speaker.linkedin_url,
-        twitter: speaker.twitter_url,
-        twitterUrl: speaker.twitter_url,
-        instagram: speaker.instagram_url,
-        instagramUrl: speaker.instagram_url,
-        youtube: speaker.youtube_url,
-        youtubeUrl: speaker.youtube_url,
+        linkedin: '', // Column doesn't exist yet
+        linkedinUrl: '', // Column doesn't exist yet
+        twitter: '', // Column doesn't exist yet
+        twitterUrl: '', // Column doesn't exist yet
+        instagram: '', // Column doesn't exist yet
+        instagramUrl: '', // Column doesn't exist yet
+        youtube: '', // Column doesn't exist yet
+        youtubeUrl: '', // Column doesn't exist yet
         topics: speaker.topics || [],
         programs: speaker.programs || [],
         industries: speaker.industries || [],
