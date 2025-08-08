@@ -17,10 +17,12 @@ export async function GET(request: NextRequest) {
     // Get all active and listed speakers with full data for website display
     const speakers = await sql`
       SELECT 
-        id, name, email, bio, short_bio, one_liner, headshot_url, website,
+        id, name, email, phone, company, title, slug,
+        bio, short_bio, one_liner, headshot_url, website,
+        linkedin_url, twitter_url, instagram_url, youtube_url,
         topics, speaking_fee_range, travel_preferences,
         technical_requirements, dietary_restrictions,
-        active, email_verified, slug, title, featured, location, programs,
+        active, email_verified, featured, location, programs,
         listed, industries, ranking, image_position, image_offset,
         videos, testimonials, created_at, updated_at
       FROM speakers
@@ -34,6 +36,9 @@ export async function GET(request: NextRequest) {
         id: speaker.id,
         slug: speaker.slug,
         name: speaker.name,
+        email: speaker.email,
+        phone: speaker.phone,
+        company: speaker.company,
         title: speaker.title || speaker.one_liner,
         bio: speaker.bio,
         shortBio: speaker.short_bio,
@@ -42,6 +47,14 @@ export async function GET(request: NextRequest) {
         imagePosition: speaker.image_position || 'center',
         imageOffsetY: speaker.image_offset || '0%',
         website: speaker.website,
+        linkedin: speaker.linkedin_url,
+        linkedinUrl: speaker.linkedin_url,
+        twitter: speaker.twitter_url,
+        twitterUrl: speaker.twitter_url,
+        instagram: speaker.instagram_url,
+        instagramUrl: speaker.instagram_url,
+        youtube: speaker.youtube_url,
+        youtubeUrl: speaker.youtube_url,
         topics: speaker.topics || [],
         programs: speaker.programs || [],
         industries: speaker.industries || [],

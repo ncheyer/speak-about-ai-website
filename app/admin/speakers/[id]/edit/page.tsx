@@ -438,19 +438,43 @@ export default function AdminSpeakerEditPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="headshot_url">Headshot URL</Label>
+                    <Label htmlFor="phone">Phone</Label>
                     <Input
-                      id="headshot_url"
-                      value={formData.headshot_url}
-                      onChange={(e) => setFormData(prev => ({ ...prev, headshot_url: e.target.value }))}
+                      id="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="+1 (555) 123-4567"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="website">Website</Label>
+                    <Label htmlFor="slug">URL Slug</Label>
+                    <div className="flex items-center">
+                      <span className="text-sm text-gray-500 mr-2">/speakers/</span>
+                      <Input
+                        id="slug"
+                        value={formData.slug}
+                        onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                        placeholder="auto-from-name"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="company">Company</Label>
                     <Input
-                      id="website"
-                      value={formData.website}
-                      onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                      id="company"
+                      value={formData.company}
+                      onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                      placeholder="Company or Organization"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="title">Professional Title</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="CEO, AI Researcher, etc."
                     />
                   </div>
                   <div>
@@ -459,6 +483,7 @@ export default function AdminSpeakerEditPage() {
                       id="location"
                       value={formData.location}
                       onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="San Francisco, CA"
                     />
                   </div>
                   <div>
@@ -468,6 +493,60 @@ export default function AdminSpeakerEditPage() {
                       value={formData.speaking_fee_range}
                       onChange={(e) => setFormData(prev => ({ ...prev, speaking_fee_range: e.target.value }))}
                       placeholder="e.g., $10,000 - $25,000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="headshot_url">Headshot URL</Label>
+                    <Input
+                      id="headshot_url"
+                      value={formData.headshot_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, headshot_url: e.target.value }))}
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="website">Personal Website</Label>
+                    <Input
+                      id="website"
+                      value={formData.website}
+                      onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="linkedin_url">LinkedIn Profile</Label>
+                    <Input
+                      id="linkedin_url"
+                      value={formData.linkedin_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, linkedin_url: e.target.value }))}
+                      placeholder="https://linkedin.com/in/..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="twitter_url">Twitter/X Profile</Label>
+                    <Input
+                      id="twitter_url"
+                      value={formData.twitter_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, twitter_url: e.target.value }))}
+                      placeholder="https://twitter.com/..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="instagram_url">Instagram Profile</Label>
+                    <Input
+                      id="instagram_url"
+                      value={formData.instagram_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, instagram_url: e.target.value }))}
+                      placeholder="https://instagram.com/..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="youtube_url">YouTube Channel</Label>
+                    <Input
+                      id="youtube_url"
+                      value={formData.youtube_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, youtube_url: e.target.value }))}
+                      placeholder="https://youtube.com/..."
                     />
                   </div>
                 </div>
