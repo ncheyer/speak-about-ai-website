@@ -19,6 +19,7 @@ import {
   Star,
   MapPin,
   Mail,
+  Phone,
   Globe,
   Loader2,
   AlertTriangle,
