@@ -265,6 +265,7 @@ export default function SpeakerProfilePage() {
   const [activeTab, setActiveTab] = useState("basic")
   const [showSuccess, setShowSuccess] = useState(false)
   const [errors, setErrors] = useState<any>({})
+  const [error, setError] = useState("")
   
   // Form states for editing
   const [editMode, setEditMode] = useState({
@@ -741,7 +742,7 @@ export default function SpeakerProfilePage() {
               {editMode.basic && (
                 <CardFooter className="bg-gray-50">
                   <Button
-                    className="ml-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                     onClick={() => handleSave('basic')}
                     disabled={isSaving}
                   >
@@ -965,7 +966,7 @@ export default function SpeakerProfilePage() {
               {editMode.professional && (
                 <CardFooter className="bg-gray-50">
                   <Button
-                    className="ml-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                     onClick={() => handleSave('professional')}
                     disabled={isSaving}
                   >
@@ -1160,7 +1161,7 @@ export default function SpeakerProfilePage() {
               {editMode.expertise && (
                 <CardFooter className="bg-gray-50">
                   <Button
-                    className="ml-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                     onClick={() => handleSave('expertise')}
                     disabled={isSaving}
                   >
@@ -1503,7 +1504,7 @@ export default function SpeakerProfilePage() {
               {editMode.logistics && (
                 <CardFooter className="bg-gray-50">
                   <Button
-                    className="ml-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                     onClick={() => handleSave('logistics')}
                     disabled={isSaving}
                   >

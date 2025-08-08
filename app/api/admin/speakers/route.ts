@@ -100,11 +100,12 @@ export async function GET(request: NextRequest) {
         location, programs, topics, industries, videos, testimonials,
         speaking_fee_range, travel_preferences, technical_requirements, 
         dietary_restrictions, featured, active, listed, ranking,
-        created_at, updated_at
+        created_at, updated_at, title, slug, email_verified,
+        image_position, image_offset, social_media
       FROM speakers
       ORDER BY 
         CASE WHEN featured = true THEN 0 ELSE 1 END,
-        ranking DESC,
+        ranking DESC NULLS LAST,
         name ASC
     `
     

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { SpeakerDashboardLayout } from "@/components/speaker-dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,9 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Settings, User, Bell, Shield, CreditCard, Globe, 
   Mail, Phone, Lock, Eye, EyeOff, Check, X, 
-  AlertCircle, Download, Trash2, LogOut, ChevronLeft
+  AlertCircle, Download, Trash2, LogOut
 } from "lucide-react"
-import Link from "next/link"
 
 export default function AccountSettingsPage() {
   const router = useRouter()
@@ -176,35 +176,23 @@ export default function AccountSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <Link href="/speakers/dashboard">
-                <Button variant="ghost" size="sm" className="mr-4">
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Back to Dashboard
-                </Button>
-              </Link>
-              <h1 className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Account Settings
-              </h1>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={handleLogout}
-              className="text-red-600 hover:bg-red-50"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
+    <SpeakerDashboardLayout>
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+            <p className="text-gray-600 mt-1">Manage your account preferences and settings</p>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={handleLogout}
+            className="text-red-600 hover:bg-red-50"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
         </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Status Alert */}
         {saveStatus.type && (
           <Alert className={`mb-6 ${saveStatus.type === 'success' ? 'border-green-500' : 'border-red-500'}`}>
@@ -220,7 +208,7 @@ export default function AccountSettingsPage() {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 w-full mb-6">
+          <TabsList className="grid grid-cols-5 w-full mb-6 bg-white border">
             <TabsTrigger value="account" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Account</span>
@@ -245,7 +233,7 @@ export default function AccountSettingsPage() {
 
           {/* Account Tab */}
           <TabsContent value="account" className="space-y-6">
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle>Account Information</CardTitle>
                 <CardDescription>Manage your account details and credentials</CardDescription>
@@ -317,7 +305,7 @@ export default function AccountSettingsPage() {
                   <Button 
                     onClick={handleSaveAccount}
                     disabled={isLoading}
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                   >
                     {isLoading ? "Saving..." : "Save Changes"}
                   </Button>
@@ -325,7 +313,7 @@ export default function AccountSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle>Change Password</CardTitle>
                 <CardDescription>Update your account password</CardDescription>
@@ -388,7 +376,7 @@ export default function AccountSettingsPage() {
                   <Button 
                     onClick={handleChangePassword}
                     disabled={isLoading || !passwordData.current || !passwordData.new || !passwordData.confirm}
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                   >
                     {isLoading ? "Changing..." : "Change Password"}
                   </Button>
@@ -399,7 +387,7 @@ export default function AccountSettingsPage() {
 
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-6">
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle>Email Notifications</CardTitle>
                 <CardDescription>Choose what emails you want to receive</CardDescription>
@@ -451,7 +439,7 @@ export default function AccountSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle>SMS Notifications</CardTitle>
                 <CardDescription>Get text messages for important updates</CardDescription>
@@ -481,7 +469,7 @@ export default function AccountSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle>Push Notifications</CardTitle>
                 <CardDescription>Browser notifications for real-time updates</CardDescription>
@@ -515,7 +503,7 @@ export default function AccountSettingsPage() {
               <Button 
                 onClick={handleSaveNotifications}
                 disabled={isLoading}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
                 {isLoading ? "Saving..." : "Save Preferences"}
               </Button>
@@ -524,7 +512,7 @@ export default function AccountSettingsPage() {
 
           {/* Privacy Tab */}
           <TabsContent value="privacy" className="space-y-6">
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle>Profile Privacy</CardTitle>
                 <CardDescription>Control who can see your profile and information</CardDescription>
@@ -591,7 +579,7 @@ export default function AccountSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle>Data & Analytics</CardTitle>
                 <CardDescription>Control how your data is used</CardDescription>
@@ -625,7 +613,7 @@ export default function AccountSettingsPage() {
               <Button 
                 onClick={handleSavePrivacy}
                 disabled={isLoading}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
                 {isLoading ? "Saving..." : "Save Privacy Settings"}
               </Button>
@@ -634,7 +622,7 @@ export default function AccountSettingsPage() {
 
           {/* Billing Tab */}
           <TabsContent value="billing" className="space-y-6">
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle>Payment Information</CardTitle>
                 <CardDescription>Manage how you receive payments</CardDescription>
@@ -708,24 +696,24 @@ export default function AccountSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle>Earnings Summary</CardTitle>
                 <CardDescription>Your earnings overview for this year</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-3">
-                  <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg">
+                  <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg">
                     <p className="text-sm text-gray-600">Total Earned</p>
-                    <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                    <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                       $125,500
                     </p>
                   </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg">
+                  <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg">
                     <p className="text-sm text-gray-600">Pending</p>
                     <p className="text-2xl font-bold text-gray-900">$15,000</p>
                   </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg">
+                  <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg">
                     <p className="text-sm text-gray-600">Next Payout</p>
                     <p className="text-2xl font-bold text-gray-900">$8,500</p>
                   </div>
@@ -737,7 +725,7 @@ export default function AccountSettingsPage() {
               <Button 
                 onClick={handleSaveBilling}
                 disabled={isLoading}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
                 {isLoading ? "Saving..." : "Save Billing Info"}
               </Button>
@@ -746,7 +734,7 @@ export default function AccountSettingsPage() {
 
           {/* Advanced Tab */}
           <TabsContent value="advanced" className="space-y-6">
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle>Two-Factor Authentication</CardTitle>
                 <CardDescription>Add an extra layer of security to your account</CardDescription>
@@ -767,7 +755,7 @@ export default function AccountSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle>Active Sessions</CardTitle>
                 <CardDescription>Manage your active login sessions</CardDescription>
@@ -799,7 +787,7 @@ export default function AccountSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-red-200">
+            <Card className="border-0 shadow-md border-red-200">
               <CardHeader>
                 <CardTitle className="text-red-600">Danger Zone</CardTitle>
                 <CardDescription>Irreversible and destructive actions</CardDescription>
@@ -824,6 +812,6 @@ export default function AccountSettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </SpeakerDashboardLayout>
   )
 }
