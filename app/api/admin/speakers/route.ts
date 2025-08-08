@@ -48,25 +48,36 @@ export async function GET(request: NextRequest) {
       // Transform the data to match the expected format from database
       const speakers = fallbackSpeakers.map((speaker, index) => ({
         id: index + 1,
-        name: speaker.name,
-        email: `${speaker.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+        name: speaker.name || 'Unknown Speaker',
+        email: speaker.email || `${(speaker.name || 'speaker').toLowerCase().replace(/\s+/g, '.')}@example.com`,
         bio: speaker.bio || '',
         short_bio: speaker.bio ? speaker.bio.substring(0, 200) : '',
         one_liner: speaker.title || '',
         headshot_url: speaker.image || '',
         website: speaker.website || '',
         location: speaker.location || '',
-        topics: speaker.topics || [],
-        industries: speaker.industries || [],
-        videos: speaker.videos || [],
-        testimonials: speaker.testimonials || [],
+        topics: Array.isArray(speaker.topics) ? speaker.topics : [],
+        industries: Array.isArray(speaker.industries) ? speaker.industries : [],
+        videos: Array.isArray(speaker.videos) ? speaker.videos : [],
+        testimonials: Array.isArray(speaker.testimonials) ? speaker.testimonials : [],
         speaking_fee_range: speaker.feeRange || speaker.fee || '',
         featured: speaker.featured || false,
         active: speaker.listed !== false,
         listed: speaker.listed !== false,
         ranking: speaker.ranking || 0,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        // Add missing fields with defaults
+        title: speaker.title || '',
+        slug: speaker.slug || '',
+        email_verified: false,
+        image_position: null,
+        image_offset: null,
+        social_media: null,
+        programs: '',
+        travel_preferences: '',
+        technical_requirements: '',
+        dietary_restrictions: ''
       }))
       
       console.log(`Admin speakers: Returning ${speakers.length} speakers from fallback data`)

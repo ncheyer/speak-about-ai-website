@@ -121,6 +121,7 @@ export default function AdminSpeakersPage() {
   const [applications, setApplications] = useState<SpeakerApplication[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingApplications, setLoadingApplications] = useState(true)
+  const [pageError, setPageError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [searchApplications, setSearchApplications] = useState("")
   const [activeFilter, setActiveFilter] = useState("all")
@@ -143,14 +144,21 @@ export default function AdminSpeakersPage() {
 
   // Check authentication and load data
   useEffect(() => {
-    const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
-    if (!isAdminLoggedIn) {
-      router.push("/admin")
-      return
+    try {
+      const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
+      if (!isAdminLoggedIn) {
+        router.push("/admin")
+        return
+      }
+      setIsLoggedIn(true)
+      loadSpeakers()
+      loadApplications()
+    } catch (error) {
+      console.error("Error in useEffect:", error)
+      setPageError("Failed to initialize page. Please refresh.")
+      setLoading(false)
+      setLoadingApplications(false)
     }
-    setIsLoggedIn(true)
-    loadSpeakers()
-    loadApplications()
   }, [router])
 
   const handleDeleteSpeaker = async (speakerId: number, speakerName: string) => {
@@ -203,22 +211,25 @@ export default function AdminSpeakersPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setApplications(data.applications || [])
+        // Ensure applications is always an array
+        const applications = Array.isArray(data.applications) ? data.applications : []
+        setApplications(applications)
       } else {
-        const errorData = await response.json()
-        toast({
-          title: "Error",
-          description: errorData.error || "Failed to load applications",
-          variant: "destructive",
-        })
+        let errorMessage = "Failed to load applications"
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch {
+          // If response isn't JSON, use default message
+        }
+        console.warn("Applications API error:", errorMessage)
+        // Don't show toast for applications - they're optional
+        setApplications([])
       }
     } catch (error) {
       console.error("Error loading applications:", error)
-      toast({
-        title: "Error",
-        description: "Failed to load applications",
-        variant: "destructive",
-      })
+      // Don't show toast for applications - they're optional
+      setApplications([])
     } finally {
       setLoadingApplications(false)
     }
@@ -348,12 +359,30 @@ export default function AdminSpeakersPage() {
 
       if (response.ok) {
         const speakersData = await response.json()
-        setSpeakers(speakersData.speakers || [])
+        // Ensure speakers is always an array
+        const speakers = Array.isArray(speakersData.speakers) ? speakersData.speakers : []
+        // Validate and sanitize speaker data
+        const validatedSpeakers = speakers.map((speaker: any) => ({
+          ...speaker,
+          name: speaker.name || 'Unknown Speaker',
+          email: speaker.email || '',
+          topics: Array.isArray(speaker.topics) ? speaker.topics : [],
+          industries: Array.isArray(speaker.industries) ? speaker.industries : [],
+          videos: Array.isArray(speaker.videos) ? speaker.videos : [],
+          testimonials: Array.isArray(speaker.testimonials) ? speaker.testimonials : []
+        }))
+        setSpeakers(validatedSpeakers)
       } else {
-        const errorData = await response.json()
+        let errorMessage = "Failed to load speakers"
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch {
+          // If response isn't JSON, use default message
+        }
         toast({
           title: "Error",
-          description: errorData.error || "Failed to load speakers",
+          description: errorMessage,
           variant: "destructive",
         })
       }
@@ -361,7 +390,7 @@ export default function AdminSpeakersPage() {
       console.error("Error loading speakers:", error)
       toast({
         title: "Error",
-        description: "Failed to load speakers",
+        description: "Failed to load speakers. Please check your connection.",
         variant: "destructive",
       })
     } finally {
@@ -441,6 +470,25 @@ export default function AdminSpeakersPage() {
 
   if (!isLoggedIn) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+  }
+
+  if (pageError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Error Loading Page</h2>
+              <p className="text-gray-600 mb-4">{pageError}</p>
+              <Button onClick={() => window.location.reload()}>
+                Refresh Page
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (loading) {
@@ -594,7 +642,7 @@ export default function AdminSpeakersPage() {
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={speaker.headshot_url} alt={speaker.name} />
-                      <AvatarFallback>{(speaker.name || '').split(' ').filter(n => n).map(n => n[0]).join('')}</AvatarFallback>
+                      <AvatarFallback>{(speaker.name || 'S').split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase() || 'S'}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <CardTitle className="text-lg">{speaker.name}</CardTitle>
