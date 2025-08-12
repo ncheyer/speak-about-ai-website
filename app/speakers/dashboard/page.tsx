@@ -117,7 +117,7 @@ export default function SpeakerDashboard() {
     <SpeakerDashboardLayout>
       <div className="space-y-6">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
+        <div className="bg-gradient-to-r from-[#1E68C6] to-blue-600 rounded-2xl p-8 text-white">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
@@ -401,7 +401,7 @@ export default function SpeakerDashboard() {
             </Card>
 
             {/* Quick Actions */}
-            <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-purple-50">
+            <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-gray-50">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
               </CardHeader>

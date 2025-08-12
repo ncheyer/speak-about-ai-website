@@ -65,7 +65,7 @@ export default function SpeakerPortalLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Back Button */}
         <Link href="/portal">
@@ -77,7 +77,7 @@ export default function SpeakerPortalLogin() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-600 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#1E68C6] rounded-full mb-4">
             <Mic className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Speaker Portal</h1>
@@ -136,7 +136,7 @@ export default function SpeakerPortalLogin() {
 
               <Button 
                 type="submit" 
-                className="w-full h-12 bg-purple-600 hover:bg-purple-700" 
+                className="w-full h-12 bg-[#1E68C6] hover:bg-blue-700" 
                 disabled={isLoading}
               >
                 {isLoading ? "Signing in..." : "Sign In"}
@@ -163,7 +163,7 @@ export default function SpeakerPortalLogin() {
               <Link href="/speakers/forgot-password">
                 <Button
                   variant="link"
-                  className="text-sm text-gray-600 hover:text-purple-600"
+                  className="text-sm text-gray-600 hover:text-[#1E68C6]"
                 >
                   Forgot your password?
                 </Button>

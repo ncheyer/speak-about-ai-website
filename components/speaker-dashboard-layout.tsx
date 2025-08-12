@@ -74,8 +74,8 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
       name: "Profile",
       href: "/speakers/dashboard/profile",
       icon: User,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
+      color: "text-[#1E68C6]",
+      bgColor: "bg-blue-50",
       current: pathname === "/speakers/dashboard/profile"
     },
     {
@@ -98,8 +98,8 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
       name: "Resources",
       href: "/speakers/dashboard/resources",
       icon: FileText,
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50",
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
       current: pathname === "/speakers/dashboard/resources"
     },
     {
@@ -130,7 +130,7 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
               {/* Logo */}
               <div className="flex-shrink-0 flex items-center ml-4 lg:ml-0">
                 <Link href="/speakers/dashboard" className="flex items-center">
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#1E68C6] to-blue-600 flex items-center justify-center">
                     <Star className="h-5 w-5 text-white" />
                   </div>
                   <span className="ml-3 text-xl font-bold text-gray-900">Speaker Portal</span>
@@ -168,7 +168,7 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
               {/* Profile dropdown */}
               <div className="relative">
                 <button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100">
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#1E68C6] to-blue-600 flex items-center justify-center">
                     <span className="text-white font-semibold text-sm">
                       {speakerName.charAt(0).toUpperCase()}
                     </span>
@@ -199,9 +199,9 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
       )}>
         <div className="h-full px-3 py-4 overflow-y-auto">
           {/* User info */}
-          <div className="px-3 py-4 mb-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg">
+          <div className="px-3 py-4 mb-4 bg-gradient-to-br from-blue-50 to-gray-50 rounded-lg">
             <div className="flex items-center space-x-3">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#1E68C6] to-blue-600 flex items-center justify-center">
                 <span className="text-white font-bold text-lg">
                   {speakerName.charAt(0).toUpperCase()}
                 </span>
@@ -217,7 +217,7 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
                 <p className="font-semibold text-gray-900">85%</p>
               </div>
               <div className="w-20 bg-gray-200 rounded-full h-2">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full" style={{ width: "85%" }}></div>
+                <div className="bg-gradient-to-r from-[#1E68C6] to-blue-600 h-2 rounded-full" style={{ width: "85%" }}></div>
               </div>
             </div>
           </div>
@@ -233,7 +233,7 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
                   className={cn(
                     "group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                     item.current
-                      ? "bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border-l-4 border-blue-600"
+                      ? "bg-gradient-to-r from-blue-50 to-gray-50 text-blue-700 border-l-4 border-[#1E68C6]"
                       : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                   )}
                 >
@@ -281,7 +281,7 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           {/* CTA */}
-          <div className="mt-8 mx-3 p-4 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg">
+          <div className="mt-8 mx-3 p-4 bg-gradient-to-br from-[#1E68C6] to-blue-600 rounded-lg">
             <Globe className="h-8 w-8 text-white mb-2" />
             <h3 className="text-white font-semibold mb-1">Go Premium</h3>
             <p className="text-white/80 text-xs mb-3">Unlock advanced features and analytics</p>

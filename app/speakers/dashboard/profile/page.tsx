@@ -379,9 +379,9 @@ export default function SpeakerProfilePage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1E68C6] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading profile...</p>
         </div>
       </div>
@@ -391,7 +391,7 @@ export default function SpeakerProfilePage() {
   // Error state
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <p className="text-gray-600">Failed to load profile</p>
@@ -404,10 +404,10 @@ export default function SpeakerProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-purple-100">
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 h-1"></div>
+      <header className="bg-white shadow-sm border-b border-blue-100">
+        <div className="bg-gradient-to-r from-[#1E68C6] to-blue-600 h-1"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-4">
@@ -418,7 +418,7 @@ export default function SpeakerProfilePage() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-[#1E68C6] to-blue-600 bg-clip-text text-transparent">
                   Profile Management
                 </h1>
                 <p className="text-sm text-gray-600">Update your speaker profile and information</p>
@@ -430,7 +430,7 @@ export default function SpeakerProfilePage() {
                 Preview Profile
               </Button>
               <Button 
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                className="bg-gradient-to-r from-[#1E68C6] to-blue-600 hover:from-blue-700 hover:to-blue-800"
                 size="sm"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
@@ -446,7 +446,7 @@ export default function SpeakerProfilePage() {
         {/* Profile Header Card */}
         <Card className="border-0 shadow-xl mb-8 overflow-hidden">
           {/* Banner */}
-          <div className="h-48 bg-gradient-to-r from-purple-600 to-blue-600 relative">
+          <div className="h-48 bg-gradient-to-r from-[#1E68C6] to-blue-600 relative">
             {profile.banner_url && (
               <img 
                 src={profile.banner_url} 
@@ -470,12 +470,12 @@ export default function SpeakerProfilePage() {
               <div className="relative">
                 <Avatar className="h-32 w-32 border-4 border-white shadow-xl">
                   <AvatarImage src={profile.headshot_url} alt={profile.first_name} />
-                  <AvatarFallback className="text-3xl bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                  <AvatarFallback className="text-3xl bg-gradient-to-r from-[#1E68C6] to-blue-600 text-white">
                     {profile.first_name[0]}{profile.last_name[0]}
                   </AvatarFallback>
                 </Avatar>
                 <Button
-                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full p-0 bg-purple-600 hover:bg-purple-700"
+                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full p-0 bg-[#1E68C6] hover:bg-blue-700"
                   onClick={() => handleImageUpload('headshot')}
                 >
                   <Camera className="h-4 w-4" />
@@ -523,11 +523,11 @@ export default function SpeakerProfilePage() {
             </div>
             
             {/* Profile Completion */}
-            <Card className="bg-purple-50 border-purple-200">
+            <Card className="bg-blue-50 border-blue-200">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-purple-900">Profile Completion</span>
-                  <span className="text-sm font-bold text-purple-600">{completionPercentage}%</span>
+                  <span className="text-sm font-medium text-blue-900">Profile Completion</span>
+                  <span className="text-sm font-bold text-[#1E68C6]">{completionPercentage}%</span>
                 </div>
                 <Progress value={completionPercentage} className="h-2 mb-4" />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -742,7 +742,7 @@ export default function SpeakerProfilePage() {
               {editMode.basic && (
                 <CardFooter className="bg-gray-50">
                   <Button
-                    className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-blue-800"
                     onClick={() => handleSave('basic')}
                     disabled={isSaving}
                   >
@@ -954,7 +954,7 @@ export default function SpeakerProfilePage() {
                       <ul className="space-y-1">
                         {profile.achievements.map((achievement, idx) => (
                           <li key={idx} className="flex items-start gap-2">
-                            <Star className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                            <Star className="h-4 w-4 text-[#1E68C6] mt-0.5 flex-shrink-0" />
                             <span className="text-sm">{achievement}</span>
                           </li>
                         ))}
@@ -966,7 +966,7 @@ export default function SpeakerProfilePage() {
               {editMode.professional && (
                 <CardFooter className="bg-gray-50">
                   <Button
-                    className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-blue-800"
                     onClick={() => handleSave('professional')}
                     disabled={isSaving}
                   >
@@ -1043,7 +1043,7 @@ export default function SpeakerProfilePage() {
                     ) : (
                       <div className="flex flex-wrap gap-2">
                         {profile.expertise_areas.map((area, idx) => (
-                          <Badge key={idx} className="bg-purple-100 text-purple-800 border-purple-200">
+                          <Badge key={idx} className="bg-blue-100 text-blue-800 border-blue-200">
                             {area}
                           </Badge>
                         ))}
@@ -1090,7 +1090,7 @@ export default function SpeakerProfilePage() {
                       <ul className="space-y-2">
                         {profile.speaking_topics.map((topic, idx) => (
                           <li key={idx} className="flex items-center gap-2">
-                            <Mic className="h-4 w-4 text-purple-600" />
+                            <Mic className="h-4 w-4 text-[#1E68C6]" />
                             <span>{topic}</span>
                           </li>
                         ))}
@@ -1149,8 +1149,8 @@ export default function SpeakerProfilePage() {
                       </>
                     ) : (
                       profile.signature_talks.map((talk, idx) => (
-                        <Card key={idx} className="p-4 bg-purple-50 border-purple-200">
-                          <h4 className="font-medium text-purple-900 mb-1">{talk.title}</h4>
+                        <Card key={idx} className="p-4 bg-blue-50 border-blue-200">
+                          <h4 className="font-medium text-blue-900 mb-1">{talk.title}</h4>
                           <p className="text-sm text-gray-700">{talk.description}</p>
                         </Card>
                       ))
@@ -1161,7 +1161,7 @@ export default function SpeakerProfilePage() {
               {editMode.expertise && (
                 <CardFooter className="bg-gray-50">
                   <Button
-                    className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-blue-800"
                     onClick={() => handleSave('expertise')}
                     disabled={isSaving}
                   >
@@ -1351,14 +1351,14 @@ export default function SpeakerProfilePage() {
                 <CardContent>
                   <div className="space-y-4">
                     {profile.testimonials.map((testimonial, idx) => (
-                      <Card key={idx} className="bg-purple-50 border-purple-200">
+                      <Card key={idx} className="bg-blue-50 border-blue-200">
                         <CardContent className="pt-6">
                           <blockquote className="text-gray-700 italic mb-4">
                             "{testimonial.text}"
                           </blockquote>
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-medium text-purple-900">{testimonial.author}</p>
+                              <p className="font-medium text-blue-900">{testimonial.author}</p>
                               <p className="text-sm text-gray-600">{testimonial.title}</p>
                               <p className="text-sm text-gray-500">{testimonial.event}</p>
                             </div>
@@ -1504,7 +1504,7 @@ export default function SpeakerProfilePage() {
               {editMode.logistics && (
                 <CardFooter className="bg-gray-50">
                   <Button
-                    className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-blue-800"
                     onClick={() => handleSave('logistics')}
                     disabled={isSaving}
                   >
