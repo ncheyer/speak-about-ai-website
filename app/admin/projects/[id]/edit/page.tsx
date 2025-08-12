@@ -27,9 +27,14 @@ import {
   DollarSign,
   FileText,
   Mail,
-  Send
+  Send,
+  Plus,
+  Trash2,
+  CheckCircle,
+  Sparkles
 } from "lucide-react"
 import Link from "next/link"
+import { generateDeliverablesFromProject, formatDeliverablesForStorage } from "@/lib/generate-deliverables"
 
 interface Project {
   id: number
@@ -157,6 +162,9 @@ interface Project {
   
   // Event Classification
   event_classification?: "virtual" | "local" | "travel"
+  
+  // Deliverables
+  deliverables?: string
   
   notes?: string
   tags?: string[]
@@ -1393,6 +1401,66 @@ export default function ProjectEditPage() {
                     />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Deliverables
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const generatedDeliverables = generateDeliverablesFromProject(formData)
+                      updateField("deliverables", formatDeliverablesForStorage(generatedDeliverables))
+                    }}
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Auto-Generate
+                  </Button>
+                </CardTitle>
+                <CardDescription>
+                  Define what will be delivered as part of this engagement. These will appear on invoices.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="deliverables">Deliverables List</Label>
+                  <Textarea
+                    id="deliverables"
+                    value={formData.deliverables || ""}
+                    onChange={(e) => updateField("deliverables", e.target.value)}
+                    placeholder="Enter each deliverable on a new line...
+• Pre-event consultation call
+• 60-minute keynote presentation
+• Interactive Q&A session
+• Post-event resources"
+                    rows={10}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Enter each deliverable on a new line. Click "Auto-Generate" to create deliverables based on project details.
+                  </p>
+                </div>
+                
+                {formData.deliverables && (
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <Label className="mb-2 block">Preview:</Label>
+                    <div className="space-y-1">
+                      {formData.deliverables.split('\n').filter(Boolean).map((item, index) => (
+                        <div key={index} className="flex items-start gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                          <span className="text-sm">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

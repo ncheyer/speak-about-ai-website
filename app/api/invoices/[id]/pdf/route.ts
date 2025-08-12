@@ -189,9 +189,9 @@ function generateInvoiceHTML(invoice: any): string {
       <div class="invoice-container">
         <div class="header">
           <div class="company-info">
-            <h1>Speak About AI</h1>
-            <p>Professional Speaking & Consulting Services</p>
-            <p>hello@speakabout.ai</p>
+            <img src="https://www.speakabout.ai/speak-about-ai-logo.png" alt="Speak About AI" style="height: 60px; margin-bottom: 16px;">
+            <p>AI Keynote Speaker Bureau</p>
+            <p>human@speakabout.ai</p>
           </div>
           <div class="invoice-details">
             <div class="invoice-badge">INVOICE</div>
@@ -231,11 +231,29 @@ function generateInvoiceHTML(invoice: any): string {
             <tbody>
               <tr>
                 <td>
-                  <strong>Professional Services</strong><br>
-                  ${invoice.description || 'Speaking engagement and related services'}
-                  ${invoice.notes ? `<br><small style="color: #6b7280">${invoice.notes}</small>` : ''}
+                  <strong>${invoice.speaker_name || invoice.requested_speaker_name || 'Professional Speaker'} - Keynote Presentation</strong><br>
+                  <div style="margin-top: 8px; line-height: 1.6;">
+                    <strong>Event:</strong> ${invoice.event_name || invoice.project_title}<br>
+                    <strong>Topic:</strong> ${invoice.program_topic || 'AI and Innovation'}<br>
+                    <strong>Format:</strong> ${invoice.program_type || 'Keynote Presentation'}<br>
+                    <strong>Duration:</strong> ${invoice.program_length || 60} minutes${invoice.qa_length ? ` (includes ${invoice.qa_length} min Q&A)` : ''}<br>
+                    <strong>Audience:</strong> ${invoice.audience_size || 'TBD'} attendees<br>
+                    <br>
+                    <strong>Deliverables:</strong><br>
+                    ${invoice.deliverables ? 
+                      invoice.deliverables.split('\n').map(item => `• ${item}<br>`).join('') :
+                      `• Pre-event consultation and content customization<br>
+                       • ${invoice.program_length || 60}-minute ${invoice.program_type || 'keynote presentation'}<br>
+                       ${invoice.qa_length ? `• ${invoice.qa_length}-minute Q&A session<br>` : ''}
+                       ${invoice.tech_rehearsal_date ? '• Technical rehearsal and sound check<br>' : ''}
+                       ${invoice.recording_allowed ? '• Permission for event recording<br>' : ''}
+                       • Professional presentation delivery<br>
+                       • Post-event follow-up (as requested)<br>`
+                    }
+                  </div>
+                  ${invoice.notes ? `<br><small style="color: #6b7280">Notes: ${invoice.notes}</small>` : ''}
                 </td>
-                <td class="amount">${formatCurrency(parseFloat(invoice.amount))}</td>
+                <td class="amount" style="vertical-align: top; padding-top: 24px;">${formatCurrency(parseFloat(invoice.amount))}</td>
               </tr>
             </tbody>
           </table>
@@ -261,9 +279,21 @@ function generateInvoiceHTML(invoice: any): string {
         </div>
         ` : ''}
 
-        <div class="footer">
+        <div class="footer" style="margin-top: 40px;">
+          <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Banking Information</h3>
+            <div style="color: #111827; line-height: 1.6;">
+              <strong>Bank Name:</strong> ${process.env.BANK_NAME || 'Please contact for banking details'}<br>
+              <strong>Account Name:</strong> ${process.env.BANK_ACCOUNT_NAME || 'Speak About AI LLC'}<br>
+              ${process.env.BANK_ACCOUNT_NUMBER ? `<strong>Account Number:</strong> ${process.env.BANK_ACCOUNT_NUMBER}<br>` : ''}
+              ${process.env.BANK_ROUTING_NUMBER ? `<strong>Routing Number:</strong> ${process.env.BANK_ROUTING_NUMBER}<br>` : ''}
+              ${process.env.BANK_SWIFT_CODE ? `<strong>SWIFT Code:</strong> ${process.env.BANK_SWIFT_CODE}<br>` : ''}
+              ${process.env.BANK_ADDRESS ? `<strong>Bank Address:</strong> ${process.env.BANK_ADDRESS}<br>` : ''}
+              ${process.env.BANK_WIRE_INSTRUCTIONS ? `<br><strong>Wire Instructions:</strong> ${process.env.BANK_WIRE_INSTRUCTIONS}` : ''}
+            </div>
+          </div>
           <p>Thank you for your business!</p>
-          <p>Payment terms: Net 30 days from issue date</p>
+          <p>Payment terms: ${invoice.invoice_type === 'deposit' ? process.env.INVOICE_DEPOSIT_TERMS || 'Net 30 days from issue date' : process.env.INVOICE_FINAL_TERMS || 'Due on event date'}</p>
           <p>Please reference invoice number ${invoice.invoice_number} with your payment</p>
         </div>
       </div>
@@ -288,16 +318,32 @@ export async function GET(
       return NextResponse.json({ error: "Invalid invoice ID" }, { status: 400 })
     }
 
-    // Fetch invoice with project details
+    // Fetch invoice with project and speaker details
     const [invoice] = await sql`
       SELECT 
         i.*,
         p.project_name as project_title,
         p.event_date,
         p.event_location,
-        p.event_type
+        p.event_type,
+        p.event_name,
+        p.requested_speaker_name,
+        p.program_topic,
+        p.program_type,
+        p.audience_size,
+        p.program_start_time,
+        p.program_length,
+        p.qa_length,
+        p.av_requirements,
+        p.recording_allowed,
+        p.tech_rehearsal_date,
+        p.deliverables,
+        p.description as project_description,
+        s.name as speaker_name,
+        s.title as speaker_title
       FROM invoices i
       LEFT JOIN projects p ON i.project_id = p.id
+      LEFT JOIN speakers s ON p.speaker_id = s.id
       WHERE i.id = ${invoiceId}
     `
 

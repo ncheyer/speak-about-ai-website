@@ -115,6 +115,11 @@ export default function Footer() {
                   Admin Panel
                 </Link>
               </li>
+              <li>
+                <Link href="/apply" className="text-[#EAEAEE] hover:text-white">
+                  Apply to Be a Speaker
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

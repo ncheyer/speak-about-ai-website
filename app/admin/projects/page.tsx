@@ -54,6 +54,7 @@ import {
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
 import { InvoicePDFDialog } from "@/components/invoice-pdf-viewer"
+import { InvoiceEditorModal } from "@/components/invoice-editor-modal"
 
 interface Project {
   id: number
@@ -139,6 +140,7 @@ interface Invoice {
   id: number
   project_id: number
   invoice_number: string
+  invoice_type?: "deposit" | "final" | "standard"
   amount: number
   status: "draft" | "sent" | "paid" | "overdue" | "cancelled"
   issue_date: string
@@ -215,6 +217,7 @@ export default function EnhancedProjectManagementPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showCreateProject, setShowCreateProject] = useState(false)
   const [selectedInvoiceForPDF, setSelectedInvoiceForPDF] = useState<{id: number, number: string} | null>(null)
+  const [selectedInvoiceForEdit, setSelectedInvoiceForEdit] = useState<number | null>(null)
   const [newProjectData, setNewProjectData] = useState({
     project_name: "",
     event_date: "",
@@ -491,10 +494,43 @@ export default function EnhancedProjectManagementPage() {
       })
 
       if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Project created successfully"
-        })
+        const newProject = await response.json()
+        
+        // Auto-generate deposit and final invoices
+        try {
+          const invoiceResponse = await fetch("/api/invoices/generate-pair", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              'x-dev-admin-bypass': 'dev-admin-access'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              projectId: newProject.id
+            })
+          })
+          
+          if (invoiceResponse.ok) {
+            toast({
+              title: "Success",
+              description: "Project created and invoices generated successfully"
+            })
+          } else {
+            toast({
+              title: "Partial Success",
+              description: "Project created but failed to generate invoices. You can create them manually.",
+              variant: "default"
+            })
+          }
+        } catch (error) {
+          console.error("Error generating invoices:", error)
+          toast({
+            title: "Partial Success",
+            description: "Project created but failed to generate invoices. You can create them manually.",
+            variant: "default"
+          })
+        }
+        
         setShowCreateProject(false)
         setNewProjectData({
           project_name: "",
@@ -1303,6 +1339,7 @@ export default function EnhancedProjectManagementPage() {
                         <TableHead>Speaker</TableHead>
                         <TableHead>Stage</TableHead>
                         <TableHead>Date</TableHead>
+                        <TableHead>Invoices</TableHead>
                         <TableHead>Revenue</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
@@ -1339,17 +1376,193 @@ export default function EnhancedProjectManagementPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge className={(PROJECT_STATUSES[project.status]?.color || "bg-gray-500") + " text-white"}>
-                              {PROJECT_STATUSES[project.status]?.label || project.status}
-                            </Badge>
+                            <Select 
+                              value={project.status} 
+                              onValueChange={async (newStatus) => {
+                                try {
+                                  const response = await fetch(`/api/projects/${project.id}`, {
+                                    method: "PATCH",
+                                    headers: { 
+                                      "Content-Type": "application/json",
+                                      'x-dev-admin-bypass': 'dev-admin-access'
+                                    },
+                                    credentials: 'include',
+                                    body: JSON.stringify({ status: newStatus })
+                                  })
+                                  
+                                  if (response.ok) {
+                                    toast({
+                                      title: "Success",
+                                      description: "Project stage updated"
+                                    })
+                                    loadData()
+                                  } else {
+                                    toast({
+                                      title: "Error",
+                                      description: "Failed to update stage",
+                                      variant: "destructive"
+                                    })
+                                  }
+                                } catch (error) {
+                                  console.error("Error updating stage:", error)
+                                  toast({
+                                    title: "Error",
+                                    description: "Failed to update stage",
+                                    variant: "destructive"
+                                  })
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-[140px] h-8 border-0">
+                                <SelectValue>
+                                  <Badge className={(PROJECT_STATUSES[project.status]?.color || "bg-gray-500") + " text-white"}>
+                                    {PROJECT_STATUSES[project.status]?.label || project.status}
+                                  </Badge>
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="invoicing">
+                                  <Badge className="bg-blue-500 text-white">Invoicing</Badge>
+                                </SelectItem>
+                                <SelectItem value="logistics_planning">
+                                  <Badge className="bg-purple-500 text-white">Logistics</Badge>
+                                </SelectItem>
+                                <SelectItem value="pre_event">
+                                  <Badge className="bg-indigo-500 text-white">Pre-Event</Badge>
+                                </SelectItem>
+                                <SelectItem value="event_week">
+                                  <Badge className="bg-orange-500 text-white">Event Week</Badge>
+                                </SelectItem>
+                                <SelectItem value="follow_up">
+                                  <Badge className="bg-yellow-500 text-white">Follow Up</Badge>
+                                </SelectItem>
+                                <SelectItem value="completed">
+                                  <Badge className="bg-green-500 text-white">Completed</Badge>
+                                </SelectItem>
+                                <SelectItem value="cancelled">
+                                  <Badge className="bg-gray-500 text-white">Cancelled</Badge>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
                           </TableCell>
                           <TableCell>
                             {formatEventDate(project.event_date)}
                           </TableCell>
                           <TableCell>
+                            <div className="space-y-1">
+                              {(() => {
+                                const projectInvoices = invoices.filter(inv => inv.project_id === project.id)
+                                const depositInvoice = projectInvoices.find(inv => inv.invoice_type === 'deposit')
+                                const finalInvoice = projectInvoices.find(inv => inv.invoice_type === 'final')
+                                
+                                if (!depositInvoice && !finalInvoice) {
+                                  return (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 text-xs"
+                                      onClick={async () => {
+                                        try {
+                                          const response = await fetch("/api/invoices/generate-pair", {
+                                            method: "POST",
+                                            headers: { 
+                                              "Content-Type": "application/json",
+                                              'x-dev-admin-bypass': 'dev-admin-access'
+                                            },
+                                            credentials: 'include',
+                                            body: JSON.stringify({ projectId: project.id })
+                                          })
+                                          
+                                          if (response.ok) {
+                                            toast({
+                                              title: "Success",
+                                              description: "Invoices generated successfully"
+                                            })
+                                            loadData()
+                                          } else {
+                                            toast({
+                                              title: "Error",
+                                              description: "Failed to generate invoices",
+                                              variant: "destructive"
+                                            })
+                                          }
+                                        } catch (error) {
+                                          console.error("Error:", error)
+                                          toast({
+                                            title: "Error",
+                                            description: "Failed to generate invoices",
+                                            variant: "destructive"
+                                          })
+                                        }
+                                      }}
+                                    >
+                                      <Plus className="h-3 w-3 mr-1" />
+                                      Generate
+                                    </Button>
+                                  )
+                                }
+                                
+                                return (
+                                  <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-xs font-medium">50%:</span>
+                                        {depositInvoice ? (
+                                          <Badge 
+                                            variant={depositInvoice.status === 'paid' ? 'default' : 'outline'}
+                                            className={`text-xs cursor-pointer ${
+                                              depositInvoice.status === 'paid' ? 'bg-green-500 hover:bg-green-600' :
+                                              depositInvoice.status === 'sent' ? 'bg-blue-500 hover:bg-blue-600' :
+                                              depositInvoice.status === 'overdue' ? 'bg-red-500 hover:bg-red-600' :
+                                              'bg-gray-400 hover:bg-gray-500'
+                                            } text-white`}
+                                            onClick={() => setSelectedInvoiceForPDF({id: depositInvoice.id, number: depositInvoice.invoice_number})}
+                                          >
+                                            {depositInvoice.status === 'paid' ? '✓ Paid' : 
+                                             depositInvoice.status === 'sent' ? 'Sent' :
+                                             depositInvoice.status === 'overdue' ? 'Overdue' : 'Draft'}
+                                          </Badge>
+                                        ) : (
+                                          <span className="text-xs text-gray-400">-</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-xs font-medium">50%:</span>
+                                        {finalInvoice ? (
+                                          <Badge 
+                                            variant={finalInvoice.status === 'paid' ? 'default' : 'outline'}
+                                            className={`text-xs cursor-pointer ${
+                                              finalInvoice.status === 'paid' ? 'bg-green-500 hover:bg-green-600' :
+                                              finalInvoice.status === 'sent' ? 'bg-blue-500 hover:bg-blue-600' :
+                                              finalInvoice.status === 'overdue' ? 'bg-red-500 hover:bg-red-600' :
+                                              'bg-gray-400 hover:bg-gray-500'
+                                            } text-white`}
+                                            onClick={() => setSelectedInvoiceForPDF({id: finalInvoice.id, number: finalInvoice.invoice_number})}
+                                          >
+                                            {finalInvoice.status === 'paid' ? '✓ Paid' : 
+                                             finalInvoice.status === 'sent' ? 'Sent' :
+                                             finalInvoice.status === 'overdue' ? 'Overdue' : 'Draft'}
+                                          </Badge>
+                                        ) : (
+                                          <span className="text-xs text-gray-400">-</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })()}
+                            </div>
+                          </TableCell>
+                          <TableCell>
                             <div>
                               <div className="font-medium">
-                                ${new Intl.NumberFormat('en-US').format(project.payment_received ? parseFloat(project.speaker_fee || project.budget || "0") : 0)}
+                                ${new Intl.NumberFormat('en-US').format(
+                                  invoices
+                                    .filter(inv => inv.project_id === project.id && inv.status === 'paid')
+                                    .reduce((sum, inv) => sum + inv.amount, 0)
+                                )}
                               </div>
                               <div className="text-sm text-gray-500">
                                 of ${new Intl.NumberFormat('en-US').format(parseFloat(project.speaker_fee || project.budget || "0"))}
@@ -1373,14 +1586,6 @@ export default function EnhancedProjectManagementPage() {
                                 title="Edit Project"
                               >
                                 <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleCreateInvoice(project.id, parseFloat(project.speaker_fee || project.budget || "0"))}
-                              >
-                                <Receipt className="h-4 w-4 mr-1" />
-                                Invoice
                               </Button>
                               <Button
                                 size="sm"
@@ -1986,6 +2191,14 @@ export default function EnhancedProjectManagementPage() {
                                 <Button 
                                   size="sm" 
                                   variant="outline"
+                                  onClick={() => setSelectedInvoiceForEdit(invoice.id)}
+                                  title="Edit Invoice"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
                                   onClick={() => setSelectedInvoiceForPDF({id: invoice.id, number: invoice.invoice_number})}
                                   title="Preview Invoice"
                                 >
@@ -2517,6 +2730,25 @@ export default function EnhancedProjectManagementPage() {
         </Dialog>
       )}
 
+      {/* Invoice Editor Modal */}
+      {selectedInvoiceForEdit && (
+        <InvoiceEditorModal
+          open={!!selectedInvoiceForEdit}
+          onOpenChange={(open) => !open && setSelectedInvoiceForEdit(null)}
+          invoiceId={selectedInvoiceForEdit}
+          onSave={() => {
+            fetchProjects()
+            setSelectedInvoiceForEdit(null)
+          }}
+          onViewPDF={(id) => {
+            const invoice = invoices.find(i => i.id === id)
+            if (invoice) {
+              setSelectedInvoiceForPDF({id: invoice.id, number: invoice.invoice_number})
+            }
+          }}
+        />
+      )}
+      
       {/* Invoice PDF Dialog */}
       <InvoicePDFDialog
         invoiceId={selectedInvoiceForPDF?.id || null}
