@@ -316,36 +316,36 @@ export default function SpeakerApplicationPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-16 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 py-16 px-4">
         <div className="max-w-2xl mx-auto">
           <Card className="border-0 shadow-xl">
             <CardContent className="pt-12 pb-8 text-center">
               <div className="inline-flex items-center justify-center w-20 h-20 mb-6 rounded-full bg-gradient-to-r from-green-500 to-green-600">
                 <CheckCircle className="h-10 w-10 text-white" />
               </div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-[#1E68C6] to-blue-600 bg-clip-text text-transparent mb-4">
                 Application Submitted Successfully!
               </h2>
               <p className="text-gray-600 mb-6 text-lg">
                 Thank you for applying to join Speak About AI.
               </p>
-              <div className="bg-purple-50 rounded-lg p-6 mb-6 text-left">
-                <h3 className="font-semibold text-purple-900 mb-3">What happens next?</h3>
+              <div className="bg-blue-50 rounded-lg p-6 mb-6 text-left">
+                <h3 className="font-semibold text-blue-900 mb-3">What happens next?</h3>
                 <ul className="space-y-2 text-gray-700">
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-600 mt-1">1.</span>
+                    <span className="text-[#1E68C6] mt-1">1.</span>
                     <span>Our team will review your application within 3-5 business days</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-600 mt-1">2.</span>
+                    <span className="text-[#1E68C6] mt-1">2.</span>
                     <span>If selected, you'll receive an invitation email to create your speaker account</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-600 mt-1">3.</span>
+                    <span className="text-[#1E68C6] mt-1">3.</span>
                     <span>Once approved, your profile will be featured in our speaker directory</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-600 mt-1">4.</span>
+                    <span className="text-[#1E68C6] mt-1">4.</span>
                     <span>You'll gain access to our speaker portal to manage bookings and your profile</span>
                   </li>
                 </ul>
@@ -354,7 +354,7 @@ export default function SpeakerApplicationPage() {
                 We'll contact you at the email address you provided with our decision.
               </p>
               <Link href="/">
-                <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+                <Button className="bg-gradient-to-r from-[#1E68C6] to-blue-600 hover:from-blue-700 hover:to-blue-700">
                   Return to Homepage
                 </Button>
               </Link>
@@ -366,14 +366,14 @@ export default function SpeakerApplicationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-16 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 py-16 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 mb-6 rounded-full bg-gradient-to-r from-purple-600 to-blue-600">
+          <div className="inline-flex items-center justify-center w-20 h-20 mb-6 rounded-full bg-gradient-to-r from-[#1E68C6] to-blue-600">
             <Mic className="h-10 w-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-[#1E68C6] to-blue-600 bg-clip-text text-transparent mb-4">
             Join Speak About AI
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -385,7 +385,7 @@ export default function SpeakerApplicationPage() {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-gray-600">Step {currentStep} of {totalSteps}</span>
-            <span className="text-sm font-medium text-purple-600">{Math.round(progress)}% Complete</span>
+            <span className="text-sm font-medium text-[#1E68C6]">{Math.round(progress)}% Complete</span>
           </div>
           <Progress value={progress} className="h-2" />
         </div>
@@ -394,20 +394,20 @@ export default function SpeakerApplicationPage() {
           {/* Step 1: Qualification */}
           {currentStep === 1 && (
             <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+              <CardHeader className="bg-gradient-to-r from-[#1E68C6] to-blue-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2 text-white">
                   <Star className="h-5 w-5" />
                   Speaker Qualification
                 </CardTitle>
-                <CardDescription className="text-purple-100">
+                <CardDescription className="text-blue-100">
                   Help us understand your speaking experience and expertise
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6 pt-6">
-                <Alert className="border-purple-200 bg-purple-50">
-                  <AlertCircle className="h-4 w-4 text-purple-600" />
-                  <AlertTitle className="text-purple-900">Why these questions matter</AlertTitle>
-                  <AlertDescription className="text-purple-700">
+                <Alert className="border-blue-200 bg-blue-50">
+                  <AlertCircle className="h-4 w-4 text-[#1E68C6]" />
+                  <AlertTitle className="text-blue-900">Why these questions matter</AlertTitle>
+                  <AlertDescription className="text-blue-700">
                     We maintain a curated network of exceptional speakers. These questions help us ensure 
                     you're a great fit for our clients' needs and can deliver outstanding value.
                   </AlertDescription>
@@ -525,12 +525,12 @@ export default function SpeakerApplicationPage() {
           {/* Step 2: Personal Information */}
           {currentStep === 2 && (
             <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+              <CardHeader className="bg-gradient-to-r from-[#1E68C6] to-blue-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2 text-white">
                   <User className="h-5 w-5" />
                   Personal Information
                 </CardTitle>
-                <CardDescription className="text-purple-100">
+                <CardDescription className="text-blue-100">
                   Your contact details and basic information
                 </CardDescription>
               </CardHeader>
@@ -635,12 +635,12 @@ export default function SpeakerApplicationPage() {
           {/* Step 3: Professional Background */}
           {currentStep === 3 && (
             <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+              <CardHeader className="bg-gradient-to-r from-[#1E68C6] to-blue-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2 text-white">
                   <Briefcase className="h-5 w-5" />
                   Professional Background
                 </CardTitle>
-                <CardDescription className="text-purple-100">
+                <CardDescription className="text-blue-100">
                   Your current role and professional story
                 </CardDescription>
               </CardHeader>
@@ -740,12 +740,12 @@ export default function SpeakerApplicationPage() {
           {/* Step 4: Speaking Expertise */}
           {currentStep === 4 && (
             <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+              <CardHeader className="bg-gradient-to-r from-[#1E68C6] to-blue-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2 text-white">
                   <Target className="h-5 w-5" />
                   Speaking Expertise & Topics
                 </CardTitle>
-                <CardDescription className="text-purple-100">
+                <CardDescription className="text-blue-100">
                   Define your areas of expertise and speaking topics
                 </CardDescription>
               </CardHeader>
@@ -835,12 +835,12 @@ export default function SpeakerApplicationPage() {
           {/* Step 5: Speaking Experience */}
           {currentStep === 5 && (
             <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+              <CardHeader className="bg-gradient-to-r from-[#1E68C6] to-blue-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2 text-white">
                   <Award className="h-5 w-5" />
                   Speaking Experience & Portfolio
                 </CardTitle>
-                <CardDescription className="text-purple-100">
+                <CardDescription className="text-blue-100">
                   Share your speaking history and portfolio
                 </CardDescription>
               </CardHeader>
@@ -953,12 +953,12 @@ export default function SpeakerApplicationPage() {
           {/* Step 6: Digital Presence */}
           {currentStep === 6 && (
             <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+              <CardHeader className="bg-gradient-to-r from-[#1E68C6] to-blue-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2 text-white">
                   <Globe className="h-5 w-5" />
                   Digital Presence & Content
                 </CardTitle>
-                <CardDescription className="text-purple-100">
+                <CardDescription className="text-blue-100">
                   Your online presence and content portfolio
                 </CardDescription>
               </CardHeader>
@@ -1086,12 +1086,12 @@ export default function SpeakerApplicationPage() {
           {/* Step 7: Logistics & Availability */}
           {currentStep === 7 && (
             <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+              <CardHeader className="bg-gradient-to-r from-[#1E68C6] to-blue-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2 text-white">
                   <DollarSign className="h-5 w-5" />
                   Logistics & Availability
                 </CardTitle>
-                <CardDescription className="text-purple-100">
+                <CardDescription className="text-blue-100">
                   Your speaking requirements and preferences
                 </CardDescription>
               </CardHeader>
@@ -1187,12 +1187,12 @@ export default function SpeakerApplicationPage() {
           {/* Step 8: References & Final */}
           {currentStep === 8 && (
             <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+              <CardHeader className="bg-gradient-to-r from-[#1E68C6] to-blue-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2 text-white">
                   <Users className="h-5 w-5" />
                   References & Additional Information
                 </CardTitle>
-                <CardDescription className="text-purple-100">
+                <CardDescription className="text-blue-100">
                   Final details and references
                 </CardDescription>
               </CardHeader>
@@ -1304,7 +1304,7 @@ export default function SpeakerApplicationPage() {
                   type="button"
                   onClick={handleNext}
                   disabled={isSubmitting}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  className="bg-gradient-to-r from-[#1E68C6] to-blue-600 hover:from-blue-700 hover:to-blue-800"
                 >
                   Next Step
                   <ChevronRight className="ml-2 h-4 w-4" />
@@ -1313,7 +1313,7 @@ export default function SpeakerApplicationPage() {
                 <Button 
                   type="submit" 
                   disabled={isSubmitting || !formData.agree_to_terms}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  className="bg-gradient-to-r from-[#1E68C6] to-blue-600 hover:from-blue-700 hover:to-blue-800"
                 >
                   {isSubmitting ? (
                     <>
