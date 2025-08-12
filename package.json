@@ -6,7 +6,11 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "seo:diagnostic": "tsx scripts/seo-diagnostic.ts",
+    "seo:fix": "tsx scripts/fix-seo-issues.ts",
+    "seo:monitor": "tsx scripts/seo-monitor.ts",
+    "seo:all": "npm run seo:diagnostic && npm run seo:fix && npm run seo:monitor"
   },
   "dependencies": {
     "@contentful/rich-text-html-renderer": "latest",

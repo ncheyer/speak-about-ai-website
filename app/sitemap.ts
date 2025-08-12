@@ -1,62 +1,64 @@
 import type { MetadataRoute } from "next"
-import { getAllSpeakers } from "@/lib/speakers-data" // Changed to getAllSpeakers as per lib/speakers-data.ts
-import { getBlogPosts } from "@/lib/blog-data"
 
 const BASE_URL = "https://www.speakabout.ai"
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticPages = [
-    "", // Homepage
-    "/speakers",
-    "/blog",
-    "/contact",
-    "/our-services",
-    "/our-team",
-    "/privacy",
-    "/terms",
-    "/top-ai-speakers-2025",
-    "/form-submission",
-    // Industry Pages
-    "/industries/automotive-ai-speakers",
-    "/industries/healthcare-keynote-speakers",
-    "/industries/leadership-business-strategy-ai-speakers",
-    "/industries/manufacturing-ai-speakers",
-    "/industries/retail-ai-speakers",
-    "/industries/sales-marketing-ai-speakers",
-    "/industries/technology-ai-keynote-speakers",
-    "/industries/technology-keynote-speakers",
-  ].map((path) => ({
-    url: `${BASE_URL}${path}`,
-    lastModified: new Date().toISOString(),
-    changeFrequency: path === "" || path === "/blog" || path === "/speakers" ? "daily" : "monthly",
-    priority: path === "" ? 1.0 : 0.8,
-  }))
-
-  let speakerPages: MetadataRoute.Sitemap = []
-  try {
-    const speakers = await getAllSpeakers() // Using getAllSpeakers
-    speakerPages = speakers.map((speaker) => ({
-      url: `${BASE_URL}/speakers/${speaker.slug}`,
-      lastModified: speaker.lastUpdated || new Date().toISOString(), // Using lastUpdated from Speaker interface
+export default function sitemap(): MetadataRoute.Sitemap {
+  // Start with just the most critical pages
+  // This conservative approach ensures Google focuses on your best content
+  
+  const now = new Date()
+  
+  // Only include the absolute most important pages initially
+  const criticalPages: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}`,
+      lastModified: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
       changeFrequency: "weekly",
+      priority: 1.0,
+    },
+    {
+      url: `${BASE_URL}/speakers`,
+      lastModified: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/top-ai-speakers-2025`,
+      lastModified: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), // 1 week ago
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/industries/technology-keynote-speakers`,
+      lastModified: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${BASE_URL}/industries/healthcare-keynote-speakers`,
+      lastModified: new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/our-services`,
+      lastModified: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000), // 2 weeks ago
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/contact`,
+      lastModified: new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000), // 3 weeks ago
+      changeFrequency: "monthly",
       priority: 0.7,
-    }))
-  } catch (error) {
-    console.error("Error fetching speakers for sitemap:", error)
-  }
-
-  let blogPostPages: MetadataRoute.Sitemap = []
-  try {
-    const posts = await getBlogPosts()
-    blogPostPages = posts.map((post) => ({
-      url: `${BASE_URL}/blog/${post.slug}`,
-      lastModified: post.sys?.updatedAt || new Date().toISOString(), // Using sys.updatedAt from Contentful structure
-      changeFrequency: "weekly",
-      priority: 0.6,
-    }))
-  } catch (error) {
-    console.error("Error fetching blog posts for sitemap:", error)
-  }
-
-  return [...staticPages, ...speakerPages, ...blogPostPages]
+    },
+  ]
+  
+  return criticalPages
 }

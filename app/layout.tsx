@@ -36,14 +36,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://speakaboutai.com"),
+  metadataBase: new URL("https://www.speakabout.ai"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://speakaboutai.com",
+    url: "https://www.speakabout.ai",
     siteName: "Speak About AI",
     title: "Speak About AI - Premier AI Keynote Speakers Bureau",
     description:
