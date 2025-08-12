@@ -1,7 +1,42 @@
+# Robots.txt for speakabout.ai
+# Last updated: 2025
+
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /debug*
+Disallow: /test*
+Disallow: /check-sheet*
+Disallow: /image-test
+Disallow: /landing-page
+Disallow: /form-submission
+Disallow: /_next/
+Disallow: /node_modules/
+Disallow: /.git/
 
+# Major search engine crawlers
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 0
+
+# Block bad bots
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+# Sitemap location
 Sitemap: https://www.speakabout.ai/sitemap.xml
-# If your domain is different, please update the Sitemap URL above.
-# For example, if you are testing on a Vercel deployment, 
-# it might be https://your-project-name.vercel.app/sitemap.xml
