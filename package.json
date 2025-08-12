@@ -6,11 +6,11 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start",
+    "seo:all": "npm run seo:diagnostic && npm run seo:fix && npm run seo:monitor",
     "seo:diagnostic": "tsx scripts/seo-diagnostic.ts",
     "seo:fix": "tsx scripts/fix-seo-issues.ts",
     "seo:monitor": "tsx scripts/seo-monitor.ts",
-    "seo:all": "npm run seo:diagnostic && npm run seo:fix && npm run seo:monitor"
+    "start": "next start"
   },
   "dependencies": {
     "@contentful/rich-text-html-renderer": "latest",
@@ -47,6 +47,7 @@
     "@tailwindcss/typography": "latest",
     "@vercel/blob": "latest",
     "ajv": "latest",
+    "cheerio": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "latest",
@@ -66,6 +67,7 @@
     "react-dom": "^19",
     "react-hook-form": "latest",
     "react-resizable-panels": "latest",
+    "readline": "latest",
     "recharts": "latest",
     "sonner": "latest",
     "tailwind-merge": "^2.5.5",
