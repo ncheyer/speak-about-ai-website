@@ -342,7 +342,7 @@ export default function SpeakerProfilePage() {
     }
   }
 
-  const handleImageUpload = (type: 'headshot' | 'banner') => {
+  const handleImageUpload = (type: 'headshot') => {
     // In production, this would handle actual file upload
     console.log(`Uploading ${type}...`)
   }
@@ -425,13 +425,18 @@ export default function SpeakerProfilePage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm">
-                <Eye className="h-4 w-4 mr-2" />
-                Preview Profile
-              </Button>
               <Button 
                 className="bg-gradient-to-r from-[#1E68C6] to-blue-600 hover:from-blue-700 hover:to-blue-800"
                 size="sm"
+                onClick={() => {
+                  // Generate slug from profile name
+                  const slug = profile ? 
+                    `${profile.first_name}-${profile.last_name}`.toLowerCase().replace(/\s+/g, '-') : 
+                    ''
+                  if (slug) {
+                    window.open(`/speakers/${slug}`, '_blank')
+                  }
+                }}
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
                 View Public Profile
@@ -445,28 +450,9 @@ export default function SpeakerProfilePage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Header Card */}
         <Card className="border-0 shadow-xl mb-8 overflow-hidden">
-          {/* Banner */}
-          <div className="h-48 bg-gradient-to-r from-[#1E68C6] to-blue-600 relative">
-            {profile.banner_url && (
-              <img 
-                src={profile.banner_url} 
-                alt="Banner" 
-                className="w-full h-full object-cover opacity-50"
-              />
-            )}
-            <Button
-              className="absolute top-4 right-4 bg-white/20 backdrop-blur hover:bg-white/30"
-              size="sm"
-              onClick={() => handleImageUpload('banner')}
-            >
-              <Camera className="h-4 w-4 mr-2" />
-              Change Banner
-            </Button>
-          </div>
-          
           {/* Profile Info */}
-          <div className="px-8 pb-8">
-            <div className="flex items-end -mt-16 mb-4">
+          <div className="px-8 pt-8 pb-8">
+            <div className="flex items-end mb-4">
               <div className="relative">
                 <Avatar className="h-32 w-32 border-4 border-white shadow-xl">
                   <AvatarImage src={profile.headshot_url} alt={profile.first_name} />

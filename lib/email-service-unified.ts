@@ -571,7 +571,7 @@ The Speak About AI Team
  * Send password reset email
  */
 export async function sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
-  const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://speakabout.ai'}/auth/reset-password?token=${resetToken}`
+  const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://speakabout.ai'}/portal/speaker-reset-password?token=${resetToken}`
 
   const html = `
     <!DOCTYPE html>

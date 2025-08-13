@@ -94,6 +94,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       bgColor: "bg-purple-50"
     },
     {
+      title: "Activity Log",
+      href: "/admin/activity",
+      icon: Activity,
+      description: "Speaker Updates",
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50"
+    },
+    {
       title: "Client Portal",
       href: "/admin/clients",
       icon: Users,

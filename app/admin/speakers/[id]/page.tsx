@@ -20,7 +20,11 @@ import {
   Calendar,
   DollarSign,
   Loader2,
-  ExternalLink
+  ExternalLink,
+  History,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -69,6 +73,21 @@ interface Speaker {
   updated_at: string
 }
 
+interface UpdateLog {
+  id: number
+  speaker_id: number
+  speaker_name: string
+  speaker_email: string
+  field_name: string
+  old_value: string
+  new_value: string
+  changed_by: string
+  change_type: string
+  metadata: any
+  created_at: string
+  current_speaker_name?: string
+}
+
 export default function AdminSpeakerViewPage() {
   const router = useRouter()
   const params = useParams()
@@ -76,6 +95,9 @@ export default function AdminSpeakerViewPage() {
   const [speaker, setSpeaker] = useState<Speaker | null>(null)
   const [loading, setLoading] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [updates, setUpdates] = useState<UpdateLog[]>([])
+  const [loadingUpdates, setLoadingUpdates] = useState(false)
+  const [showAllUpdates, setShowAllUpdates] = useState(false)
 
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
@@ -95,6 +117,8 @@ export default function AdminSpeakerViewPage() {
       if (response.ok) {
         const data = await response.json()
         setSpeaker(data.speaker)
+        // Load update logs after speaker loads
+        loadUpdates()
       } else {
         const errorData = await response.json()
         toast({
@@ -114,6 +138,71 @@ export default function AdminSpeakerViewPage() {
       router.push("/admin/speakers")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadUpdates = async () => {
+    try {
+      setLoadingUpdates(true)
+      const response = await fetch(`/api/admin/speakers/updates?speakerId=${params.id}&limit=50`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        setUpdates(data.updates || [])
+      } else {
+        console.error("Failed to load update logs")
+      }
+    } catch (error) {
+      console.error("Error loading update logs:", error)
+    } finally {
+      setLoadingUpdates(false)
+    }
+  }
+
+  const formatFieldName = (field: string) => {
+    return field.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ')
+  }
+
+  const formatValue = (value: string, field: string) => {
+    if (!value || value === '') return '<empty>'
+    if (field === 'topics' || field === 'industries' || field === 'programs') {
+      try {
+        const parsed = JSON.parse(value)
+        if (Array.isArray(parsed)) {
+          return parsed.join(', ') || '<empty>'
+        }
+      } catch {
+        return value
+      }
+    }
+    if (value.length > 100) {
+      return value.substring(0, 100) + '...'
+    }
+    return value
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    
+    if (diffHours < 1) {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60))
+      return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`
+    } else if (diffHours < 24) {
+      return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`
+    } else if (diffDays < 7) {
+      return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+      })
     }
   }
 
@@ -446,6 +535,116 @@ export default function AdminSpeakerViewPage() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Update Log Section */}
+            <Card className="mt-6">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <History className="h-5 w-5 text-gray-600" />
+                    <CardTitle className="text-lg">Profile Update History</CardTitle>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {updates.length > 0 && (
+                      <Badge variant="secondary">{updates.length} changes</Badge>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={loadUpdates}
+                      disabled={loadingUpdates}
+                    >
+                      {loadingUpdates ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <CardDescription>
+                  Track all changes made to this speaker's profile
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingUpdates ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                    <span>Loading update history...</span>
+                  </div>
+                ) : updates.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No profile updates recorded yet
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Show limited updates or all based on toggle */}
+                    {(showAllUpdates ? updates : updates.slice(0, 10)).map((update) => (
+                      <div
+                        key={update.id}
+                        className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline" className="text-xs">
+                                {formatFieldName(update.field_name)}
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                {formatDate(update.created_at)}
+                              </span>
+                              {update.changed_by && update.changed_by !== 'self' && (
+                                <span className="text-xs text-gray-500">
+                                  by {update.changed_by}
+                                </span>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-xs font-medium text-gray-600 mb-1">Previous Value:</p>
+                                <p className="text-sm text-gray-800 bg-red-50 p-2 rounded border border-red-200">
+                                  {formatValue(update.old_value, update.field_name)}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs font-medium text-gray-600 mb-1">New Value:</p>
+                                <p className="text-sm text-gray-800 bg-green-50 p-2 rounded border border-green-200">
+                                  {formatValue(update.new_value, update.field_name)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Show more/less toggle */}
+                    {updates.length > 10 && (
+                      <div className="text-center pt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowAllUpdates(!showAllUpdates)}
+                          className="gap-2"
+                        >
+                          {showAllUpdates ? (
+                            <>
+                              Show Less
+                              <ChevronUp className="h-4 w-4" />
+                            </>
+                          ) : (
+                            <>
+                              Show All {updates.length} Updates
+                              <ChevronDown className="h-4 w-4" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

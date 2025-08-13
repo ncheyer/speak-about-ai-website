@@ -83,7 +83,7 @@ function SpeakerResetPasswordContent() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ 
-          email, 
+          email: email || "token-reset", // Use a placeholder if email not provided
           resetToken: resetToken || token, 
           newPassword 
         }),

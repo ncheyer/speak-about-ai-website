@@ -143,23 +143,33 @@ export async function PUT(request: NextRequest) {
     }
 
     const speakerId = decoded.speakerId
+    const speakerEmail = decoded.email
     const data = await request.json()
+    
+    // Fetch current speaker data for comparison
+    const currentData = await sql`
+      SELECT * FROM speakers WHERE id = ${speakerId}
+    `
+    
+    if (currentData.length === 0) {
+      return NextResponse.json({ error: 'Speaker not found' }, { status: 404 })
+    }
+    
+    const current = currentData[0]
     
     // Combine first and last name
     const fullName = `${data.first_name || ''} ${data.last_name || ''}`.trim()
     
-    // Update speaker in database
+    // Update speaker in database - only update columns that exist
     const result = await sql`
       UPDATE speakers
       SET 
         name = ${fullName},
         email = ${data.email},
-        title = ${data.title || null},
-        company = ${data.company || null},
         location = ${data.location || null},
         bio = ${data.bio || null},
         short_bio = ${data.short_bio || null},
-        one_liner = ${data.one_liner || null},
+        one_liner = ${data.one_liner || data.title || null},
         headshot_url = ${data.headshot_url || null},
         website = ${data.website || null},
         topics = ${JSON.stringify(data.speaking_topics || [])},
@@ -169,10 +179,6 @@ export async function PUT(request: NextRequest) {
         travel_preferences = ${data.travel_preferences || null},
         technical_requirements = ${data.technical_requirements || null},
         dietary_restrictions = ${data.dietary_restrictions || null},
-        linkedin_url = ${data.linkedin_url || null},
-        twitter_url = ${data.twitter_url || null},
-        instagram_url = ${data.instagram_url || null},
-        youtube_url = ${data.youtube_url || null},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${speakerId}
       RETURNING id, email, name, updated_at
@@ -181,10 +187,65 @@ export async function PUT(request: NextRequest) {
     if (result.length === 0) {
       return NextResponse.json({ error: 'Speaker not found' }, { status: 404 })
     }
+    
+    // Log changes to speaker_updates table
+    const changes = []
+    const fieldsToTrack = [
+      { field: 'name', old: current.name, new: fullName },
+      { field: 'email', old: current.email, new: data.email },
+      { field: 'location', old: current.location, new: data.location },
+      { field: 'bio', old: current.bio, new: data.bio },
+      { field: 'short_bio', old: current.short_bio, new: data.short_bio },
+      { field: 'one_liner', old: current.one_liner, new: data.one_liner || data.title },
+      { field: 'headshot_url', old: current.headshot_url, new: data.headshot_url },
+      { field: 'website', old: current.website, new: data.website },
+      { field: 'topics', old: current.topics, new: JSON.stringify(data.speaking_topics || []) },
+      { field: 'industries', old: current.industries, new: JSON.stringify(data.expertise_areas || []) },
+      { field: 'programs', old: current.programs, new: JSON.stringify(data.programs || []) },
+      { field: 'speaking_fee_range', old: current.speaking_fee_range, new: data.speaking_fee_range },
+      { field: 'travel_preferences', old: current.travel_preferences, new: data.travel_preferences },
+      { field: 'technical_requirements', old: current.technical_requirements, new: data.technical_requirements },
+      { field: 'dietary_restrictions', old: current.dietary_restrictions, new: data.dietary_restrictions }
+    ]
+    
+    // Insert update logs for changed fields
+    for (const item of fieldsToTrack) {
+      // Skip if values are the same (considering null/undefined as equal to empty string)
+      const oldVal = item.old || ''
+      const newVal = item.new || ''
+      
+      if (oldVal !== newVal) {
+        await sql`
+          INSERT INTO speaker_updates (
+            speaker_id,
+            speaker_name,
+            speaker_email,
+            field_name,
+            old_value,
+            new_value,
+            changed_by,
+            change_type,
+            metadata
+          ) VALUES (
+            ${speakerId},
+            ${fullName},
+            ${data.email},
+            ${item.field},
+            ${oldVal.toString()},
+            ${newVal.toString()},
+            ${speakerEmail || 'self'},
+            'update',
+            ${JSON.stringify({ source: 'speaker_profile_update' })}
+          )
+        `
+        changes.push(item.field)
+      }
+    }
 
     return NextResponse.json({ 
       success: true,
-      speaker: result[0]
+      speaker: result[0],
+      changes_logged: changes
     })
 
   } catch (error) {

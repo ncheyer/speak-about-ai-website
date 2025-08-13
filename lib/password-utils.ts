@@ -5,7 +5,7 @@ import { createHash, randomBytes, pbkdf2Sync } from 'crypto'
  */
 export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString('hex')
-  const hash = pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex')
+  const hash = pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex')
   return `${salt}:${hash}`
 }
 
@@ -17,7 +17,7 @@ export function verifyPassword(password: string, storedHash: string): boolean {
     const [salt, hash] = storedHash.split(':')
     if (!salt || !hash) return false
     
-    const verifyHash = pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex')
+    const verifyHash = pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex')
     return hash === verifyHash
   } catch (error) {
     console.error('Password verification error:', error)

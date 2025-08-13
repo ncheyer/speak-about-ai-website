@@ -9,26 +9,62 @@ const sql = neon(process.env.DATABASE_URL!)
 // Request password reset
 export async function POST(request: NextRequest) {
   try {
-    const { email, resetToken, newPassword } = await request.json()
-
-    if (!email) {
+    let body
+    try {
+      body = await request.json()
+    } catch (jsonError) {
+      console.error('JSON parsing error:', jsonError)
       return NextResponse.json(
-        { error: 'Email is required' },
+        { error: 'Invalid request format' },
         { status: 400 }
       )
     }
+    
+    const { email, resetToken, newPassword } = body
 
     // If this is a password reset request (no resetToken provided)
     if (!resetToken) {
-      // Find speaker by email
-      const speakers = await sql`
-        SELECT id, email, name, active
-        FROM speakers
-        WHERE email = ${email.toLowerCase()} AND active = true
+      // Email is required for requesting a reset
+      if (!email) {
+        return NextResponse.json(
+          { error: 'Email is required' },
+          { status: 400 }
+        )
+      }
+      // First try to find in speaker_accounts table (for portal login)
+      const accounts = await sql`
+        SELECT 
+          sa.id as account_id,
+          sa.speaker_id,
+          sa.speaker_email as email,
+          sa.speaker_name as name,
+          sa.is_active as active
+        FROM speaker_accounts sa
+        WHERE LOWER(sa.speaker_email) = ${email.toLowerCase()} 
+          AND sa.is_active = true
         LIMIT 1
       `
+      
+      let speaker = null
+      let useAccountsTable = false
+      
+      if (accounts.length > 0) {
+        speaker = accounts[0]
+        useAccountsTable = true
+      } else {
+        // Fallback to speakers table
+        const speakers = await sql`
+          SELECT id, email, name, active
+          FROM speakers
+          WHERE email = ${email.toLowerCase()} AND active = true
+          LIMIT 1
+        `
+        if (speakers.length > 0) {
+          speaker = speakers[0]
+        }
+      }
 
-      if (speakers.length === 0) {
+      if (!speaker) {
         // Don't reveal if email exists or not for security
         return NextResponse.json({
           success: true,
@@ -36,21 +72,29 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      const speaker = speakers[0]
-
       // Generate reset token (expires in 1 hour)
       const resetToken = generateSecureToken()
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
 
-      // Store reset token
-      await sql`
-        UPDATE speakers
-        SET 
-          reset_token = ${resetToken},
-          reset_token_expires = ${expiresAt.toISOString()},
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = ${speaker.id}
-      `
+      // Store reset token in the appropriate table
+      if (useAccountsTable) {
+        await sql`
+          UPDATE speaker_accounts
+          SET 
+            reset_token = ${resetToken},
+            reset_token_expires = ${expiresAt.toISOString()}
+          WHERE id = ${speaker.account_id}
+        `
+      } else {
+        await sql`
+          UPDATE speakers
+          SET 
+            reset_token = ${resetToken},
+            reset_token_expires = ${expiresAt.toISOString()},
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ${speaker.id}
+        `
+      }
 
       // Send password reset email
       try {
@@ -92,44 +136,80 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find speaker with valid reset token
-    const speakers = await sql`
-      SELECT id, email, name, reset_token_expires
-      FROM speakers
-      WHERE reset_token = ${resetToken} 
-        AND active = true 
-        AND reset_token_expires > NOW()
+    // First try speaker_accounts table
+    const accounts = await sql`
+      SELECT 
+        sa.id as account_id,
+        sa.speaker_email as email,
+        sa.speaker_name as name,
+        sa.reset_token_expires
+      FROM speaker_accounts sa
+      WHERE sa.reset_token = ${resetToken} 
+        AND sa.is_active = true 
+        AND sa.reset_token_expires > NOW()
       LIMIT 1
     `
 
-    if (speakers.length === 0) {
+    let speaker = null
+    let useAccountsTable = false
+
+    if (accounts.length > 0) {
+      speaker = accounts[0]
+      useAccountsTable = true
+    } else {
+      // Fallback to speakers table
+      const speakers = await sql`
+        SELECT id, email, name, reset_token_expires
+        FROM speakers
+        WHERE reset_token = ${resetToken} 
+          AND active = true 
+          AND reset_token_expires > NOW()
+        LIMIT 1
+      `
+      if (speakers.length > 0) {
+        speaker = speakers[0]
+      }
+    }
+
+    if (!speaker) {
       return NextResponse.json(
         { error: 'Invalid or expired reset token' },
         { status: 400 }
       )
     }
 
-    const speaker = speakers[0]
-
     // Hash new password
     const passwordHash = hashPassword(newPassword)
 
-    // Update password and clear reset token
-    await sql`
-      UPDATE speakers
-      SET 
-        password_hash = ${passwordHash},
-        reset_token = NULL,
-        reset_token_expires = NULL,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${speaker.id}
-    `
+    // Update password in the appropriate table
+    if (useAccountsTable) {
+      await sql`
+        UPDATE speaker_accounts
+        SET 
+          password_hash = ${passwordHash},
+          reset_token = NULL,
+          reset_token_expires = NULL,
+          email_verified = true
+        WHERE id = ${speaker.account_id}
+      `
+    } else {
+      await sql`
+        UPDATE speakers
+        SET 
+          password_hash = ${passwordHash},
+          reset_token = NULL,
+          reset_token_expires = NULL,
+          email_verified = true,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ${speaker.id}
+      `
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Password reset successfully. You can now log in with your new password.',
       speaker: {
-        id: speaker.id,
+        id: speaker.account_id || speaker.id,
         email: speaker.email,
         name: speaker.name
       }

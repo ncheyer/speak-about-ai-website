@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Mic, Mail, ArrowRight, ArrowLeft, Lock } from "lucide-react"
-import Link from "next/link"
 
 export default function SpeakerPortalLogin() {
   const router = useRouter()
@@ -143,6 +143,22 @@ export default function SpeakerPortalLogin() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </form>
+
+            {/* Password Reset Notice */}
+            <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-800 font-medium mb-2">
+                🔐 First time logging in?
+              </p>
+              <p className="text-xs text-amber-700 mb-3">
+                If you're an existing speaker (like noah@speakabout.ai) but haven't set a password yet, you'll need to reset your password first.
+              </p>
+              <Link href="/portal/speaker-reset-password">
+                <Button variant="outline" size="sm" className="w-full">
+                  <Lock className="mr-2 h-3 w-3" />
+                  Set/Reset Password
+                </Button>
+              </Link>
+            </div>
 
             {/* Registration Section */}
             <div className="mt-6 pt-6 border-t border-gray-200">
