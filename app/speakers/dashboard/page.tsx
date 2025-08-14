@@ -59,9 +59,9 @@ export default function SpeakerDashboard() {
         date.setDate(date.getDate() - i)
         data.push({
           date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          views: Math.floor(30 + Math.random() * 50),
-          requests: Math.floor(1 + Math.random() * 5),
-          bookings: Math.floor(Math.random() * 3)
+          views: 45 + ((i * 7) % 30), // Deterministic based on index
+          requests: 2 + (i % 4),
+          bookings: i % 3
         })
       }
     } else if (selectedPeriod === "3months") {
@@ -71,9 +71,9 @@ export default function SpeakerDashboard() {
         date.setDate(date.getDate() - (i * 7))
         data.push({
           date: `Week ${12 - i}`,
-          views: Math.floor(200 + Math.random() * 150),
-          requests: Math.floor(5 + Math.random() * 15),
-          bookings: Math.floor(2 + Math.random() * 8)
+          views: 250 + ((i * 31) % 100), // Deterministic based on index
+          requests: 10 + (i % 10),
+          bookings: 5 + (i % 5)
         })
       }
     } else {
@@ -83,9 +83,9 @@ export default function SpeakerDashboard() {
         date.setMonth(date.getMonth() - i)
         data.push({
           date: date.toLocaleDateString('en-US', { month: 'short' }),
-          views: Math.floor(800 + Math.random() * 400),
-          requests: Math.floor(20 + Math.random() * 30),
-          bookings: Math.floor(10 + Math.random() * 20)
+          views: 900 + ((i * 37) % 200), // Deterministic based on index
+          requests: 25 + (i % 20),
+          bookings: 15 + (i % 10)
         })
       }
     }
