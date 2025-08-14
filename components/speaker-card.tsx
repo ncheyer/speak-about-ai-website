@@ -35,6 +35,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
     imageOffsetY = "0%",
     industries = [],
     programs = [],
+    topics = [],
     slug,
     fee = "Inquire for Fee",
     feeRange,
@@ -104,7 +105,10 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
   const commonButtonClasses =
     "w-full text-xs sm:text-sm px-3 h-auto py-3 whitespace-normal flex items-center justify-center gap-2"
 
-  const safePrograms = Array.isArray(programs) ? programs : []
+  // Use programs if available, otherwise fall back to topics
+  const safePrograms = Array.isArray(programs) && programs.length > 0 
+    ? programs 
+    : (Array.isArray(topics) ? topics : [])
   const safeIndustries = Array.isArray(industries) ? industries : []
 
   return (
@@ -209,7 +213,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
               )}
             </div>
           )}
-          {safePrograms && safePrograms.length > 0 && (
+          {safePrograms.length > 0 && (
             <div className="mb-4">
               <button
                 onClick={() => setShowTopicsDetail(!showTopicsDetail)}
