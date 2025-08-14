@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Speaker } from "@/lib/speakers-data"
-import { CalendarCheck, User, ChevronDown, ChevronUp } from "lucide-react"
+import { CalendarCheck, User, ChevronDown, ChevronUp, MapPin, Lightbulb } from "lucide-react"
 
 interface UnifiedSpeakerCardProps {
   speaker: Speaker
@@ -18,6 +18,8 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
   const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading")
   const [currentImageUrl, setCurrentImageUrl] = useState<string>("")
   const [showFeeDetail, setShowFeeDetail] = useState(false)
+  const [showLocationDetail, setShowLocationDetail] = useState(false)
+  const [showTopicsDetail, setShowTopicsDetail] = useState(false)
   const isInitialMount = useRef(true)
   const [didCancelRef, setDidCancelRef] = useState(false)
 
@@ -36,6 +38,8 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
     slug,
     fee = "Inquire for Fee",
     feeRange,
+    location,
+    topics = [],
   } = speaker
 
   const placeholderImg = `/placeholder.svg?width=400&height=300&text=${encodeURIComponent(name)}`
@@ -185,7 +189,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
             </div>
           )}
           {fee && (
-            <div className="mb-4">
+            <div className="mb-3">
               <button
                 onClick={() => setShowFeeDetail(!showFeeDetail)}
                 className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-800 mb-1 font-montserrat hover:text-[#1E68C6] transition-colors"
@@ -199,6 +203,56 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
                   <div className="text-xs text-gray-600 font-montserrat mt-0.5">
                     Fee varies depending on format, location, and commitment. Contact us for a specific quote and to
                     check availability.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {location && (
+            <div className="mb-3">
+              <button
+                onClick={() => setShowLocationDetail(!showLocationDetail)}
+                className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-800 mb-1 font-montserrat hover:text-[#1E68C6] transition-colors"
+              >
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5" />
+                  Location
+                </span>
+                {showLocationDetail ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+              </button>
+              {showLocationDetail && (
+                <div className="bg-sky-50/70 p-3 rounded-lg mt-1 border border-sky-200 shadow-sm">
+                  <div className="text-sm font-semibold text-[#1E68C6] font-montserrat">{location}</div>
+                  <div className="text-xs text-gray-600 font-montserrat mt-0.5">
+                    Speaker's base location. Travel arrangements can be made for events worldwide.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {topics && topics.length > 0 && (
+            <div className="mb-4">
+              <button
+                onClick={() => setShowTopicsDetail(!showTopicsDetail)}
+                className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-800 mb-1 font-montserrat hover:text-[#1E68C6] transition-colors"
+              >
+                <span className="flex items-center gap-1">
+                  <Lightbulb className="w-3.5 h-3.5" />
+                  Speaking Topics ({topics.length})
+                </span>
+                {showTopicsDetail ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+              </button>
+              {showTopicsDetail && (
+                <div className="bg-sky-50/70 p-3 rounded-lg mt-1 border border-sky-200 shadow-sm">
+                  <div className="flex flex-wrap gap-1.5">
+                    {topics.map((topic, index) => (
+                      <Badge
+                        key={`${slug}-topic-dropdown-${index}`}
+                        className="text-xs font-montserrat text-white bg-[#1E68C6] px-2 py-0.5 rounded-md"
+                      >
+                        {topic}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
               )}
