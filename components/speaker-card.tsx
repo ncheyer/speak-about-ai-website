@@ -221,7 +221,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
             </div>
           )}
           {safePrograms.length > 0 && (
-            <div className="mb-4">
+            <div className="mb-3">
               <button
                 onClick={() => setShowTopicsDetail(!showTopicsDetail)}
                 className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-800 mb-1 font-montserrat hover:text-[#1E68C6] transition-colors"
@@ -234,9 +234,9 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
               </button>
               {showTopicsDetail && (
                 <div className="bg-sky-50/70 p-3 rounded-lg mt-1 border border-sky-200 shadow-sm">
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto">
                     {safePrograms.map((program, index) => (
-                      <div key={`${slug}-program-dropdown-${index}`} className="text-sm text-gray-700 font-montserrat">
+                      <div key={`${slug}-program-dropdown-${index}`} className="text-sm text-gray-700 font-montserrat break-words">
                         • {String(program).trim()}
                       </div>
                     ))}
