@@ -35,7 +35,6 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
     imageOffsetY = "0%",
     industries = [],
     programs = [],
-    topics = [],
     slug,
     fee = "Inquire for Fee",
     feeRange,
@@ -105,10 +104,8 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
   const commonButtonClasses =
     "w-full text-xs sm:text-sm px-3 h-auto py-3 whitespace-normal flex items-center justify-center gap-2"
 
-  // Use programs if available, otherwise fall back to topics
-  const safePrograms = Array.isArray(programs) && programs.length > 0 
-    ? programs 
-    : (Array.isArray(topics) ? topics : [])
+  // Use programs array for keynote topics
+  const safePrograms = Array.isArray(programs) ? programs : []
   const safeIndustries = Array.isArray(industries) ? industries : []
 
   return (

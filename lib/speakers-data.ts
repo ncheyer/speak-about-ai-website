@@ -420,7 +420,9 @@ async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
             image: speaker.headshot_url || speaker.profile_photo_url,
             imagePosition: speaker.image_position || 'center',
             imageOffsetY: speaker.image_offset || '0%',
-            programs: speaker.programs || speaker.primary_topics || [],
+            programs: Array.isArray(speaker.programs) && speaker.programs.length > 0 
+              ? speaker.programs 
+              : (speaker.primary_topics || []),
             industries: speaker.industries || speaker.industries_served || [],
             fee: speaker.speaking_fee_range || 'Please Inquire',
             feeRange: speaker.speaking_fee_range,

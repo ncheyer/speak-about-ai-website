@@ -42,6 +42,9 @@ export interface Speaker {
   one_sheet_url?: string
   website?: string
   
+  // Keynote programs
+  programs?: string[]
+  
   // Social Media (JSONB in DB)
   social_media?: {
     twitter?: string
