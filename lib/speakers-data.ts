@@ -420,9 +420,28 @@ async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
             image: speaker.headshot_url || speaker.profile_photo_url,
             imagePosition: speaker.image_position || 'center',
             imageOffsetY: speaker.image_offset || '0%',
-            programs: Array.isArray(speaker.programs) && speaker.programs.length > 0 
-              ? speaker.programs 
-              : (speaker.primary_topics || []),
+            programs: (() => {
+              // Handle different formats of programs field
+              if (!speaker.programs) return [];
+              
+              // If it's already an array, use it
+              if (Array.isArray(speaker.programs)) return speaker.programs;
+              
+              // If it's a string that looks like PostgreSQL array format
+              if (typeof speaker.programs === 'string') {
+                // Remove PostgreSQL array syntax if present
+                let programsStr = speaker.programs.trim();
+                if (programsStr.startsWith('{') && programsStr.endsWith('}')) {
+                  programsStr = programsStr.slice(1, -1);
+                  // Split by comma but respect quoted strings
+                  return programsStr.split(/","|","/).map(p => p.replace(/^"|"$/g, '').trim());
+                }
+                // Otherwise split by comma
+                return programsStr.split(',').map(p => p.trim()).filter(p => p);
+              }
+              
+              return [];
+            })(),
             industries: speaker.industries || speaker.industries_served || [],
             fee: speaker.speaking_fee_range || 'Please Inquire',
             feeRange: speaker.speaking_fee_range,

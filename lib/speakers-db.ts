@@ -42,8 +42,11 @@ export interface Speaker {
   one_sheet_url?: string
   website?: string
   
-  // Keynote programs
-  programs?: string[]
+  // Keynote programs (can be string or array in database)
+  programs?: string | string[]
+  
+  // Location
+  location?: string
   
   // Social Media (JSONB in DB)
   social_media?: {
