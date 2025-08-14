@@ -21,6 +21,22 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
   const maxRetries = 3
   const [activeTab, setActiveTab] = useState("about")
 
+  // Function to extract YouTube video ID from URL
+  const getYouTubeId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+    const match = url?.match(regExp)
+    return (match && match[2].length === 11) ? match[2] : null
+  }
+
+  // Function to get YouTube thumbnail
+  const getYouTubeThumbnail = (url: string) => {
+    const videoId = getYouTubeId(url)
+    if (videoId) {
+      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+    }
+    return null
+  }
+
   const videos = speaker.videos || []
   const testimonialsToDisplay = speaker.testimonials && speaker.testimonials.length > 0 ? speaker.testimonials : []
 
@@ -360,10 +376,11 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-6 font-neue-haas">Videos</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {videos.map((video) => {
+                      {videos.map((video, index) => {
+                        const thumbnail = video.thumbnail || getYouTubeThumbnail(video.url) || "/placeholder.svg?width=300&height=160&text=Video+Thumbnail"
                         return (
                           <a
-                            key={video.id}
+                            key={video.id || `video-${index}`}
                             href={video.url}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -372,9 +389,16 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                             <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
                               <div className="aspect-video bg-gray-100 relative">
                                 <img
-                                  src={video.thumbnail || "/placeholder.svg?width=300&height=160&text=Video+Thumbnail"}
+                                  src={thumbnail}
                                   alt={video.title}
                                   className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement
+                                    // Fallback to lower quality thumbnail if maxresdefault doesn't exist
+                                    if (thumbnail.includes('maxresdefault')) {
+                                      target.src = thumbnail.replace('maxresdefault', 'hqdefault')
+                                    }
+                                  }}
                                 />
                                 <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
                                   <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">

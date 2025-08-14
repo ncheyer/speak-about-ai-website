@@ -24,12 +24,16 @@ export async function GET(request: NextRequest) {
 
     const speakerId = decoded.speakerId
     
+    if (!speakerId) {
+      return NextResponse.json({ error: 'Invalid token - no speaker ID' }, { status: 401 })
+    }
+    
     // Fetch speaker data from database - only query existing columns
     const speakers = await sql`
       SELECT 
         id, email, name, bio, short_bio, one_liner,
-        headshot_url, website, 
-        topics, industries, programs,
+        headshot_url, website, social_media,
+        topics, industries, programs, videos, testimonials,
         speaking_fee_range, 
         travel_preferences, technical_requirements, dietary_restrictions,
         location,
@@ -47,7 +51,7 @@ export async function GET(request: NextRequest) {
     const speaker = speakers[0]
     
     // Parse name into first and last
-    const nameParts = speaker.name ? speaker.name.split(' ') : ['', '']
+    const nameParts = speaker.name ? speaker.name.trim().split(' ') : ['', '']
     const firstName = nameParts[0] || ''
     const lastName = nameParts.slice(1).join(' ') || ''
     
@@ -58,8 +62,10 @@ export async function GET(request: NextRequest) {
       last_name: lastName,
       email: speaker.email,
       phone: '', // Not in current database
-      title: speaker.one_liner || '', // Use one_liner as title since title column doesn't exist
-      company: '', // Not in current database
+      // Store title and company in one_liner field separated by ' at '
+      // Parse them back out for display
+      title: speaker.one_liner?.includes(' at ') ? speaker.one_liner.split(' at ')[0] : (speaker.one_liner || ''),
+      company: speaker.one_liner?.includes(' at ') ? speaker.one_liner.split(' at ')[1] : '',
       location: speaker.location || '',
       timezone: 'PST', // Default, not in current database
       
@@ -92,14 +98,14 @@ export async function GET(request: NextRequest) {
       dietary_restrictions: speaker.dietary_restrictions || '',
       
       website: speaker.website || '',
-      linkedin_url: '', // Not in current database
-      twitter_url: '', // Not in current database
-      youtube_url: '', // Not in current database
-      instagram_url: '', // Not in current database
+      linkedin_url: speaker.social_media?.linkedin_url || '',
+      twitter_url: speaker.social_media?.twitter_url || '',
+      youtube_url: speaker.social_media?.youtube_url || '',
+      instagram_url: speaker.social_media?.instagram_url || '',
       
-      videos: [], // Not in current database
-      publications: [], // Not in current database
-      testimonials: [], // Not in current database
+      videos: speaker.videos || [],
+      publications: [], // Column doesn't exist yet
+      testimonials: speaker.testimonials || [],
       
       featured: speaker.featured,
       active: speaker.active,
@@ -160,6 +166,14 @@ export async function PUT(request: NextRequest) {
     // Combine first and last name
     const fullName = `${data.first_name || ''} ${data.last_name || ''}`.trim()
     
+    // Prepare social media data
+    const socialMedia = {
+      linkedin_url: data.linkedin_url || null,
+      twitter_url: data.twitter_url || null,
+      youtube_url: data.youtube_url || null,
+      instagram_url: data.instagram_url || null
+    }
+
     // Update speaker in database - only update columns that exist
     const result = await sql`
       UPDATE speakers
@@ -169,12 +183,15 @@ export async function PUT(request: NextRequest) {
         location = ${data.location || null},
         bio = ${data.bio || null},
         short_bio = ${data.short_bio || null},
-        one_liner = ${data.one_liner || data.title || null},
+        one_liner = ${data.title && data.company ? `${data.title} at ${data.company}` : (data.one_liner || data.title || null)},
         headshot_url = ${data.headshot_url || null},
         website = ${data.website || null},
+        social_media = ${JSON.stringify(socialMedia)},
         topics = ${JSON.stringify(data.speaking_topics || [])},
         industries = ${JSON.stringify(data.expertise_areas || [])},
         programs = ${JSON.stringify(data.programs || [])},
+        videos = ${JSON.stringify(data.videos || [])},
+        testimonials = ${JSON.stringify(data.testimonials || [])},
         speaking_fee_range = ${data.speaking_fee_range || null},
         travel_preferences = ${data.travel_preferences || null},
         technical_requirements = ${data.technical_requirements || null},

@@ -18,12 +18,12 @@ export async function GET(request: NextRequest) {
     const speakers = await sql`
       SELECT 
         id, name, email, 
-        bio, short_bio, one_liner, headshot_url, website,
+        bio, short_bio, one_liner, headshot_url, website, social_media,
         topics, speaking_fee_range, travel_preferences,
         technical_requirements, dietary_restrictions,
         active, email_verified, featured, location, programs,
         listed, industries, ranking, image_position, image_offset,
-        videos, testimonials, created_at, updated_at
+        videos, testimonials, publications, created_at, updated_at
       FROM speakers
       WHERE active = true
       ORDER BY ranking DESC NULLS LAST, name ASC
@@ -46,14 +46,14 @@ export async function GET(request: NextRequest) {
         imagePosition: speaker.image_position || 'center',
         imageOffsetY: speaker.image_offset || '0%',
         website: speaker.website,
-        linkedin: '', // Column doesn't exist yet
-        linkedinUrl: '', // Column doesn't exist yet
-        twitter: '', // Column doesn't exist yet
-        twitterUrl: '', // Column doesn't exist yet
-        instagram: '', // Column doesn't exist yet
-        instagramUrl: '', // Column doesn't exist yet
-        youtube: '', // Column doesn't exist yet
-        youtubeUrl: '', // Column doesn't exist yet
+        linkedin: speaker.social_media?.linkedin_url || '',
+        linkedinUrl: speaker.social_media?.linkedin_url || '',
+        twitter: speaker.social_media?.twitter_url || '',
+        twitterUrl: speaker.social_media?.twitter_url || '',
+        instagram: speaker.social_media?.instagram_url || '',
+        instagramUrl: speaker.social_media?.instagram_url || '',
+        youtube: speaker.social_media?.youtube_url || '',
+        youtubeUrl: speaker.social_media?.youtube_url || '',
         topics: speaker.topics || [],
         programs: speaker.programs || [],
         industries: speaker.industries || [],
@@ -70,6 +70,7 @@ export async function GET(request: NextRequest) {
         ranking: speaker.ranking || 0,
         videos: speaker.videos || [],
         testimonials: speaker.testimonials || [],
+        publications: speaker.publications || [],
         active: speaker.active,
         emailVerified: speaker.email_verified,
         createdAt: speaker.created_at,

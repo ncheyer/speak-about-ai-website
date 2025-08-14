@@ -403,9 +403,8 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
   try {
-    // For server-side rendering and static generation, try to fetch from database directly
+    // For server-side rendering, try to use the database directly
     if (typeof window === 'undefined') {
-      // We're on the server - try to import the database function directly
       try {
         const { getAllSpeakers: getAllSpeakersFromDB } = await import('./speakers-db')
         const dbSpeakers = await getAllSpeakersFromDB()
@@ -414,130 +413,48 @@ async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
           // Transform database speakers to match our Speaker interface
           const transformedSpeakers = dbSpeakers.map((speaker: any) => ({
             slug: speaker.slug || speaker.name?.toLowerCase().replace(/\s+/g, '-') || `speaker-${speaker.id}`,
-            name: speaker.name,
-            title: speaker.title || speaker.one_liner || '',
+            name: speaker.name || '',
+            title: speaker.one_liner || '',
             bio: speaker.bio || speaker.short_bio || '',
-            image: speaker.headshot_url || speaker.profile_photo_url,
+            image: speaker.headshot_url || '',
             imagePosition: speaker.image_position || 'center',
             imageOffsetY: speaker.image_offset || '0%',
-            programs: (() => {
-              // Handle different formats of programs field
-              if (!speaker.programs) return [];
-              
-              // If it's already an array, use it
-              if (Array.isArray(speaker.programs)) return speaker.programs;
-              
-              // If it's a string
-              if (typeof speaker.programs === 'string') {
-                let programsStr = speaker.programs.trim();
-                
-                // Replace smart quotes with regular quotes for consistent parsing
-                programsStr = programsStr
-                  .replace(/[\u201C\u201D]/g, '"')  // Replace smart double quotes
-                  .replace(/[\u2018\u2019]/g, "'");  // Replace smart single quotes
-                
-                // Try to parse as JSON array first (e.g., ["item1", "item2"])
-                if (programsStr.startsWith('[') && programsStr.endsWith(']')) {
-                  try {
-                    const parsed = JSON.parse(programsStr);
-                    if (Array.isArray(parsed)) {
-                      // If it's an array with one comma/newline-separated string, split it
-                      if (parsed.length === 1 && typeof parsed[0] === 'string') {
-                        // Split by comma or newline
-                        const items = parsed[0].split(/[,\n]+/).map(p => p.trim()).filter(p => p);
-                        if (items.length > 1) {
-                          return items;
-                        }
-                      }
-                      // Flatten any nested arrays
-                      return parsed.flat().filter(p => typeof p === 'string' && p.trim());
-                    }
-                  } catch (e) {
-                    // Fall through to other parsing methods
-                  }
-                }
-                
-                // Handle PostgreSQL array format: {"item1","item2"} or {item1,item2}
-                if (programsStr.startsWith('{') && programsStr.endsWith('}')) {
-                  // Remove the outer braces
-                  programsStr = programsStr.slice(1, -1);
-                  
-                  // Split by comma, handling quoted strings
-                  const programs = [];
-                  let current = '';
-                  let inQuotes = false;
-                  
-                  for (let i = 0; i < programsStr.length; i++) {
-                    const char = programsStr[i];
-                    
-                    if (char === '"' && (i === 0 || programsStr[i-1] !== '\\')) {
-                      inQuotes = !inQuotes;
-                    } else if (char === ',' && !inQuotes) {
-                      // End of an item
-                      current = current.trim();
-                      // Remove surrounding quotes if present
-                      if (current.startsWith('"') && current.endsWith('"')) {
-                        current = current.slice(1, -1);
-                      }
-                      if (current) programs.push(current);
-                      current = '';
-                    } else {
-                      current += char;
-                    }
-                  }
-                  
-                  // Don't forget the last item
-                  current = current.trim();
-                  if (current.startsWith('"') && current.endsWith('"')) {
-                    current = current.slice(1, -1);
-                  }
-                  if (current) programs.push(current);
-                  
-                  return programs;
-                }
-                
-                // Otherwise treat as comma-separated
-                return programsStr.split(',').map(p => p.trim()).filter(p => p);
-              }
-              
-              return [];
-            })(),
-            industries: speaker.industries || speaker.industries_served || [],
+            programs: Array.isArray(speaker.programs) ? speaker.programs : [],
+            industries: Array.isArray(speaker.industries) ? speaker.industries : [],
             fee: speaker.speaking_fee_range || 'Please Inquire',
-            feeRange: speaker.speaking_fee_range,
-            location: speaker.location || speaker.travel_preferences,
-            linkedin: speaker.social_media?.linkedin,
-            twitter: speaker.social_media?.twitter,
-            website: speaker.website,
-            featured: speaker.featured || speaker.preferred_partner || false,
-            videos: speaker.videos || [],
-            testimonials: speaker.testimonials || [],
-            tags: speaker.keywords || [],
-            topics: speaker.topics || speaker.primary_topics || [],
-            listed: speaker.listed !== false && speaker.active !== false,
-            expertise: speaker.expertise || speaker.primary_topics || [],
-            ranking: speaker.ranking || speaker.internal_rating || 0,
+            feeRange: speaker.speaking_fee_range || '',
+            location: speaker.location || '',
+            linkedin: speaker.social_media?.linkedin_url || '',
+            twitter: speaker.social_media?.twitter_url || '',
+            website: speaker.website || '',
+            featured: speaker.featured || false,
+            videos: Array.isArray(speaker.videos) ? speaker.videos : [],
+            testimonials: Array.isArray(speaker.testimonials) ? speaker.testimonials : [],
+            topics: Array.isArray(speaker.topics) ? speaker.topics : [],
+            listed: speaker.listed !== false,
+            expertise: Array.isArray(speaker.topics) ? speaker.topics : [],
+            ranking: speaker.ranking || 0
           }))
           return transformedSpeakers
         }
-        console.log("No speakers found in database")
-        return localSpeakers
       } catch (dbError) {
-        console.log("Could not fetch from database directly, using local speakers:", dbError)
-        return localSpeakers
+        console.log("Could not fetch from database directly:", dbError)
       }
     }
     
-    // Client-side: fetch from API
-    const baseUrl = window.location.origin
+    // If we couldn't get from database directly, don't try API on server-side
+    // as it causes circular dependency issues
+    if (typeof window === 'undefined') {
+      return localSpeakers
+    }
     
-    const response = await fetch(`${baseUrl}/api/speakers`, {
-      next: { revalidate: 3600 } // Cache for 1 hour instead of no-store
+    // Client-side: fetch from API endpoint
+    const response = await fetch(`/api/speakers`, {
+      next: { revalidate: 300 } // Cache for 5 minutes
     })
 
     if (!response.ok) {
-      console.error("Failed to fetch speakers from database API. " + 
-                   `Status: ${response.status}, ${response.statusText}.`)
+      console.error(`Failed to fetch speakers from database API. Status: ${response.status}`)
       return localSpeakers
     }
 
@@ -548,31 +465,35 @@ async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
       return localSpeakers
     }
 
-    // Convert API response to Speaker interface format
+    // Transform API response to Speaker interface format
     const speakers: Speaker[] = data.speakers.map((speaker: any) => ({
-      slug: speaker.slug,
-      name: speaker.name,
-      title: speaker.title,
-      bio: speaker.bio,
-      image: speaker.image,
-      imagePosition: speaker.imagePosition,
-      imageOffsetY: speaker.imageOffsetY,
-      programs: speaker.programs || [],
-      industries: speaker.industries || [],
-      fee: speaker.fee,
-      feeRange: speaker.feeRange,
-      location: speaker.location,
-      website: speaker.website,
-      featured: speaker.featured,
-      videos: speaker.videos || [],
-      testimonials: speaker.testimonials || [],
-      topics: speaker.topics || [],
-      listed: speaker.listed,
-      expertise: speaker.expertise || [],
+      slug: speaker.slug || speaker.name?.toLowerCase().replace(/\s+/g, '-') || `speaker-${speaker.id}`,
+      name: speaker.name || '',
+      title: speaker.title || speaker.oneLiner || '',
+      bio: speaker.bio || speaker.shortBio || '',
+      image: speaker.image || speaker.headshot_url || '',
+      imagePosition: speaker.imagePosition || 'center',
+      imageOffsetY: speaker.imageOffsetY || '0%',
+      programs: Array.isArray(speaker.programs) ? speaker.programs : [],
+      industries: Array.isArray(speaker.industries) ? speaker.industries : [],
+      fee: speaker.fee || speaker.feeRange || speaker.speakingFeeRange || 'Please Inquire',
+      feeRange: speaker.feeRange || speaker.speakingFeeRange || '',
+      location: speaker.location || '',
+      linkedin: speaker.linkedin || speaker.linkedinUrl || '',
+      twitter: speaker.twitter || speaker.twitterUrl || '',
+      website: speaker.website || '',
+      featured: speaker.featured || false,
+      videos: Array.isArray(speaker.videos) ? speaker.videos : [],
+      testimonials: Array.isArray(speaker.testimonials) ? speaker.testimonials : [],
+      tags: Array.isArray(speaker.tags) ? speaker.tags : [],
+      topics: Array.isArray(speaker.topics) ? speaker.topics : [],
+      listed: speaker.listed !== false,
+      expertise: Array.isArray(speaker.expertise) ? speaker.expertise : [],
       ranking: speaker.ranking || 0,
-      // Additional fields that might be useful
-      linkedin: speaker.socialMedia?.linkedin,
-      twitter: speaker.socialMedia?.twitter,
+      // Additional fields that might be present
+      youtube: speaker.youtube || speaker.youtubeUrl || '',
+      instagram: speaker.instagram || speaker.instagramUrl || '',
+      publications: Array.isArray(speaker.publications) ? speaker.publications : []
     }))
 
     console.log(`🎯 Fetched ${speakers.length} speakers from database`)
@@ -617,6 +538,25 @@ export async function getFeaturedSpeakers(limit = 8): Promise<Speaker[]> {
 
 export async function getSpeakerBySlug(slug: string): Promise<Speaker | undefined> {
   try {
+    // First, try to fetch directly from the database API  
+    const baseUrl = typeof window === 'undefined' 
+      ? 'http://localhost:3000'
+      : ''
+    
+    const response = await fetch(`${baseUrl}/api/speakers/public/${slug}`, {
+      next: { revalidate: 60 } // Cache for 1 minute
+    })
+    
+    if (response.ok) {
+      const data = await response.json()
+      if (data.found && data.speaker) {
+        console.log(`Found speaker ${slug} in database`)
+        return data.speaker as Speaker
+      }
+    }
+    
+    // Fallback to cache/sheets data if database doesn't have the speaker
+    console.log(`Speaker ${slug} not found in database, checking sheets data`)
     if (!allSpeakersCache || !(lastFetchTime && Date.now() - lastFetchTime < CACHE_DURATION)) {
       await getAllSpeakers()
     }
@@ -625,6 +565,9 @@ export async function getSpeakerBySlug(slug: string): Promise<Speaker | undefine
     return undefined
   } catch (error) {
     console.error(`getSpeakerBySlug: Failed for slug ${slug}:`, error)
+    // Try fallback to cache
+    const speaker = allSpeakersCache ? allSpeakersCache.find((s) => s.slug === slug) : undefined
+    if (speaker && speaker.listed !== false) return speaker
     return undefined
   }
 }

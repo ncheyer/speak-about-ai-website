@@ -37,6 +37,11 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [speakerName, setSpeakerName] = useState("")
   const [speakerEmail, setSpeakerEmail] = useState("")
+  const [profileCompletion, setProfileCompletion] = useState(0)
+  const [stats, setStats] = useState({
+    profileViews: 0,
+    events: 0
+  })
 
   useEffect(() => {
     const token = localStorage.getItem("speakerToken")
@@ -50,7 +55,77 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
     
     setSpeakerName(name || "Speaker")
     setSpeakerEmail(email || "")
+    
+    // Fetch profile data for completion percentage
+    fetchProfileData(token)
+    // Fetch analytics for stats
+    fetchAnalytics(token)
   }, [router])
+  
+  // Refresh stats when pathname changes
+  useEffect(() => {
+    const token = localStorage.getItem("speakerToken")
+    if (token) {
+      fetchAnalytics(token)
+    }
+  }, [pathname])
+  
+  const fetchProfileData = async (token: string) => {
+    try {
+      const response = await fetch("/api/speakers/profile", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.profile) {
+          // Calculate profile completion - must match dashboard calculation
+          const profileCompletionItems = [
+            !!(data.profile.first_name && data.profile.last_name && data.profile.email),
+            !!(data.profile.title && data.profile.company),
+            data.profile.speaking_topics?.length > 0,
+            data.profile.videos?.length > 0,
+            data.profile.publications?.length > 0,
+            data.profile.testimonials?.length > 0,
+            !!(data.profile.linkedin_url || data.profile.twitter_url),
+            !!(data.profile.speaking_fee_range && data.profile.travel_preferences)
+          ]
+          
+          const completedItems = profileCompletionItems.filter(item => item).length
+          const totalItems = profileCompletionItems.length
+          const completionPercentage = Math.round((completedItems / totalItems) * 100)
+          
+          setProfileCompletion(completionPercentage)
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error)
+    }
+  }
+  
+  const fetchAnalytics = async (token: string) => {
+    try {
+      const response = await fetch("/api/speakers/me/analytics?range=30d", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.analytics) {
+          setStats({
+            profileViews: data.analytics.profileViews || 0,
+            events: 3 // This would come from events API
+          })
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching analytics:", error)
+    }
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("speakerToken")
@@ -194,16 +269,16 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-900">{speakerName}</p>
-                <p className="text-xs text-gray-500">Premium Speaker</p>
+                <p className="text-xs text-gray-500">Speaker Account</p>
               </div>
             </div>
             <div className="mt-4 flex items-center justify-between">
               <div className="text-xs">
                 <p className="text-gray-500">Profile Completion</p>
-                <p className="font-semibold text-gray-900">85%</p>
+                <p className="font-semibold text-gray-900">{profileCompletion}%</p>
               </div>
               <div className="w-20 bg-gray-200 rounded-full h-2">
-                <div className="bg-gradient-to-r from-[#1E68C6] to-blue-600 h-2 rounded-full" style={{ width: "85%" }}></div>
+                <div className="bg-gradient-to-r from-[#1E68C6] to-blue-600 h-2 rounded-full" style={{ width: `${profileCompletion}%` }}></div>
               </div>
             </div>
           </div>
@@ -247,33 +322,16 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
                   <TrendingUp className="h-4 w-4 text-green-500 mr-2" />
                   <span className="text-sm text-gray-700">Profile Views</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">1,234</span>
+                <span className="text-sm font-semibold text-gray-900">{stats.profileViews.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 text-blue-500 mr-2" />
                   <span className="text-sm text-gray-700">Events</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">12</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Star className="h-4 w-4 text-yellow-500 mr-2" />
-                  <span className="text-sm text-gray-700">Rating</span>
-                </div>
-                <span className="text-sm font-semibold text-gray-900">4.9</span>
+                <span className="text-sm font-semibold text-gray-900">{stats.events}</span>
               </div>
             </div>
-          </div>
-
-          {/* CTA */}
-          <div className="mt-8 mx-3 p-4 bg-gradient-to-br from-[#1E68C6] to-blue-600 rounded-lg">
-            <Globe className="h-8 w-8 text-white mb-2" />
-            <h3 className="text-white font-semibold mb-1">Go Premium</h3>
-            <p className="text-white/80 text-xs mb-3">Unlock advanced features and analytics</p>
-            <Button className="w-full bg-white text-blue-600 hover:bg-gray-100">
-              Upgrade Now
-            </Button>
           </div>
         </div>
       </aside>

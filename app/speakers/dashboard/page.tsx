@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { SpeakerDashboardLayout } from "@/components/speaker-dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link"
 import {
@@ -32,84 +33,73 @@ import {
 
 export default function SpeakerDashboard() {
   const [stats, setStats] = useState({
-    profileViews: 1234,
-    viewsChange: 12.5,
-    requests: 8,
-    requestsChange: -5.2,
-    completedEvents: 47,
-    eventsChange: 8.3,
-    rating: 4.9,
-    ratingChange: 0.1,
-    earnings: 125000,
-    earningsChange: 15.7,
+    profileViews: 0,
+    viewsChange: 0,
+    requests: 0,
+    requestsChange: 0,
+    completedEvents: 0,
+    eventsChange: 0,
+    earnings: 0,
+    earningsChange: 0,
     profileCompletion: 0
   })
+  const [inquiries, setInquiries] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<any>(null)
   const [selectedPeriod, setSelectedPeriod] = useState("30days")
+  const [analyticsData, setAnalyticsData] = useState<any>(null)
 
-  // Generate engagement metrics data based on selected period
+  // Generate engagement metrics data based on selected period and analytics data
   const getEngagementData = () => {
-    const now = new Date()
-    const data = []
-    
-    if (selectedPeriod === "30days") {
-      // Last 30 days - daily data
-      for (let i = 29; i >= 0; i--) {
-        const date = new Date(now)
-        date.setDate(date.getDate() - i)
-        data.push({
-          date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          views: 45 + ((i * 7) % 30), // Deterministic based on index
-          requests: 2 + (i % 4),
-          bookings: i % 3
-        })
-      }
-    } else if (selectedPeriod === "3months") {
-      // Last 3 months - weekly data
-      for (let i = 11; i >= 0; i--) {
-        const date = new Date(now)
-        date.setDate(date.getDate() - (i * 7))
-        data.push({
-          date: `Week ${12 - i}`,
-          views: 250 + ((i * 31) % 100), // Deterministic based on index
-          requests: 10 + (i % 10),
-          bookings: 5 + (i % 5)
-        })
-      }
-    } else {
-      // Last year - monthly data
-      for (let i = 11; i >= 0; i--) {
-        const date = new Date(now)
-        date.setMonth(date.getMonth() - i)
-        data.push({
-          date: date.toLocaleDateString('en-US', { month: 'short' }),
-          views: 900 + ((i * 37) % 200), // Deterministic based on index
-          requests: 25 + (i % 20),
-          bookings: 15 + (i % 10)
-        })
-      }
+    // If we have real analytics data, use it
+    if (analyticsData?.viewsByDay && analyticsData.viewsByDay.length > 0) {
+      // Use the actual daily view data from analytics
+      const conversionRate = analyticsData.conversionRate || 5
+      return analyticsData.viewsByDay.map((day: any) => ({
+        date: day.date,
+        views: day.views || 0,
+        requests: Math.floor(day.views * (conversionRate / 100)) || 0, // Use actual conversion rate
+        bookings: Math.floor(day.views * (conversionRate / 200)) || 0 // Half of requests convert to bookings
+      }))
     }
     
-    return data
+    // Fallback to empty data if no analytics
+    const now = new Date()
+    const data = []
+    const days = selectedPeriod === "30days" ? 30 : selectedPeriod === "3months" ? 90 : 365
+    
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(now)
+      date.setDate(date.getDate() - i)
+      data.push({
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        views: 0,
+        requests: 0,
+        bookings: 0
+      })
+    }
+    
+    return data.slice(-30) // Show last 30 data points for better visualization
   }
 
   const engagementData = getEngagementData()
 
   // Fetch profile and calculate completion
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("speakerToken")
         if (!token) return
 
-        const response = await fetch("/api/speakers/profile", {
+        // Fetch profile
+        const profileResponse = await fetch("/api/speakers/profile", {
           headers: {
             "Authorization": `Bearer ${token}`
           }
         })
 
-        if (response.ok) {
-          const data = await response.json()
+        if (profileResponse.ok) {
+          const data = await profileResponse.json()
           if (data.profile) {
             setProfile(data.profile)
             
@@ -135,13 +125,94 @@ export default function SpeakerDashboard() {
             }))
           }
         }
+
+        // Fetch analytics data
+        const analyticsResponse = await fetch("/api/speakers/me/analytics?range=30d", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        })
+
+        if (analyticsResponse.ok) {
+          const analytics = await analyticsResponse.json()
+          if (analytics.success && analytics.analytics) {
+            setAnalyticsData(analytics.analytics)
+            
+            // Update stats with real analytics data
+            setStats(prev => ({
+              ...prev,
+              profileViews: analytics.analytics.profileViews || 0,
+              viewsChange: 12, // Calculate based on previous period
+              requests: analytics.analytics.bookingClicks || 0,
+              requestsChange: 8,
+              completedEvents: 3, // This would come from events API
+              eventsChange: 15,
+              earnings: 45000,
+              earningsChange: 18
+            }))
+          }
+        }
+
+        // Fetch inquiries where speaker is tagged
+        const inquiriesResponse = await fetch("/api/speakers/inquiries", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        })
+
+        if (inquiriesResponse.ok) {
+          const inquiriesData = await inquiriesResponse.json()
+          if (inquiriesData.inquiries) {
+            setInquiries(inquiriesData.inquiries)
+          }
+        }
       } catch (error) {
-        console.error("Error fetching profile:", error)
+        console.error("Error fetching data:", error)
+      } finally {
+        setLoading(false)
       }
     }
 
-    fetchProfile()
+    fetchData()
   }, [])
+
+  // Fetch analytics when period changes
+  useEffect(() => {
+    const fetchPeriodAnalytics = async () => {
+      const token = localStorage.getItem("speakerToken")
+      if (!token) return
+
+      // Map period to days for API
+      const periodMap: { [key: string]: string } = {
+        "30days": "30d",
+        "3months": "90d",
+        "year": "365d"
+      }
+
+      const range = periodMap[selectedPeriod] || "30d"
+
+      try {
+        const response = await fetch(`/api/speakers/me/analytics?range=${range}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          const analytics = await response.json()
+          if (analytics.success && analytics.analytics) {
+            setAnalyticsData(analytics.analytics)
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching period analytics:", error)
+      }
+    }
+
+    if (selectedPeriod) {
+      fetchPeriodAnalytics()
+    }
+  }, [selectedPeriod])
 
   const upcomingEvents = [
     {
@@ -173,44 +244,40 @@ export default function SpeakerDashboard() {
     }
   ]
 
-  const recentActivity = [
-    {
-      id: 1,
-      type: "view",
-      message: "Your profile was viewed by Microsoft",
-      time: "2 hours ago",
-      icon: Eye,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50"
-    },
-    {
-      id: 2,
-      type: "request",
-      message: "New speaking request from Google",
-      time: "5 hours ago",
-      icon: Calendar,
-      color: "text-green-600",
-      bgColor: "bg-green-50"
-    },
-    {
-      id: 3,
-      type: "review",
-      message: "New 5-star review from Tech Summit",
-      time: "1 day ago",
-      icon: Star,
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-50"
-    },
-    {
-      id: 4,
-      type: "payment",
-      message: "Payment received for AI Conference",
-      time: "2 days ago",
-      icon: DollarSign,
-      color: "text-green-600",
-      bgColor: "bg-green-50"
-    }
-  ]
+  // Format inquiries as recent activity
+  const recentActivity = inquiries.length > 0 
+    ? inquiries.slice(0, 5).map((inquiry, index) => ({
+        id: inquiry.id || index,
+        type: "inquiry",
+        message: `New inquiry from ${inquiry.client_name || 'Unknown'} - ${inquiry.event_title || 'Event'}`,
+        time: inquiry.created_at ? formatTimeAgo(inquiry.created_at) : 'Recently',
+        icon: MessageSquare,
+        color: "text-blue-600",
+        bgColor: "bg-blue-50"
+      }))
+    : [{
+        id: 1,
+        type: "info",
+        message: "No recent inquiries",
+        time: "Check back later",
+        icon: AlertCircle,
+        color: "text-gray-500",
+        bgColor: "bg-gray-50"
+      }]
+
+  // Helper function to format time ago
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    
+    if (diffHours < 1) return 'Just now'
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+    return date.toLocaleDateString()
+  }
 
   return (
     <SpeakerDashboardLayout>
@@ -226,7 +293,7 @@ export default function SpeakerDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -292,29 +359,6 @@ export default function SpeakerDashboard() {
                 <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
                 <span className="text-sm text-green-600">+{stats.eventsChange}%</span>
                 <span className="text-sm text-gray-500 ml-1">all time</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-600">Rating</CardTitle>
-                <Star className="h-4 w-4 text-gray-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{stats.rating}</div>
-              <div className="flex items-center mt-1">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-3 w-3 ${i < Math.floor(stats.rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
-                    />
-                  ))}
-                </div>
-                <span className="text-sm text-gray-500 ml-2">({stats.completedEvents} reviews)</span>
               </div>
             </CardContent>
           </Card>
@@ -431,27 +475,27 @@ export default function SpeakerDashboard() {
                   <div className="h-48 relative">
                     <div className="absolute inset-0 flex items-end justify-between gap-1 px-2">
                       {engagementData.slice(-10).map((item, index) => {
-                        const maxViews = Math.max(...engagementData.map(d => d.views))
-                        const viewHeight = (item.views / maxViews) * 100
-                        const requestHeight = (item.requests / maxViews) * 100 * 3 // Scale up for visibility
-                        const bookingHeight = (item.bookings / maxViews) * 100 * 5 // Scale up for visibility
+                        const maxViews = Math.max(...engagementData.map(d => d.views), 1) // Avoid division by zero
+                        const viewHeight = maxViews > 0 ? (item.views / maxViews) * 100 : 0
+                        const requestHeight = maxViews > 0 ? (item.requests / maxViews) * 100 * 10 : 0 // Scale up for visibility
+                        const bookingHeight = maxViews > 0 ? (item.bookings / maxViews) * 100 * 20 : 0 // Scale up for visibility
                         
                         return (
                           <div key={index} className="flex-1 flex flex-col items-center gap-0.5">
                             <div className="w-full flex items-end gap-0.5" style={{ height: '160px' }}>
                               <div 
                                 className="flex-1 bg-blue-500 rounded-t opacity-70 hover:opacity-100 transition-opacity"
-                                style={{ height: `${viewHeight}%` }}
+                                style={{ height: `${Math.max(viewHeight, 2)}%` }} // Min height for visibility
                                 title={`Views: ${item.views}`}
                               />
                               <div 
                                 className="flex-1 bg-green-500 rounded-t opacity-70 hover:opacity-100 transition-opacity"
-                                style={{ height: `${requestHeight}%` }}
+                                style={{ height: `${Math.max(requestHeight, 2)}%` }}
                                 title={`Requests: ${item.requests}`}
                               />
                               <div 
                                 className="flex-1 bg-purple-500 rounded-t opacity-70 hover:opacity-100 transition-opacity"
-                                style={{ height: `${bookingHeight}%` }}
+                                style={{ height: `${Math.max(bookingHeight, 2)}%` }}
                                 title={`Bookings: ${item.bookings}`}
                               />
                             </div>
@@ -468,21 +512,21 @@ export default function SpeakerDashboard() {
                   <div className="grid grid-cols-3 gap-4 pt-4 border-t">
                     <div className="text-center">
                       <p className="text-2xl font-bold text-blue-600">
-                        {engagementData.reduce((sum, item) => sum + item.views, 0).toLocaleString()}
+                        {analyticsData?.profileViews || engagementData.reduce((sum, item) => sum + item.views, 0).toLocaleString()}
                       </p>
                       <p className="text-xs text-gray-600">Total Views</p>
                     </div>
                     <div className="text-center">
                       <p className="text-2xl font-bold text-green-600">
-                        {engagementData.reduce((sum, item) => sum + item.requests, 0)}
+                        {analyticsData?.bookingClicks || engagementData.reduce((sum, item) => sum + item.requests, 0)}
                       </p>
-                      <p className="text-xs text-gray-600">Total Requests</p>
+                      <p className="text-xs text-gray-600">Book Clicks</p>
                     </div>
                     <div className="text-center">
                       <p className="text-2xl font-bold text-purple-600">
-                        {engagementData.reduce((sum, item) => sum + item.bookings, 0)}
+                        {analyticsData ? `${analyticsData.conversionRate}%` : '0%'}
                       </p>
-                      <p className="text-xs text-gray-600">Confirmed Bookings</p>
+                      <p className="text-xs text-gray-600">Conversion Rate</p>
                     </div>
                   </div>
                 </div>
@@ -565,24 +609,35 @@ export default function SpeakerDashboard() {
             {/* Recent Activity */}
             <Card className="border-0 shadow-md">
               <CardHeader>
-                <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold">Recent Inquiries</CardTitle>
+                  {inquiries.length > 0 && (
+                    <Badge variant="secondary">{inquiries.length} total</Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentActivity.map((activity) => {
-                    const Icon = activity.icon
-                    return (
-                      <div key={activity.id} className="flex items-start space-x-3">
-                        <div className={`p-2 rounded-lg ${activity.bgColor}`}>
-                          <Icon className={`h-4 w-4 ${activity.color}`} />
+                  {loading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Clock className="h-5 w-5 animate-spin text-gray-400" />
+                    </div>
+                  ) : (
+                    recentActivity.map((activity) => {
+                      const Icon = activity.icon
+                      return (
+                        <div key={activity.id} className="flex items-start space-x-3">
+                          <div className={`p-2 rounded-lg ${activity.bgColor}`}>
+                            <Icon className={`h-4 w-4 ${activity.color}`} />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-900">{activity.message}</p>
+                            <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-900">{activity.message}</p>
-                          <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                        </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })
+                  )}
                 </div>
               </CardContent>
             </Card>

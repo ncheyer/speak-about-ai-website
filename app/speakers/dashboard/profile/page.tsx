@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { upload } from "@vercel/blob/client"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -266,6 +267,10 @@ export default function SpeakerProfilePage() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [errors, setErrors] = useState<any>({})
   const [error, setError] = useState("")
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showVideoDialog, setShowVideoDialog] = useState(false)
+  const [newVideo, setNewVideo] = useState({ title: '', url: '', date: '' })
   
   // Form states for editing
   const [editMode, setEditMode] = useState({
@@ -295,16 +300,19 @@ export default function SpeakerProfilePage() {
       })
       
       if (!response.ok) {
-        throw new Error('Failed to fetch profile')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Profile fetch failed:', response.status, errorData)
+        throw new Error(errorData.error || `Failed to fetch profile (${response.status})`)
       }
       
       const data = await response.json()
+      console.log('Profile loaded successfully:', data.profile?.email)
       // Use only real data from database, no mock data merging
       setProfile(data.profile)
     } catch (error) {
       console.error('Error fetching profile:', error)
       // Don't fall back to mock data - show error instead
-      setError('Failed to load profile. Please try again.')
+      setError(`Failed to load profile: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsLoading(false)
     }
@@ -343,8 +351,92 @@ export default function SpeakerProfilePage() {
   }
 
   const handleImageUpload = (type: 'headshot') => {
-    // In production, this would handle actual file upload
-    console.log(`Uploading ${type}...`)
+    // Trigger the hidden file input
+    if (fileInputRef.current) {
+      fileInputRef.current.click()
+    }
+  }
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file")
+      setTimeout(() => setError(""), 3000)
+      return
+    }
+
+    // Validate file size (5MB limit)
+    const maxSizeBytes = 5 * 1024 * 1024
+    if (file.size > maxSizeBytes) {
+      setError(`File size too large. Maximum allowed: 5MB`)
+      setTimeout(() => setError(""), 3000)
+      return
+    }
+
+    try {
+      setIsUploadingPhoto(true)
+      setError("")
+      
+      // Create a filename with timestamp to avoid conflicts
+      const timestamp = new Date().getTime()
+      const speakerName = `${profile?.first_name || 'speaker'}-${profile?.last_name || 'photo'}`.toLowerCase().replace(/\s+/g, '-')
+      const fileExtension = file.name.split('.').pop()
+      const filename = `speakers/${speakerName}-${timestamp}.${fileExtension}`
+
+      // Get authentication token
+      const token = localStorage.getItem("speakerToken")
+      if (!token) {
+        setError("Authentication required. Please log in again.")
+        setTimeout(() => setError(""), 3000)
+        return
+      }
+
+      // Upload to Vercel Blob with authentication
+      const blob = await upload(filename, file, {
+        access: "public",
+        handleUploadUrl: "/api/speakers/upload",
+        onUploadProgress: (event) => {
+          console.log(`Upload progress: ${event.percentage}%`)
+        },
+      })
+
+      console.log("Upload successful:", blob.url)
+      
+      // Update the profile with the new headshot URL
+      const updatedProfile = { ...profile, headshot_url: blob.url }
+      setProfile(updatedProfile)
+
+      // Save the updated profile to the database
+      // token is already declared above
+      if (token) {
+        const response = await fetch("/api/speakers/profile", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ headshot_url: blob.url })
+        })
+
+        if (response.ok) {
+          setShowSuccess(true)
+          setTimeout(() => setShowSuccess(false), 3000)
+        }
+      }
+    } catch (error) {
+      console.error("Upload error:", error)
+      setError("Failed to upload photo. Please try again.")
+      setTimeout(() => setError(""), 5000)
+    } finally {
+      setIsUploadingPhoto(false)
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
   }
 
   const addItem = (field: string, item: any) => {
@@ -354,22 +446,100 @@ export default function SpeakerProfilePage() {
     }))
   }
 
-  const removeItem = (field: string, index: number) => {
-    setProfile(prev => ({
-      ...prev,
-      [field]: (prev[field as keyof typeof prev] as any[]).filter((_, i) => i !== index)
-    }))
+  const removeItem = async (field: string, index: number) => {
+    // Update local state
+    const updatedProfile = {
+      ...profile,
+      [field]: (profile[field as keyof typeof profile] as any[]).filter((_, i) => i !== index)
+    }
+    setProfile(updatedProfile)
+    
+    // Save to database
+    const token = localStorage.getItem("speakerToken")
+    if (token) {
+      try {
+        const response = await fetch('/api/speakers/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(updatedProfile)
+        })
+        
+        if (response.ok) {
+          setShowSuccess(true)
+          setTimeout(() => setShowSuccess(false), 3000)
+        }
+      } catch (error) {
+        console.error(`Error removing ${field} item:`, error)
+        setError(`Failed to remove item. Please try again.`)
+        setTimeout(() => setError(''), 5000)
+      }
+    }
+  }
+
+  const getYouTubeId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+    const match = url?.match(regExp)
+    return (match && match[2].length === 11) ? match[2] : null
+  }
+
+  const handleAddVideo = async () => {
+    if (newVideo.title && newVideo.url) {
+      // Generate YouTube thumbnail if it's a YouTube video
+      const videoId = getYouTubeId(newVideo.url)
+      const videoWithThumbnail = {
+        ...newVideo,
+        id: `video-${Date.now()}`, // Generate a unique ID
+        thumbnail: videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : undefined
+      }
+      
+      // Add to local state
+      const updatedProfile = {
+        ...profile,
+        videos: [...(profile.videos || []), videoWithThumbnail]
+      }
+      setProfile(updatedProfile)
+      
+      // Save to database
+      const token = localStorage.getItem("speakerToken")
+      if (token) {
+        try {
+          const response = await fetch('/api/speakers/profile', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(updatedProfile)
+          })
+          
+          if (response.ok) {
+            setShowSuccess(true)
+            setTimeout(() => setShowSuccess(false), 3000)
+          }
+        } catch (error) {
+          console.error('Error saving video:', error)
+          setError('Failed to save video. Please try again.')
+          setTimeout(() => setError(''), 5000)
+        }
+      }
+      
+      setNewVideo({ title: '', url: '', date: '' })
+      setShowVideoDialog(false)
+    }
   }
 
   const profileCompletionItems = profile ? [
-    { label: "Basic Information", completed: !!(profile.first_name && profile.last_name && profile.email) },
-    { label: "Professional Background", completed: !!(profile.title && profile.company) },
-    { label: "Expertise & Topics", completed: profile.speaking_topics?.length > 0 },
-    { label: "Speaking Videos", completed: profile.videos?.length > 0 },
-    { label: "Publications", completed: profile.publications?.length > 0 },
-    { label: "Testimonials", completed: profile.testimonials?.length > 0 },
-    { label: "Social Media Links", completed: !!(profile.linkedin_url || profile.twitter_url) },
-    { label: "Speaking Requirements", completed: !!(profile.speaking_fee_range && profile.travel_preferences) }
+    { label: "Basic Information", completed: !!(profile?.first_name && profile?.last_name && profile?.email) },
+    { label: "Professional Background", completed: !!(profile?.title && profile?.company) },
+    { label: "Expertise & Topics", completed: profile?.speaking_topics?.length > 0 },
+    { label: "Speaking Videos", completed: profile?.videos?.length > 0 },
+    { label: "Publications", completed: profile?.publications?.length > 0 },
+    { label: "Testimonials", completed: profile?.testimonials?.length > 0 },
+    { label: "Social Media Links", completed: !!(profile?.linkedin_url || profile?.twitter_url) },
+    { label: "Speaking Requirements", completed: !!(profile?.speaking_fee_range && profile?.travel_preferences) }
   ] : []
 
   const completedItems = profileCompletionItems.filter(item => item.completed).length
@@ -392,12 +562,20 @@ export default function SpeakerProfilePage() {
   if (!profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center max-w-md mx-auto p-6">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-gray-600">Failed to load profile</p>
-          <Button onClick={() => router.push('/speakers/dashboard')} className="mt-4">
-            Back to Dashboard
-          </Button>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Failed to load profile</h2>
+          {error && (
+            <p className="text-gray-600 mb-4">{error}</p>
+          )}
+          <div className="space-y-2">
+            <Button onClick={() => window.location.reload()} variant="outline" className="w-full">
+              Try Again
+            </Button>
+            <Button onClick={() => router.push('/speakers/dashboard')} className="w-full">
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -463,9 +641,22 @@ export default function SpeakerProfilePage() {
                 <Button
                   className="absolute bottom-0 right-0 h-8 w-8 rounded-full p-0 bg-[#1E68C6] hover:bg-blue-700"
                   onClick={() => handleImageUpload('headshot')}
+                  disabled={isUploadingPhoto}
                 >
-                  <Camera className="h-4 w-4" />
+                  {isUploadingPhoto ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
                 </Button>
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
               </div>
               
               <div className="ml-6 flex-1">
@@ -541,6 +732,16 @@ export default function SpeakerProfilePage() {
             <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">
               Your profile has been updated successfully!
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Error Alert */}
+        {error && (
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              {error}
             </AlertDescription>
           </Alert>
         )}
@@ -1247,7 +1448,11 @@ export default function SpeakerProfilePage() {
                       <CardTitle>Speaking Videos</CardTitle>
                       <CardDescription>Showcase your speaking engagements</CardDescription>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowVideoDialog(true)}
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Video
                     </Button>
@@ -1255,29 +1460,67 @@ export default function SpeakerProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {profile.videos.map((video, idx) => (
-                      <Card key={idx} className="overflow-hidden">
+                    {profile.videos?.length > 0 ? profile.videos.map((video, idx) => (
+                      <Card key={video.id || `video-${idx}`} className="overflow-hidden">
                         <div className="aspect-video bg-gray-100 relative">
-                          <Video className="h-12 w-12 text-gray-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                          {video.url && (video.url.includes('youtube.com') || video.url.includes('youtu.be')) ? (
+                            <iframe
+                              className="w-full h-full"
+                              src={`https://www.youtube.com/embed/${getYouTubeId(video.url)}`}
+                              title={video.title}
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          ) : video.url && video.url.includes('vimeo.com') ? (
+                            <iframe
+                              className="w-full h-full"
+                              src={`https://player.vimeo.com/video/${video.url.split('/').pop()}`}
+                              title={video.title}
+                              frameBorder="0"
+                              allow="autoplay; fullscreen; picture-in-picture"
+                              allowFullScreen
+                            />
+                          ) : (
+                            <Video className="h-12 w-12 text-gray-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                          )}
                         </div>
                         <CardContent className="pt-4">
                           <h4 className="font-medium mb-1">{video.title}</h4>
                           <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span>{video.date}</span>
-                            <span>{video.views} views</span>
+                            {video.date && <span>{video.date}</span>}
                           </div>
                           <div className="flex gap-2 mt-3">
-                            <Button variant="outline" size="sm" className="flex-1">
-                              <Eye className="h-4 w-4 mr-2" />
-                              View
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1"
+                              asChild
+                            >
+                              <a href={video.url} target="_blank" rel="noopener noreferrer">
+                                <Eye className="h-4 w-4 mr-2" />
+                                View
+                              </a>
                             </Button>
-                            <Button variant="ghost" size="sm">
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
+                            {editMode.media && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => removeItem('videos', idx)}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+                    )) : (
+                      <div className="col-span-2 text-center py-8 text-gray-500">
+                        <Video className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                        <p>No videos added yet</p>
+                        <p className="text-sm mt-1">Click "Add Video" to showcase your speaking engagements</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1512,6 +1755,59 @@ export default function SpeakerProfilePage() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Add Video Dialog */}
+      <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Speaking Video</DialogTitle>
+            <DialogDescription>
+              Add a YouTube or Vimeo link to showcase your speaking engagements
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="video-title">Video Title</Label>
+              <Input
+                id="video-title"
+                placeholder="e.g., AI Summit 2024 Keynote"
+                value={newVideo.title}
+                onChange={(e) => setNewVideo({ ...newVideo, title: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="video-url">Video URL</Label>
+              <Input
+                id="video-url"
+                placeholder="https://youtube.com/watch?v=..."
+                value={newVideo.url}
+                onChange={(e) => setNewVideo({ ...newVideo, url: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="video-date">Date (Optional)</Label>
+              <Input
+                id="video-date"
+                placeholder="e.g., March 2024"
+                value={newVideo.date}
+                onChange={(e) => setNewVideo({ ...newVideo, date: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowVideoDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAddVideo}
+              disabled={!newVideo.title || !newVideo.url}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-blue-800"
+            >
+              Add Video
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
