@@ -26,7 +26,8 @@ import {
   MessageSquare,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Edit
 } from "lucide-react"
 
 export default function SpeakerDashboard() {
@@ -41,8 +42,106 @@ export default function SpeakerDashboard() {
     ratingChange: 0.1,
     earnings: 125000,
     earningsChange: 15.7,
-    profileCompletion: 85
+    profileCompletion: 0
   })
+  const [profile, setProfile] = useState<any>(null)
+  const [selectedPeriod, setSelectedPeriod] = useState("30days")
+
+  // Generate engagement metrics data based on selected period
+  const getEngagementData = () => {
+    const now = new Date()
+    const data = []
+    
+    if (selectedPeriod === "30days") {
+      // Last 30 days - daily data
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(now)
+        date.setDate(date.getDate() - i)
+        data.push({
+          date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          views: Math.floor(30 + Math.random() * 50),
+          requests: Math.floor(1 + Math.random() * 5),
+          bookings: Math.floor(Math.random() * 3)
+        })
+      }
+    } else if (selectedPeriod === "3months") {
+      // Last 3 months - weekly data
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date(now)
+        date.setDate(date.getDate() - (i * 7))
+        data.push({
+          date: `Week ${12 - i}`,
+          views: Math.floor(200 + Math.random() * 150),
+          requests: Math.floor(5 + Math.random() * 15),
+          bookings: Math.floor(2 + Math.random() * 8)
+        })
+      }
+    } else {
+      // Last year - monthly data
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date(now)
+        date.setMonth(date.getMonth() - i)
+        data.push({
+          date: date.toLocaleDateString('en-US', { month: 'short' }),
+          views: Math.floor(800 + Math.random() * 400),
+          requests: Math.floor(20 + Math.random() * 30),
+          bookings: Math.floor(10 + Math.random() * 20)
+        })
+      }
+    }
+    
+    return data
+  }
+
+  const engagementData = getEngagementData()
+
+  // Fetch profile and calculate completion
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("speakerToken")
+        if (!token) return
+
+        const response = await fetch("/api/speakers/profile", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.profile) {
+            setProfile(data.profile)
+            
+            // Calculate profile completion based on actual data
+            const profileCompletionItems = [
+              !!(data.profile.first_name && data.profile.last_name && data.profile.email),
+              !!(data.profile.title && data.profile.company),
+              data.profile.speaking_topics?.length > 0,
+              data.profile.videos?.length > 0,
+              data.profile.publications?.length > 0,
+              data.profile.testimonials?.length > 0,
+              !!(data.profile.linkedin_url || data.profile.twitter_url),
+              !!(data.profile.speaking_fee_range && data.profile.travel_preferences)
+            ]
+            
+            const completedItems = profileCompletionItems.filter(item => item).length
+            const totalItems = profileCompletionItems.length
+            const completionPercentage = Math.round((completedItems / totalItems) * 100)
+            
+            setStats(prev => ({
+              ...prev,
+              profileCompletion: completionPercentage
+            }))
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error)
+      }
+    }
+
+    fetchProfile()
+  }, [])
 
   const upcomingEvents = [
     {
@@ -122,19 +221,6 @@ export default function SpeakerDashboard() {
             <div>
               <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
               <p className="text-white/80">Here's what's happening with your speaker profile today.</p>
-            </div>
-            <div className="hidden md:flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-white/60 text-sm">Current Ranking</p>
-                <p className="text-2xl font-bold flex items-center">
-                  #12 <TrendingUp className="h-5 w-5 ml-2" />
-                </p>
-              </div>
-              <div className="h-12 w-px bg-white/20"></div>
-              <div className="text-right">
-                <p className="text-white/60 text-sm">Speaker Score</p>
-                <p className="text-2xl font-bold">98/100</p>
-              </div>
             </div>
           </div>
         </div>
@@ -311,19 +397,93 @@ export default function SpeakerDashboard() {
             <Card className="border-0 shadow-md">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">Performance Overview</CardTitle>
-                  <select className="text-sm border rounded-lg px-3 py-1">
-                    <option>Last 30 days</option>
-                    <option>Last 3 months</option>
-                    <option>Last year</option>
+                  <CardTitle className="text-lg font-semibold">Engagement Metrics</CardTitle>
+                  <select 
+                    className="text-sm border rounded-lg px-3 py-1"
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value)}
+                  >
+                    <option value="30days">Last 30 days</option>
+                    <option value="3months">Last 3 months</option>
+                    <option value="year">Last year</option>
                   </select>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                  <div className="text-center">
-                    <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-600">Performance chart will be displayed here</p>
+                <div className="space-y-4">
+                  {/* Metric Labels */}
+                  <div className="flex items-center justify-around text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <span className="text-gray-600">Profile Views</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span className="text-gray-600">Requests</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                      <span className="text-gray-600">Bookings</span>
+                    </div>
+                  </div>
+                  
+                  {/* Simple Bar Chart */}
+                  <div className="h-48 relative">
+                    <div className="absolute inset-0 flex items-end justify-between gap-1 px-2">
+                      {engagementData.slice(-10).map((item, index) => {
+                        const maxViews = Math.max(...engagementData.map(d => d.views))
+                        const viewHeight = (item.views / maxViews) * 100
+                        const requestHeight = (item.requests / maxViews) * 100 * 3 // Scale up for visibility
+                        const bookingHeight = (item.bookings / maxViews) * 100 * 5 // Scale up for visibility
+                        
+                        return (
+                          <div key={index} className="flex-1 flex flex-col items-center gap-0.5">
+                            <div className="w-full flex items-end gap-0.5" style={{ height: '160px' }}>
+                              <div 
+                                className="flex-1 bg-blue-500 rounded-t opacity-70 hover:opacity-100 transition-opacity"
+                                style={{ height: `${viewHeight}%` }}
+                                title={`Views: ${item.views}`}
+                              />
+                              <div 
+                                className="flex-1 bg-green-500 rounded-t opacity-70 hover:opacity-100 transition-opacity"
+                                style={{ height: `${requestHeight}%` }}
+                                title={`Requests: ${item.requests}`}
+                              />
+                              <div 
+                                className="flex-1 bg-purple-500 rounded-t opacity-70 hover:opacity-100 transition-opacity"
+                                style={{ height: `${bookingHeight}%` }}
+                                title={`Bookings: ${item.bookings}`}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-500 mt-1" style={{ fontSize: '10px' }}>
+                              {index % 2 === 0 ? item.date.split(' ')[1] || item.date : ''}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  
+                  {/* Summary Stats */}
+                  <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-blue-600">
+                        {engagementData.reduce((sum, item) => sum + item.views, 0).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-gray-600">Total Views</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-green-600">
+                        {engagementData.reduce((sum, item) => sum + item.requests, 0)}
+                      </p>
+                      <p className="text-xs text-gray-600">Total Requests</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-purple-600">
+                        {engagementData.reduce((sum, item) => sum + item.bookings, 0)}
+                      </p>
+                      <p className="text-xs text-gray-600">Confirmed Bookings</p>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -347,29 +507,56 @@ export default function SpeakerDashboard() {
                     <Progress value={stats.profileCompletion} className="h-2" />
                   </div>
                   <div className="space-y-2">
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      <span className="text-sm text-gray-600">Basic Information</span>
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      <span className="text-sm text-gray-600">Profile Photo</span>
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      <span className="text-sm text-gray-600">Speaking Topics</span>
-                    </div>
-                    <div className="flex items-center">
-                      <AlertCircle className="h-4 w-4 text-yellow-500 mr-2" />
-                      <span className="text-sm text-gray-600">Video Samples</span>
-                    </div>
-                    <div className="flex items-center">
-                      <XCircle className="h-4 w-4 text-gray-300 mr-2" />
-                      <span className="text-sm text-gray-600">Testimonials</span>
-                    </div>
+                    {profile && (
+                      <>
+                        <div className="flex items-center">
+                          {profile.first_name && profile.last_name && profile.email ? (
+                            <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-gray-300 mr-2" />
+                          )}
+                          <span className="text-sm text-gray-600">Basic Information</span>
+                        </div>
+                        <div className="flex items-center">
+                          {profile.headshot_url ? (
+                            <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-yellow-500 mr-2" />
+                          )}
+                          <span className="text-sm text-gray-600">Profile Photo</span>
+                        </div>
+                        <div className="flex items-center">
+                          {profile.speaking_topics?.length > 0 ? (
+                            <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-gray-300 mr-2" />
+                          )}
+                          <span className="text-sm text-gray-600">Speaking Topics</span>
+                        </div>
+                        <Link href="/speakers/dashboard/profile" className="flex items-center hover:bg-gray-50 p-1 rounded transition-colors">
+                          {profile.videos?.length > 0 ? (
+                            <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-yellow-500 mr-2" />
+                          )}
+                          <span className="text-sm text-gray-600 hover:text-gray-900">Video Samples</span>
+                        </Link>
+                        <Link href="/speakers/dashboard/profile" className="flex items-center hover:bg-gray-50 p-1 rounded transition-colors">
+                          {profile.testimonials?.length > 0 ? (
+                            <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-gray-300 mr-2" />
+                          )}
+                          <span className="text-sm text-gray-600 hover:text-gray-900">Testimonials</span>
+                        </Link>
+                      </>
+                    )}
                   </div>
                   <Link href="/speakers/dashboard/profile">
-                    <Button className="w-full">Complete Profile</Button>
+                    <Button className="w-full bg-gradient-to-r from-[#1E68C6] to-blue-600 hover:from-blue-700 hover:to-blue-800">
+                      <Edit className="h-4 w-4 mr-2" />
+                      Complete Your Profile
+                    </Button>
                   </Link>
                 </div>
               </CardContent>

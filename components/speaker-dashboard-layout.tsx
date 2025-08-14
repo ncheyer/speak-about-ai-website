@@ -37,7 +37,6 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [speakerName, setSpeakerName] = useState("")
   const [speakerEmail, setSpeakerEmail] = useState("")
-  const [notifications, setNotifications] = useState(3)
 
   useEffect(() => {
     const token = localStorage.getItem("speakerToken")
@@ -152,20 +151,7 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
                 </div>
               </div>
 
-              {/* Notifications */}
-              <button className="relative p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-lg">
-                <Bell className="h-5 w-5" />
-                {notifications > 0 && (
-                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-                )}
-              </button>
-
-              {/* Messages */}
-              <button className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-lg">
-                <MessageSquare className="h-5 w-5" />
-              </button>
-
-              {/* Profile dropdown */}
+{/* Profile dropdown */}
               <div className="relative">
                 <button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100">
                   <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#1E68C6] to-blue-600 flex items-center justify-center">

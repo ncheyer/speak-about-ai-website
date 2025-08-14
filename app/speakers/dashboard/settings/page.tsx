@@ -44,8 +44,6 @@ export default function AccountSettingsPage() {
     emailBookingConfirmations: true,
     emailReminders: true,
     emailNewsletter: false,
-    smsBookingRequests: false,
-    smsReminders: false,
     pushBookingRequests: true,
     pushReminders: true
   })
@@ -439,37 +437,7 @@ export default function AccountSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <CardTitle>SMS Notifications</CardTitle>
-                <CardDescription>Get text messages for important updates</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Booking Requests</Label>
-                    <p className="text-sm text-gray-500">Receive SMS for urgent booking requests</p>
-                  </div>
-                  <Switch
-                    checked={notifications.smsBookingRequests}
-                    onCheckedChange={(checked) => setNotifications({...notifications, smsBookingRequests: checked})}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Event Reminders</Label>
-                    <p className="text-sm text-gray-500">Get SMS reminders 24 hours before events</p>
-                  </div>
-                  <Switch
-                    checked={notifications.smsReminders}
-                    onCheckedChange={(checked) => setNotifications({...notifications, smsReminders: checked})}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-md">
+<Card className="border-0 shadow-md">
               <CardHeader>
                 <CardTitle>Push Notifications</CardTitle>
                 <CardDescription>Browser notifications for real-time updates</CardDescription>
