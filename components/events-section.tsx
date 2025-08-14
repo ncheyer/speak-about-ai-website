@@ -1,23 +1,46 @@
 "use client"
 import { Card, CardContent } from "@/components/ui/card"
-import { Calendar, MapPin } from "lucide-react"
-import { useEffect } from "react"
+import { Calendar, MapPin, Loader2 } from "lucide-react"
+import { useState } from "react"
 import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 export default function EventsSection() {
-  useEffect(() => {
-    const script = document.createElement("script")
-    script.src = "https://webforms.pipedrive.com/f/loader"
-    script.async = true
-    document.body.appendChild(script)
+  const [email, setEmail] = useState("")
+  const [name, setName] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
-    return () => {
-      const existingScript = document.querySelector('script[src="https://webforms.pipedrive.com/f/loader"]')
-      if (existingScript) {
-        document.body.removeChild(existingScript)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/newsletter/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, name }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setMessage({ type: 'success', text: data.message })
+        setEmail("")
+        setName("")
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Something went wrong. Please try again.' })
       }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to subscribe. Please try again later.' })
+    } finally {
+      setIsLoading(false)
     }
-  }, [])
+  }
 
   return (
     <section className="py-20 bg-gray-50">
@@ -67,13 +90,58 @@ export default function EventsSection() {
                     <Calendar className="w-6 h-6 text-[#1E68C6] mr-3" />
                     <h3 className="text-2xl font-bold text-gray-900 font-neue-haas">Stay Updated</h3>
                   </div>
-                  <p className="text-gray-600 mb-0 font-montserrat">
+                  <p className="text-gray-600 mb-6 font-montserrat">
                     Sign up with your email address to stay up to date on our upcoming events.
                   </p>
-                  <div
-                    className="pipedriveWebForms"
-                    data-pd-webforms="https://webforms.pipedrive.com/f/5VC4HN8hdvjKvpaA69lAC7vLQ7nBVviY7oXImlS3k7liMwClEdDrGDXdBOtBz00QhB"
-                  ></div>
+                  
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <Input
+                        type="text"
+                        placeholder="Your Name (optional)"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E68C6] focus:border-transparent"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        type="email"
+                        placeholder="Your Email Address"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E68C6] focus:border-transparent"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full bg-[#1E68C6] hover:bg-[#1557A7] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Subscribing...
+                        </>
+                      ) : (
+                        'Subscribe to Newsletter'
+                      )}
+                    </Button>
+                  </form>
+
+                  {message && (
+                    <div className={`mt-4 p-3 rounded-lg text-sm ${
+                      message.type === 'success' 
+                        ? 'bg-green-50 text-green-800 border border-green-200' 
+                        : 'bg-red-50 text-red-800 border border-red-200'
+                    }`}>
+                      {message.text}
+                    </div>
+                  )}
+                  
                   <p className="text-xs text-gray-500 mt-4 text-center font-montserrat">We respect your privacy.</p>
                 </CardContent>
               </Card>
