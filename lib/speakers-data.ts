@@ -431,6 +431,27 @@ async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
               if (typeof speaker.programs === 'string') {
                 let programsStr = speaker.programs.trim();
                 
+                // Replace smart quotes with regular quotes for consistent parsing
+                programsStr = programsStr
+                  .replace(/[\u201C\u201D]/g, '"')  // Replace smart double quotes
+                  .replace(/[\u2018\u2019]/g, "'");  // Replace smart single quotes
+                
+                // Try to parse as JSON array first (e.g., ["item1", "item2"])
+                if (programsStr.startsWith('[') && programsStr.endsWith(']')) {
+                  try {
+                    const parsed = JSON.parse(programsStr);
+                    if (Array.isArray(parsed)) {
+                      // If it's an array with one comma-separated string, split it
+                      if (parsed.length === 1 && typeof parsed[0] === 'string' && parsed[0].includes(',')) {
+                        return parsed[0].split(',').map(p => p.trim()).filter(p => p);
+                      }
+                      return parsed;
+                    }
+                  } catch (e) {
+                    // Fall through to other parsing methods
+                  }
+                }
+                
                 // Handle PostgreSQL array format: {"item1","item2"} or {item1,item2}
                 if (programsStr.startsWith('{') && programsStr.endsWith('}')) {
                   // Remove the outer braces
