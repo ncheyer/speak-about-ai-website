@@ -23,15 +23,16 @@ export async function GET(request: NextRequest) {
         technical_requirements, dietary_restrictions,
         active, email_verified, featured, location, programs,
         listed, industries, ranking, image_position, image_offset,
-        videos, testimonials, publications, created_at, updated_at
+        videos, testimonials, created_at, updated_at
       FROM speakers
       WHERE active = true
       ORDER BY ranking DESC NULLS LAST, name ASC
     `
 
-    return NextResponse.json({
-      success: true,
-      speakers: speakers.map(speaker => ({
+    // Parse JSON fields safely
+    const parsedSpeakers = speakers.map(speaker => {
+      try {
+        return {
         id: speaker.id,
         slug: speaker.name?.toLowerCase().replace(/\s+/g, '-') || `speaker-${speaker.id}`,
         name: speaker.name,
@@ -54,10 +55,10 @@ export async function GET(request: NextRequest) {
         instagramUrl: speaker.social_media?.instagram_url || '',
         youtube: speaker.social_media?.youtube_url || '',
         youtubeUrl: speaker.social_media?.youtube_url || '',
-        topics: speaker.topics || [],
-        programs: speaker.programs || [],
-        industries: speaker.industries || [],
-        expertise: speaker.topics || [], // Using topics as expertise for compatibility
+        topics: typeof speaker.topics === 'string' ? JSON.parse(speaker.topics) : (speaker.topics || []),
+        programs: typeof speaker.programs === 'string' ? JSON.parse(speaker.programs) : (speaker.programs || []),
+        industries: typeof speaker.industries === 'string' ? JSON.parse(speaker.industries) : (speaker.industries || []),
+        expertise: typeof speaker.topics === 'string' ? JSON.parse(speaker.topics) : (speaker.topics || []), // Using topics as expertise for compatibility
         fee: speaker.speaking_fee_range || 'Please Inquire',
         feeRange: speaker.speaking_fee_range,
         speakingFeeRange: speaker.speaking_fee_range,
@@ -68,14 +69,32 @@ export async function GET(request: NextRequest) {
         featured: speaker.featured || false,
         listed: speaker.listed !== false,
         ranking: speaker.ranking || 0,
-        videos: speaker.videos || [],
-        testimonials: speaker.testimonials || [],
-        publications: speaker.publications || [],
+        videos: typeof speaker.videos === 'string' ? JSON.parse(speaker.videos) : (speaker.videos || []),
+        testimonials: typeof speaker.testimonials === 'string' ? JSON.parse(speaker.testimonials) : (speaker.testimonials || []),
         active: speaker.active,
         emailVerified: speaker.email_verified,
         createdAt: speaker.created_at,
         updatedAt: speaker.updated_at
-      }))
+        }
+      } catch (parseError) {
+        console.error(`Error parsing speaker ${speaker.id}:`, parseError)
+        // Return minimal speaker data if parsing fails
+        return {
+          id: speaker.id,
+          slug: speaker.name?.toLowerCase().replace(/\s+/g, '-') || `speaker-${speaker.id}`,
+          name: speaker.name,
+          programs: [],
+          industries: [],
+          topics: [],
+          videos: [],
+          testimonials: []
+        }
+      }
+    })
+    
+    return NextResponse.json({
+      success: true,
+      speakers: parsedSpeakers
     })
 
   } catch (error) {

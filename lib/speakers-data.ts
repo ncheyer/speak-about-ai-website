@@ -411,7 +411,21 @@ async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
         if (dbSpeakers && dbSpeakers.length > 0) {
           console.log(`Fetched ${dbSpeakers.length} speakers from database directly`)
           // Transform database speakers to match our Speaker interface
-          const transformedSpeakers = dbSpeakers.map((speaker: any) => ({
+          const transformedSpeakers = dbSpeakers.map((speaker: any) => {
+            // Helper function to safely parse JSON fields
+            const parseJsonField = (field: any) => {
+              if (Array.isArray(field)) return field
+              if (typeof field === 'string') {
+                try {
+                  return JSON.parse(field)
+                } catch (e) {
+                  return []
+                }
+              }
+              return []
+            }
+            
+            return {
             slug: speaker.slug || speaker.name?.toLowerCase().replace(/\s+/g, '-') || `speaker-${speaker.id}`,
             name: speaker.name || '',
             title: speaker.one_liner || '',
@@ -419,8 +433,8 @@ async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
             image: speaker.headshot_url || '',
             imagePosition: speaker.image_position || 'center',
             imageOffsetY: speaker.image_offset || '0%',
-            programs: Array.isArray(speaker.programs) ? speaker.programs : [],
-            industries: Array.isArray(speaker.industries) ? speaker.industries : [],
+            programs: parseJsonField(speaker.programs),
+            industries: parseJsonField(speaker.industries),
             fee: speaker.speaking_fee_range || 'Please Inquire',
             feeRange: speaker.speaking_fee_range || '',
             location: speaker.location || '',
@@ -428,13 +442,14 @@ async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
             twitter: speaker.social_media?.twitter_url || '',
             website: speaker.website || '',
             featured: speaker.featured || false,
-            videos: Array.isArray(speaker.videos) ? speaker.videos : [],
-            testimonials: Array.isArray(speaker.testimonials) ? speaker.testimonials : [],
-            topics: Array.isArray(speaker.topics) ? speaker.topics : [],
+            videos: parseJsonField(speaker.videos),
+            testimonials: parseJsonField(speaker.testimonials),
+            topics: parseJsonField(speaker.topics),
             listed: speaker.listed !== false,
-            expertise: Array.isArray(speaker.topics) ? speaker.topics : [],
+            expertise: parseJsonField(speaker.expertise || speaker.topics),
             ranking: speaker.ranking || 0
-          }))
+          }
+          })
           return transformedSpeakers
         }
       } catch (dbError) {
