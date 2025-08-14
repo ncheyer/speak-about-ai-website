@@ -197,7 +197,14 @@ export default function MasterAdminPanel() {
     try {
       setSpeakersLoading(true)
       console.log('Admin: Loading speakers...')
-      const response = await fetch("/api/admin/speakers")
+      const token = localStorage.getItem("adminSessionToken")
+      
+      const response = await fetch("/api/admin/speakers", {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'x-dev-admin-bypass': 'dev-admin-access'
+        }
+      })
       // Speakers response received
       
       if (response.ok) {

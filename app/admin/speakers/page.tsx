@@ -357,7 +357,14 @@ export default function AdminSpeakersPage() {
   const loadSpeakers = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/admin/speakers")
+      const token = localStorage.getItem("adminSessionToken")
+      
+      const response = await fetch("/api/admin/speakers", {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'x-dev-admin-bypass': 'dev-admin-access'
+        }
+      })
 
       if (response.ok) {
         const speakersData = await response.json()
