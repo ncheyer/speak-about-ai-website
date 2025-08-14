@@ -41,34 +41,30 @@ interface AnalyticsData {
 export default function SpeakerAnalyticsPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState("30d")
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
-    profileViews: 247,
-    bookingClicks: 18,
-    conversionRate: 7.3,
+    profileViews: 0,
+    bookingClicks: 0,
+    conversionRate: 0,
     viewsByDay: [],
-    topReferrers: [
-      { source: "Google Search", count: 89 },
-      { source: "LinkedIn", count: 67 },
-      { source: "Direct", count: 45 },
-      { source: "Twitter", count: 23 },
-      { source: "Email Campaign", count: 23 }
-    ],
-    viewsByLocation: [
-      { location: "United States", count: 145 },
-      { location: "United Kingdom", count: 42 },
-      { location: "Canada", count: 28 },
-      { location: "Australia", count: 18 },
-      { location: "Germany", count: 14 }
-    ],
+    topReferrers: [],
+    viewsByLocation: [],
     engagementMetrics: {
-      avgTimeOnProfile: "2:34",
-      bounceRate: 42.5,
-      repeatVisitors: 31
+      avgTimeOnProfile: "0:00",
+      bounceRate: 0,
+      repeatVisitors: 0
     }
   })
 
   useEffect(() => {
+    fetchAnalytics()
+  }, [timeRange])
+
+  const fetchAnalytics = async () => {
+    setLoading(true)
+    setError(null)
+    
     // Check authentication
     const token = localStorage.getItem("speakerToken")
     if (!token) {
@@ -76,12 +72,68 @@ export default function SpeakerAnalyticsPage() {
       return
     }
 
-    // Generate mock data for the chart
-    generateChartData()
-    setLoading(false)
-  }, [timeRange, router])
+    try {
+      const response = await fetch(`/api/speakers/me/analytics?range=${timeRange}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
 
-  const generateChartData = () => {
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics')
+      }
+
+      const data = await response.json()
+      
+      if (data.success && data.analytics) {
+        setAnalyticsData(data.analytics)
+      } else {
+        // Use fallback data if API fails
+        setAnalyticsData({
+          profileViews: 0,
+          bookingClicks: 0,
+          conversionRate: 0,
+          viewsByDay: generateFallbackChartData(),
+          topReferrers: [
+            { source: "No data available", count: 0 }
+          ],
+          viewsByLocation: [
+            { location: "No data available", count: 0 }
+          ],
+          engagementMetrics: {
+            avgTimeOnProfile: "0:00",
+            bounceRate: 0,
+            repeatVisitors: 0
+          }
+        })
+      }
+    } catch (err) {
+      console.error('Error fetching analytics:', err)
+      setError('Unable to load analytics data')
+      // Set fallback data
+      setAnalyticsData({
+        profileViews: 0,
+        bookingClicks: 0,
+        conversionRate: 0,
+        viewsByDay: generateFallbackChartData(),
+        topReferrers: [
+          { source: "Data unavailable", count: 0 }
+        ],
+        viewsByLocation: [
+          { location: "Data unavailable", count: 0 }
+        ],
+        engagementMetrics: {
+          avgTimeOnProfile: "0:00",
+          bounceRate: 0,
+          repeatVisitors: 0
+        }
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const generateFallbackChartData = () => {
     const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90
     const data = []
     const today = new Date()
@@ -91,14 +143,11 @@ export default function SpeakerAnalyticsPage() {
       date.setDate(date.getDate() - i)
       data.push({
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        views: 5 + Math.floor((i * 3) % 15) // Deterministic based on index
+        views: 0
       })
     }
     
-    setAnalyticsData(prev => ({
-      ...prev,
-      viewsByDay: data
-    }))
+    return data
   }
 
   if (loading) {
@@ -146,6 +195,13 @@ export default function SpeakerAnalyticsPage() {
           </div>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+        )}
+
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
@@ -158,7 +214,7 @@ export default function SpeakerAnalyticsPage() {
             <CardContent>
               <div className="text-2xl font-bold">{analyticsData.profileViews}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                <span className="text-green-600">+12%</span> from last period
+                Real-time from Umami
               </p>
             </CardContent>
           </Card>
