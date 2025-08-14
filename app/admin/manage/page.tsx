@@ -198,15 +198,11 @@ export default function MasterAdminPanel() {
       setSpeakersLoading(true)
       console.log('Admin: Loading speakers...')
       const response = await fetch("/api/admin/speakers")
-      console.log('Admin: Speakers response status:', response.status)
+      // Speakers response received
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Admin: Speakers data received:', { 
-          success: data.success, 
-          speakerCount: data.speakers?.length || 0,
-          firstSpeaker: data.speakers?.[0] || null
-        })
+        // Speakers data processed
         setSpeakers(data.speakers || [])
       } else {
         try {
@@ -254,8 +250,7 @@ export default function MasterAdminPanel() {
       if (response.ok) {
         const data = await response.json()
         const dealsArray = Array.isArray(data) ? data : data.deals || []
-        console.log('Deals loaded:', dealsArray.length, 'deals')
-        console.log('Sample deal:', dealsArray[0])
+        // Deals loaded successfully
         setDeals(dealsArray)
       } else {
         const error = await response.json()
@@ -291,7 +286,7 @@ export default function MasterAdminPanel() {
         'x-dev-admin-bypass': 'dev-admin-access'
       }
       
-      console.log('Fetching projects with headers:', headers)
+      // Fetching projects with authentication
       
       const response = await fetch("/api/projects", { headers })
       
@@ -495,12 +490,7 @@ export default function MasterAdminPanel() {
     pipelineValue: deals.filter(d => !["won", "lost"].includes(d.status)).reduce((sum, deal) => sum + (Number(deal.deal_value) || 0), 0)
   }
   
-  // Log pipeline value for debugging
-  console.log('Pipeline value calculation:', {
-    totalDeals: deals.length,
-    pipelineDeals: deals.filter(d => !["won", "lost"].includes(d.status)).length,
-    pipelineValue: dealStats.pipelineValue
-  })
+  // Pipeline value calculated
 
   const projectStats = {
     total: projects.length,

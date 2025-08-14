@@ -21,26 +21,21 @@ export async function GET(request: NextRequest) {
   let sql: ReturnType<typeof getSqlClient> = null
   
   try {
-    // Temporarily bypass authentication for debugging
-    console.log('Admin speakers: BYPASSING authentication for debugging...')
-    
-    // Uncomment this when ready to re-enable auth:
-    // const authError = requireAdminAuth(request)
-    // if (authError) {
-    //   console.log('Admin speakers: Authentication failed')
-    //   return authError
-    // }
-    console.log('Admin speakers: Authentication bypassed')
+    // Authentication check
+    const authError = requireAdminAuth(request)
+    if (authError) {
+      // Authentication failed
+      return authError
+    }
     
     // Get SQL client
     sql = getSqlClient()
     
-    console.log('Admin speakers: DATABASE_URL available:', !!process.env.DATABASE_URL)
-    console.log('Admin speakers: sql client initialized:', !!sql)
+    // Database connection checked
     
     // Check if database is available
     if (!sql) {
-      console.log('Admin speakers: Database not available, using fallback data')
+      // Database not available, using fallback data
       
       // Use the static speaker data as fallback
       const fallbackSpeakers = await getAllSpeakers()
