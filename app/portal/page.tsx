@@ -153,7 +153,7 @@ export default function EventHubPortal() {
               size="lg" 
               variant="outline"
               className="bg-white/10 text-white border-white/30 hover:bg-white/20"
-              onClick={() => router.push("/speakers/apply")}
+              onClick={() => router.push("/apply")}
             >
               <UserPlus className="mr-2 h-5 w-5" />
               Become a Speaker
