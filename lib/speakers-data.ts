@@ -427,16 +427,50 @@ async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
               // If it's already an array, use it
               if (Array.isArray(speaker.programs)) return speaker.programs;
               
-              // If it's a string that looks like PostgreSQL array format
+              // If it's a string
               if (typeof speaker.programs === 'string') {
-                // Remove PostgreSQL array syntax if present
                 let programsStr = speaker.programs.trim();
+                
+                // Handle PostgreSQL array format: {"item1","item2"} or {item1,item2}
                 if (programsStr.startsWith('{') && programsStr.endsWith('}')) {
+                  // Remove the outer braces
                   programsStr = programsStr.slice(1, -1);
-                  // Split by comma but respect quoted strings
-                  return programsStr.split(/","|","/).map(p => p.replace(/^"|"$/g, '').trim());
+                  
+                  // Split by comma, handling quoted strings
+                  const programs = [];
+                  let current = '';
+                  let inQuotes = false;
+                  
+                  for (let i = 0; i < programsStr.length; i++) {
+                    const char = programsStr[i];
+                    
+                    if (char === '"' && (i === 0 || programsStr[i-1] !== '\\')) {
+                      inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                      // End of an item
+                      current = current.trim();
+                      // Remove surrounding quotes if present
+                      if (current.startsWith('"') && current.endsWith('"')) {
+                        current = current.slice(1, -1);
+                      }
+                      if (current) programs.push(current);
+                      current = '';
+                    } else {
+                      current += char;
+                    }
+                  }
+                  
+                  // Don't forget the last item
+                  current = current.trim();
+                  if (current.startsWith('"') && current.endsWith('"')) {
+                    current = current.slice(1, -1);
+                  }
+                  if (current) programs.push(current);
+                  
+                  return programs;
                 }
-                // Otherwise split by comma
+                
+                // Otherwise treat as comma-separated
                 return programsStr.split(',').map(p => p.trim()).filter(p => p);
               }
               
