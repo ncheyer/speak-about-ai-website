@@ -39,7 +39,6 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
     fee = "Inquire for Fee",
     feeRange,
     location,
-    topics = [],
   } = speaker
 
   const placeholderImg = `/placeholder.svg?width=400&height=300&text=${encodeURIComponent(name)}`
@@ -230,7 +229,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
               )}
             </div>
           )}
-          {topics && topics.length > 0 && (
+          {safePrograms && safePrograms.length > 0 && (
             <div className="mb-4">
               <button
                 onClick={() => setShowTopicsDetail(!showTopicsDetail)}
@@ -238,20 +237,17 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
               >
                 <span className="flex items-center gap-1">
                   <Lightbulb className="w-3.5 h-3.5" />
-                  Speaking Topics ({topics.length})
+                  Keynote Topics ({safePrograms.length})
                 </span>
                 {showTopicsDetail ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
               </button>
               {showTopicsDetail && (
                 <div className="bg-sky-50/70 p-3 rounded-lg mt-1 border border-sky-200 shadow-sm">
-                  <div className="flex flex-wrap gap-1.5">
-                    {topics.map((topic, index) => (
-                      <Badge
-                        key={`${slug}-topic-dropdown-${index}`}
-                        className="text-xs font-montserrat text-white bg-[#1E68C6] px-2 py-0.5 rounded-md"
-                      >
-                        {topic}
-                      </Badge>
+                  <div className="space-y-1.5">
+                    {safePrograms.map((program, index) => (
+                      <div key={`${slug}-program-dropdown-${index}`} className="text-sm text-gray-700 font-montserrat">
+                        • {program}
+                      </div>
                     ))}
                   </div>
                 </div>
