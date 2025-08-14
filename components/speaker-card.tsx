@@ -166,27 +166,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
             </h3>
             <p className="text-xs sm:text-sm text-gray-600 font-medium font-montserrat leading-snug">{title}</p>
           </Link>
-          <div className="mb-3.5"></div>
-          {safePrograms.length > 0 && (
-            <div className="mb-4">
-              <h4 className="text-xs font-semibold text-gray-600 mb-1.5 font-montserrat">Keynote Options:</h4>
-              <div className="flex flex-wrap gap-1.5">
-                {safePrograms.slice(0, maxTopicsToShow).map((topic, index) => (
-                  <Badge
-                    key={`${slug}-topic-${index}`}
-                    className="text-xs font-montserrat text-white bg-[#1E68C6] px-2 py-0.5 rounded-md"
-                  >
-                    {topic}
-                  </Badge>
-                ))}
-                {safePrograms.length > maxTopicsToShow && (
-                  <Badge className="text-xs font-montserrat text-white bg-[#1E68C6] px-2 py-0.5 rounded-md">
-                    +{safePrograms.length - maxTopicsToShow} more
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
+          <div className="mb-4"></div>
           {fee && (
             <div className="mb-3">
               <button
