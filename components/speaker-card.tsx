@@ -161,8 +161,9 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 font-neue-haas leading-tight mb-1 group-hover:text-[#1E68C6] transition-colors duration-300">
               {name}
             </h3>
+            <p className="text-xs sm:text-sm text-gray-600 font-medium font-montserrat leading-snug">{title}</p>
           </Link>
-          <p className="text-xs sm:text-sm text-[#1E68C6] font-semibold font-montserrat mb-3.5 leading-snug">{title}</p>
+          <div className="mb-3.5"></div>
           {safePrograms.length > 0 && (
             <div className="mb-4">
               <h4 className="text-xs font-semibold text-gray-600 mb-1.5 font-montserrat">Keynote Options:</h4>
