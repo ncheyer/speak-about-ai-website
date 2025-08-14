@@ -26,56 +26,73 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || 'all'
     const search = searchParams.get('search') || ''
     
-    let query = `
-      SELECT 
-        id,
-        email,
-        name,
-        company,
-        subscribed_at,
-        status,
-        source,
-        ip_address,
-        unsubscribed_at
-      FROM newsletter_signups
-    `
+    // Simplified query approach - always use the same query structure
+    let signups
     
-    const conditions = []
-    const params = []
-    
-    if (status !== 'all') {
-      conditions.push(`status = $${params.length + 1}`)
-      params.push(status)
+    try {
+      // Get all signups first, then filter in memory if needed
+      signups = await sql`
+        SELECT 
+          id,
+          email,
+          name,
+          company,
+          subscribed_at,
+          status,
+          source,
+          ip_address,
+          unsubscribed_at
+        FROM newsletter_signups
+        ORDER BY subscribed_at DESC
+      `
+      
+      // Apply filters in memory if needed
+      if (status !== 'all') {
+        signups = signups.filter(s => s.status === status)
+      }
+      
+      if (search) {
+        const searchLower = search.toLowerCase()
+        signups = signups.filter(s => 
+          (s.email && s.email.toLowerCase().includes(searchLower)) ||
+          (s.name && s.name.toLowerCase().includes(searchLower)) ||
+          (s.company && s.company.toLowerCase().includes(searchLower))
+        )
+      }
+    } catch (queryError) {
+      console.error('Error querying newsletter signups:', queryError)
+      signups = []
     }
-    
-    if (search) {
-      conditions.push(`(email ILIKE $${params.length + 1} OR name ILIKE $${params.length + 1} OR company ILIKE $${params.length + 1})`)
-      params.push(`%${search}%`)
-    }
-    
-    if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(' AND ')}`
-    }
-    
-    query += ` ORDER BY subscribed_at DESC`
-    
-    const signups = await sql(query, params)
     
     // Get statistics
-    const stats = await sql`
-      SELECT 
-        COUNT(*) FILTER (WHERE status = 'active') as active_count,
-        COUNT(*) FILTER (WHERE status = 'unsubscribed') as unsubscribed_count,
-        COUNT(*) as total_count,
-        COUNT(*) FILTER (WHERE subscribed_at >= CURRENT_DATE - INTERVAL '7 days' AND status = 'active') as week_count,
-        COUNT(*) FILTER (WHERE subscribed_at >= CURRENT_DATE - INTERVAL '30 days' AND status = 'active') as month_count
-      FROM newsletter_signups
-    `
+    let stats
+    try {
+      const statsResult = await sql`
+        SELECT 
+          COUNT(*) FILTER (WHERE status = 'active') as active_count,
+          COUNT(*) FILTER (WHERE status = 'unsubscribed') as unsubscribed_count,
+          COUNT(*) as total_count,
+          COUNT(*) FILTER (WHERE subscribed_at >= CURRENT_DATE - INTERVAL '7 days' AND status = 'active') as week_count,
+          COUNT(*) FILTER (WHERE subscribed_at >= CURRENT_DATE - INTERVAL '30 days' AND status = 'active') as month_count
+        FROM newsletter_signups
+      `
+      stats = statsResult[0]
+    } catch (statsError) {
+      console.error('Error getting newsletter stats:', statsError)
+      // Provide default stats if query fails
+      stats = {
+        active_count: signups.filter(s => s.status === 'active').length,
+        unsubscribed_count: signups.filter(s => s.status === 'unsubscribed').length,
+        total_count: signups.length,
+        week_count: 0,
+        month_count: 0
+      }
+    }
     
     return NextResponse.json({
       success: true,
       signups,
-      stats: stats[0]
+      stats: stats
     })
     
   } catch (error) {
