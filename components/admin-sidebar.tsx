@@ -102,6 +102,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       bgColor: "bg-indigo-50"
     },
     {
+      title: "Newsletter",
+      href: "/admin/newsletter",
+      icon: Mail,
+      description: "Subscriber Management",
+      color: "text-pink-600",
+      bgColor: "bg-pink-50"
+    },
+    {
       title: "Client Portal",
       href: "/admin/clients",
       icon: Users,
