@@ -35,7 +35,6 @@ import {
   Calendar,
   Video,
   BarChart3,
-  Eye,
   MousePointer,
   TrendingUp
 } from "lucide-react"
