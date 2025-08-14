@@ -253,7 +253,10 @@ export default function MasterAdminPanel() {
       
       if (response.ok) {
         const data = await response.json()
-        setDeals(Array.isArray(data) ? data : data.deals || [])
+        const dealsArray = Array.isArray(data) ? data : data.deals || []
+        console.log('Deals loaded:', dealsArray.length, 'deals')
+        console.log('Sample deal:', dealsArray[0])
+        setDeals(dealsArray)
       } else {
         const error = await response.json()
         console.error("Deals API error:", error)
@@ -487,10 +490,17 @@ export default function MasterAdminPanel() {
 
   const dealStats = {
     total: deals.length,
-    totalValue: deals.reduce((sum, deal) => sum + deal.deal_value, 0),
+    totalValue: deals.reduce((sum, deal) => sum + (Number(deal.deal_value) || 0), 0),
     wonDeals: deals.filter(d => d.status === "won").length,
-    pipelineValue: deals.filter(d => !["won", "lost"].includes(d.status)).reduce((sum, deal) => sum + deal.deal_value, 0)
+    pipelineValue: deals.filter(d => !["won", "lost"].includes(d.status)).reduce((sum, deal) => sum + (Number(deal.deal_value) || 0), 0)
   }
+  
+  // Log pipeline value for debugging
+  console.log('Pipeline value calculation:', {
+    totalDeals: deals.length,
+    pipelineDeals: deals.filter(d => !["won", "lost"].includes(d.status)).length,
+    pipelineValue: dealStats.pipelineValue
+  })
 
   const projectStats = {
     total: projects.length,
@@ -561,7 +571,10 @@ export default function MasterAdminPanel() {
             <CardContent>
               <div className="text-2xl font-bold">{dealStats.total}</div>
               <p className="text-xs text-muted-foreground">
-                ${(dealStats.pipelineValue / 1000).toFixed(0)}K pipeline • {dealStats.wonDeals} won
+                ${new Intl.NumberFormat('en-US', { 
+                  notation: 'compact',
+                  maximumFractionDigits: 1
+                }).format(dealStats.pipelineValue)} pipeline • {dealStats.wonDeals} won
               </p>
             </CardContent>
           </Card>
