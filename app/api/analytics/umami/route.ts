@@ -46,6 +46,8 @@ function generateMockData(days: number) {
 }
 
 export async function GET(request: NextRequest) {
+  console.log('Umami API endpoint called')
+  
   try {
     // Check for admin authentication (using localStorage approach)
     const authHeader = request.headers.get('x-admin-request')
@@ -59,8 +61,13 @@ export async function GET(request: NextRequest) {
     // Check if Umami credentials are configured
     const hasUmamiConfig = process.env.UMAMI_API_KEY && process.env.UMAMI_WEBSITE_ID
     
+    console.log('Umami config check:', { 
+      hasApiKey: !!process.env.UMAMI_API_KEY,
+      hasWebsiteId: !!process.env.UMAMI_WEBSITE_ID
+    })
+    
     if (!hasUmamiConfig) {
-      console.log('Umami not configured, returning mock data')
+      console.log('Umami not configured, returning empty data')
       return NextResponse.json(generateMockData(days))
     }
 
@@ -81,20 +88,20 @@ export async function GET(request: NextRequest) {
     const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
 
     try {
-      // Umami Cloud API authentication
+      // Umami Cloud API authentication - CORRECTED!
       const headers: HeadersInit = {
         'x-umami-api-key': apiKey as string,
         'Accept': 'application/json'
       }
 
-      // Try the Umami Cloud API endpoint
-      const response = await fetch(
-        `https://cloud.umami.is/api/websites/${websiteId}/stats?startAt=${startAt}&endAt=${endAt}`,
-        { 
-          headers,
-          signal: controller.signal
-        }
-      )
+      // Use the correct Umami API endpoint structure
+      const apiUrl = `https://api.umami.is/v1/websites/${websiteId}/stats?startAt=${startAt}&endAt=${endAt}`
+      console.log('Calling Umami API:', apiUrl)
+      
+      const response = await fetch(apiUrl, { 
+        headers,
+        signal: controller.signal
+      })
       
       clearTimeout(timeoutId)
 
@@ -111,11 +118,11 @@ export async function GET(request: NextRequest) {
       
       try {
         const [pageViewsRes, metricsRes] = await Promise.all([
-          fetch(`https://cloud.umami.is/api/websites/${websiteId}/pageviews?startAt=${startAt}&endAt=${endAt}&unit=day`, { 
+          fetch(`https://api.umami.is/v1/websites/${websiteId}/pageviews?startAt=${startAt}&endAt=${endAt}&unit=day`, { 
             headers,
             signal: metricsController.signal
           }),
-          fetch(`https://cloud.umami.is/api/websites/${websiteId}/metrics?startAt=${startAt}&endAt=${endAt}&type=url`, { 
+          fetch(`https://api.umami.is/v1/websites/${websiteId}/metrics?startAt=${startAt}&endAt=${endAt}&type=url`, { 
             headers,
             signal: metricsController.signal
           })
@@ -131,9 +138,9 @@ export async function GET(request: NextRequest) {
         // Return real Umami data
         return NextResponse.json({
           totalPageViews: stats.pageviews?.value || 0,
-          uniqueVisitors: stats.uniques?.value || 0,
-          bounceRate: stats.bounces?.value ? (stats.bounces.value / stats.pageviews?.value * 100) : 0,
-          avgSessionDuration: stats.totaltime?.value ? (stats.totaltime.value / stats.uniques?.value) : 0,
+          uniqueVisitors: stats.visitors?.value || 0,
+          bounceRate: stats.bounces?.value ? (stats.bounces.value / stats.visits?.value * 100) : 0,
+          avgSessionDuration: stats.totaltime?.value ? (stats.totaltime.value / stats.visits?.value) : 0,
           topPages: metrics?.slice(0, 10).map((page: any) => ({
             page: page.x || 'Unknown',
             views: page.y || 0
@@ -163,9 +170,9 @@ export async function GET(request: NextRequest) {
         // Return partial real data
         return NextResponse.json({
           totalPageViews: stats.pageviews?.value || 0,
-          uniqueVisitors: stats.uniques?.value || 0,
-          bounceRate: stats.bounces?.value ? (stats.bounces.value / stats.pageviews?.value * 100) : 0,
-          avgSessionDuration: stats.totaltime?.value ? (stats.totaltime.value / stats.uniques?.value) : 0,
+          uniqueVisitors: stats.visitors?.value || 0,
+          bounceRate: stats.bounces?.value ? (stats.bounces.value / stats.visits?.value * 100) : 0,
+          avgSessionDuration: stats.totaltime?.value ? (stats.totaltime.value / stats.visits?.value) : 0,
           ...generateMockData(days), // Fill in the rest with mock data
           period: {
             start: startDate.toISOString(),
