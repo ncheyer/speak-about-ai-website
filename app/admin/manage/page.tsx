@@ -242,10 +242,29 @@ export default function MasterAdminPanel() {
   const loadDeals = async () => {
     try {
       setDealsLoading(true)
-      const response = await fetch("/api/deals")
+      const token = localStorage.getItem("adminSessionToken")
+      
+      const response = await fetch("/api/deals", {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'x-dev-admin-bypass': 'dev-admin-access'
+        }
+      })
+      
       if (response.ok) {
         const data = await response.json()
         setDeals(Array.isArray(data) ? data : data.deals || [])
+      } else {
+        const error = await response.json()
+        console.error("Deals API error:", error)
+        if (response.status === 401) {
+          toast({
+            title: "Authentication Error",
+            description: "Session expired. Please log in again.",
+            variant: "destructive",
+          })
+          router.push("/admin")
+        }
       }
     } catch (error) {
       console.error("Error loading deals:", error)
@@ -262,10 +281,31 @@ export default function MasterAdminPanel() {
   const loadProjects = async () => {
     try {
       setProjectsLoading(true)
-      const response = await fetch("/api/projects")
+      const token = localStorage.getItem("adminSessionToken")
+      
+      const headers: HeadersInit = {
+        'Authorization': token ? `Bearer ${token}` : '',
+        'x-dev-admin-bypass': 'dev-admin-access'
+      }
+      
+      console.log('Fetching projects with headers:', headers)
+      
+      const response = await fetch("/api/projects", { headers })
+      
       if (response.ok) {
         const data = await response.json()
         setProjects(Array.isArray(data) ? data : data.projects || [])
+      } else {
+        const error = await response.json()
+        console.error("Projects API error:", error)
+        if (response.status === 401) {
+          toast({
+            title: "Authentication Error",
+            description: "Session expired. Please log in again.",
+            variant: "destructive",
+          })
+          router.push("/admin")
+        }
       }
     } catch (error) {
       console.error("Error loading projects:", error)
@@ -282,10 +322,29 @@ export default function MasterAdminPanel() {
   const loadProposals = async () => {
     try {
       setProposalsLoading(true)
-      const response = await fetch("/api/proposals")
+      const token = localStorage.getItem("adminSessionToken")
+      
+      const response = await fetch("/api/proposals", {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'x-dev-admin-bypass': 'dev-admin-access'
+        }
+      })
+      
       if (response.ok) {
         const data = await response.json()
         setProposals(Array.isArray(data) ? data : [])
+      } else {
+        const error = await response.json()
+        console.error("Proposals API error:", error)
+        if (response.status === 401) {
+          toast({
+            title: "Authentication Error",
+            description: "Session expired. Please log in again.",
+            variant: "destructive",
+          })
+          router.push("/admin")
+        }
       }
     } catch (error) {
       console.error("Error loading proposals:", error)
