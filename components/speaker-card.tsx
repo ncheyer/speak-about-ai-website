@@ -220,20 +220,20 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
               )}
             </div>
           )}
-          {safePrograms.length > 0 && (
-            <div className="mb-3">
-              <button
-                onClick={() => setShowTopicsDetail(!showTopicsDetail)}
-                className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-800 mb-1 font-montserrat hover:text-[#1E68C6] transition-colors"
-              >
-                <span className="flex items-center gap-1">
-                  <Lightbulb className="w-3.5 h-3.5" />
-                  Keynote Topics
-                </span>
-                {showTopicsDetail ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
-              </button>
-              {showTopicsDetail && (
-                <div className="bg-sky-50/70 p-3 rounded-lg mt-1 border border-sky-200 shadow-sm">
+          <div className="mb-3">
+            <button
+              onClick={() => setShowTopicsDetail(!showTopicsDetail)}
+              className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-800 mb-1 font-montserrat hover:text-[#1E68C6] transition-colors"
+            >
+              <span className="flex items-center gap-1">
+                <Lightbulb className="w-3.5 h-3.5" />
+                Keynote Topics
+              </span>
+              {showTopicsDetail ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+            </button>
+            {showTopicsDetail && (
+              <div className="bg-sky-50/70 p-3 rounded-lg mt-1 border border-sky-200 shadow-sm">
+                {safePrograms.length > 0 ? (
                   <div className="space-y-1.5 max-h-64 overflow-y-auto">
                     {safePrograms.map((program, index) => (
                       <div key={`${slug}-program-dropdown-${index}`} className="text-sm text-gray-700 font-montserrat break-words">
@@ -241,10 +241,14 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                ) : (
+                  <div className="text-sm text-gray-500 font-montserrat italic">
+                    No keynote topics available yet
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="mt-auto pt-4">
             <div className="w-full flex flex-col space-y-3">
               <Button asChild variant="gold" className={commonButtonClasses}>
