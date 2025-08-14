@@ -271,6 +271,7 @@ export default function SpeakerProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showVideoDialog, setShowVideoDialog] = useState(false)
   const [newVideo, setNewVideo] = useState({ title: '', url: '', date: '' })
+  const [editingVideoIndex, setEditingVideoIndex] = useState<number | null>(null)
   
   // Form states for editing
   const [editMode, setEditMode] = useState({
@@ -491,15 +492,28 @@ export default function SpeakerProfilePage() {
       const videoId = getYouTubeId(newVideo.url)
       const videoWithThumbnail = {
         ...newVideo,
-        id: `video-${Date.now()}`, // Generate a unique ID
+        id: editingVideoIndex !== null ? profile.videos[editingVideoIndex].id : `video-${Date.now()}`,
         thumbnail: videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : undefined
       }
       
-      // Add to local state
-      const updatedProfile = {
-        ...profile,
-        videos: [...(profile.videos || []), videoWithThumbnail]
+      // Update profile with new or edited video
+      let updatedProfile
+      if (editingVideoIndex !== null) {
+        // Edit existing video
+        const updatedVideos = [...(profile.videos || [])]
+        updatedVideos[editingVideoIndex] = videoWithThumbnail
+        updatedProfile = {
+          ...profile,
+          videos: updatedVideos
+        }
+      } else {
+        // Add new video
+        updatedProfile = {
+          ...profile,
+          videos: [...(profile.videos || []), videoWithThumbnail]
+        }
       }
+      
       setProfile(updatedProfile)
       
       // Save to database
@@ -527,8 +541,20 @@ export default function SpeakerProfilePage() {
       }
       
       setNewVideo({ title: '', url: '', date: '' })
+      setEditingVideoIndex(null)
       setShowVideoDialog(false)
     }
+  }
+  
+  const handleEditVideo = (index: number) => {
+    const video = profile.videos[index]
+    setNewVideo({
+      title: video.title || '',
+      url: video.url || '',
+      date: video.date || ''
+    })
+    setEditingVideoIndex(index)
+    setShowVideoDialog(true)
   }
 
   const profileCompletionItems = profile ? [
@@ -1503,13 +1529,22 @@ export default function SpeakerProfilePage() {
                               </a>
                             </Button>
                             {editMode.media && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => removeItem('videos', idx)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
+                              <>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleEditVideo(idx)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => removeItem('videos', idx)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </>
                             )}
                           </div>
                         </CardContent>
@@ -1756,13 +1791,19 @@ export default function SpeakerProfilePage() {
         </Tabs>
       </main>
 
-      {/* Add Video Dialog */}
-      <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
+      {/* Add/Edit Video Dialog */}
+      <Dialog open={showVideoDialog} onOpenChange={(open) => {
+        if (!open) {
+          setEditingVideoIndex(null)
+          setNewVideo({ title: '', url: '', date: '' })
+        }
+        setShowVideoDialog(open)
+      }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Speaking Video</DialogTitle>
+            <DialogTitle>{editingVideoIndex !== null ? 'Edit' : 'Add'} Speaking Video</DialogTitle>
             <DialogDescription>
-              Add a YouTube or Vimeo link to showcase your speaking engagements
+              {editingVideoIndex !== null ? 'Update' : 'Add'} a YouTube or Vimeo link to showcase your speaking engagements
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -1803,7 +1844,7 @@ export default function SpeakerProfilePage() {
               disabled={!newVideo.title || !newVideo.url}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-blue-800"
             >
-              Add Video
+              {editingVideoIndex !== null ? 'Update' : 'Add'} Video
             </Button>
           </DialogFooter>
         </DialogContent>
