@@ -228,7 +228,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
               >
                 <span className="flex items-center gap-1">
                   <Lightbulb className="w-3.5 h-3.5" />
-                  Keynote Topics ({safePrograms.length})
+                  Keynote Topics
                 </span>
                 {showTopicsDetail ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
               </button>
