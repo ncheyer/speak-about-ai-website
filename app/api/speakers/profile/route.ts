@@ -216,9 +216,15 @@ export async function PUT(request: NextRequest) {
       { field: 'one_liner', old: current.one_liner, new: data.one_liner || data.title },
       { field: 'headshot_url', old: current.headshot_url, new: data.headshot_url },
       { field: 'website', old: current.website, new: data.website },
+      { field: 'linkedin', old: current.social_media?.linkedin_url, new: socialMedia.linkedin_url },
+      { field: 'twitter', old: current.social_media?.twitter_url, new: socialMedia.twitter_url },
+      { field: 'instagram', old: current.social_media?.instagram_url, new: socialMedia.instagram_url },
+      { field: 'youtube', old: current.social_media?.youtube_url, new: socialMedia.youtube_url },
       { field: 'topics', old: current.topics, new: JSON.stringify(data.speaking_topics || []) },
       { field: 'industries', old: current.industries, new: JSON.stringify(data.expertise_areas || []) },
       { field: 'programs', old: current.programs, new: JSON.stringify(data.programs || []) },
+      { field: 'videos', old: current.videos, new: JSON.stringify(data.videos || []) },
+      { field: 'testimonials', old: current.testimonials, new: JSON.stringify(data.testimonials || []) },
       { field: 'speaking_fee_range', old: current.speaking_fee_range, new: data.speaking_fee_range },
       { field: 'travel_preferences', old: current.travel_preferences, new: data.travel_preferences },
       { field: 'technical_requirements', old: current.technical_requirements, new: data.technical_requirements },
@@ -228,8 +234,20 @@ export async function PUT(request: NextRequest) {
     // Insert update logs for changed fields
     for (const item of fieldsToTrack) {
       // Skip if values are the same (considering null/undefined as equal to empty string)
-      const oldVal = item.old || ''
-      const newVal = item.new || ''
+      let oldVal = item.old || ''
+      let newVal = item.new || ''
+      
+      // For JSON fields, stringify them if they're objects/arrays
+      if (typeof oldVal === 'object') {
+        oldVal = JSON.stringify(oldVal)
+      }
+      if (typeof newVal === 'object') {
+        newVal = JSON.stringify(newVal)
+      }
+      
+      // Convert to string for comparison
+      oldVal = String(oldVal)
+      newVal = String(newVal)
       
       if (oldVal !== newVal) {
         await sql`
