@@ -77,7 +77,7 @@ export async function PATCH(
       }, { status: 400 })
     }
 
-    // Check if invoice exists
+    // Check if invoice exists and get project_id
     const [invoice] = await sql`
       SELECT * FROM invoices WHERE id = ${invoiceId}
     `
@@ -102,6 +102,26 @@ export async function PATCH(
       WHERE id = ${invoiceId}
       RETURNING *
     `
+
+    // If invoice is marked as paid and has a project_id, update the project status
+    if (status === "paid" && updatedInvoice.project_id) {
+      console.log(`Invoice ${invoiceId} marked as paid. Updating project ${updatedInvoice.project_id} to completed status.`)
+      
+      try {
+        await sql`
+          UPDATE projects 
+          SET 
+            status = 'completed',
+            completion_percentage = 100,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ${updatedInvoice.project_id}
+        `
+        console.log(`Successfully updated project ${updatedInvoice.project_id} to completed status`)
+      } catch (projectError) {
+        console.error(`Failed to update project ${updatedInvoice.project_id} status:`, projectError)
+        // Don't fail the invoice update if project update fails
+      }
+    }
 
     return NextResponse.json(updatedInvoice)
 
