@@ -161,7 +161,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
             </Badge>
           )}
           {safeIndustries.length > 0 && safeIndustries[0] && (
-            <Badge className="absolute top-3 left-3 bg-[#1E68C6] text-white font-montserrat text-xs px-2.5 py-1.5 rounded-md shadow-md max-w-[45%] truncate">
+            <Badge className="absolute top-3 left-3 bg-[#1E68C6] text-white font-montserrat text-xs px-2.5 py-1.5 rounded-md shadow-md max-w-[calc(100%-120px)] break-words whitespace-normal">
               {safeIndustries[0]}
             </Badge>
           )}
