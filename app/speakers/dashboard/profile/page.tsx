@@ -1474,14 +1474,33 @@ export default function SpeakerProfilePage() {
                       <CardTitle>Speaking Videos</CardTitle>
                       <CardDescription>Showcase your speaking engagements</CardDescription>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setShowVideoDialog(true)}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Video
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={editMode.media ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setEditMode(prev => ({ ...prev, media: !prev.media }))}
+                      >
+                        {editMode.media ? (
+                          <>
+                            <X className="h-4 w-4 mr-2" />
+                            Done
+                          </>
+                        ) : (
+                          <>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </>
+                        )}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setShowVideoDialog(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Video
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
