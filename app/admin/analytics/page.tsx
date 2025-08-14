@@ -41,6 +41,8 @@ interface AnalyticsData {
   topPages: Array<{ page: string; views: number }>
   topReferrers: Array<{ referrer: string; count: number }>
   deviceBreakdown: Array<{ device: string; count: number }>
+  browserBreakdown?: Array<{ browser: string; count: number }>
+  countryBreakdown?: Array<{ country: string; count: number }>
   dailyStats: Array<{
     date: string
     page_views: number
@@ -53,6 +55,13 @@ interface AnalyticsData {
     created_at: string
     metadata: any
   }>
+  totalSessions?: number
+  averageTime?: number
+  period?: {
+    start: string
+    end: string
+    days: number
+  }
 }
 
 export default function AdminAnalyticsPage() {
@@ -76,18 +85,30 @@ export default function AdminAnalyticsPage() {
   const loadAnalytics = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/analytics?days=${timeRange}`)
+      // Try Umami API first, fallback to legacy API
+      const response = await fetch(`/api/analytics/umami?days=${timeRange}`, {
+        headers: {
+          'x-admin-request': 'true'
+        }
+      })
       
       if (response.ok) {
         const data = await response.json()
         setAnalytics(data)
       } else {
-        const errorData = await response.json()
-        toast({
-          title: "Error",
-          description: errorData.error || "Failed to load analytics",
-          variant: "destructive"
-        })
+        // Fallback to legacy analytics API
+        const fallbackResponse = await fetch(`/api/analytics?days=${timeRange}`)
+        if (fallbackResponse.ok) {
+          const data = await fallbackResponse.json()
+          setAnalytics(data)
+        } else {
+          const errorData = await response.json()
+          toast({
+            title: "Analytics Setup Required",
+            description: "Please ensure Umami Analytics is properly configured",
+            variant: "destructive"
+          })
+        }
       }
     } catch (error) {
       console.error("Error loading analytics:", error)
@@ -128,7 +149,7 @@ export default function AdminAnalyticsPage() {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Website Analytics</h1>
-              <p className="mt-2 text-gray-600">Track visitor behavior and website performance</p>
+              <p className="mt-2 text-gray-600">Powered by Umami Analytics - Track visitor behavior and website performance</p>
             </div>
             <div className="flex gap-4">
               <Select value={timeRange} onValueChange={setTimeRange}>
@@ -154,7 +175,7 @@ export default function AdminAnalyticsPage() {
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
               <AlertTitle className="text-yellow-800">Analytics Setup Required</AlertTitle>
               <AlertDescription className="text-yellow-700">
-                Analytics data is not available. Please ensure the analytics system is properly configured.
+                Umami Analytics is being configured. Please ensure the UMAMI_API_KEY is set in your environment variables.
               </AlertDescription>
             </Alert>
           ) : (
@@ -279,6 +300,75 @@ export default function AdminAnalyticsPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Browser Breakdown */}
+              {analytics.browserBreakdown && analytics.browserBreakdown.length > 0 && (
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle>Browser Distribution</CardTitle>
+                    <CardDescription>Top browsers used by visitors</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {analytics.browserBreakdown.map((browser, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="font-medium">{browser.browser}</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-32 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-blue-600 h-2 rounded-full" 
+                                style={{ 
+                                  width: `${(browser.count / analytics.totalPageViews * 100).toFixed(1)}%` 
+                                }}
+                              />
+                            </div>
+                            <Badge variant="secondary">{browser.count.toLocaleString()}</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Country Breakdown */}
+              {analytics.countryBreakdown && analytics.countryBreakdown.length > 0 && (
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle>Geographic Distribution</CardTitle>
+                    <CardDescription>Top countries by visitor count</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Country</TableHead>
+                          <TableHead className="text-right">Visitors</TableHead>
+                          <TableHead className="text-right">Percentage</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {analytics.countryBreakdown.map((country, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-2">
+                                <Globe className="h-4 w-4 text-gray-400" />
+                                {country.country}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">{country.count.toLocaleString()}</TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant="outline">
+                                {((country.count / analytics.totalPageViews) * 100).toFixed(1)}%
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Recent Events */}
               <Card>
