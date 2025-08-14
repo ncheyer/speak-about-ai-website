@@ -565,12 +565,6 @@ export default function MasterAdminPanel() {
           <TabsContent value="speakers" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Speaker Management</h2>
-              <Link href="/admin/speakers">
-                <Button variant="outline">
-                  <Eye className="mr-2 h-4 w-4" />
-                  Full Speaker Panel
-                </Button>
-              </Link>
             </div>
 
             {/* Speaker Filters */}
