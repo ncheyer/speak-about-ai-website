@@ -155,13 +155,13 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
           {feeRange && (
             <Badge
               variant="secondary"
-              className="absolute top-3 right-3 bg-black/75 text-white backdrop-blur-sm text-xs px-2.5 py-1.5 font-montserrat rounded-md shadow-md"
+              className="absolute top-3 right-3 bg-black/75 text-white backdrop-blur-sm text-xs px-2.5 py-1.5 font-montserrat rounded-md shadow-md z-10"
             >
               {feeRange}
             </Badge>
           )}
           {safeIndustries.length > 0 && safeIndustries[0] && (
-            <Badge className="absolute top-3 left-3 bg-[#1E68C6] text-white font-montserrat text-xs px-2.5 py-1.5 rounded-md shadow-md">
+            <Badge className="absolute top-3 left-3 bg-[#1E68C6] text-white font-montserrat text-xs px-2.5 py-1.5 rounded-md shadow-md max-w-[45%] truncate">
               {safeIndustries[0]}
             </Badge>
           )}
