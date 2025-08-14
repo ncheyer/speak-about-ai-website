@@ -149,7 +149,9 @@ export default function AdminAnalyticsPage() {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Website Analytics</h1>
-              <p className="mt-2 text-gray-600">Powered by Umami Analytics - Track visitor behavior and website performance</p>
+              <p className="mt-2 text-gray-600">
+                {analytics?.period ? 'Powered by Umami Analytics' : 'Analytics Dashboard'} - Track visitor behavior and website performance
+              </p>
             </div>
             <div className="flex gap-4">
               <Select value={timeRange} onValueChange={setTimeRange}>
@@ -178,6 +180,64 @@ export default function AdminAnalyticsPage() {
                 Umami Analytics is being configured. Please ensure the UMAMI_API_KEY is set in your environment variables.
               </AlertDescription>
             </Alert>
+          ) : analytics.totalPageViews === 0 && analytics.uniqueVisitors === 0 ? (
+            <>
+              <Alert className="mb-8 border-orange-200 bg-orange-50">
+                <AlertTriangle className="h-4 w-4 text-orange-600" />
+                <AlertTitle className="text-orange-800">Umami Analytics Connection Issue</AlertTitle>
+                <AlertDescription className="text-orange-700">
+                  Unable to fetch data from Umami Analytics. The API key may need to be reconfigured or the Umami Cloud service may be temporarily unavailable.
+                  <br />
+                  <span className="text-sm mt-2 block">
+                    To fix this:
+                    <ol className="list-decimal ml-5 mt-1">
+                      <li>Verify your API key in Umami Cloud dashboard</li>
+                      <li>Ensure the API key has read permissions</li>
+                      <li>Check that tracking script is collecting data at cloud.umami.is</li>
+                    </ol>
+                  </span>
+                </AlertDescription>
+              </Alert>
+              {/* Show empty state metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Page Views</CardTitle>
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-gray-400">No data</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Unique Visitors</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-gray-400">No data</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Bounce Rate</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-gray-400">No data</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Avg Session Duration</CardTitle>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-gray-400">No data</div>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
           ) : (
             <>
               {/* Key Metrics */}

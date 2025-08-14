@@ -7,48 +7,34 @@ function generateMockData(days: number) {
   startDate.setDate(endDate.getDate() - days)
   
   return {
-    totalPageViews: Math.floor(Math.random() * 5000) + 1000,
-    uniqueVisitors: Math.floor(Math.random() * 2000) + 500,
-    bounceRate: Math.random() * 30 + 35,
-    avgSessionDuration: Math.floor(Math.random() * 200) + 100,
+    totalPageViews: 0,
+    uniqueVisitors: 0,
+    bounceRate: 0,
+    avgSessionDuration: 0,
     topPages: [
-      { page: '/', views: Math.floor(Math.random() * 1000) + 500 },
-      { page: '/speakers', views: Math.floor(Math.random() * 500) + 200 },
-      { page: '/our-services', views: Math.floor(Math.random() * 400) + 150 },
-      { page: '/contact', views: Math.floor(Math.random() * 300) + 100 },
-      { page: '/about', views: Math.floor(Math.random() * 200) + 50 },
-      { page: '/admin', views: Math.floor(Math.random() * 100) + 20 }
+      { page: '/', views: 0 },
+      { page: '/speakers', views: 0 },
+      { page: '/our-services', views: 0 },
+      { page: '/contact', views: 0 },
+      { page: '/about', views: 0 }
     ],
     topReferrers: [
-      { referrer: 'google.com', count: Math.floor(Math.random() * 500) + 200 },
-      { referrer: 'Direct', count: Math.floor(Math.random() * 400) + 150 },
-      { referrer: 'linkedin.com', count: Math.floor(Math.random() * 200) + 50 },
-      { referrer: 'twitter.com', count: Math.floor(Math.random() * 150) + 30 },
-      { referrer: 'facebook.com', count: Math.floor(Math.random() * 100) + 20 }
+      { referrer: 'No data available', count: 0 }
     ],
     deviceBreakdown: [
-      { device: 'desktop', count: Math.floor(Math.random() * 1000) + 500 },
-      { device: 'mobile', count: Math.floor(Math.random() * 800) + 300 },
-      { device: 'tablet', count: Math.floor(Math.random() * 200) + 50 }
+      { device: 'No data', count: 0 }
     ],
     browserBreakdown: [
-      { browser: 'Chrome', count: Math.floor(Math.random() * 1000) + 500 },
-      { browser: 'Safari', count: Math.floor(Math.random() * 600) + 200 },
-      { browser: 'Firefox', count: Math.floor(Math.random() * 300) + 100 },
-      { browser: 'Edge', count: Math.floor(Math.random() * 200) + 50 }
+      { browser: 'No data', count: 0 }
     ],
     countryBreakdown: [
-      { country: 'United States', count: Math.floor(Math.random() * 1500) + 500 },
-      { country: 'United Kingdom', count: Math.floor(Math.random() * 400) + 100 },
-      { country: 'Canada', count: Math.floor(Math.random() * 300) + 80 },
-      { country: 'Germany', count: Math.floor(Math.random() * 200) + 50 },
-      { country: 'France', count: Math.floor(Math.random() * 150) + 30 }
+      { country: 'No data', count: 0 }
     ],
     dailyStats: Array.from({ length: days }, (_, i) => ({
       date: new Date(Date.now() - (days - i - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      page_views: Math.floor(Math.random() * 500) + 100,
-      unique_visitors: Math.floor(Math.random() * 200) + 50,
-      bounce_rate: Math.random() * 20 + 30
+      page_views: 0,
+      unique_visitors: 0,
+      bounce_rate: 0
     })),
     recentEvents: [],
     period: {
