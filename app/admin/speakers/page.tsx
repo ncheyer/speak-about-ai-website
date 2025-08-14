@@ -43,6 +43,14 @@ import { useToast } from "@/hooks/use-toast"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
   Dialog,
   DialogContent,
   DialogDescription,
