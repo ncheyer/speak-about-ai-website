@@ -105,7 +105,17 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
     "w-full text-xs sm:text-sm px-3 h-auto py-3 whitespace-normal flex items-center justify-center gap-2"
 
   // Use programs array for keynote topics
-  const safePrograms = Array.isArray(programs) ? programs : []
+  let safePrograms = Array.isArray(programs) ? programs : []
+  
+  // Fix for single-element arrays containing multiple items
+  if (safePrograms.length === 1 && typeof safePrograms[0] === 'string') {
+    // Check if it contains multiple items separated by comma or newline
+    const singleItem = safePrograms[0];
+    if (singleItem.includes(',') || singleItem.includes('\n')) {
+      safePrograms = singleItem.split(/[,\n]+/).map(p => p.trim()).filter(p => p && p !== '');
+    }
+  }
+  
   const safeIndustries = Array.isArray(industries) ? industries : []
 
   return (
@@ -227,7 +237,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
                   <div className="space-y-1.5">
                     {safePrograms.map((program, index) => (
                       <div key={`${slug}-program-dropdown-${index}`} className="text-sm text-gray-700 font-montserrat">
-                        • {program}
+                        • {String(program).trim()}
                       </div>
                     ))}
                   </div>

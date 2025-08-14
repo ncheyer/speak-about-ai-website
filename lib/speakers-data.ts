@@ -441,11 +441,16 @@ async function fetchAllSpeakersFromDatabase(): Promise<Speaker[]> {
                   try {
                     const parsed = JSON.parse(programsStr);
                     if (Array.isArray(parsed)) {
-                      // If it's an array with one comma-separated string, split it
-                      if (parsed.length === 1 && typeof parsed[0] === 'string' && parsed[0].includes(',')) {
-                        return parsed[0].split(',').map(p => p.trim()).filter(p => p);
+                      // If it's an array with one comma/newline-separated string, split it
+                      if (parsed.length === 1 && typeof parsed[0] === 'string') {
+                        // Split by comma or newline
+                        const items = parsed[0].split(/[,\n]+/).map(p => p.trim()).filter(p => p);
+                        if (items.length > 1) {
+                          return items;
+                        }
                       }
-                      return parsed;
+                      // Flatten any nested arrays
+                      return parsed.flat().filter(p => typeof p === 'string' && p.trim());
                     }
                   } catch (e) {
                     // Fall through to other parsing methods
