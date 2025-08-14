@@ -2,6 +2,19 @@
 (function() {
   'use strict';
 
+  // Disable analytics if blocked by extensions or in certain environments
+  try {
+    const isBlocked = window.location.protocol === 'chrome-extension:' || 
+                     window.location.protocol === 'moz-extension:';
+    
+    if (isBlocked) {
+      console.debug('Analytics disabled: browser extension environment detected');
+      return;
+    }
+  } catch (e) {
+    // Continue if check fails
+  }
+
   // Check if analytics is opted in
   function hasAnalyticsConsent() {
     try {
@@ -48,6 +61,13 @@
     if (!hasAnalyticsConsent()) return;
     
     try {
+      // Check if fetch is available and not blocked
+      if (typeof fetch === 'undefined') return;
+      
+      // Use a timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
       fetch('/api/analytics/events', {
         method: 'POST',
         headers: {
@@ -58,12 +78,20 @@
           eventCategory,
           eventValue,
           metadata
-        })
-      }).catch(() => {
-        // Fail silently
+        }),
+        signal: controller.signal
+      }).then(() => {
+        clearTimeout(timeoutId);
+      }).catch((error) => {
+        clearTimeout(timeoutId);
+        // Fail silently - analytics should not break the site
+        if (error.name !== 'AbortError') {
+          console.debug('Analytics event failed:', eventName);
+        }
       });
     } catch (error) {
-      // Fail silently
+      // Fail silently - analytics should not break the site
+      console.debug('Analytics error:', error.message);
     }
   }
 
@@ -114,21 +142,39 @@
     // Track scroll depth
     let maxScroll = 0;
     let scrollTracked = false;
+    let scrollTimer = null;
     
     function trackScrollDepth() {
-      const scrollPercent = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
-      maxScroll = Math.max(maxScroll, scrollPercent);
-      
-      // Track at 25%, 50%, 75%, and 100% scroll
-      if (!scrollTracked && (maxScroll >= 75)) {
-        scrollTracked = true;
-        trackEvent('scroll_depth', 'engagement', maxScroll, {
-          page: window.location.pathname
-        });
+      try {
+        // Prevent division by zero
+        const scrollHeight = document.body.scrollHeight - window.innerHeight;
+        if (scrollHeight <= 0) return;
+        
+        const scrollPercent = Math.round((window.scrollY / scrollHeight) * 100);
+        maxScroll = Math.max(maxScroll, scrollPercent);
+        
+        // Track at 25%, 50%, 75%, and 100% scroll
+        if (!scrollTracked && (maxScroll >= 75)) {
+          scrollTracked = true;
+          trackEvent('scroll_depth', 'engagement', maxScroll, {
+            page: window.location.pathname
+          });
+        }
+      } catch (error) {
+        // Fail silently
+        console.debug('Scroll tracking error:', error.message);
       }
     }
+    
+    // Throttle scroll events to prevent excessive calls
+    function handleScroll() {
+      if (scrollTimer) {
+        clearTimeout(scrollTimer);
+      }
+      scrollTimer = setTimeout(trackScrollDepth, 150);
+    }
 
-    window.addEventListener('scroll', trackScrollDepth, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
   }
 
   // Initialize when page loads
