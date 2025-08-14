@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { 
   Calendar, 
   Mail, 
@@ -26,7 +27,8 @@ import {
   Search,
   ChevronDown,
   Loader2,
-  Send
+  Send,
+  Newspaper
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -57,7 +59,8 @@ export function CustomContactForm() {
     eventDate: '',
     eventLocation: '',
     eventBudget: '',
-    additionalInfo: ''
+    additionalInfo: '',
+    newsletterOptIn: false
   })
 
   const budgetOptions = [
@@ -87,7 +90,7 @@ export function CustomContactForm() {
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -127,6 +130,7 @@ export function CustomContactForm() {
     setIsSubmitting(true)
 
     try {
+      // Submit the main contact form
       const response = await fetch('/api/submit-deal', {
         method: 'POST',
         headers: {
@@ -141,6 +145,27 @@ export function CustomContactForm() {
       const result = await response.json()
 
       if (response.ok) {
+        // If newsletter opt-in is checked, subscribe them
+        if (formData.newsletterOptIn) {
+          try {
+            await fetch('/api/newsletter/signup', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: formData.clientEmail,
+                name: formData.clientName,
+                company: formData.organizationName,
+                source: 'contact_form'
+              })
+            })
+          } catch (error) {
+            console.log('Newsletter signup failed:', error)
+            // Don't block the form submission if newsletter fails
+          }
+        }
+        
         setIsSuccess(true)
         toast({
           title: "Request submitted successfully!",
@@ -156,7 +181,8 @@ export function CustomContactForm() {
           eventDate: '',
           eventLocation: '',
           eventBudget: '',
-          additionalInfo: ''
+          additionalInfo: '',
+          newsletterOptIn: false
         })
         setSelectedSpeakers([])
       } else {
@@ -444,6 +470,30 @@ export function CustomContactForm() {
                   rows={5}
                   className="resize-none"
                 />
+              </div>
+            </div>
+
+            {/* Newsletter Opt-in */}
+            <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="newsletterOptIn"
+                  checked={formData.newsletterOptIn}
+                  onCheckedChange={(checked) => handleInputChange('newsletterOptIn', checked as boolean)}
+                  className="mt-1"
+                />
+                <div className="flex-1">
+                  <Label 
+                    htmlFor="newsletterOptIn" 
+                    className="text-base font-medium cursor-pointer flex items-center gap-2"
+                  >
+                    <Newspaper className="h-4 w-4 text-blue-600" />
+                    Subscribe to our AI insights newsletter
+                  </Label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Get exclusive AI speaker insights, event trends, and industry updates delivered monthly to your inbox.
+                  </p>
+                </div>
               </div>
             </div>
 

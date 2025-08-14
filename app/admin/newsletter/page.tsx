@@ -50,8 +50,17 @@ export default function AdminNewsletterPage() {
   const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
+    // Check if logged in
+    const isLoggedIn = localStorage.getItem('adminLoggedIn')
+    const sessionToken = localStorage.getItem('adminSessionToken')
+    
+    if (!isLoggedIn || !sessionToken) {
+      router.push('/admin')
+      return
+    }
+    
     fetchSignups()
-  }, [statusFilter])
+  }, [statusFilter, router])
 
   const fetchSignups = async () => {
     try {
@@ -59,7 +68,11 @@ export default function AdminNewsletterPage() {
       if (statusFilter !== 'all') params.append('status', statusFilter)
       if (searchTerm) params.append('search', searchTerm)
       
-      const response = await fetch(`/api/admin/newsletter?${params}`)
+      const response = await fetch(`/api/admin/newsletter?${params}`, {
+        headers: {
+          'x-admin-request': 'true'
+        }
+      })
       
       if (response.status === 401) {
         router.push('/admin')

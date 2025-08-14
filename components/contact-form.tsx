@@ -1,11 +1,17 @@
 "use client"
 
-import { useEffect, Suspense } from "react"
-import { Phone, Mail, Clock } from "lucide-react"
+import { useEffect, useState, Suspense } from "react"
+import { Phone, Mail, Clock, Newspaper } from "lucide-react"
 import { useSearchParams } from "next/navigation"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
 
 function ContactFormContent() {
   const searchParams = useSearchParams()
+  const { toast } = useToast()
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false)
+  const [email, setEmail] = useState('')
 
   useEffect(() => {
     const source = searchParams.get("source")
@@ -28,11 +34,54 @@ function ContactFormContent() {
     script.async = true
     document.body.appendChild(script)
 
-    return () => {
-      // Cleanup script on unmount
-      document.body.removeChild(script)
+    // Listen for form submission to capture email
+    const handleFormSubmit = (e: any) => {
+      const form = e.target
+      if (form && form.querySelector) {
+        const emailField = form.querySelector('input[type="email"]') as HTMLInputElement
+        if (emailField && emailField.value) {
+          setEmail(emailField.value)
+          
+          // If newsletter opt-in is checked, subscribe them
+          if (newsletterOptIn && emailField.value) {
+            const nameField = form.querySelector('input[name*="name"]') as HTMLInputElement
+            const companyField = form.querySelector('input[name*="organization"], input[name*="company"]') as HTMLInputElement
+            
+            fetch('/api/newsletter/signup', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: emailField.value,
+                name: nameField?.value || '',
+                company: companyField?.value || '',
+                source: 'pipedrive_contact_form'
+              })
+            }).then(() => {
+              toast({
+                title: "Newsletter subscription confirmed!",
+                description: "You'll receive our AI insights newsletter monthly."
+              })
+            }).catch(error => {
+              console.log('Newsletter signup failed:', error)
+            })
+          }
+        }
+      }
     }
-  }, [])
+
+    // Add listener for form submissions
+    document.addEventListener('submit', handleFormSubmit)
+
+    return () => {
+      // Cleanup
+      document.removeEventListener('submit', handleFormSubmit)
+      if (document.body.contains(script)) {
+        document.body.removeChild(script)
+      }
+    }
+  }, [newsletterOptIn, toast])
 
   return (
     <div className="bg-gradient-to-br from-[#EAEAEE] to-white py-20">
@@ -117,6 +166,30 @@ function ContactFormContent() {
                 className="pipedriveWebForms"
                 data-pd-webforms="https://webforms.pipedrive.com/f/ctoswBHcheTWUjcfitBTRlIxoOj7jOhHg1GA8CSpVYWp45oKsrxtQnDSAiwekwzSvN"
               />
+
+              {/* Newsletter Opt-in */}
+              <div className="bg-gray-50 rounded-lg p-6 mt-6 mb-4">
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="newsletterOptIn"
+                    checked={newsletterOptIn}
+                    onCheckedChange={(checked) => setNewsletterOptIn(checked as boolean)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label 
+                      htmlFor="newsletterOptIn" 
+                      className="text-base font-medium cursor-pointer flex items-center gap-2"
+                    >
+                      <Newspaper className="h-4 w-4 text-blue-600" />
+                      Subscribe to our AI insights newsletter
+                    </Label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Get exclusive AI speaker insights, event trends, and industry updates delivered monthly.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               <p className="text-sm text-gray-500 mt-6 text-center">
                 We'll respond with availability and recommendations within 24 hours.
