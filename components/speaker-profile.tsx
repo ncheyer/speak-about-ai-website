@@ -68,6 +68,37 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
     }
   }, [speaker.image])
 
+  // Track speaker profile view with Umami
+  useEffect(() => {
+    // Check if Umami is available
+    if (typeof window !== 'undefined' && (window as any).umami) {
+      // Track the speaker profile view event
+      (window as any).umami.track('speaker-profile-view', {
+        speaker_name: speaker.name,
+        speaker_slug: speaker.slug,
+        speaker_id: speaker.id,
+        speaker_topics: speaker.topics?.join(', ') || '',
+        speaker_location: speaker.location || ''
+      })
+      
+      console.log('Tracked speaker profile view:', speaker.name)
+    }
+  }, [speaker.id, speaker.name, speaker.slug])
+
+  // Track book speaker button click
+  const trackBookSpeakerClick = (source: string) => {
+    if (typeof window !== 'undefined' && (window as any).umami) {
+      (window as any).umami.track('book-speaker-click', {
+        speaker_name: speaker.name,
+        speaker_slug: speaker.slug,
+        speaker_id: speaker.id,
+        click_source: source,
+        speaker_fee_range: speaker.speakingFeeRange || ''
+      })
+      console.log('Tracked book speaker click:', speaker.name, 'from', source)
+    }
+  }
+
   // Better bio formatting function
   const formatBio = (bio: string) => {
     if (!bio) return null
@@ -228,6 +259,7 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                       asChild
                       variant="gold"
                       className="w-full font-montserrat transition-all duration-300 hover:shadow-xl"
+                      onClick={() => trackBookSpeakerClick('profile-sidebar')}
                     >
                       <Link
                         href={`/contact?source=speaker_profile&speakerName=${encodeURIComponent(speaker.name)}`}
@@ -445,6 +477,7 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
                 size="lg"
                 variant="gold"
                 className="font-montserrat transition-all duration-300 hover:shadow-xl"
+                onClick={() => trackBookSpeakerClick('profile-cta')}
               >
                 <Link
                   href={`/contact?source=speaker_profile_cta&speakerName=${encodeURIComponent(speaker.name)}`}

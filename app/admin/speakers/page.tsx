@@ -33,7 +33,11 @@ import {
   Send,
   FileText,
   Calendar,
-  Video
+  Video,
+  BarChart3,
+  Eye,
+  MousePointer,
+  TrendingUp
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -143,6 +147,8 @@ export default function AdminSpeakersPage() {
   })
   const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null)
   const [sendingInvite, setSendingInvite] = useState(false)
+  const [speakerAnalytics, setSpeakerAnalytics] = useState<any[]>([])
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false)
 
   // Check authentication and load data
   useEffect(() => {
@@ -155,6 +161,7 @@ export default function AdminSpeakersPage() {
       setIsLoggedIn(true)
       loadSpeakers()
       loadApplications()
+      loadSpeakerAnalytics()
     } catch (error) {
       console.error("Error in useEffect:", error)
       setPageError("Failed to initialize page. Please refresh.")
@@ -354,6 +361,29 @@ export default function AdminSpeakersPage() {
     }
   }
 
+  const loadSpeakerAnalytics = async () => {
+    try {
+      setLoadingAnalytics(true)
+      const token = localStorage.getItem("adminSessionToken")
+      
+      const response = await fetch("/api/analytics/speaker-views?days=30", {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'x-dev-admin-bypass': 'dev-admin-access'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSpeakerAnalytics(data.speakers || [])
+      }
+    } catch (error) {
+      console.error("Error loading speaker analytics:", error)
+    } finally {
+      setLoadingAnalytics(false)
+    }
+  }
+
   const loadSpeakers = async () => {
     try {
       setLoading(true)
@@ -537,7 +567,7 @@ export default function AdminSpeakersPage() {
           </div>
 
           <Tabs defaultValue="speakers" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className="grid w-full max-w-lg grid-cols-3">
               <TabsTrigger value="speakers" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Speakers ({speakers.length})
@@ -545,6 +575,10 @@ export default function AdminSpeakersPage() {
               <TabsTrigger value="applications" className="flex items-center gap-2">
                 <UserPlus className="h-4 w-4" />
                 Applications ({applications.filter(a => a.status === 'pending').length})
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Analytics
               </TabsTrigger>
             </TabsList>
 
@@ -1060,6 +1094,133 @@ export default function AdminSpeakersPage() {
                   )}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="analytics" className="space-y-6">
+              {/* Analytics Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium">Total Profile Views</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {speakerAnalytics.reduce((sum, s) => sum + (s.views || 0), 0)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Last 30 days</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium">Book Clicks</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {speakerAnalytics.reduce((sum, s) => sum + (s.bookClicks || 0), 0)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Total conversions</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium">Avg Conversion Rate</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {speakerAnalytics.length > 0 
+                        ? (speakerAnalytics.reduce((sum, s) => sum + parseFloat(s.conversionRate || 0), 0) / speakerAnalytics.length).toFixed(1)
+                        : '0'}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">Views to book clicks</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Speaker Analytics Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Speaker Profile Performance</CardTitle>
+                  <CardDescription>
+                    Track which speaker profiles are getting the most views and engagement
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {loadingAnalytics ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                    </div>
+                  ) : speakerAnalytics.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      No analytics data available yet. Speaker profile views will appear here once tracked.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Speaker</TableHead>
+                            <TableHead>Location</TableHead>
+                            <TableHead className="text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <Eye className="h-4 w-4" />
+                                Views
+                              </div>
+                            </TableHead>
+                            <TableHead className="text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <MousePointer className="h-4 w-4" />
+                                Book Clicks
+                              </div>
+                            </TableHead>
+                            <TableHead className="text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <TrendingUp className="h-4 w-4" />
+                                Conversion
+                              </div>
+                            </TableHead>
+                            <TableHead>Topics</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {speakerAnalytics.map((speaker, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">
+                                {speaker.slug ? (
+                                  <Link 
+                                    href={`/speakers/${speaker.slug}`}
+                                    target="_blank"
+                                    className="text-blue-600 hover:underline flex items-center gap-1"
+                                  >
+                                    {speaker.name}
+                                    <ExternalLink className="h-3 w-3" />
+                                  </Link>
+                                ) : (
+                                  speaker.name
+                                )}
+                              </TableCell>
+                              <TableCell>{speaker.location || '-'}</TableCell>
+                              <TableCell className="text-center font-semibold">
+                                {speaker.views || 0}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {speaker.bookClicks || 0}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant={parseFloat(speaker.conversionRate) > 5 ? 'default' : 'secondary'}>
+                                  {speaker.conversionRate || 0}%
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="max-w-xs truncate">
+                                {speaker.topics || '-'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
