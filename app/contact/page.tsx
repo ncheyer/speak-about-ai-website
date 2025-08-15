@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
-import { Suspense } from "react"
-import { CustomContactForm } from "@/components/custom-contact-form"
+import { ContactFormWrapper } from "@/components/contact-form-wrapper"
 
 export const metadata: Metadata = {
   title: "Contact AI Speaker Bureau | Speak About AI", // 43 chars
@@ -16,9 +15,7 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-12">
-        <Suspense fallback={null}>
-          <CustomContactForm />
-        </Suspense>
+        <ContactFormWrapper />
       </div>
     </div>
   )

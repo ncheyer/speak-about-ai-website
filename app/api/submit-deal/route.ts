@@ -31,14 +31,16 @@ export async function POST(request: NextRequest) {
       }))
     }
 
-    // Prepare deal data
+    // Prepare deal data - handle multiple event dates
+    const eventDates = formData.eventDates || (formData.eventDate ? [formData.eventDate] : [])
     const dealData = {
       clientName: formData.clientName,
       clientEmail: formData.clientEmail,
       phone: formData.phone,
       organizationName: formData.organizationName,
       specificSpeaker: formData.specificSpeaker,
-      eventDate: formData.eventDate,
+      eventDate: eventDates.length > 0 ? eventDates[0] : '', // Primary date for compatibility
+      eventDates: eventDates, // All dates
       eventLocation: formData.eventLocation,
       eventBudget: formData.eventBudget,
       additionalInfo: formData.additionalInfo,

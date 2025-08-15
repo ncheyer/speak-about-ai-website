@@ -40,7 +40,7 @@ interface Speaker {
   oneLiner?: string
 }
 
-export function CustomContactForm() {
+export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?: string }) {
   const { toast } = useToast()
   
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -50,13 +50,13 @@ export function CustomContactForm() {
   const [selectedSpeakers, setSelectedSpeakers] = useState<Speaker[]>([])
   const [speakerSearchTerm, setSpeakerSearchTerm] = useState('')
   const [showSpeakerDropdown, setShowSpeakerDropdown] = useState(false)
+  const [eventDates, setEventDates] = useState<string[]>([''])
   
   const [formData, setFormData] = useState({
     clientName: '',
     clientEmail: '',
     phone: '',
     organizationName: '',
-    eventDate: '',
     eventLocation: '',
     eventBudget: '',
     additionalInfo: '',
@@ -75,6 +75,16 @@ export function CustomContactForm() {
   useEffect(() => {
     fetchSpeakers()
   }, [])
+
+  useEffect(() => {
+    // Auto-select speaker if passed as prop
+    if (preselectedSpeaker && speakers.length > 0 && selectedSpeakers.length === 0) {
+      const speaker = speakers.find(s => s.name === preselectedSpeaker)
+      if (speaker) {
+        setSelectedSpeakers([speaker])
+      }
+    }
+  }, [preselectedSpeaker, speakers])
 
   const fetchSpeakers = async () => {
     try {
@@ -138,6 +148,7 @@ export function CustomContactForm() {
         },
         body: JSON.stringify({
           ...formData,
+          eventDates: eventDates.filter(date => date !== ''),
           specificSpeaker: selectedSpeakers.map(s => s.name).join(', ')
         })
       })
@@ -178,13 +189,13 @@ export function CustomContactForm() {
           clientEmail: '',
           phone: '',
           organizationName: '',
-          eventDate: '',
           eventLocation: '',
           eventBudget: '',
           additionalInfo: '',
           newsletterOptIn: false
         })
         setSelectedSpeakers([])
+        setEventDates([''])
       } else {
         throw new Error(result.error || 'Failed to submit')
       }
@@ -264,7 +275,7 @@ export function CustomContactForm() {
                     type="email"
                     value={formData.clientEmail}
                     onChange={(e) => handleInputChange('clientEmail', e.target.value)}
-                    placeholder="john@company.com"
+                    placeholder="person@company.com"
                     required
                     className="h-12"
                   />
@@ -288,7 +299,7 @@ export function CustomContactForm() {
                     id="organizationName"
                     value={formData.organizationName}
                     onChange={(e) => handleInputChange('organizationName', e.target.value)}
-                    placeholder="Acme Corporation"
+                    placeholder="Company"
                     required
                     className="h-12"
                   />
@@ -409,16 +420,47 @@ export function CustomContactForm() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="eventDate">Event Date</Label>
-                  <div className="relative">
-                    <Input
-                      id="eventDate"
-                      type="date"
-                      value={formData.eventDate}
-                      onChange={(e) => handleInputChange('eventDate', e.target.value)}
-                      className="h-12 pl-10"
-                    />
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Label htmlFor="eventDate">Event Date(s)</Label>
+                  <div className="space-y-2">
+                    {eventDates.map((date, index) => (
+                      <div key={index} className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            type="date"
+                            value={date}
+                            onChange={(e) => {
+                              const newDates = [...eventDates]
+                              newDates[index] = e.target.value
+                              setEventDates(newDates)
+                            }}
+                            className="h-12 pl-10"
+                          />
+                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        </div>
+                        {eventDates.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              setEventDates(eventDates.filter((_, i) => i !== index))
+                            }}
+                            className="h-12 w-12"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEventDates([...eventDates, ''])}
+                      className="w-full"
+                    >
+                      Add Another Date
+                    </Button>
                   </div>
                 </div>
                 
