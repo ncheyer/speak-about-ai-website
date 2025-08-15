@@ -18,7 +18,16 @@ export async function POST(request: NextRequest) {
         { status: 429 }
       )
     }
-    const body = await request.json()
+    let body: any
+    try {
+      body = await request.json()
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError)
+      return NextResponse.json(
+        { error: "Invalid request format" },
+        { status: 400 }
+      )
+    }
     const { email, password } = body
 
     // Validate input
