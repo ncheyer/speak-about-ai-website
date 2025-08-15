@@ -28,7 +28,9 @@ import {
   Calendar,
   MousePointer,
   Clock,
-  Loader2
+  Loader2,
+  Search,
+  XCircle
 } from "lucide-react"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
@@ -64,13 +66,27 @@ interface AnalyticsData {
   }
 }
 
+interface SearchAnalytics {
+  totalSearches: number
+  uniqueQueries: number
+  avgResultCount: number
+  zeroResultQueries: Array<{ query: string; search_count: number }>
+  topQueries: Array<{ query: string; search_count: number; avg_results: number }>
+  searchesByIndustry: Array<{ industry_filter: string; search_count: number }>
+  searchTrends: Array<{ date: string; searches: number; unique_queries: number }>
+  recentSearches: Array<{ query: string; result_count: number; industry_filter: string; created_at: string }>
+  topSearchedSpeakers: Array<{ name: string; slug: string; count: number }>
+}
+
 export default function AdminAnalyticsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+  const [searchAnalytics, setSearchAnalytics] = useState<SearchAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState("7")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [activeTab, setActiveTab] = useState("overview")
 
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
@@ -85,15 +101,19 @@ export default function AdminAnalyticsPage() {
   const loadAnalytics = async () => {
     try {
       setLoading(true)
-      // Try Umami API first, fallback to legacy API
-      const response = await fetch(`/api/analytics/umami?days=${timeRange}`, {
-        headers: {
-          'x-admin-request': 'true'
-        }
-      })
       
-      if (response.ok) {
-        const data = await response.json()
+      // Load both website analytics and search analytics in parallel
+      const [websiteResponse, searchResponse] = await Promise.all([
+        fetch(`/api/analytics/umami?days=${timeRange}`, {
+          headers: { 'x-admin-request': 'true' }
+        }),
+        fetch(`/api/analytics/search?days=${timeRange}`, {
+          headers: { 'x-admin-request': 'true' }
+        })
+      ])
+      
+      if (websiteResponse.ok) {
+        const data = await websiteResponse.json()
         setAnalytics(data)
       } else {
         // Fallback to legacy analytics API
@@ -102,13 +122,20 @@ export default function AdminAnalyticsPage() {
           const data = await fallbackResponse.json()
           setAnalytics(data)
         } else {
-          const errorData = await response.json()
+          const errorData = await websiteResponse.json()
           toast({
             title: "Analytics Setup Required",
             description: "Please ensure Umami Analytics is properly configured",
             variant: "destructive"
           })
         }
+      }
+      
+      if (searchResponse.ok) {
+        const searchData = await searchResponse.json()
+        setSearchAnalytics(searchData.analytics)
+      } else {
+        console.error('Failed to load search analytics')
       }
     } catch (error) {
       console.error("Error loading analytics:", error)
@@ -148,9 +175,9 @@ export default function AdminAnalyticsPage() {
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Website Analytics</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
               <p className="mt-2 text-gray-600">
-                {analytics?.period ? 'Powered by Umami Analytics' : 'Analytics Dashboard'} - Track visitor behavior and website performance
+                {analytics?.period ? 'Powered by Umami Analytics' : 'Analytics Dashboard'} - Track visitor behavior, search patterns, and website performance
               </p>
             </div>
             <div className="flex gap-4">
@@ -172,7 +199,31 @@ export default function AdminAnalyticsPage() {
             </div>
           </div>
 
-          {!analytics ? (
+          {/* Tab Navigation */}
+          <div className="flex space-x-1 mb-8 border-b">
+            <button
+              onClick={() => setActiveTab("overview")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === "overview"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Website Overview
+            </button>
+            <button
+              onClick={() => setActiveTab("search")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === "search"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Search Analytics
+            </button>
+          </div>
+
+          {activeTab === "overview" && !analytics ? (
             <Alert className="mb-8 border-yellow-200 bg-yellow-50">
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
               <AlertTitle className="text-yellow-800">Analytics Setup Required</AlertTitle>
@@ -180,7 +231,7 @@ export default function AdminAnalyticsPage() {
                 Umami Analytics is being configured. Please ensure the UMAMI_API_KEY is set in your environment variables.
               </AlertDescription>
             </Alert>
-          ) : analytics.totalPageViews === 0 && analytics.uniqueVisitors === 0 ? (
+          ) : activeTab === "overview" && analytics && analytics.totalPageViews === 0 && analytics.uniqueVisitors === 0 ? (
             <>
               <Alert className="mb-8 border-orange-200 bg-orange-50">
                 <AlertTriangle className="h-4 w-4 text-orange-600" />
@@ -238,7 +289,7 @@ export default function AdminAnalyticsPage() {
                 </Card>
               </div>
             </>
-          ) : (
+          ) : activeTab === "overview" && analytics ? (
             <>
               {/* Key Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -468,7 +519,257 @@ export default function AdminAnalyticsPage() {
                 </CardContent>
               </Card>
             </>
-          )}
+          ) : activeTab === "search" && searchAnalytics ? (
+            <>
+              {/* Search Analytics Section */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Searches</CardTitle>
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{searchAnalytics.totalSearches.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Speaker directory searches
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Unique Queries</CardTitle>
+                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{searchAnalytics.uniqueQueries.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Different search terms
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Avg Results</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{searchAnalytics.avgResultCount}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Speakers per search
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Zero Results</CardTitle>
+                    <XCircle className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{searchAnalytics.zeroResultQueries.length}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Queries with no matches
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                {/* Top Search Queries */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Search Queries</CardTitle>
+                    <CardDescription>Most frequently searched terms</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Query</TableHead>
+                          <TableHead className="text-right">Searches</TableHead>
+                          <TableHead className="text-right">Avg Results</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {searchAnalytics.topQueries.slice(0, 10).map((query, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">{query.query}</TableCell>
+                            <TableCell className="text-right">{query.search_count}</TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant={Math.round(Number(query.avg_results)) > 0 ? "default" : "destructive"}>
+                                {Math.round(Number(query.avg_results))}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                {/* Zero Result Queries */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Zero Result Queries</CardTitle>
+                    <CardDescription>Search terms that returned no speakers</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {searchAnalytics.zeroResultQueries.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Query</TableHead>
+                            <TableHead className="text-right">Attempts</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {searchAnalytics.zeroResultQueries.slice(0, 10).map((query, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">{query.query}</TableCell>
+                              <TableCell className="text-right">
+                                <Badge variant="destructive">{query.search_count}</Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <p className="text-gray-500 text-center py-8">
+                        No zero-result queries found. All searches returned results!
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Most Searched Speakers */}
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle>Most Searched Speakers</CardTitle>
+                  <CardDescription>Speakers appearing most frequently in search results</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {searchAnalytics.topSearchedSpeakers && searchAnalytics.topSearchedSpeakers.length > 0 ? (
+                    <div className="space-y-4">
+                      {searchAnalytics.topSearchedSpeakers.map((speaker, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                              index === 0 ? 'bg-yellow-500' :
+                              index === 1 ? 'bg-gray-400' :
+                              index === 2 ? 'bg-orange-600' :
+                              'bg-blue-500'
+                            }`}>
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="font-medium">{speaker.name}</p>
+                              <p className="text-xs text-gray-500">@{speaker.slug}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <p className="text-sm font-semibold">{speaker.count} appearances</p>
+                              <p className="text-xs text-gray-500">in search results</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(`/speakers/${speaker.slug}`, '_blank')}
+                            >
+                              View Profile
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-center py-8">
+                      No speaker appearance data yet. Data will populate as searches are performed.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Searches by Industry Filter */}
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle>Searches by Industry Filter</CardTitle>
+                  <CardDescription>Which industry filters are most popular</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {searchAnalytics.searchesByIndustry.map((industry, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <span className="font-medium capitalize">
+                          {industry.industry_filter === 'all' ? 'All Industries' : industry.industry_filter}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-32 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-600 h-2 rounded-full" 
+                              style={{ 
+                                width: `${(industry.search_count / searchAnalytics.totalSearches * 100).toFixed(1)}%` 
+                              }}
+                            />
+                          </div>
+                          <Badge variant="secondary">{industry.search_count}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Searches */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Searches</CardTitle>
+                  <CardDescription>Latest search queries on the speaker directory</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Query</TableHead>
+                        <TableHead>Industry Filter</TableHead>
+                        <TableHead className="text-right">Results</TableHead>
+                        <TableHead>Time</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {searchAnalytics.recentSearches.slice(0, 20).map((search, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{search.query}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {search.industry_filter === 'all' ? 'All' : search.industry_filter}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant={search.result_count > 0 ? "default" : "destructive"}>
+                              {search.result_count}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-gray-500">
+                            {new Date(search.created_at).toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </>
+          ) : activeTab === "search" ? (
+            <div className="text-center py-12">
+              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No search analytics data available yet.</p>
+              <p className="text-sm text-gray-500 mt-2">Search tracking will begin when users search the speaker directory.</p>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

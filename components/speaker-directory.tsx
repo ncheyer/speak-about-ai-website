@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -90,6 +90,8 @@ interface SpeakerDirectoryProps {
 export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedIndustry, setSelectedIndustry] = useState("all")
+  const searchDebounceTimer = useRef<NodeJS.Timeout | null>(null)
+  const lastTrackedSearch = useRef<string>("")
 
   const validInitialSpeakers = useMemo(() => {
     if (!Array.isArray(initialSpeakers)) {
@@ -103,6 +105,44 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
   const [displayCount, setDisplayCount] = useState(12)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(false)
+
+  // Track search event with Umami
+  const trackSearchEvent = (query: string, resultCount: number, industry: string, speakers: Speaker[] = []) => {
+    // Only track if the search query has changed and is not empty
+    if (query && query !== lastTrackedSearch.current) {
+      lastTrackedSearch.current = query
+      
+      // Track with Umami if available
+      if (typeof window !== 'undefined' && (window as any).umami) {
+        (window as any).umami.track('speaker-search', {
+          search_query: query,
+          result_count: resultCount,
+          industry_filter: industry,
+          timestamp: new Date().toISOString()
+        })
+      }
+
+      // Get top 10 speaker results to track
+      const topSpeakers = speakers.slice(0, 10).map(s => ({
+        id: s.id,
+        name: s.name,
+        slug: s.slug
+      }))
+
+      // Also send to our analytics API for admin dashboard
+      fetch('/api/analytics/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query,
+          resultCount,
+          industry,
+          page: '/speakers',
+          speakerResults: topSpeakers
+        })
+      }).catch(err => console.error('Failed to track search:', err))
+    }
+  }
 
   useEffect(() => {
     const applyFilters = () => {
@@ -185,6 +225,17 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
         setFilteredSpeakers(finalFilteredSpeakers)
         setDisplayedSpeakers(finalFilteredSpeakers.slice(0, 12))
         setDisplayCount(12)
+
+        // Track search after filtering with debounce
+        if (searchDebounceTimer.current) {
+          clearTimeout(searchDebounceTimer.current)
+        }
+        searchDebounceTimer.current = setTimeout(() => {
+          if (searchQuery.trim()) {
+            console.log('Tracking search:', searchQuery.trim(), 'Results:', finalFilteredSpeakers.length, 'Industry:', selectedIndustry)
+            trackSearchEvent(searchQuery.trim(), finalFilteredSpeakers.length, selectedIndustry, finalFilteredSpeakers)
+          }
+        }, 500) // Wait 500ms after user stops typing
       } catch (err) {
         console.error("Error applying filters in SpeakerDirectory:", err)
         setError(true)
@@ -196,6 +247,13 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
     }
 
     applyFilters()
+
+    // Cleanup debounce timer
+    return () => {
+      if (searchDebounceTimer.current) {
+        clearTimeout(searchDebounceTimer.current)
+      }
+    }
   }, [searchQuery, selectedIndustry, validInitialSpeakers])
 
   const handleLoadMore = () => {
