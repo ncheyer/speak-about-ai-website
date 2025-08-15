@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       notable_clients: data.notable_clients || [],
       certifications: data.certifications || [],
       awards: data.awards || [],
-      status: 'pending', // All new applications start as pending
+      // status: 'pending', // Column doesn't exist in DB
       active: true
     }
 
@@ -76,8 +76,8 @@ export async function POST(request: Request) {
       speaker: {
         id: speaker.id,
         name: speaker.name,
-        email: speaker.email,
-        status: speaker.status
+        email: speaker.email
+        // status: speaker.status // Column doesn't exist
       }
     })
   } catch (error) {

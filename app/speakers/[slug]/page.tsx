@@ -37,6 +37,9 @@ export async function generateStaticParams() {
   }
 }
 
+// Enable ISR for speaker pages
+export const revalidate = 3600 // Revalidate every hour
+
 export async function generateMetadata({ params }: SpeakerPageProps) {
   const { slug } = await params
   const speaker = await getSpeakerBySlug(slug)

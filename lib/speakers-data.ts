@@ -551,38 +551,103 @@ export async function getFeaturedSpeakers(limit = 8): Promise<Speaker[]> {
   }
 }
 
+// Cache for individual speaker lookups
+const speakerBySlugCache = new Map<string, { speaker: Speaker | undefined; timestamp: number }>()
+const SPEAKER_CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
 export async function getSpeakerBySlug(slug: string): Promise<Speaker | undefined> {
   try {
-    // First, try to fetch directly from the database API  
-    const baseUrl = typeof window === 'undefined' 
-      ? 'http://localhost:3000'
-      : ''
-    
-    const response = await fetch(`${baseUrl}/api/speakers/public/${slug}`, {
-      next: { revalidate: 60 } // Cache for 1 minute
-    })
-    
-    if (response.ok) {
-      const data = await response.json()
-      if (data.found && data.speaker) {
-        console.log(`Found speaker ${slug} in database`)
-        return data.speaker as Speaker
+    // Check individual speaker cache first
+    const cached = speakerBySlugCache.get(slug)
+    if (cached && Date.now() - cached.timestamp < SPEAKER_CACHE_DURATION) {
+      return cached.speaker
+    }
+
+    // For server-side rendering, try to use the database directly
+    if (typeof window === 'undefined') {
+      try {
+        const { getSpeakerBySlug: getSpeakerFromDB } = await import('./speakers-db')
+        const dbSpeaker = await getSpeakerFromDB(slug)
+        if (dbSpeaker) {
+          // Transform database speaker to match our Speaker interface
+          const parseJsonField = (field: any) => {
+            if (Array.isArray(field)) return field
+            if (typeof field === 'string') {
+              try {
+                return JSON.parse(field)
+              } catch (e) {
+                return []
+              }
+            }
+            return []
+          }
+          
+          const speaker: Speaker = {
+            slug: dbSpeaker.slug || slug,
+            name: dbSpeaker.name || '',
+            title: dbSpeaker.one_liner || dbSpeaker.title || '',
+            bio: dbSpeaker.bio || dbSpeaker.short_bio || '',
+            image: dbSpeaker.headshot_url || '',
+            imagePosition: dbSpeaker.image_position || 'center',
+            imageOffsetY: dbSpeaker.image_offset || '0%',
+            programs: parseJsonField(dbSpeaker.programs),
+            industries: parseJsonField(dbSpeaker.industries),
+            fee: dbSpeaker.speaking_fee_range || 'Please Inquire',
+            feeRange: dbSpeaker.speaking_fee_range || '',
+            location: dbSpeaker.location || '',
+            linkedin: dbSpeaker.social_media?.linkedin_url || '',
+            twitter: dbSpeaker.social_media?.twitter_url || '',
+            website: dbSpeaker.website || '',
+            featured: dbSpeaker.featured || false,
+            videos: parseJsonField(dbSpeaker.videos),
+            testimonials: parseJsonField(dbSpeaker.testimonials),
+            topics: parseJsonField(dbSpeaker.topics),
+            listed: dbSpeaker.listed !== false,
+            expertise: parseJsonField(dbSpeaker.expertise || dbSpeaker.topics),
+            ranking: dbSpeaker.ranking || 0
+          }
+          
+          // Cache the result
+          speakerBySlugCache.set(slug, { speaker, timestamp: Date.now() })
+          return speaker
+        }
+      } catch (dbError) {
+        console.log("Could not fetch speaker from database directly:", dbError)
       }
     }
     
-    // Fallback to cache/sheets data if database doesn't have the speaker
-    console.log(`Speaker ${slug} not found in database, checking sheets data`)
-    if (!allSpeakersCache || !(lastFetchTime && Date.now() - lastFetchTime < CACHE_DURATION)) {
-      await getAllSpeakers()
+    // Client-side: fetch from API endpoint
+    if (typeof window !== 'undefined') {
+      const response = await fetch(`/api/speakers/public/${slug}`, {
+        next: { revalidate: 300 } // Cache for 5 minutes
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.found && data.speaker) {
+          const speaker = data.speaker as Speaker
+          // Cache the result
+          speakerBySlugCache.set(slug, { speaker, timestamp: Date.now() })
+          return speaker
+        }
+      }
     }
-    const speaker = allSpeakersCache ? allSpeakersCache.find((s) => s.slug === slug) : undefined
-    if (speaker && speaker.listed !== false) return speaker
+    
+    // Fallback to local speakers if available
+    const localSpeaker = localSpeakers.find((s) => s.slug === slug)
+    if (localSpeaker && localSpeaker.listed !== false) {
+      speakerBySlugCache.set(slug, { speaker: localSpeaker, timestamp: Date.now() })
+      return localSpeaker
+    }
+    
+    // Cache the not-found result too
+    speakerBySlugCache.set(slug, { speaker: undefined, timestamp: Date.now() })
     return undefined
   } catch (error) {
     console.error(`getSpeakerBySlug: Failed for slug ${slug}:`, error)
-    // Try fallback to cache
-    const speaker = allSpeakersCache ? allSpeakersCache.find((s) => s.slug === slug) : undefined
-    if (speaker && speaker.listed !== false) return speaker
+    // Try fallback to local speakers
+    const localSpeaker = localSpeakers.find((s) => s.slug === slug)
+    if (localSpeaker && localSpeaker.listed !== false) return localSpeaker
     return undefined
   }
 }

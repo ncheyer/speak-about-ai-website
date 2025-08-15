@@ -29,6 +29,7 @@ export interface Speaker {
   id: number
   email: string
   name: string
+  slug?: string
   bio?: string
   short_bio?: string
   one_liner?: string
@@ -86,8 +87,8 @@ export interface Speaker {
   certifications?: string[]
   awards?: string[]
   
-  // Approval workflow
-  status?: 'pending' | 'approved' | 'rejected' | 'suspended'
+  // Approval workflow (removed status - doesn't exist in DB)
+  // status?: 'pending' | 'approved' | 'rejected' | 'suspended'
   approval_notes?: string
   approved_by?: string
   approved_at?: string
@@ -181,36 +182,25 @@ export async function getAllSpeakers(filters?: {
       // Simple query without filters
       speakers = await sql`
         SELECT * FROM speakers 
+        WHERE active = true
         ORDER BY created_at DESC
       `
     } else {
-      // Build query with filters using safe interpolation
-      if (filters.status && filters.availability && filters.minFee !== undefined && filters.maxFee !== undefined) {
+      // Build query with filters - removed status column references
+      if (filters.availability && filters.minFee !== undefined && filters.maxFee !== undefined) {
         speakers = await sql`
           SELECT * FROM speakers 
-          WHERE status = ${filters.status}
-          AND availability_status = ${filters.availability}
+          WHERE availability_status = ${filters.availability}
           AND speaking_fee_min >= ${filters.minFee}
           AND speaking_fee_max <= ${filters.maxFee}
-          ORDER BY created_at DESC
-        `
-      } else if (filters.status && filters.availability) {
-        speakers = await sql`
-          SELECT * FROM speakers 
-          WHERE status = ${filters.status}
-          AND availability_status = ${filters.availability}
-          ORDER BY created_at DESC
-        `
-      } else if (filters.status) {
-        speakers = await sql`
-          SELECT * FROM speakers 
-          WHERE status = ${filters.status}
+          AND active = true
           ORDER BY created_at DESC
         `
       } else if (filters.availability) {
         speakers = await sql`
           SELECT * FROM speakers 
           WHERE availability_status = ${filters.availability}
+          AND active = true
           ORDER BY created_at DESC
         `
       } else if (filters.minFee !== undefined && filters.maxFee !== undefined) {
@@ -218,24 +208,28 @@ export async function getAllSpeakers(filters?: {
           SELECT * FROM speakers 
           WHERE speaking_fee_min >= ${filters.minFee}
           AND speaking_fee_max <= ${filters.maxFee}
+          AND active = true
           ORDER BY created_at DESC
         `
       } else if (filters.minFee !== undefined) {
         speakers = await sql`
           SELECT * FROM speakers 
           WHERE speaking_fee_min >= ${filters.minFee}
+          AND active = true
           ORDER BY created_at DESC
         `
       } else if (filters.maxFee !== undefined) {
         speakers = await sql`
           SELECT * FROM speakers 
           WHERE speaking_fee_max <= ${filters.maxFee}
+          AND active = true
           ORDER BY created_at DESC
         `
       } else {
         // Fallback to no filters
         speakers = await sql`
           SELECT * FROM speakers 
+          WHERE active = true
           ORDER BY created_at DESC
         `
       }
@@ -303,6 +297,65 @@ export async function getSpeakerByEmail(email: string): Promise<Speaker | null> 
   }
 }
 
+// Get speaker by slug - optimized with index
+export async function getSpeakerBySlug(slug: string): Promise<Speaker | null> {
+  initializeDatabase()
+  
+  if (!databaseAvailable || !sql) {
+    console.warn("getSpeakerBySlug: Database not available")
+    return null
+  }
+  
+  try {
+    // First try with slug column if it exists
+    const [speaker] = await sql`
+      SELECT * FROM speakers 
+      WHERE slug = ${slug}
+      AND active = true
+      LIMIT 1
+    `
+    
+    // Increment profile views if speaker found
+    if (speaker) {
+      // Use non-blocking update for view count - check if column exists first
+      sql`
+        UPDATE speakers 
+        SET profile_views = COALESCE(profile_views, 0) + 1 
+        WHERE id = ${speaker.id}
+      `.catch(err => {
+        // Silently fail if profile_views column doesn't exist
+      })
+    }
+    
+    return speaker as Speaker || null
+  } catch (error) {
+    // If slug column doesn't exist, try by name
+    if (error.message?.includes('column "slug" does not exist')) {
+      try {
+        // Convert slug back to name format (adam-cheyer -> Adam Cheyer)
+        const name = slug.split('-').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ')
+        
+        const [speaker] = await sql`
+          SELECT * FROM speakers 
+          WHERE LOWER(name) = ${name.toLowerCase()}
+          AND active = true
+          LIMIT 1
+        `
+        
+        return speaker as Speaker || null
+      } catch (fallbackError) {
+        console.error("Error fetching speaker by name fallback:", fallbackError)
+        return null
+      }
+    }
+    
+    console.error("Error fetching speaker by slug:", error)
+    return null
+  }
+}
+
 // Create new speaker profile
 export async function createSpeaker(speakerData: Omit<Speaker, 'id' | 'created_at' | 'updated_at'>): Promise<Speaker | null> {
   initializeDatabase()
@@ -324,7 +377,7 @@ export async function createSpeaker(speakerData: Omit<Speaker, 'id' | 'created_a
         travel_preferences, technical_requirements, dietary_restrictions, preferred_event_types,
         availability_status, blackout_dates,
         years_speaking, total_engagements, industries_served, notable_clients, certifications, awards,
-        status, internal_rating, internal_notes, preferred_partner,
+        internal_rating, internal_notes, preferred_partner,
         emergency_contact, bank_details, tax_info, active
       ) VALUES (
         ${speakerData.email}, ${speakerData.name}, ${speakerData.bio}, ${speakerData.short_bio}, 
@@ -340,7 +393,7 @@ export async function createSpeaker(speakerData: Omit<Speaker, 'id' | 'created_a
         ${speakerData.availability_status || 'available'}, ${speakerData.blackout_dates},
         ${speakerData.years_speaking}, ${speakerData.total_engagements}, ${speakerData.industries_served}, 
         ${speakerData.notable_clients}, ${speakerData.certifications}, ${speakerData.awards},
-        ${speakerData.status || 'pending'}, ${speakerData.internal_rating}, 
+        ${speakerData.internal_rating}, 
         ${speakerData.internal_notes}, ${speakerData.preferred_partner || false},
         ${JSON.stringify(speakerData.emergency_contact || {})}, 
         ${JSON.stringify(speakerData.bank_details || {})}, 
@@ -381,7 +434,7 @@ export async function updateSpeaker(id: number, speakerData: Partial<Speaker>): 
       'speaking_fee_range', 'speaking_fee_min', 'speaking_fee_max', 'commission_rate',
       'travel_preferences', 'technical_requirements', 'dietary_restrictions',
       'availability_status', 'years_speaking', 'total_engagements',
-      'status', 'approval_notes', 'approved_by', 'internal_rating', 
+      'approval_notes', 'approved_by', 'internal_rating', 
       'internal_notes', 'preferred_partner', 'active'
     ]
     
