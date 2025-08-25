@@ -211,7 +211,7 @@ export default function SimpleContractsPage() {
             border: "1px solid #60a5fa"
           }}>
             <h3 style={{ marginTop: 0 }}>Link to Existing Deal (Optional)</h3>
-            <p>Available deals: {deals.length}</نا>
+            <p>Available deals: {deals.length}</p>
             
             <select
               value={selectedDeal}

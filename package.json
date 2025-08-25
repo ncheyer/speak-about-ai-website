@@ -17,6 +17,7 @@
     "@contentful/rich-text-react-renderer": "latest",
     "@contentful/rich-text-types": "latest",
     "@hookform/resolvers": "latest",
+    "@neondatabase/serverless": "^1.0.1",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
     "@radix-ui/react-aspect-ratio": "latest",
