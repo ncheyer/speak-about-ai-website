@@ -157,7 +157,7 @@ Between July 14 - August 12, 2025, speakabout.ai experienced a catastrophic SEO 
 - PageSpeed Insights: https://pagespeed.web.dev/
 
 ### Commands
-```bash
+\`\`\`bash
 # Run full SEO audit and fix
 npm run seo:all
 
@@ -169,7 +169,7 @@ npm run seo:fix
 
 # Build and test locally
 npm run build && npm run start
-```
+\`\`\`
 
 ## Risk Mitigation
 
