@@ -5,38 +5,31 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /admin/
+Disallow: /portal/
 Disallow: /debug*
 Disallow: /test*
-Disallow: /check-sheet*
-Disallow: /image-test
-Disallow: /landing-page
-Disallow: /form-submission
-Disallow: /_next/
+Disallow: /_next/static/
 Disallow: /node_modules/
 Disallow: /.git/
 
-# Major search engine crawlers
+# Allow all crawlers to access the site
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 0
 
 User-agent: Bingbot
 Allow: /
-Crawl-delay: 0
 
 User-agent: Slurp
 Allow: /
-Crawl-delay: 0
 
-# Block bad bots
 User-agent: SemrushBot
-Disallow: /
+Allow: /
 
 User-agent: AhrefsBot
-Disallow: /
+Allow: /
 
-User-agent: MJ12bot
-Disallow: /
+User-agent: DuckDuckBot
+Allow: /
 
 # Sitemap location
 Sitemap: https://www.speakabout.ai/sitemap.xml
