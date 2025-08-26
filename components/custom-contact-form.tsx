@@ -594,7 +594,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                     Subscribe to our newsletter
                   </Label>
                   <p className="text-sm text-gray-600 mt-1">
-                    Get exclusive AI speaker insights, event trends, and industry updates delivered monthly to your inbox.
+                    Get exclusive AI speaker insights, event trends, and industry updates delivered to your inbox.
                   </p>
                 </div>
               </div>
