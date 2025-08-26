@@ -299,7 +299,7 @@ export default function AdminAnalyticsPage() {
                     <Eye className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{analytics.totalPageViews.toLocaleString()}</div>
+                    <div className="text-2xl font-bold">{(analytics.totalPageViews || 0).toLocaleString()}</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -308,7 +308,7 @@ export default function AdminAnalyticsPage() {
                     <Users className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{analytics.uniqueVisitors.toLocaleString()}</div>
+                    <div className="text-2xl font-bold">{(analytics.uniqueVisitors || 0).toLocaleString()}</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -349,10 +349,10 @@ export default function AdminAnalyticsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {analytics.topPages.map((page, index) => (
+                        {(analytics.topPages || []).map((page, index) => (
                           <TableRow key={index}>
                             <TableCell className="font-medium">{page.page}</TableCell>
-                            <TableCell className="text-right">{page.views.toLocaleString()}</TableCell>
+                            <TableCell className="text-right">{(page.views || 0).toLocaleString()}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -375,12 +375,12 @@ export default function AdminAnalyticsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {analytics.topReferrers.map((referrer, index) => (
+                        {(analytics.topReferrers || []).map((referrer, index) => (
                           <TableRow key={index}>
                             <TableCell className="font-medium">
                               {referrer.referrer || "Direct"}
                             </TableCell>
-                            <TableCell className="text-right">{referrer.count.toLocaleString()}</TableCell>
+                            <TableCell className="text-right">{(referrer.count || 0).toLocaleString()}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -397,7 +397,7 @@ export default function AdminAnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {analytics.deviceBreakdown.map((device, index) => (
+                    {(analytics.deviceBreakdown || []).map((device, index) => (
                       <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-3">
                           {device.device === "desktop" && <Monitor className="h-5 w-5 text-gray-600" />}
@@ -405,7 +405,7 @@ export default function AdminAnalyticsPage() {
                           {device.device === "tablet" && <Monitor className="h-5 w-5 text-gray-600" />}
                           <span className="font-medium capitalize">{device.device}</span>
                         </div>
-                        <Badge variant="secondary">{device.count.toLocaleString()}</Badge>
+                        <Badge variant="secondary">{(device.count || 0).toLocaleString()}</Badge>
                       </div>
                     ))}
                   </div>
@@ -421,7 +421,7 @@ export default function AdminAnalyticsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {analytics.browserBreakdown.map((browser, index) => (
+                      {(analytics.browserBreakdown || []).map((browser, index) => (
                         <div key={index} className="flex items-center justify-between">
                           <span className="font-medium">{browser.browser}</span>
                           <div className="flex items-center gap-2">
@@ -433,7 +433,7 @@ export default function AdminAnalyticsPage() {
                                 }}
                               />
                             </div>
-                            <Badge variant="secondary">{browser.count.toLocaleString()}</Badge>
+                            <Badge variant="secondary">{(browser.count || 0).toLocaleString()}</Badge>
                           </div>
                         </div>
                       ))}
@@ -459,7 +459,7 @@ export default function AdminAnalyticsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {analytics.countryBreakdown.map((country, index) => (
+                        {(analytics.countryBreakdown || []).map((country, index) => (
                           <TableRow key={index}>
                             <TableCell className="font-medium">
                               <div className="flex items-center gap-2">
@@ -467,7 +467,7 @@ export default function AdminAnalyticsPage() {
                                 {country.country}
                               </div>
                             </TableCell>
-                            <TableCell className="text-right">{country.count.toLocaleString()}</TableCell>
+                            <TableCell className="text-right">{(country.count || 0).toLocaleString()}</TableCell>
                             <TableCell className="text-right">
                               <Badge variant="outline">
                                 {((country.count / analytics.totalPageViews) * 100).toFixed(1)}%
@@ -498,7 +498,7 @@ export default function AdminAnalyticsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {analytics.recentEvents.map((event, index) => (
+                      {(analytics.recentEvents || []).map((event, index) => (
                         <TableRow key={index}>
                           <TableCell className="font-medium">{event.event_name}</TableCell>
                           <TableCell>{event.page_path}</TableCell>
@@ -529,7 +529,7 @@ export default function AdminAnalyticsPage() {
                     <Search className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{searchAnalytics.totalSearches.toLocaleString()}</div>
+                    <div className="text-2xl font-bold">{(searchAnalytics.totalSearches || 0).toLocaleString()}</div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Speaker directory searches
                     </p>
@@ -542,7 +542,7 @@ export default function AdminAnalyticsPage() {
                     <BarChart3 className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{searchAnalytics.uniqueQueries.toLocaleString()}</div>
+                    <div className="text-2xl font-bold">{(searchAnalytics.uniqueQueries || 0).toLocaleString()}</div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Different search terms
                     </p>
@@ -593,7 +593,7 @@ export default function AdminAnalyticsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {searchAnalytics.topQueries.slice(0, 10).map((query, index) => (
+                        {(searchAnalytics.topQueries || []).slice(0, 10).map((query, index) => (
                           <TableRow key={index}>
                             <TableCell className="font-medium">{query.query}</TableCell>
                             <TableCell className="text-right">{query.search_count}</TableCell>
@@ -625,7 +625,7 @@ export default function AdminAnalyticsPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {searchAnalytics.zeroResultQueries.slice(0, 10).map((query, index) => (
+                          {(searchAnalytics.zeroResultQueries || []).slice(0, 10).map((query, index) => (
                             <TableRow key={index}>
                               <TableCell className="font-medium">{query.query}</TableCell>
                               <TableCell className="text-right">
@@ -653,7 +653,7 @@ export default function AdminAnalyticsPage() {
                 <CardContent>
                   {searchAnalytics.topSearchedSpeakers && searchAnalytics.topSearchedSpeakers.length > 0 ? (
                     <div className="space-y-4">
-                      {searchAnalytics.topSearchedSpeakers.map((speaker, index) => (
+                      {(searchAnalytics.topSearchedSpeakers || []).map((speaker, index) => (
                         <div key={index} className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
@@ -701,7 +701,7 @@ export default function AdminAnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {searchAnalytics.searchesByIndustry.map((industry, index) => (
+                    {(searchAnalytics.searchesByIndustry || []).map((industry, index) => (
                       <div key={index} className="flex items-center justify-between">
                         <span className="font-medium capitalize">
                           {industry.industry_filter === 'all' ? 'All Industries' : industry.industry_filter}
@@ -740,7 +740,7 @@ export default function AdminAnalyticsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {searchAnalytics.recentSearches.slice(0, 20).map((search, index) => (
+                      {(searchAnalytics.recentSearches || []).slice(0, 20).map((search, index) => (
                         <TableRow key={index}>
                           <TableCell className="font-medium">{search.query}</TableCell>
                           <TableCell>
