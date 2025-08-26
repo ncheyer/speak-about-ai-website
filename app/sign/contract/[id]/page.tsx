@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, CheckCircle, AlertCircle, FileText } from "lucide-react"
-import { toast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 
 interface ContractData {
   id: number
@@ -26,6 +26,7 @@ interface ContractData {
 }
 
 export default function ContractSigningPage() {
+  const { toast } = useToast()
   const params = useParams()
   const searchParams = useSearchParams()
   const contractId = params.id as string

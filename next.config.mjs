@@ -11,8 +11,6 @@ const nextConfig = {
   },
   // Enable compression for better performance
   compress: true,
-  // Enable production optimizations
-  swcMinify: true,
   // Configure headers for caching and compression
   async headers() {
     return [
@@ -71,14 +69,6 @@ const nextConfig = {
       },
     ]
   },
-  // Development configuration for VS Code and localhost
-  allowedDevOrigins: [
-    '127.0.0.1',
-    'localhost',
-    'vscode-webview://vscode-webview',
-    '*.github.dev',
-    '*.codespaces.githubusercontent.com'
-  ],
 }
 
 export default nextConfig
