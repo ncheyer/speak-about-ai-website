@@ -25,9 +25,9 @@ export default function ServicesContact() {
           </Button>
           <Button
             asChild
-            variant="outline"
+            variant="default"
             size="lg"
-            className="border-white text-white hover:bg-white hover:text-[#1E68C6] text-lg px-8 py-4 font-montserrat"
+            className="bg-white text-[#1E68C6] hover:bg-gray-100 text-lg px-8 py-4 font-montserrat"
           >
             <a href="tel:+1-510-435-3947">
               <Phone className="w-5 h-5 mr-2" />
@@ -36,9 +36,9 @@ export default function ServicesContact() {
           </Button>
           <Button
             asChild
-            variant="outline"
+            variant="default"
             size="lg"
-            className="border-white text-white hover:bg-white hover:text-[#1E68C6] text-lg px-8 py-4 font-montserrat"
+            className="bg-white text-[#1E68C6] hover:bg-gray-100 text-lg px-8 py-4 font-montserrat"
           >
             <a href="mailto:human@speakabout.ai">
               <Mail className="w-5 h-5 mr-2" />

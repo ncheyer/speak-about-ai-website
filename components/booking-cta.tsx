@@ -25,9 +25,9 @@ export default function BookingCTA() {
           </Button>
           <Button
             asChild
-            variant="outline" // Assuming this button should remain an outline style
+            variant="default"
             size="lg"
-            className="border-white text-white hover:bg-white hover:text-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105 group font-montserrat"
+            className="bg-white text-blue-700 hover:bg-gray-100 transition-all duration-300 ease-in-out transform hover:scale-105 group font-montserrat"
           >
             <Link href="/speakers" className="flex items-center">
               Explore All Speakers
