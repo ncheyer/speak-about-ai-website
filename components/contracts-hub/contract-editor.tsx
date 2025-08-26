@@ -206,7 +206,7 @@ export function ContractEditor({ contractId, isCreating, onSave, onCancel }: Con
       
       const endpoint = contractId 
         ? `/api/contracts/${contractId}`
-        : `/api/contracts`
+        : `/api/contracts/simple`  // Using simple endpoint for debugging
       
       const method = contractId ? 'PUT' : 'POST'
       
