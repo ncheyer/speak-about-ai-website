@@ -48,11 +48,12 @@ export async function POST(request: NextRequest) {
       let result
       
       try {
-        // First attempt: Try with all possible fields including contract_data JSONB
+        // Insert with the actual database structure including required type field
         result = await sql`
           INSERT INTO contracts (
             contract_number,
             title,
+            type,
             status,
             event_title,
             event_date,
@@ -63,11 +64,15 @@ export async function POST(request: NextRequest) {
             speaker_name,
             speaker_email,
             speaker_fee,
+            fee_amount,
+            payment_terms,
+            description,
             contract_data,
             generated_at
           ) VALUES (
             ${contractNumber},
             ${values.event_title ? `Contract - ${values.event_title}` : 'Contract Draft'},
+            ${body.type || 'client_speaker'},
             'draft',
             ${values.event_title || 'Event'},
             ${values.event_date || new Date().toISOString().split('T')[0]},
@@ -78,161 +83,18 @@ export async function POST(request: NextRequest) {
             ${values.speaker_name || null},
             ${values.speaker_email || null},
             ${parseFloat(values.speaker_fee) || null},
+            ${parseFloat(values.speaker_fee) || null},
+            ${values.payment_terms || 'Net 30 days'},
+            ${values.event_description || null},
             ${JSON.stringify(values)}::jsonb,
             NOW()
           )
           RETURNING *
         `
-        console.log("Successfully inserted with all fields including JSONB")
+        console.log("Successfully inserted contract with full data")
       } catch (firstError: any) {
-        console.error("Full insert failed:", firstError.message)
-        
-        // Second attempt: Try without contract_data JSONB column
-        try {
-          result = await sql`
-            INSERT INTO contracts (
-              contract_number,
-              title,
-              status,
-              event_title,
-              event_date,
-              event_location,
-              client_name,
-              client_email
-            ) VALUES (
-              ${contractNumber},
-              ${values.event_title ? `Contract - ${values.event_title}` : 'Contract Draft'},
-              'draft',
-              ${values.event_title || 'Event'},
-              ${values.event_date || new Date().toISOString().split('T')[0]},
-              ${values.event_location || 'TBD'},
-              ${values.client_signer_name || values.client_contact_name || values.client_company || 'Client'},
-              ${values.client_email || 'client@example.com'}
-            )
-            RETURNING *
-          `
-          console.log("Successfully inserted without JSONB")
-        } catch (secondError: any) {
-          console.error("Basic insert failed:", secondError.message)
-        
-          // Third attempt: Try absolute minimum - just required fields
-          try {
-            result = await sql`
-              INSERT INTO contracts (
-                contract_number,
-                status
-              ) VALUES (
-                ${contractNumber},
-                'draft'
-              )
-              RETURNING *
-            `
-            console.log("Successfully inserted with minimal fields")
-          
-          // Now try to update with additional fields one by one
-          const contractId = result[0].id
-          
-          // Try to update title
-          try {
-            await sql`
-              UPDATE contracts 
-              SET title = ${values.event_title ? `Contract - ${values.event_title}` : 'Contract Draft'}
-              WHERE id = ${contractId}
-            `
-          } catch (e) {
-            console.log("Title column doesn't exist")
-          }
-          
-          // Try to update event_title
-          try {
-            await sql`
-              UPDATE contracts 
-              SET event_title = ${values.event_title || 'Event'}
-              WHERE id = ${contractId}
-            `
-          } catch (e) {
-            console.log("event_title column doesn't exist")
-          }
-          
-          // Try to update event_date
-          try {
-            await sql`
-              UPDATE contracts 
-              SET event_date = ${values.event_date || new Date().toISOString().split('T')[0]}
-              WHERE id = ${contractId}
-            `
-          } catch (e) {
-            console.log("event_date column doesn't exist")
-          }
-          
-          // Try to update event_location
-          try {
-            await sql`
-              UPDATE contracts 
-              SET event_location = ${values.event_location || 'TBD'}
-              WHERE id = ${contractId}
-            `
-          } catch (e) {
-            console.log("event_location column doesn't exist")
-          }
-          
-          // Try to update client_name
-          try {
-            await sql`
-              UPDATE contracts 
-              SET client_name = ${values.client_signer_name || values.client_contact_name || values.client_company || 'Client'}
-              WHERE id = ${contractId}
-            `
-          } catch (e) {
-            console.log("client_name column doesn't exist")
-          }
-          
-          // Try to update client_email
-          try {
-            await sql`
-              UPDATE contracts 
-              SET client_email = ${values.client_email || 'client@example.com'}
-              WHERE id = ${contractId}
-            `
-          } catch (e) {
-            console.log("client_email column doesn't exist")
-          }
-          
-          // Try to update speaker_name
-          if (values.speaker_name) {
-            try {
-              await sql`
-                UPDATE contracts 
-                SET speaker_name = ${values.speaker_name}
-                WHERE id = ${contractId}
-              `
-            } catch (e) {
-              console.log("speaker_name column doesn't exist")
-            }
-          }
-          
-          // Try to update speaker_email
-          if (values.speaker_email) {
-            try {
-              await sql`
-                UPDATE contracts 
-                SET speaker_email = ${values.speaker_email}
-                WHERE id = ${contractId}
-              `
-            } catch (e) {
-              console.log("speaker_email column doesn't exist")
-            }
-          }
-          
-          // Fetch the updated record
-          result = await sql`
-            SELECT * FROM contracts WHERE id = ${contractId}
-          `
-          } catch (thirdError: any) {
-            console.error("Minimal insert also failed:", thirdError.message)
-            throw thirdError
-          }
-        }
+        console.error("Insert failed:", firstError.message)
+        throw firstError
       }
       
       console.log("Contract created successfully:", result[0])
