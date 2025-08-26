@@ -87,38 +87,56 @@ export async function POST(request: NextRequest) {
         travel_stipend: parseFloat(values.travel_stipend) || 0
       }
       
-      // Insert the contract using the v2 table structure
+      // Insert using the actual table structure (original contracts table)
       const result = await sql`
         INSERT INTO contracts (
           contract_number,
-          type,
-          category,
-          template_id,
           title,
           status,
-          agency_party,
-          speaker_party,
-          client_party,
-          event_details,
-          financial_terms,
-          terms_and_conditions,
+          template_version,
+          terms,
+          total_amount,
+          payment_terms,
+          event_title,
+          event_date,
+          event_location,
+          event_type,
+          attendee_count,
+          client_name,
+          client_email,
+          client_company,
+          speaker_name,
+          speaker_email,
+          speaker_fee,
+          access_token,
+          client_signing_token,
+          speaker_signing_token,
           created_by,
-          metadata
+          expires_at
         ) VALUES (
           ${contractNumber},
-          ${body.type || 'client_speaker'},
-          ${body.category || 'external'},
-          ${null}, -- template_id can be null for now
           ${values.event_title ? `Contract - ${values.event_title}` : 'Contract Draft'},
           'draft',
-          ${JSON.stringify(agencyParty)},
-          ${speakerParty ? JSON.stringify(speakerParty) : null},
-          ${JSON.stringify(clientParty)},
-          ${JSON.stringify(eventDetails)},
-          ${JSON.stringify(financialTerms)},
+          'v1.0',
           ${contractContent},
+          ${parseFloat(values.speaker_fee) || 0},
+          ${values.payment_terms || 'Net 30 days after event'},
+          ${values.event_title || 'Event'},
+          ${values.event_date || new Date().toISOString().split('T')[0]},
+          ${values.event_location || 'TBD'},
+          ${values.event_type || 'conference'},
+          ${parseInt(values.attendee_count) || 0},
+          ${values.client_contact_name || values.client_signer_name || 'Client'},
+          ${values.client_email || 'client@example.com'},
+          ${values.client_company || 'Client Company'},
+          ${values.speaker_name || null},
+          ${values.speaker_email || null},
+          ${parseFloat(values.speaker_fee) || null},
+          ${accessToken},
+          ${clientSigningToken},
+          ${speakerSigningToken},
           ${body.created_by || 'admin'},
-          ${JSON.stringify(values)}
+          ${expiresAt.toISOString()}
         )
         RETURNING *
       `
