@@ -347,8 +347,8 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
                 <div className="text-center mt-12">
                   <Button
                     onClick={handleLoadMore}
-                    variant="outline"
-                    className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-montserrat"
+                    variant="default"
+                    className="font-montserrat"
                   >
                     Load More Speakers ({filteredSpeakers.length - displayCount} remaining)
                   </Button>

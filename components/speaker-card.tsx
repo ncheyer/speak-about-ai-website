@@ -258,7 +258,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
                 </Link>
               </Button>
               <div className="flex gap-2">
-                <Button asChild variant="outline" className={`${commonButtonClasses} flex-1`}>
+                <Button asChild variant="default" className={`${commonButtonClasses} flex-1`}>
                   <Link href={profileLink}>
                     <User size={16} />
                     <span>View Profile</span>
