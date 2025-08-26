@@ -24,21 +24,20 @@ import { AdminSidebar } from "@/components/admin-sidebar"
 
 interface Contract {
   id: number
-  deal_id: number
+  deal_id?: number
   contract_number: string
   title: string
+  type: string
   status: "draft" | "sent" | "partially_signed" | "fully_executed" | "cancelled"
-  template_version: string
-  terms: string
-  total_amount: number
+  terms?: string
+  fee_amount?: number
   payment_terms?: string
-  event_title: string
-  event_date: string
-  event_location: string
+  event_title?: string
+  event_date?: string
+  event_location?: string
   event_type?: string
-  attendee_count?: number
-  client_name: string
-  client_email: string
+  client_name?: string
+  client_email?: string
   client_company?: string
   speaker_name?: string
   speaker_email?: string
@@ -244,8 +243,8 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p className="text-2xl font-bold">{formatCurrency(contract.total_amount)}</p>
-                  <p className="text-sm text-gray-600">Speaker Fee: {formatCurrency(contract.speaker_fee || contract.total_amount)}</p>
+                  <p className="text-2xl font-bold">{formatCurrency(contract.fee_amount || 0)}</p>
+                  <p className="text-sm text-gray-600">Speaker Fee: {formatCurrency(contract.speaker_fee || contract.fee_amount || 0)}</p>
                   <p className="text-sm text-gray-600">{contract.payment_terms}</p>
                 </div>
               </CardContent>
@@ -328,14 +327,14 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <CardHeader>
               <CardTitle>Contract Terms</CardTitle>
               <CardDescription>
-                Version {contract.template_version} • Generated on {formatDate(contract.generated_at)}
+                Type: {contract.type} • Generated on {formatDate(contract.generated_at || new Date().toISOString())}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div 
                 className="prose max-w-none contract-content"
                 dangerouslySetInnerHTML={{ 
-                  __html: contract.terms.replace(/\n/g, '<br />').replace(/##/g, '<h3>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+                  __html: (contract.terms || 'No terms available').replace(/\n/g, '<br />').replace(/##/g, '<h3>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
                 }}
               />
             </CardContent>

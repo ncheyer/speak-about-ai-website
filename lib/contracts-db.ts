@@ -21,29 +21,31 @@ try {
 
 export interface Contract {
   id: number
-  deal_id: number
+  deal_id?: number
   contract_number: string
   title: string
+  type: string
   status: "draft" | "sent" | "partially_signed" | "fully_executed" | "cancelled"
   
   // Contract content
-  template_version: string
-  terms: string
+  terms?: string
+  description?: string
+  special_requirements?: string
   
   // Financial terms
-  total_amount: number
+  fee_amount?: number
   payment_terms?: string
+  currency?: string
   
   // Event details
-  event_title: string
-  event_date: string
-  event_location: string
+  event_title?: string
+  event_date?: string
+  event_location?: string
   event_type?: string
-  attendee_count?: number
   
   // Client information
-  client_name: string
-  client_email: string
+  client_name?: string
+  client_email?: string
   client_company?: string
   
   // Speaker information
@@ -52,19 +54,19 @@ export interface Contract {
   speaker_fee?: number
   
   // Contract lifecycle
-  generated_at: string
+  generated_at?: string
   sent_at?: string
   expires_at?: string
-  completed_at?: string
-  
-  // Security tokens
-  access_token: string
-  client_signing_token?: string
-  speaker_signing_token?: string
+  signed_at?: string
   
   // Audit
   created_by?: string
-  updated_at: string
+  created_at?: string
+  updated_at?: string
+  
+  // Additional data
+  template_settings?: any
+  contract_data?: any
 }
 
 export interface ContractSignature {
@@ -164,26 +166,30 @@ export async function createContractFromDeal(
     
     const [contract] = await sql`
       INSERT INTO contracts (
-        deal_id, contract_number, title, status, template_version, terms,
-        total_amount, payment_terms, event_title, event_date, event_location,
-        event_type, attendee_count, client_name, client_email, client_company,
-        client_signer_name, client_signer_email,
+        deal_id, contract_number, title, type, status, terms,
+        fee_amount, payment_terms, event_title, event_date, event_location,
+        event_type, client_name, client_email, client_company,
         speaker_name, speaker_email, speaker_fee, expires_at,
-        access_token, client_signing_token, speaker_signing_token, created_by,
-        sent_at, tokens_expire_at
+        created_by, sent_at, contract_data
       ) VALUES (
         ${deal.id}, ${contractData.contract_number}, 
         ${`Speaker Engagement Agreement - ${deal.event_title}`},
-        'draft', 'v1.0', ${contractContent},
+        'client_speaker', 'draft', ${contractContent},
         ${contractData.deal_value}, ${contractData.payment_terms},
         ${deal.event_title}, ${deal.event_date}, ${deal.event_location},
-        ${deal.event_type}, ${deal.attendee_count},
+        ${deal.event_type},
         ${deal.client_name}, ${deal.client_email}, ${deal.company},
-        ${clientSigner.name}, ${clientSigner.email},
         ${contractData.speaker_name}, ${contractData.speaker_email}, 
         ${contractData.speaker_fee}, ${expiresAt.toISOString()},
-        ${accessToken}, ${clientSigningToken}, ${speakerSigningToken}, ${createdBy},
-        NOW(), ${expiresAt.toISOString()}
+        ${createdBy}, NOW(), ${JSON.stringify({
+          clientSigner: clientSigner,
+          attendeeCount: deal.attendee_count,
+          tokens: {
+            access: accessToken,
+            clientSigning: clientSigningToken,
+            speakerSigning: speakerSigningToken
+          }
+        })}::jsonb
       )
       RETURNING *
     `
