@@ -1,12 +1,26 @@
 import { NextResponse } from "next/server"
-import { getDb } from "@/lib/db"
+import { neon } from "@neondatabase/serverless"
 
 export async function GET() {
   try {
-    const db = getDb()
+    // Initialize database connection
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json(
+        { 
+          total: 0,
+          draft: 0,
+          sent: 0,
+          partially_signed: 0,
+          fully_executed: 0,
+          total_value: 0
+        }
+      )
+    }
+    
+    const sql = neon(process.env.DATABASE_URL)
     
     // Get contract statistics
-    const statsQuery = `
+    const stats = await sql`
       SELECT 
         COUNT(*) as total,
         COUNT(CASE WHEN status = 'draft' THEN 1 END) as draft,
@@ -15,7 +29,7 @@ export async function GET() {
         COUNT(CASE WHEN status = 'fully_executed' THEN 1 END) as fully_executed,
         COALESCE(SUM(
           CASE 
-            WHEN financial_terms IS NOT NULL 
+            WHEN financial_terms IS NOT NULL AND financial_terms->>'fee' IS NOT NULL
             THEN (financial_terms->>'fee')::numeric 
             ELSE 0 
           END
@@ -23,22 +37,33 @@ export async function GET() {
       FROM contracts
     `
     
-    const result = await db.query(statsQuery)
-    const stats = result.rows[0]
+    const result = stats[0] || {
+      total: 0,
+      draft: 0,
+      sent: 0,
+      partially_signed: 0,
+      fully_executed: 0,
+      total_value: 0
+    }
     
     return NextResponse.json({
-      total: parseInt(stats.total) || 0,
-      draft: parseInt(stats.draft) || 0,
-      sent: parseInt(stats.sent) || 0,
-      partially_signed: parseInt(stats.partially_signed) || 0,
-      fully_executed: parseInt(stats.fully_executed) || 0,
-      total_value: parseFloat(stats.total_value) || 0
+      total: parseInt(result.total) || 0,
+      draft: parseInt(result.draft) || 0,
+      sent: parseInt(result.sent) || 0,
+      partially_signed: parseInt(result.partially_signed) || 0,
+      fully_executed: parseInt(result.fully_executed) || 0,
+      total_value: parseFloat(result.total_value) || 0
     })
   } catch (error) {
     console.error("Error fetching contract stats:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch contract statistics" },
-      { status: 500 }
-    )
+    // Return default stats on error
+    return NextResponse.json({
+      total: 0,
+      draft: 0,
+      sent: 0,
+      partially_signed: 0,
+      fully_executed: 0,
+      total_value: 0
+    })
   }
 }
