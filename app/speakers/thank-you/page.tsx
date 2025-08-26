@@ -29,19 +29,19 @@ export default function SpeakerThankYouPage() {
             <ul className="text-left text-gray-600 space-y-2">
               <li className="flex items-start">
                 <span className="text-blue-600 mr-2">•</span>
-                Our team will review your application within 3-5 business days
+                We'll review your application over the next few weeks
               </li>
               <li className="flex items-start">
                 <span className="text-blue-600 mr-2">•</span>
-                We'll send you an email with our decision
+                If we'd like to move forward, we'll reach out to book a time to chat face-to-face
               </li>
               <li className="flex items-start">
                 <span className="text-blue-600 mr-2">•</span>
-                If approved, you'll receive access to your speaker dashboard
+                If after the meeting we both decide it's a fit, we'll work on building you a page on the website
               </li>
               <li className="flex items-start">
                 <span className="text-blue-600 mr-2">•</span>
-                We'll work together to match you with speaking opportunities
+                We'll onboard you with our platform and start matching you with speaking opportunities
               </li>
             </ul>
           </div>

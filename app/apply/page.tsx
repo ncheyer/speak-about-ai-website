@@ -334,19 +334,15 @@ export default function SpeakerApplicationPage() {
                 <ul className="space-y-2 text-gray-700">
                   <li className="flex items-start gap-2">
                     <span className="text-[#1E68C6] mt-1">1.</span>
-                    <span>Our team will review your application within 3-5 business days</span>
+                    <span>We'll review your application over the next few weeks</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-[#1E68C6] mt-1">2.</span>
-                    <span>If selected, you'll receive an invitation email to create your speaker account</span>
+                    <span>If we'd like to move forward, we'll reach out to book a time to chat face-to-face</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-[#1E68C6] mt-1">3.</span>
-                    <span>Once approved, your profile will be featured in our speaker directory</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-[#1E68C6] mt-1">4.</span>
-                    <span>You'll gain access to our speaker portal to manage bookings and your profile</span>
+                    <span>If after the meeting we both decide it's a fit, we'll work on building you a page on the website and onboarding you with our platform</span>
                   </li>
                 </ul>
               </div>
