@@ -24,7 +24,8 @@ import {
   X,
   Heart,
   Mail,
-  TrendingUp
+  TrendingUp,
+  FileSignature
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -65,9 +66,17 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       title: "CRM",
       href: "/admin/crm",
       icon: BarChart3,
-      description: "Deals, Proposals & Contracts",
+      description: "Deals & Proposals",
       color: "text-blue-600",
       bgColor: "bg-blue-50"
+    },
+    {
+      title: "Contracts Hub",
+      href: "/admin/contracts-hub",
+      icon: FileSignature,
+      description: "Contract Management",
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50"
     },
     {
       title: "Project Management",
@@ -163,7 +172,8 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       <nav className="flex-1 overflow-y-auto p-4 space-y-2">
         {navigationItems.map((item) => {
           const isActive = pathname === item.href || 
-            (item.href === "/admin/dashboard" && pathname.startsWith("/admin/dashboard"))
+            (item.href === "/admin/dashboard" && pathname.startsWith("/admin/dashboard")) ||
+            (item.href === "/admin/contracts-hub" && pathname.startsWith("/admin/contracts-hub"))
           
           return (
             <Link key={item.href} href={item.href}>
