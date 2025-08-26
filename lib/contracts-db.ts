@@ -422,6 +422,83 @@ export async function generateContractHTML(contractId: number): Promise<string |
   }
 }
 
+export async function updateContract(id: number, data: any): Promise<Contract | null> {
+  if (!databaseAvailable || !sql) {
+    console.warn("updateContract: Database not available")
+    return null
+  }
+  
+  try {
+    console.log("Updating contract ID:", id)
+    
+    // Build update fields dynamically
+    const updates: string[] = []
+    const values: any = { id }
+    
+    if (data.title) {
+      updates.push('title = ${title}')
+      values.title = data.title
+    }
+    
+    if (data.template_id) {
+      updates.push('template_id = ${template_id}')
+      values.template_id = data.template_id
+    }
+    
+    if (data.type) {
+      updates.push('type = ${type}')
+      values.type = data.type
+    }
+    
+    if (data.category) {
+      updates.push('category = ${category}')
+      values.category = data.category
+    }
+    
+    if (data.metadata) {
+      updates.push('metadata = ${metadata}')
+      values.metadata = JSON.stringify(data.metadata)
+    }
+    
+    if (data.financial_terms) {
+      updates.push('financial_terms = ${financial_terms}')
+      values.financial_terms = JSON.stringify(data.financial_terms)
+    }
+    
+    if (data.status) {
+      updates.push('status = ${status}')
+      values.status = data.status
+    }
+    
+    if (data.updated_by) {
+      updates.push('last_modified_by = ${updated_by}')
+      values.updated_by = data.updated_by
+    }
+    
+    // Always update the timestamp
+    updates.push('updated_at = NOW()')
+    
+    if (updates.length === 1) {
+      // Only timestamp update, no other changes
+      return await getContractById(id)
+    }
+    
+    // Execute the update
+    const result = await sql`
+      UPDATE contracts 
+      SET ${sql.unsafe(updates.join(', '))}
+      WHERE id = ${id}
+      RETURNING *
+    `
+    
+    console.log("Successfully updated contract ID:", id)
+    return result.length > 0 ? result[0] : null
+  } catch (error) {
+    console.error("Error updating contract:", error)
+    return null
+  }
+}
+
 export async function deleteContract(id: number): Promise<boolean> {
   if (!databaseAvailable || !sql) {
     console.warn("deleteContract: Database not available")
