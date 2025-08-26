@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter, useParams } from "next/navigation"
+import { upload } from "@vercel/blob/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -23,7 +24,9 @@ import {
   MessageSquare,
   User,
   Settings,
-  Briefcase
+  Briefcase,
+  Camera,
+  Upload
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -86,6 +89,8 @@ export default function AdminSpeakerEditPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -136,6 +141,62 @@ export default function AdminSpeakerEditPage() {
     setIsLoggedIn(true)
     loadSpeaker()
   }, [router, params.id])
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Error",
+        description: "Please select an image file",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "Image must be less than 5MB",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setUploadingImage(true)
+
+    try {
+      // Upload to Vercel Blob
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/admin/speakers/upload",
+      })
+
+      // Update form data with the new image URL
+      setFormData(prev => ({ ...prev, headshot_url: blob.url }))
+      
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully",
+      })
+    } catch (error) {
+      console.error("Upload error:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to upload image",
+        variant: "destructive",
+      })
+    } finally {
+      setUploadingImage(false)
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
 
   const loadSpeaker = async () => {
     try {
@@ -495,13 +556,65 @@ export default function AdminSpeakerEditPage() {
                       placeholder="e.g., $10,000 - $25,000"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="headshot_url">Headshot URL</Label>
-                    <Input
-                      id="headshot_url"
-                      value={formData.headshot_url}
-                      onChange={(e) => setFormData(prev => ({ ...prev, headshot_url: e.target.value }))}
-                      placeholder="https://..."
+                  <div className="md:col-span-2">
+                    <Label htmlFor="headshot_url">Headshot</Label>
+                    <div className="mt-2 flex items-start gap-4">
+                      <Avatar className="h-24 w-24">
+                        <AvatarImage src={formData.headshot_url} alt={formData.name} />
+                        <AvatarFallback>
+                          {formData.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadingImage}
+                          >
+                            {uploadingImage ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload New Image
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFormData(prev => ({ ...prev, headshot_url: '' }))}
+                            disabled={!formData.headshot_url || uploadingImage}
+                          >
+                            <X className="mr-2 h-4 w-4" />
+                            Remove
+                          </Button>
+                        </div>
+                        <Input
+                          id="headshot_url"
+                          value={formData.headshot_url}
+                          onChange={(e) => setFormData(prev => ({ ...prev, headshot_url: e.target.value }))}
+                          placeholder="Or enter image URL directly"
+                          disabled={uploadingImage}
+                        />
+                        <p className="text-xs text-gray-500">
+                          Recommended: Square image, at least 400x400px, max 5MB
+                        </p>
+                      </div>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={handleImageUpload}
                     />
                   </div>
                   <div>
