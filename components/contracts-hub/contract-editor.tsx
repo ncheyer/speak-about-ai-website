@@ -122,6 +122,7 @@ export function ContractEditor({ contractId, isCreating, onSave, onCancel }: Con
 
   const loadTemplate = (templateId: string) => {
     const template = defaultContractTemplates.find(t => t.id === templateId)
+    console.log('Loading template:', templateId, template)
     if (template) {
       setSelectedTemplate(template)
       // Initialize default values
@@ -131,11 +132,13 @@ export function ContractEditor({ contractId, isCreating, onSave, onCancel }: Con
           defaultValues[variable.key] = variable.defaultValue
         }
       })
-      setContract(prev => ({
-        ...prev,
+      const updatedContract = {
+        ...contract,
         template_id: templateId,
-        values: { ...defaultValues, ...prev.values }
-      }))
+        values: { ...defaultValues, ...contract.values }
+      }
+      console.log('Updated contract after template load:', updatedContract)
+      setContract(updatedContract)
     }
   }
 
@@ -207,15 +210,23 @@ export function ContractEditor({ contractId, isCreating, onSave, onCancel }: Con
       
       const method = contractId ? 'PUT' : 'POST'
       
+      const payload = {
+        ...contract,
+        send_for_signature: sendForSignature
+      }
+      
+      console.log('Saving contract with payload:', payload)
+      
       const response = await fetch(endpoint, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...contract,
-          send_for_signature: sendForSignature
-        })
+        body: JSON.stringify(payload)
       })
 
+      const responseText = await response.text()
+      console.log('Response status:', response.status)
+      console.log('Response text:', responseText)
+      
       if (response.ok) {
         toast({
           title: "Success",
@@ -225,7 +236,18 @@ export function ContractEditor({ contractId, isCreating, onSave, onCancel }: Con
         })
         onSave?.()
       } else {
-        throw new Error("Failed to save contract")
+        let errorMessage = "Failed to save contract"
+        try {
+          const errorData = JSON.parse(responseText)
+          errorMessage = errorData.error || errorMessage
+          if (errorData.details) {
+            console.error('Error details:', errorData.details)
+            errorMessage += `: ${errorData.details}`
+          }
+        } catch (e) {
+          console.error('Could not parse error response:', responseText)
+        }
+        throw new Error(errorMessage)
       }
     } catch (error) {
       console.error("Error saving contract:", error)
