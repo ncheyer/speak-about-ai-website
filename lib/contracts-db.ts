@@ -446,29 +446,14 @@ export async function updateContract(id: number, data: any): Promise<Contract | 
       values.title = data.title
     }
     
-    if (data.template_id) {
-      updates.push('template_id = ${template_id}')
-      values.template_id = data.template_id
-    }
-    
     if (data.type) {
       updates.push('type = ${type}')
       values.type = data.type
     }
     
-    if (data.category) {
-      updates.push('category = ${category}')
-      values.category = data.category
-    }
-    
-    if (data.metadata) {
-      updates.push('metadata = ${metadata}')
-      values.metadata = JSON.stringify(data.metadata)
-    }
-    
-    if (data.financial_terms) {
-      updates.push('financial_terms = ${financial_terms}')
-      values.financial_terms = JSON.stringify(data.financial_terms)
+    if (data.contract_data) {
+      updates.push('contract_data = ${contract_data}::jsonb')
+      values.contract_data = JSON.stringify(data.contract_data)
     }
     
     if (data.status) {
@@ -477,8 +462,32 @@ export async function updateContract(id: number, data: any): Promise<Contract | 
     }
     
     if (data.updated_by) {
-      updates.push('last_modified_by = ${updated_by}')
+      updates.push('created_by = ${updated_by}')
       values.updated_by = data.updated_by
+    }
+    
+    // Update fee_amount if speaker_fee is provided in contract_data
+    if (data.contract_data && data.contract_data.speaker_fee) {
+      updates.push('fee_amount = ${fee_amount}')
+      values.fee_amount = parseFloat(data.contract_data.speaker_fee) || 0
+      updates.push('speaker_fee = ${speaker_fee}')
+      values.speaker_fee = parseFloat(data.contract_data.speaker_fee) || 0
+    }
+    
+    // Update event details if provided
+    if (data.contract_data) {
+      if (data.contract_data.event_title) {
+        updates.push('event_title = ${event_title}')
+        values.event_title = data.contract_data.event_title
+      }
+      if (data.contract_data.event_date) {
+        updates.push('event_date = ${event_date}')
+        values.event_date = data.contract_data.event_date
+      }
+      if (data.contract_data.event_location) {
+        updates.push('event_location = ${event_location}')
+        values.event_location = data.contract_data.event_location
+      }
     }
     
     // Always update the timestamp

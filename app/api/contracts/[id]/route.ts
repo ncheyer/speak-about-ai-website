@@ -25,10 +25,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Add additional fields for the hub
+    // The contract_data column already exists in the database
     const enhancedContract = {
       ...contract,
-      contract_data: contract.metadata || {},
-      template_id: contract.template_id || 'standard-speaker-agreement',
+      contract_data: contract.contract_data || contract.metadata || {},
+      template_id: contract.template_id || contract.template_settings?.template_id || 'standard-speaker-agreement',
       signatures: {
         client: contract.client_signature_status ? {
           signed: contract.client_signature_status === 'signed',
@@ -76,7 +77,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         title: body.title,
         type: body.type,
         category: body.category,
-        metadata: body.values || body.contract_data,
+        contract_data: body.values || body.contract_data,  // Use contract_data column
         financial_terms: body.financial_terms,
         status: body.status,
         updated_by: body.updated_by || 'admin'
