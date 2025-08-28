@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { DealStatusDropdown } from "@/components/deal-status-dropdown"
+import { LostDealModal, type LostDealData } from "@/components/lost-deal-modal"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -148,6 +150,8 @@ export default function AdminCRMPage() {
   const [contractDeal, setContractDeal] = useState<Deal | null>(null)
   const [showContractPreview, setShowContractPreview] = useState(false)
   const [contractPreviewContent, setContractPreviewContent] = useState("")
+  const [showLostDealModal, setShowLostDealModal] = useState(false)
+  const [lostDealInfo, setLostDealInfo] = useState<{ id: number; name: string } | null>(null)
   const [contractFormData, setContractFormData] = useState({
     speaker_name: "",
     speaker_email: "",
@@ -704,6 +708,119 @@ d) An immediate family member is stricken by serious injury, illness, or death.
         variant: "destructive"
       })
     }
+  }
+
+  const handleQuickStatusChange = async (dealId: number, newStatus: string, dealName: string) => {
+    // If marking as lost, show the lost deal modal
+    if (newStatus === 'lost') {
+      setLostDealInfo({ id: dealId, name: dealName })
+      setShowLostDealModal(true)
+      return
+    }
+
+    // Otherwise, update the status directly
+    try {
+      const response = await fetch(`/api/deals/${dealId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: `Deal status updated to ${newStatus}`,
+        })
+        loadData() // Reload deals
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to update deal status",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error updating deal status:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update deal status",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleLostDealSubmit = async (lostData: LostDealData) => {
+    if (!lostDealInfo) return
+
+    try {
+      // Build the notes to append to the deal
+      const lostNotes = `\n\n--- MARKED AS LOST ---\nDate: ${new Date().toLocaleDateString()}\nReason: ${lostData.reason}\nDetails: ${lostData.specificReason}\n${lostData.worthFollowUp ? `Follow up in: ${lostData.followUpTimeframe}` : 'No follow-up needed'}\nNext Steps: ${lostData.nextSteps}\n${lostData.competitorWon ? `Competitor won: ${lostData.competitorWon}` : ''}\n${lostData.budgetMismatch ? `Budget issue: ${lostData.budgetMismatch}` : ''}\n${lostData.otherNotes ? `Additional notes: ${lostData.otherNotes}` : ''}`
+
+      // Find the current deal to append to existing notes
+      const currentDeal = deals.find(d => d.id === lostDealInfo.id)
+      const updatedNotes = (currentDeal?.notes || '') + lostNotes
+
+      const response = await fetch(`/api/deals/${lostDealInfo.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          status: 'lost',
+          notes: updatedNotes,
+          // Store structured data for future analysis (could add these fields to DB later)
+          lost_reason: lostData.reason,
+          worth_follow_up: lostData.worthFollowUp,
+          follow_up_date: lostData.worthFollowUp && lostData.followUpTimeframe !== 'never' 
+            ? calculateFollowUpDate(lostData.followUpTimeframe) 
+            : null
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Deal marked as lost",
+          description: "Lost deal information has been recorded",
+        })
+        setShowLostDealModal(false)
+        setLostDealInfo(null)
+        loadData() // Reload deals
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to update deal",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error marking deal as lost:", error)
+      toast({
+        title: "Error",
+        description: "Failed to mark deal as lost",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const calculateFollowUpDate = (timeframe: string): string => {
+    const date = new Date()
+    switch (timeframe) {
+      case '1month':
+        date.setMonth(date.getMonth() + 1)
+        break
+      case '3months':
+        date.setMonth(date.getMonth() + 3)
+        break
+      case '6months':
+        date.setMonth(date.getMonth() + 6)
+        break
+      case '1year':
+        date.setFullYear(date.getFullYear() + 1)
+        break
+      default:
+        return ''
+    }
+    return date.toISOString().split('T')[0]
   }
 
   const handleReactivateDeal = async (deal: Deal) => {
@@ -1278,9 +1395,12 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                               ${new Intl.NumberFormat('en-US').format(deal.deal_value)}
                             </TableCell>
                             <TableCell>
-                              <Badge className={`${DEAL_STATUSES[deal.status].color} text-white`}>
-                                {DEAL_STATUSES[deal.status].label}
-                              </Badge>
+                              <DealStatusDropdown
+                                currentStatus={deal.status}
+                                dealId={deal.id}
+                                dealName={deal.event_title}
+                                onStatusChange={handleQuickStatusChange}
+                              />
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline" className={PRIORITY_COLORS[deal.priority]}>
@@ -2269,6 +2389,17 @@ d) An immediate family member is stricken by serious injury, illness, or death.
           </Card>
         </div>
       )}
+
+      {/* Lost Deal Modal */}
+      <LostDealModal
+        isOpen={showLostDealModal}
+        onClose={() => {
+          setShowLostDealModal(false)
+          setLostDealInfo(null)
+        }}
+        onSubmit={handleLostDealSubmit}
+        dealName={lostDealInfo?.name || ''}
+      />
     </div>
   )
 }
