@@ -308,7 +308,7 @@ export default function AdminCRMPage() {
       setSubmitting(true)
       
       // Generate preview directly in the client
-      const speakerFee = parseFloat(contractFormData.speaker_fee) || contractDeal.deal_value
+      const speakerFee = parseFloat(contractFormData.speaker_fee) || contractDeal.deal_value || 0
       const eventDate = new Date(contractDeal.event_date)
       const eventDateFormatted = eventDate.toLocaleDateString('en-US', {
         weekday: 'long',
@@ -392,7 +392,7 @@ Event Reference: ${contractRef}
 Client & Name of Event: ${contractDeal.company} / ${contractDeal.event_title} ("Event")
 Date(s)/Time(s): ${eventDateFormatted} from ${eventTime}
 Location(s): ${contractDeal.event_location}
-The fee and any other consideration payable to the Agent: $${speakerFee.toLocaleString('en-US')} USD
+The fee and any other consideration payable to the Agent: $${(speakerFee || 0).toLocaleString('en-US')} USD
 ${contractDeal.travel_required ? `Travel: Travel stipend of $${(contractDeal.travel_stipend || 2500).toLocaleString('en-US')}, plus ${contractDeal.hotel_required ? 'one night accommodation at a 4-star hotel of the client\'s choice nearby the venue.' : 'travel arrangements as agreed.'}` : ''}
 For that fee, the Speaker will provide:
 ${generateEngagementDetails()}
@@ -1376,7 +1376,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                                   <p className="text-sm text-gray-500">{new Date(contract.event_date).toLocaleDateString()}</p>
                                 </div>
                               </TableCell>
-                              <TableCell>${contract.total_amount.toLocaleString()}</TableCell>
+                              <TableCell>${(contract.fee_amount || contract.speaker_fee || 0).toLocaleString()}</TableCell>
                               <TableCell>
                                 <Badge className={`${statusColor} text-white`}>
                                   <StatusIcon className="mr-1 h-3 w-3" />
