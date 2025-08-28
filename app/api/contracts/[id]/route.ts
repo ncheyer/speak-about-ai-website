@@ -24,6 +24,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Contract not found" }, { status: 404 })
     }
 
+    console.log("Raw contract from database:", contract)
+    console.log("contract.contract_data:", contract.contract_data)
+    
     // Add additional fields for the hub
     // The contract_data column already exists in the database
     const enhancedContract = {

@@ -73,7 +73,7 @@ export function ContractEditor({ contractId, isCreating, onSave, onCancel }: Con
   useEffect(() => {
     if (isCreating) {
       loadDeals()
-      loadTemplate('standard-speaker-agreement')
+      loadTemplate('standard-speaker-agreement', {})
     } else if (contractId) {
       loadContract(contractId)
     }
@@ -82,19 +82,34 @@ export function ContractEditor({ contractId, isCreating, onSave, onCancel }: Con
   const loadContract = async (id: number) => {
     try {
       setLoading(true)
+      console.log("Loading contract with ID:", id)
       const response = await fetch(`/api/contracts/${id}`)
       if (response.ok) {
         const data = await response.json()
-        setContract({
+        console.log("Contract data received from API:", data)
+        console.log("contract_data field:", data.contract_data)
+        
+        const contractValues = data.contract_data || {}
+        const contractToSet = {
           template_id: data.template_id || 'standard-speaker-agreement',
           deal_id: data.deal_id,
-          type: data.type,
-          category: data.category,
+          type: data.type || 'client_speaker',
+          category: data.category || 'external',
           title: data.title,
           status: data.status,
-          values: data.contract_data || {}
-        })
-        loadTemplate(data.template_id || 'standard-speaker-agreement')
+          values: contractValues
+        }
+        console.log("Setting contract state to:", contractToSet)
+        setContract(contractToSet)
+        
+        // Load template but pass existing values to preserve them
+        const templateId = data.template_id || 'standard-speaker-agreement'
+        console.log("Loading template with existing values:", templateId, contractValues)
+        loadTemplate(templateId, contractValues)
+      } else {
+        console.error("Failed to load contract, status:", response.status)
+        const errorText = await response.text()
+        console.error("Error response:", errorText)
       }
     } catch (error) {
       console.error("Error loading contract:", error)
@@ -120,25 +135,31 @@ export function ContractEditor({ contractId, isCreating, onSave, onCancel }: Con
     }
   }
 
-  const loadTemplate = (templateId: string) => {
+  const loadTemplate = (templateId: string, existingValues?: Record<string, any>) => {
     const template = defaultContractTemplates.find(t => t.id === templateId)
     console.log('Loading template:', templateId, template)
+    console.log('Existing values:', existingValues)
     if (template) {
       setSelectedTemplate(template)
-      // Initialize default values
-      const defaultValues: Record<string, any> = {}
-      template.variables.forEach(variable => {
-        if (variable.defaultValue !== undefined) {
-          defaultValues[variable.key] = variable.defaultValue
-        }
-      })
-      const updatedContract = {
-        ...contract,
-        template_id: templateId,
-        values: { ...defaultValues, ...contract.values }
+      // Only set default values if no existing values are provided
+      if (!existingValues || Object.keys(existingValues).length === 0) {
+        // Initialize default values only for new contracts
+        const defaultValues: Record<string, any> = {}
+        template.variables.forEach(variable => {
+          if (variable.defaultValue !== undefined) {
+            defaultValues[variable.key] = variable.defaultValue
+          }
+        })
+        setContract(prev => ({
+          ...prev,
+          template_id: templateId,
+          values: { ...defaultValues, ...prev.values }
+        }))
+        console.log('Set default values for new contract')
+      } else {
+        // For existing contracts, preserve the values
+        console.log('Preserving existing values:', existingValues)
       }
-      console.log('Updated contract after template load:', updatedContract)
-      setContract(updatedContract)
     }
   }
 
@@ -455,7 +476,7 @@ export function ContractEditor({ contractId, isCreating, onSave, onCancel }: Con
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Select value={contract.template_id} onValueChange={loadTemplate}>
+          <Select value={contract.template_id} onValueChange={(templateId) => loadTemplate(templateId, contract.values)}>
             <SelectTrigger>
               <SelectValue placeholder="Select template" />
             </SelectTrigger>
