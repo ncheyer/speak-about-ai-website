@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description:
       "Book world-class AI keynote speakers with Speak About AI, the AI-exclusive bureau trusted by Fortune 500s. 50+ experts for your next event.",
     type: "website",
-    url: "https://www.speakabout.ai",
+    url: "https://speakabout.ai",
     images: [
       {
         url: "/og-image.jpg",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     images: ["/og-image.jpg"],
   },
   alternates: {
-    canonical: "https://www.speakabout.ai",
+    canonical: "https://speakabout.ai",
   },
   robots: {
     index: true,
@@ -56,8 +56,8 @@ const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Speak About AI",
-  url: "https://www.speakabout.ai",
-  logo: "https://www.speakabout.ai/logo.png",
+  url: "https://speakabout.ai",
+  logo: "https://speakabout.ai/logo.png",
   description:
     "The world's only AI-exclusive speaker bureau, connecting organizations with top artificial intelligence keynote speakers.",
   address: {

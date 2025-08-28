@@ -3,7 +3,7 @@ import { getAllSpeakers } from "@/lib/speakers-data"
 import { getBlogPosts } from "@/lib/blog-data"
 import { getAllLandingPages } from "@/lib/landing-page-data"
 
-const BASE_URL = "https://www.speakabout.ai"
+const BASE_URL = "https://speakabout.ai"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()

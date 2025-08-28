@@ -32,4 +32,4 @@ User-agent: DuckDuckBot
 Allow: /
 
 # Sitemap location
-Sitemap: https://www.speakabout.ai/sitemap.xml
+Sitemap: https://speakabout.ai/sitemap.xml
