@@ -52,6 +52,16 @@ export interface Deal {
   hotel_required?: boolean
   travel_stipend?: number
   travel_notes?: string
+  // Lost deal tracking fields
+  lost_reason?: string
+  lost_details?: string
+  worth_follow_up?: boolean
+  follow_up_date?: string
+  lost_competitor?: string
+  lost_next_steps?: string
+  lost_date?: string
+  won_date?: string
+  closed_notes?: string
 }
 
 export async function getAllDeals(): Promise<Deal[]> {
@@ -170,6 +180,15 @@ export async function updateDeal(id: number, dealData: Partial<Deal>): Promise<D
         hotel_required = ${dealData.hotel_required !== undefined ? dealData.hotel_required : sql`hotel_required`},
         travel_stipend = ${dealData.travel_stipend !== undefined ? dealData.travel_stipend : sql`travel_stipend`},
         travel_notes = COALESCE(${dealData.travel_notes || null}, travel_notes),
+        lost_reason = COALESCE(${dealData.lost_reason || null}, lost_reason),
+        lost_details = COALESCE(${dealData.lost_details || null}, lost_details),
+        worth_follow_up = ${dealData.worth_follow_up !== undefined ? dealData.worth_follow_up : sql`worth_follow_up`},
+        follow_up_date = COALESCE(${dealData.follow_up_date || null}, follow_up_date),
+        lost_competitor = COALESCE(${dealData.lost_competitor || null}, lost_competitor),
+        lost_next_steps = COALESCE(${dealData.lost_next_steps || null}, lost_next_steps),
+        lost_date = ${dealData.status === 'lost' ? sql`CURRENT_TIMESTAMP` : sql`lost_date`},
+        won_date = ${dealData.status === 'won' ? sql`CURRENT_TIMESTAMP` : sql`won_date`},
+        closed_notes = COALESCE(${dealData.closed_notes || null}, closed_notes),
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${id}
       RETURNING *
