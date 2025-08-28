@@ -2,21 +2,27 @@ import { neon } from "@neondatabase/serverless"
 import { generateContractContent, generateContractHTML as generateHTMLFromTemplate, validateContractData, type ContractData } from "./contract-template"
 import type { Deal } from "./deals-db"
 
-// Initialize Neon client with error handling
+// Lazy initialize Neon client to avoid build-time errors
 let sql: any = null
 let databaseAvailable = false
+let initialized = false
 
-try {
-  if (process.env.DATABASE_URL) {
-    console.log("Contracts DB: Initializing Neon client...")
-    sql = neon(process.env.DATABASE_URL)
-    databaseAvailable = true
-    console.log("Contracts DB: Neon client initialized successfully")
-  } else {
-    console.warn("DATABASE_URL environment variable is not set - contracts database unavailable")
+function initializeDatabase() {
+  if (initialized) return
+  initialized = true
+  
+  try {
+    if (process.env.DATABASE_URL) {
+      console.log("Contracts DB: Initializing Neon client...")
+      sql = neon(process.env.DATABASE_URL)
+      databaseAvailable = true
+      console.log("Contracts DB: Neon client initialized successfully")
+    } else {
+      console.warn("DATABASE_URL environment variable is not set - contracts database unavailable")
+    }
+  } catch (error) {
+    console.error("Failed to initialize Neon client for contracts:", error)
   }
-} catch (error) {
-  console.error("Failed to initialize Neon client for contracts:", error)
 }
 
 export interface Contract {
@@ -119,6 +125,7 @@ export async function createContractFromDeal(
   createdBy?: string,
   clientSignerInfo?: { name: string; email: string }
 ): Promise<Contract | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("createContractFromDeal: Database not available")
     return null
@@ -209,6 +216,7 @@ export async function createContractFromDeal(
 }
 
 export async function getAllContracts(): Promise<Contract[]> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getAllContracts: Database not available")
     return []
@@ -231,6 +239,7 @@ export async function getAllContracts(): Promise<Contract[]> {
 }
 
 export async function getContractById(id: number): Promise<Contract | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getContractById: Database not available")
     return null
@@ -252,6 +261,7 @@ export async function getContractById(id: number): Promise<Contract | null> {
 }
 
 export async function getContractByToken(token: string): Promise<Contract | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getContractByToken: Database not available")
     return null
@@ -277,6 +287,7 @@ export async function updateContractStatus(
   status: Contract['status'],
   updatedBy?: string
 ): Promise<Contract | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("updateContractStatus: Database not available")
     return null
@@ -317,6 +328,7 @@ export async function addContractSignature(
   ipAddress?: string,
   userAgent?: string
 ): Promise<ContractSignature | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("addContractSignature: Database not available")
     return null
@@ -367,6 +379,7 @@ export async function addContractSignature(
 }
 
 export async function getContractSignatures(contractId: number): Promise<ContractSignature[]> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getContractSignatures: Database not available")
     return []
@@ -429,6 +442,7 @@ export async function generateContractHTML(contractId: number): Promise<string |
 }
 
 export async function updateContract(id: number, data: any): Promise<Contract | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("updateContract: Database not available")
     return null
@@ -515,6 +529,7 @@ export async function updateContract(id: number, data: any): Promise<Contract | 
 }
 
 export async function deleteContract(id: number): Promise<boolean> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("deleteContract: Database not available")
     return false
@@ -533,6 +548,7 @@ export async function deleteContract(id: number): Promise<boolean> {
 
 // Get contract by ID and token for signing
 export async function getContractByIdAndToken(id: number, token: string): Promise<Contract | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getContractByIdAndToken: Database not available")
     return null
@@ -562,6 +578,7 @@ export async function signContract(data: {
   ipAddress?: string
   userAgent?: string
 }): Promise<{ id: number; contractFullyExecuted: boolean } | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("signContract: Database not available")
     return null
@@ -651,6 +668,7 @@ export async function signContract(data: {
 
 // Test connection function
 export async function testContractsConnection(): Promise<boolean> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     return false
   }

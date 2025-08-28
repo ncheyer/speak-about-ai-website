@@ -1,20 +1,26 @@
 import { neon } from "@neondatabase/serverless"
 
-// Initialize Neon client with error handling
+// Lazy initialize Neon client to avoid build-time errors
 let sql: any = null
 let databaseAvailable = false
+let initialized = false
 
-try {
-  if (process.env.DATABASE_URL) {
-    console.log("Deals DB: Initializing Neon client...")
-    sql = neon(process.env.DATABASE_URL)
-    databaseAvailable = true
-    console.log("Deals DB: Neon client initialized successfully")
-  } else {
-    console.warn("DATABASE_URL environment variable is not set - deals database unavailable")
+function initializeDatabase() {
+  if (initialized) return
+  initialized = true
+  
+  try {
+    if (process.env.DATABASE_URL) {
+      console.log("Deals DB: Initializing Neon client...")
+      sql = neon(process.env.DATABASE_URL)
+      databaseAvailable = true
+      console.log("Deals DB: Neon client initialized successfully")
+    } else {
+      console.warn("DATABASE_URL environment variable is not set - deals database unavailable")
+    }
+  } catch (error) {
+    console.error("Failed to initialize Neon client for deals:", error)
   }
-} catch (error) {
-  console.error("Failed to initialize Neon client for deals:", error)
 }
 
 export interface Deal {
@@ -49,6 +55,7 @@ export interface Deal {
 }
 
 export async function getAllDeals(): Promise<Deal[]> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getAllDeals: Database not available")
     return []
@@ -76,6 +83,7 @@ export async function getAllDeals(): Promise<Deal[]> {
 }
 
 export async function getDealById(id: number): Promise<Deal | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getDealById: Database not available")
     return null
@@ -95,6 +103,7 @@ export async function getDealById(id: number): Promise<Deal | null> {
 }
 
 export async function createDeal(dealData: Omit<Deal, "id" | "created_at" | "updated_at">): Promise<Deal | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("createDeal: Database not available")
     return null
@@ -128,6 +137,11 @@ export async function createDeal(dealData: Omit<Deal, "id" | "created_at" | "upd
 }
 
 export async function updateDeal(id: number, dealData: Partial<Deal>): Promise<Deal | null> {
+  initializeDatabase()
+  if (!databaseAvailable || !sql) {
+    console.warn("updateDeal: Database not available")
+    return null
+  }
   try {
     console.log("Updating deal ID:", id)
     console.log("Update data received:", JSON.stringify(dealData, null, 2))
@@ -169,6 +183,11 @@ export async function updateDeal(id: number, dealData: Partial<Deal>): Promise<D
 }
 
 export async function deleteDeal(id: number): Promise<boolean> {
+  initializeDatabase()
+  if (!databaseAvailable || !sql) {
+    console.warn("deleteDeal: Database not available")
+    return false
+  }
   try {
     console.log("Deleting deal ID:", id)
     await sql`DELETE FROM deals WHERE id = ${id}`
@@ -181,6 +200,7 @@ export async function deleteDeal(id: number): Promise<boolean> {
 }
 
 export async function getDealsByStatus(status: string): Promise<Deal[]> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getDealsByStatus: Database not available")
     return []
@@ -201,6 +221,7 @@ export async function getDealsByStatus(status: string): Promise<Deal[]> {
 }
 
 export async function searchDeals(searchTerm: string): Promise<Deal[]> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("searchDeals: Database not available")
     return []
@@ -225,6 +246,10 @@ export async function searchDeals(searchTerm: string): Promise<Deal[]> {
 
 // Test connection function
 export async function testConnection(): Promise<boolean> {
+  initializeDatabase()
+  if (!databaseAvailable || !sql) {
+    return false
+  }
   try {
     await sql`SELECT 1`
     return true
