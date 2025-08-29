@@ -82,9 +82,17 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       title: "Project Management",
       href: "/admin/projects",
       icon: CheckSquare,
-      description: "Live Projects & Invoicing",
+      description: "Live Projects",
       color: "text-orange-600",
       bgColor: "bg-orange-50"
+    },
+    {
+      title: "Invoicing",
+      href: "/admin/invoicing",
+      icon: DollarSign,
+      description: "Invoice Management",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50"
     },
     {
       title: "Speaker Management",
@@ -173,7 +181,8 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
         {navigationItems.map((item) => {
           const isActive = pathname === item.href || 
             (item.href === "/admin/dashboard" && pathname.startsWith("/admin/dashboard")) ||
-            (item.href === "/admin/contracts-hub" && pathname.startsWith("/admin/contracts-hub"))
+            (item.href === "/admin/contracts-hub" && pathname.startsWith("/admin/contracts-hub")) ||
+            (item.href === "/admin/invoicing" && pathname.startsWith("/admin/invoicing"))
           
           return (
             <Link key={item.href} href={item.href}>
