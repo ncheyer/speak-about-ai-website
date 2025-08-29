@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { InvoicesSection } from "@/components/admin/invoices-section"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -144,7 +145,9 @@ const PRIORITY_COLORS = {
 export default function MasterAdminPanel() {
   const router = useRouter()
   const { toast } = useToast()
+  const [masterTab, setMasterTab] = useState<"overview" | "deals" | "projects">("overview")
   const [activeTab, setActiveTab] = useState("speakers")
+  const [projectsSubTab, setProjectsSubTab] = useState("dashboard")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   
   // Data states
@@ -1394,6 +1397,110 @@ export default function MasterAdminPanel() {
                 )}
               </>
             )}
+          </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+          {/* Deals & CRM Tab */}
+          <TabsContent value="deals">
+            <Card>
+              <CardHeader>
+                <CardTitle>Deals & CRM Management</CardTitle>
+                <CardDescription>
+                  Manage your sales pipeline, deals, proposals, and contracts
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-gray-600">
+                    Access the full CRM system to manage:
+                  </p>
+                  <ul className="list-disc list-inside space-y-2 text-gray-600">
+                    <li>Deals Pipeline - Track opportunities from lead to close</li>
+                    <li>Proposals - Create and send speaker proposals</li>
+                    <li>Contracts - Generate and manage speaker agreements</li>
+                    <li>Past Deals - Archive of won and lost opportunities</li>
+                  </ul>
+                  <div className="pt-4">
+                    <Button
+                      onClick={() => router.push('/admin/crm')}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Open CRM Dashboard →
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Projects & Operations Tab */}
+          <TabsContent value="projects">
+            <Tabs value={projectsSubTab} onValueChange={setProjectsSubTab}>
+              <TabsList className="grid w-full max-w-xl grid-cols-3 mb-6">
+                <TabsTrigger value="dashboard">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Projects Dashboard
+                </TabsTrigger>
+                <TabsTrigger value="contracts">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Contracts
+                </TabsTrigger>
+                <TabsTrigger value="invoices">
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Invoices
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Projects Dashboard Sub-tab */}
+              <TabsContent value="dashboard">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Projects Dashboard</CardTitle>
+                    <CardDescription>
+                      Manage active speaker engagements and track project progress
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <Button
+                        onClick={() => router.push('/admin/projects')}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        Open Projects Dashboard →
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Contracts Sub-tab */}
+              <TabsContent value="contracts">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Contracts Management</CardTitle>
+                    <CardDescription>
+                      Create, edit, and track speaker engagement contracts
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <Button
+                        onClick={() => router.push('/admin/contracts-hub')}
+                        className="bg-indigo-600 hover:bg-indigo-700"
+                      >
+                        Open Contracts Hub →
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Invoices Sub-tab */}
+              <TabsContent value="invoices">
+                <InvoicesSection />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
         </div>
