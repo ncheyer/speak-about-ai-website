@@ -55,6 +55,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 
   const navigationItems = [
     {
+      title: "Operations Hub",
+      href: "/admin/hub",
+      icon: Home,
+      description: "Unified Dashboard",
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-50"
+    },
+    {
       title: "Master Panel",
       href: "/admin/manage",
       icon: Settings,
