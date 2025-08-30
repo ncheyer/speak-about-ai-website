@@ -216,6 +216,7 @@ export default function EnhancedProjectManagementPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [activeTab, setActiveTab] = useState("dashboard")
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [selectedProjectForDetails, setSelectedProjectForDetails] = useState<Project | null>(null)
   const [showCreateInvoice, setShowCreateInvoice] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showCreateProject, setShowCreateProject] = useState(false)
@@ -1999,10 +2000,10 @@ export default function EnhancedProjectManagementPage() {
                   <div className="mb-6">
                     <Label>Select Project</Label>
                     <Select
-                      value={selectedProject?.id?.toString() || ""}
+                      value={selectedProjectForDetails?.id?.toString() || ""}
                       onValueChange={(value) => {
                         const project = projects.find(p => p.id === parseInt(value))
-                        setSelectedProject(project || null)
+                        setSelectedProjectForDetails(project || null)
                       }}
                     >
                       <SelectTrigger>
@@ -2019,10 +2020,10 @@ export default function EnhancedProjectManagementPage() {
                   </div>
 
                   {/* Project Details Manager */}
-                  {selectedProject && (
+                  {selectedProjectForDetails && (
                     <ProjectDetailsManager
-                      projectId={selectedProject.id}
-                      projectName={selectedProject.project_name}
+                      projectId={selectedProjectForDetails.id}
+                      projectName={selectedProjectForDetails.project_name}
                       onGenerateTasks={(tasks) => {
                         toast({
                           title: "Tasks Generated",
@@ -2033,7 +2034,7 @@ export default function EnhancedProjectManagementPage() {
                     />
                   )}
                   
-                  {!selectedProject && (
+                  {!selectedProjectForDetails && (
                     <div className="text-center py-12 text-gray-500">
                       <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                       <p>Select a project to view and manage its details</p>
