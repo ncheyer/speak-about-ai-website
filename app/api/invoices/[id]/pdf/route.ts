@@ -5,6 +5,14 @@ import { requireAdminAuth } from "@/lib/auth-middleware"
 const sql = neon(process.env.DATABASE_URL!)
 
 function generateInvoiceHTML(invoice: any): string {
+  // Debug logging
+  console.log('Generating invoice HTML with banking info:', {
+    hasBankingInfo: !!invoice.banking_info,
+    bankingInfoKeys: invoice.banking_info ? Object.keys(invoice.banking_info) : [],
+    entityName: invoice.banking_info?.account_name,
+    bankName: invoice.banking_info?.bank_name
+  })
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -19,6 +27,9 @@ function generateInvoiceHTML(invoice: any): string {
       day: 'numeric'
     })
   }
+  
+  // Use direct URL or base64 logo for PDF compatibility
+  const logoUrl = 'https://www.speakabout.ai/speak-about-ai-logo.png'
 
   return `
     <!DOCTYPE html>
@@ -189,7 +200,7 @@ function generateInvoiceHTML(invoice: any): string {
       <div class="invoice-container">
         <div class="header">
           <div class="company-info">
-            <img src="https://www.speakabout.ai/speak-about-ai-logo.png" alt="Speak About AI" style="height: 60px; margin-bottom: 16px;">
+            <img src="${logoUrl}" alt="Speak About AI" style="height: 60px; margin-bottom: 16px; max-width: 200px;" crossorigin="anonymous">
             <p>AI Keynote Speaker Bureau</p>
             <p>human@speakabout.ai</p>
           </div>
@@ -287,7 +298,7 @@ function generateInvoiceHTML(invoice: any): string {
         ` : ''}
 
         <div class="footer" style="margin-top: 40px;">
-          ${invoice.banking_info ? `
+          ${(invoice.banking_info && (invoice.banking_info.account_name || invoice.banking_info.bank_name || invoice.banking_info.account_number)) ? `
           <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Payment Information</h3>
             <div style="color: #111827; line-height: 1.8;">
@@ -399,44 +410,50 @@ export async function GET(
     }
 
     // Fetch banking configuration securely
-    let bankingInfo = null
+    let bankingInfo = {}
     
     // Log environment variables for debugging (remove in production)
     console.log('Banking env vars check:', {
-      hasEntityName: !!process.env.ENTITY_NAME,
-      hasBankName: !!process.env.BANK_NAME,
-      hasAccountNumber: !!process.env.ACCOUNT_NUMBER,
-      hasSwiftCode: !!process.env.SWIFT_CODE
+      ENTITY_NAME: process.env.ENTITY_NAME || 'not set',
+      ENTITY_ADDRESS: process.env.ENTITY_ADDRESS || 'not set',
+      BANK_NAME: process.env.BANK_NAME || 'not set',
+      BANK_ADDRESS: process.env.BANK_ADDRESS || 'not set',
+      ACCOUNT_NUMBER: process.env.ACCOUNT_NUMBER ? 'set (masked)' : 'not set',
+      ROUTING_NUMBER: process.env.ROUTING_NUMBER ? 'set (masked)' : 'not set',
+      SWIFT_CODE: process.env.SWIFT_CODE || 'not set',
+      CURRENCY_TYPE: process.env.CURRENCY_TYPE || 'not set'
     })
     
-    // First check environment variables (highest priority) - using your actual env var names
-    if (process.env.BANK_NAME || process.env.ENTITY_NAME || process.env.ACCOUNT_NUMBER) {
-      bankingInfo = {
-        bank_name: process.env.BANK_NAME || '',
-        account_name: process.env.ENTITY_NAME || '',
-        entity_address: process.env.ENTITY_ADDRESS || '',
-        // Only show masked account numbers unless explicitly configured
-        account_number: process.env.SHOW_FULL_ACCOUNT_NUMBER === 'true' 
-          ? (process.env.ACCOUNT_NUMBER || '')
-          : process.env.ACCOUNT_NUMBER ? `****${process.env.ACCOUNT_NUMBER.slice(-4)}` : '',
-        routing_number: process.env.SHOW_FULL_ACCOUNT_NUMBER === 'true'
-          ? (process.env.ROUTING_NUMBER || '')
-          : process.env.ROUTING_NUMBER ? `****${process.env.ROUTING_NUMBER.slice(-4)}` : '',
-        swift_code: process.env.SWIFT_CODE || '',
-        bank_address: process.env.BANK_ADDRESS || '',
-        currency_type: process.env.CURRENCY_TYPE || 'USD',
-        wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS || (process.env.SWIFT_CODE ? `Please use SWIFT code ${process.env.SWIFT_CODE} for international transfers` : ''),
-        ach_instructions: process.env.BANK_ACH_INSTRUCTIONS || 'For ACH transfers, use the routing and account numbers provided above'
-      }
-      
-      console.log('Banking info loaded:', {
-        hasData: true,
-        hasAccountName: !!bankingInfo.account_name,
-        hasBankName: !!bankingInfo.bank_name,
-        hasAccountNum: !!bankingInfo.account_number,
-        hasSwift: !!bankingInfo.swift_code
-      })
-    } else {
+    // Always set banking info from environment variables
+    bankingInfo = {
+      bank_name: process.env.BANK_NAME || '',
+      account_name: process.env.ENTITY_NAME || '',
+      entity_address: process.env.ENTITY_ADDRESS || '',
+      // Only show masked account numbers unless explicitly configured
+      account_number: process.env.SHOW_FULL_ACCOUNT_NUMBER === 'true' 
+        ? (process.env.ACCOUNT_NUMBER || '')
+        : process.env.ACCOUNT_NUMBER ? `****${process.env.ACCOUNT_NUMBER.slice(-4)}` : '',
+      routing_number: process.env.SHOW_FULL_ACCOUNT_NUMBER === 'true'
+        ? (process.env.ROUTING_NUMBER || '')
+        : process.env.ROUTING_NUMBER ? `****${process.env.ROUTING_NUMBER.slice(-4)}` : '',
+      swift_code: process.env.SWIFT_CODE || '',
+      bank_address: process.env.BANK_ADDRESS || '',
+      currency_type: process.env.CURRENCY_TYPE || 'USD',
+      wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS || (process.env.SWIFT_CODE ? `Please use SWIFT code ${process.env.SWIFT_CODE} for international transfers` : ''),
+      ach_instructions: process.env.BANK_ACH_INSTRUCTIONS || 'For ACH transfers, use the routing and account numbers provided above'
+    }
+    
+    console.log('Banking info prepared:', {
+      hasAccountName: !!bankingInfo.account_name,
+      hasBankName: !!bankingInfo.bank_name,
+      hasAccountNum: !!bankingInfo.account_number,
+      hasSwift: !!bankingInfo.swift_code,
+      accountName: bankingInfo.account_name,
+      bankName: bankingInfo.bank_name
+    })
+    
+    // Only try database if no env vars are set
+    if (!bankingInfo.account_name && !bankingInfo.bank_name && !bankingInfo.account_number) {
       // Fallback to database (using safe view with masked sensitive data)
       try {
         const bankingConfigs = await sql`
@@ -448,10 +465,12 @@ export async function GET(
         `
         
         if (bankingConfigs.length > 0) {
-          bankingInfo = {}
+          const dbBankingInfo = {}
           bankingConfigs.forEach(config => {
-            bankingInfo[config.config_key] = config.value
+            dbBankingInfo[config.config_key] = config.value
           })
+          // Use database values if env vars are not set
+          bankingInfo = dbBankingInfo
         }
       } catch (error) {
         console.error('Error fetching banking config:', error)

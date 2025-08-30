@@ -76,8 +76,8 @@ export function InvoicePDFViewer({ invoiceId, invoiceNumber, onClose }: InvoiceP
         iframeDoc.write(htmlContent)
         iframeDoc.close()
 
-        // Wait for content to load
-        await new Promise(resolve => setTimeout(resolve, 500))
+        // Wait for content and images to load
+        await new Promise(resolve => setTimeout(resolve, 1000))
 
         // Use html2canvas if available, otherwise use jsPDF's html method
         try {
@@ -85,7 +85,9 @@ export function InvoicePDFViewer({ invoiceId, invoiceNumber, onClose }: InvoiceP
           const canvas = await html2canvas(iframeDoc.body, {
             scale: 2,
             useCORS: true,
-            logging: false
+            allowTaint: true,
+            logging: false,
+            imageTimeout: 15000
           })
 
           const imgData = canvas.toDataURL('image/png')
