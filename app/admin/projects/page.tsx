@@ -1997,6 +1997,152 @@ export default function EnhancedProjectManagementPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Task Management Dialog */}
+      <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manage Tasks - {selectedProject?.project_name || selectedProject?.event_name}</DialogTitle>
+            <DialogDescription>
+              {selectedProject?.client_name} • {selectedProject?.event_date ? new Date(selectedProject.event_date).toLocaleDateString() : 'No date set'}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedProject && (
+            <div className="space-y-4 mt-4">
+              {/* Task stages */}
+              {Object.entries(TASK_DEFINITIONS).map(([stage, tasks]) => {
+                const stageConfig = PROJECT_STATUSES[stage]
+                const isCurrentStage = selectedProject.status === stage
+                const stageCompletion = selectedProject.stage_completion?.[stage] || {}
+                const completedCount = Object.values(stageCompletion).filter(Boolean).length
+                const totalCount = Object.keys(tasks).length
+                
+                return (
+                  <Card key={stage} className={isCurrentStage ? "border-blue-500 shadow-md" : ""}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Badge className={(stageConfig?.color || "bg-gray-500") + " text-white"}>
+                            {stageConfig?.label || stage}
+                          </Badge>
+                          {isCurrentStage && (
+                            <Badge variant="outline" className="text-blue-600 border-blue-600">
+                              Current Stage
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {completedCount} of {totalCount} completed
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {Object.entries(tasks).map(([taskKey, taskDef]) => {
+                        const isCompleted = stageCompletion[taskKey] || false
+                        const daysUntilEvent = selectedProject.event_date 
+                          ? Math.ceil((new Date(selectedProject.event_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                          : null
+                        const urgency = calculateTaskUrgency(stage, daysUntilEvent, taskKey)
+                        
+                        return (
+                          <div 
+                            key={taskKey}
+                            className={`p-3 rounded-lg border ${isCompleted ? 'bg-green-50 border-green-200' : 'bg-white'}`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  {isCompleted ? (
+                                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                  ) : (
+                                    <div className="h-5 w-5 rounded border-2 border-gray-300" />
+                                  )}
+                                  <span className={`font-medium ${isCompleted ? 'line-through text-gray-500' : ''}`}>
+                                    {taskDef.name}
+                                  </span>
+                                  {!isCompleted && (
+                                    <>
+                                      <Badge 
+                                        className={`text-xs ${
+                                          urgency === "critical" ? "bg-red-100 text-red-700" :
+                                          urgency === "high" ? "bg-orange-100 text-orange-700" : 
+                                          urgency === "medium" ? "bg-yellow-100 text-yellow-700" : 
+                                          "bg-gray-100 text-gray-700"
+                                        }`}
+                                      >
+                                        {urgency === "critical" ? "Critical" :
+                                         urgency === "high" ? "Urgent" : 
+                                         urgency === "medium" ? "Soon" : "Normal"}
+                                      </Badge>
+                                      {taskDef.estimatedTime && (
+                                        <span className="text-xs text-gray-500">
+                                          <Clock className="inline h-3 w-3 mr-1" />
+                                          {taskDef.estimatedTime}
+                                        </span>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 ml-7">{taskDef.description}</p>
+                              </div>
+                              {!isCompleted && isCurrentStage && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    handleUpdateStageCompletion(selectedProject.id, stage, taskKey, true)
+                                    // Update local state to reflect the change
+                                    setSelectedProject({
+                                      ...selectedProject,
+                                      stage_completion: {
+                                        ...selectedProject.stage_completion,
+                                        [stage]: {
+                                          ...stageCompletion,
+                                          [taskKey]: true
+                                        }
+                                      }
+                                    })
+                                  }}
+                                >
+                                  <Check className="h-4 w-4" />
+                                  Complete
+                                </Button>
+                              )}
+                              {isCompleted && isCurrentStage && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    handleUpdateStageCompletion(selectedProject.id, stage, taskKey, false)
+                                    // Update local state to reflect the change
+                                    setSelectedProject({
+                                      ...selectedProject,
+                                      stage_completion: {
+                                        ...selectedProject.stage_completion,
+                                        [stage]: {
+                                          ...stageCompletion,
+                                          [taskKey]: false
+                                        }
+                                      }
+                                    })
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                  Undo
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
