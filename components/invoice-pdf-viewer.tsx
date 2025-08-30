@@ -24,11 +24,14 @@ export function InvoicePDFViewer({ invoiceId, invoiceNumber, onClose }: InvoiceP
   const fetchInvoiceHTML = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/invoices/${invoiceId}/pdf`, {
+      // Add cache-busting to ensure fresh data
+      const response = await fetch(`/api/invoices/${invoiceId}/pdf?t=${Date.now()}`, {
         headers: {
-          'x-dev-admin-bypass': 'dev-admin-access'
+          'x-dev-admin-bypass': 'dev-admin-access',
+          'Cache-Control': 'no-cache'
         },
-        credentials: 'include'
+        credentials: 'include',
+        cache: 'no-store'
       })
 
       if (response.ok) {

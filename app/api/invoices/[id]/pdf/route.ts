@@ -401,25 +401,41 @@ export async function GET(
     // Fetch banking configuration securely
     let bankingInfo = null
     
+    // Log environment variables for debugging (remove in production)
+    console.log('Banking env vars check:', {
+      hasEntityName: !!process.env.ENTITY_NAME,
+      hasBankName: !!process.env.BANK_NAME,
+      hasAccountNumber: !!process.env.ACCOUNT_NUMBER,
+      hasSwiftCode: !!process.env.SWIFT_CODE
+    })
+    
     // First check environment variables (highest priority) - using your actual env var names
-    if (process.env.BANK_NAME || process.env.ENTITY_NAME) {
+    if (process.env.BANK_NAME || process.env.ENTITY_NAME || process.env.ACCOUNT_NUMBER) {
       bankingInfo = {
-        bank_name: process.env.BANK_NAME,
-        account_name: process.env.ENTITY_NAME,
-        entity_address: process.env.ENTITY_ADDRESS,
+        bank_name: process.env.BANK_NAME || '',
+        account_name: process.env.ENTITY_NAME || '',
+        entity_address: process.env.ENTITY_ADDRESS || '',
         // Only show masked account numbers unless explicitly configured
         account_number: process.env.SHOW_FULL_ACCOUNT_NUMBER === 'true' 
-          ? process.env.ACCOUNT_NUMBER 
+          ? (process.env.ACCOUNT_NUMBER || '')
           : process.env.ACCOUNT_NUMBER ? `****${process.env.ACCOUNT_NUMBER.slice(-4)}` : '',
         routing_number: process.env.SHOW_FULL_ACCOUNT_NUMBER === 'true'
-          ? process.env.ROUTING_NUMBER
+          ? (process.env.ROUTING_NUMBER || '')
           : process.env.ROUTING_NUMBER ? `****${process.env.ROUTING_NUMBER.slice(-4)}` : '',
-        swift_code: process.env.SWIFT_CODE,
-        bank_address: process.env.BANK_ADDRESS,
+        swift_code: process.env.SWIFT_CODE || '',
+        bank_address: process.env.BANK_ADDRESS || '',
         currency_type: process.env.CURRENCY_TYPE || 'USD',
-        wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS || `Please use SWIFT code ${process.env.SWIFT_CODE || ''} for international transfers`,
+        wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS || (process.env.SWIFT_CODE ? `Please use SWIFT code ${process.env.SWIFT_CODE} for international transfers` : ''),
         ach_instructions: process.env.BANK_ACH_INSTRUCTIONS || 'For ACH transfers, use the routing and account numbers provided above'
       }
+      
+      console.log('Banking info loaded:', {
+        hasData: true,
+        hasAccountName: !!bankingInfo.account_name,
+        hasBankName: !!bankingInfo.bank_name,
+        hasAccountNum: !!bankingInfo.account_number,
+        hasSwift: !!bankingInfo.swift_code
+      })
     } else {
       // Fallback to database (using safe view with masked sensitive data)
       try {
