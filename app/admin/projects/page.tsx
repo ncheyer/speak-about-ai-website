@@ -1677,6 +1677,19 @@ export default function EnhancedProjectManagementPage() {
                             ? Math.ceil((new Date(project.event_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
                             : null
                           
+                          // Parse requirements and deliverables from notes field
+                          let taskRequirements = []
+                          let taskDeliverables = []
+                          try {
+                            if (task.notes) {
+                              const details = typeof task.notes === 'string' ? JSON.parse(task.notes) : task.notes
+                              taskRequirements = details.requirements || []
+                              taskDeliverables = details.deliverables || []
+                            }
+                          } catch (e) {
+                            console.error('Error parsing task details:', e)
+                          }
+                          
                           allTasks.push({
                             id: `custom-${task.id}`,
                             projectId: task.projectId,
@@ -1686,8 +1699,8 @@ export default function EnhancedProjectManagementPage() {
                             taskKey: `custom_${task.id}`,
                             taskName: task.task_name,
                             taskDescription: task.description,
-                            taskRequirements: [],
-                            taskDeliverables: [],
+                            taskRequirements: taskRequirements,
+                            taskDeliverables: taskDeliverables,
                             taskOwner: task.assigned_to || 'Team',
                             estimatedTime: null,
                             priority: task.priority || 'medium',
@@ -2161,16 +2174,31 @@ export default function EnhancedProjectManagementPage() {
                           
                           if (response.ok) {
                             const result = await response.json()
-                            toast({
-                              title: "Tasks Generated",
-                              description: `${result.count} tasks have been created for this project`
-                            })
                             
-                            // Switch to tasks tab to show the new tasks
-                            setActiveTab('tasks')
-                            
-                            // Refresh data to show new tasks
-                            loadData()
+                            if (result.count > 0) {
+                              toast({
+                                title: "Tasks Generated",
+                                description: `${result.count} new tasks created${result.skipped > 0 ? ` (${result.skipped} already existed)` : ''}`
+                              })
+                              
+                              // Switch to tasks tab to show the new tasks
+                              setActiveTab('tasks')
+                              
+                              // Refresh data to show new tasks
+                              loadData()
+                            } else if (result.skipped > 0) {
+                              toast({
+                                title: "No New Tasks",
+                                description: `All ${result.skipped} tasks already exist for this project`,
+                                variant: "default"
+                              })
+                            } else {
+                              toast({
+                                title: "No Tasks Needed",
+                                description: "No missing information found that requires tasks",
+                                variant: "default"
+                              })
+                            }
                           } else {
                             throw new Error('Failed to save tasks')
                           }

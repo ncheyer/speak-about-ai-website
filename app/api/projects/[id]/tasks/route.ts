@@ -49,9 +49,43 @@ export async function POST(
       )
     }
 
-    // Insert all tasks
+    // First, check for existing tasks to avoid duplicates
+    const existingTasks = await sql`
+      SELECT task_name, category 
+      FROM project_tasks 
+      WHERE project_id = ${projectId} 
+        AND created_from = 'generated'
+        AND completed = false
+    `
+
+    const existingTaskNames = new Set(
+      existingTasks.map(t => `${t.task_name}-${t.category}`)
+    )
+
+    // Filter out tasks that already exist
+    const newTasks = tasks.filter(task => 
+      !existingTaskNames.has(`${task.name}-${task.category}`)
+    )
+
+    if (newTasks.length === 0) {
+      return NextResponse.json({
+        success: true,
+        message: 'All tasks already exist',
+        tasks: [],
+        count: 0,
+        skipped: tasks.length
+      })
+    }
+
+    // Insert only new tasks
     const insertedTasks = []
-    for (const task of tasks) {
+    for (const task of newTasks) {
+      // Store requirements and deliverables as JSON in notes field
+      const taskDetails = {
+        requirements: task.requirements || [],
+        deliverables: task.deliverables || []
+      }
+      
       const result = await sql`
         INSERT INTO project_tasks (
           project_id,
@@ -61,7 +95,8 @@ export async function POST(
           priority,
           stage,
           created_from,
-          status
+          status,
+          notes
         ) VALUES (
           ${projectId},
           ${task.name},
@@ -70,7 +105,8 @@ export async function POST(
           ${task.priority || 'medium'},
           ${task.stage || 'logistics_planning'},
           'generated',
-          'pending'
+          'pending',
+          ${JSON.stringify(taskDetails)}
         )
         RETURNING *
       `
@@ -80,7 +116,8 @@ export async function POST(
     return NextResponse.json({
       success: true,
       tasks: insertedTasks,
-      count: insertedTasks.length
+      count: insertedTasks.length,
+      skipped: tasks.length - newTasks.length
     })
   } catch (error) {
     console.error('Error creating project tasks:', error)

@@ -386,12 +386,16 @@ export function generateTasksFromMissingFields(
   description: string
   category: string
   priority: 'critical' | 'high' | 'medium' | 'low'
+  requirements: string[]
+  deliverables: string[]
 }> {
   const tasks: Array<{
     name: string
     description: string
     category: string
     priority: 'critical' | 'high' | 'medium' | 'low'
+    requirements: string[]
+    deliverables: string[]
   }> = []
 
   // Check critical overview fields
@@ -400,7 +404,17 @@ export function generateTasksFromMissingFields(
       name: 'Confirm Speaker Name',
       description: `Confirm and document the speaker's full name and title for ${projectName}`,
       category: 'overview',
-      priority: 'critical'
+      priority: 'critical',
+      requirements: [
+        'Contact client or agency for speaker details',
+        'Verify correct spelling and pronunciation',
+        'Confirm professional title and credentials'
+      ],
+      deliverables: [
+        'Speaker name documented in project details',
+        'Phonetic spelling if needed',
+        'Professional title confirmed'
+      ]
     })
   }
 
@@ -409,7 +423,17 @@ export function generateTasksFromMissingFields(
       name: 'Confirm Event Date',
       description: `Finalize and document the event date for ${projectName}`,
       category: 'overview',
-      priority: 'critical'
+      priority: 'critical',
+      requirements: [
+        'Client confirmation of date',
+        'Venue availability verified',
+        'Speaker calendar blocked'
+      ],
+      deliverables: [
+        'Event date locked in system',
+        'Calendar invites sent',
+        'All parties notified'
+      ]
     })
   }
 
@@ -419,7 +443,19 @@ export function generateTasksFromMissingFields(
       name: 'Book Speaker Flights',
       description: 'Arrange and confirm speaker flight reservations',
       category: 'travel',
-      priority: 'high'
+      priority: 'high',
+      requirements: [
+        'Speaker travel preferences',
+        'Event schedule confirmed',
+        'Budget approval',
+        'Passport/ID verification'
+      ],
+      deliverables: [
+        'Flight confirmations',
+        'Itinerary sent to speaker',
+        'Check-in instructions provided',
+        'Seat assignments confirmed'
+      ]
     })
   }
 
@@ -428,7 +464,19 @@ export function generateTasksFromMissingFields(
       name: 'Confirm Hotel Reservation',
       description: 'Book and confirm speaker hotel accommodations',
       category: 'travel',
-      priority: 'high'
+      priority: 'high',
+      requirements: [
+        'Hotel preferences from speaker',
+        'Check-in/out dates confirmed',
+        'Proximity to venue verified',
+        'Budget approval'
+      ],
+      deliverables: [
+        'Hotel confirmation number',
+        'Room type and amenities confirmed',
+        'Check-in instructions sent',
+        'Contact information shared'
+      ]
     })
   }
 
@@ -438,7 +486,19 @@ export function generateTasksFromMissingFields(
       name: 'Finalize Venue Details',
       description: 'Confirm venue name, address, and room specifications',
       category: 'venue',
-      priority: 'critical'
+      priority: 'critical',
+      requirements: [
+        'Venue contract signed',
+        'Room assignment confirmed',
+        'Capacity requirements met',
+        'Technical capabilities verified'
+      ],
+      deliverables: [
+        'Complete venue information documented',
+        'Room layout confirmed',
+        'Access instructions obtained',
+        'Parking information gathered'
+      ]
     })
   }
 
@@ -448,7 +508,18 @@ export function generateTasksFromMissingFields(
       name: 'Identify On-Site Contact',
       description: 'Confirm primary on-site contact person and their information',
       category: 'contacts',
-      priority: 'critical'
+      priority: 'critical',
+      requirements: [
+        'Client identifies point person',
+        'Contact availability confirmed',
+        'Communication preferences established'
+      ],
+      deliverables: [
+        'Contact name and role documented',
+        'Phone and email confirmed',
+        'Backup contact identified',
+        'Day-of communication plan'
+      ]
     })
   }
 
@@ -457,7 +528,18 @@ export function generateTasksFromMissingFields(
       name: 'Confirm A/V Contact',
       description: 'Get A/V contact information and technical requirements',
       category: 'contacts',
-      priority: 'high'
+      priority: 'high',
+      requirements: [
+        'Venue A/V team identified',
+        'Technical specifications gathered',
+        'Test schedule arranged'
+      ],
+      deliverables: [
+        'A/V contact details documented',
+        'Technical requirements confirmed',
+        'Sound check scheduled',
+        'Backup plan established'
+      ]
     })
   }
 
@@ -467,7 +549,18 @@ export function generateTasksFromMissingFields(
       name: 'Confirm Audience Size',
       description: 'Get expected attendance numbers for proper preparation',
       category: 'audience',
-      priority: 'medium'
+      priority: 'medium',
+      requirements: [
+        'Registration numbers from client',
+        'Room capacity verification',
+        'Materials quantity planning'
+      ],
+      deliverables: [
+        'Expected attendance documented',
+        'Room setup confirmed',
+        'Materials ordered accordingly',
+        'Seating arrangement planned'
+      ]
     })
   }
 
@@ -477,7 +570,18 @@ export function generateTasksFromMissingFields(
       name: 'Confirm Event Title',
       description: 'Get official event title for materials and announcements',
       category: 'event_details',
-      priority: 'high'
+      priority: 'high',
+      requirements: [
+        'Client approval of title',
+        'Marketing materials review',
+        'Consistency across platforms'
+      ],
+      deliverables: [
+        'Official event title documented',
+        'Materials updated with title',
+        'Website/social media updated',
+        'Signage ordered if needed'
+      ]
     })
   }
 
@@ -487,7 +591,19 @@ export function generateTasksFromMissingFields(
       name: 'Prepare Speaker Introduction',
       description: 'Write and approve speaker introduction script',
       category: 'speaker_requirements',
-      priority: 'medium'
+      priority: 'medium',
+      requirements: [
+        'Speaker bio and credentials',
+        'Client input on emphasis',
+        'Time limit for introduction',
+        'Pronunciation guide'
+      ],
+      deliverables: [
+        'Introduction script written',
+        'Speaker approval obtained',
+        'Introducer identified and briefed',
+        'Backup copy provided'
+      ]
     })
   }
 
@@ -496,7 +612,19 @@ export function generateTasksFromMissingFields(
       name: 'Confirm A/V Requirements',
       description: 'Document all audio/visual needs and preferences',
       category: 'speaker_requirements',
-      priority: 'high'
+      priority: 'high',
+      requirements: [
+        'Speaker preferences gathered',
+        'Venue capabilities confirmed',
+        'Presentation format verified',
+        'Recording requirements checked'
+      ],
+      deliverables: [
+        'A/V requirements documented',
+        'Equipment confirmed available',
+        'Backup equipment arranged',
+        'Test schedule confirmed'
+      ]
     })
   }
 
