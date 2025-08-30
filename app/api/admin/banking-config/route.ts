@@ -54,23 +54,25 @@ export async function GET(request: NextRequest) {
     const authError = requireAdminAuth(request)
     if (authError) return authError
 
-    // First try environment variables (highest priority)
+    // First try environment variables (highest priority) - using your actual env var names
     const envConfig = {
+      entity_name: process.env.ENTITY_NAME || '',
+      entity_address: process.env.ENTITY_ADDRESS || '',
       bank_name: process.env.BANK_NAME || '',
-      account_name: process.env.BANK_ACCOUNT_NAME || '',
-      account_number: process.env.BANK_ACCOUNT_NUMBER || '',
-      routing_number: process.env.BANK_ROUTING_NUMBER || '',
-      swift_code: process.env.BANK_SWIFT_CODE || '',
       bank_address: process.env.BANK_ADDRESS || '',
-      wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS || '',
-      ach_instructions: process.env.BANK_ACH_INSTRUCTIONS || '',
+      account_number: process.env.ACCOUNT_NUMBER || '',
+      routing_number: process.env.ROUTING_NUMBER || '',
+      swift_code: process.env.SWIFT_CODE || '',
+      currency_type: process.env.CURRENCY_TYPE || 'USD',
+      wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS || `Please use SWIFT code ${process.env.SWIFT_CODE || ''} for international transfers`,
+      ach_instructions: process.env.BANK_ACH_INSTRUCTIONS || 'For ACH transfers, use the routing and account numbers provided above',
       payment_terms_deposit: process.env.INVOICE_DEPOSIT_TERMS || 'Net 30 days from issue date',
       payment_terms_final: process.env.INVOICE_FINAL_TERMS || 'Due on event date',
       source: 'environment'
     }
 
     // If env variables are configured, return them
-    if (envConfig.bank_name || envConfig.account_name) {
+    if (envConfig.bank_name || envConfig.entity_name) {
       return NextResponse.json({
         config: envConfig,
         masked: {

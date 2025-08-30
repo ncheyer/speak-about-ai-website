@@ -290,15 +290,30 @@ function generateInvoiceHTML(invoice: any): string {
           ${invoice.banking_info ? `
           <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Payment Information</h3>
-            <div style="color: #111827; line-height: 1.6;">
-              ${invoice.banking_info.bank_name ? `<strong>Bank Name:</strong> ${invoice.banking_info.bank_name}<br>` : ''}
-              ${invoice.banking_info.account_name ? `<strong>Account Name:</strong> ${invoice.banking_info.account_name}<br>` : ''}
-              ${invoice.banking_info.account_number ? `<strong>Account Number:</strong> ${invoice.banking_info.account_number}<br>` : ''}
-              ${invoice.banking_info.routing_number ? `<strong>Routing Number:</strong> ${invoice.banking_info.routing_number}<br>` : ''}
-              ${invoice.banking_info.swift_code ? `<strong>SWIFT Code:</strong> ${invoice.banking_info.swift_code}<br>` : ''}
-              ${invoice.banking_info.bank_address ? `<strong>Bank Address:</strong> ${invoice.banking_info.bank_address}<br>` : ''}
-              ${invoice.banking_info.wire_instructions ? `<br><strong>Wire Instructions:</strong> ${invoice.banking_info.wire_instructions}` : ''}
-              ${invoice.banking_info.ach_instructions ? `<br><strong>ACH Instructions:</strong> ${invoice.banking_info.ach_instructions}` : ''}
+            <div style="color: #111827; line-height: 1.8;">
+              ${invoice.banking_info.account_name ? `
+              <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb;">
+                <strong style="color: #4b5563;">Beneficiary Information</strong><br>
+                <strong>Entity Name:</strong> ${invoice.banking_info.account_name}<br>
+                ${invoice.banking_info.entity_address ? `<strong>Entity Address:</strong> ${invoice.banking_info.entity_address}<br>` : ''}
+              </div>` : ''}
+              
+              <div style="margin-bottom: 12px;">
+                <strong style="color: #4b5563;">Banking Details</strong><br>
+                ${invoice.banking_info.bank_name ? `<strong>Bank Name:</strong> ${invoice.banking_info.bank_name}<br>` : ''}
+                ${invoice.banking_info.bank_address ? `<strong>Bank Address:</strong> ${invoice.banking_info.bank_address}<br>` : ''}
+                ${invoice.banking_info.account_number ? `<strong>Account Number:</strong> ${invoice.banking_info.account_number}<br>` : ''}
+                ${invoice.banking_info.routing_number ? `<strong>Routing Number (ABA):</strong> ${invoice.banking_info.routing_number}<br>` : ''}
+                ${invoice.banking_info.swift_code ? `<strong>SWIFT/BIC Code:</strong> ${invoice.banking_info.swift_code}<br>` : ''}
+                ${invoice.banking_info.currency_type ? `<strong>Currency:</strong> ${invoice.banking_info.currency_type}<br>` : ''}
+              </div>
+              
+              ${invoice.banking_info.wire_instructions || invoice.banking_info.ach_instructions ? `
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                <strong style="color: #4b5563;">Transfer Instructions</strong><br>
+                ${invoice.banking_info.wire_instructions ? `<strong>Wire:</strong> ${invoice.banking_info.wire_instructions}<br>` : ''}
+                ${invoice.banking_info.ach_instructions ? `<strong>ACH:</strong> ${invoice.banking_info.ach_instructions}` : ''}
+              </div>` : ''}
             </div>
           </div>
           ` : `
@@ -386,22 +401,24 @@ export async function GET(
     // Fetch banking configuration securely
     let bankingInfo = null
     
-    // First check environment variables (highest priority)
-    if (process.env.BANK_NAME || process.env.BANK_ACCOUNT_NAME) {
+    // First check environment variables (highest priority) - using your actual env var names
+    if (process.env.BANK_NAME || process.env.ENTITY_NAME) {
       bankingInfo = {
         bank_name: process.env.BANK_NAME,
-        account_name: process.env.BANK_ACCOUNT_NAME,
+        account_name: process.env.ENTITY_NAME,
+        entity_address: process.env.ENTITY_ADDRESS,
         // Only show masked account numbers unless explicitly configured
         account_number: process.env.SHOW_FULL_ACCOUNT_NUMBER === 'true' 
-          ? process.env.BANK_ACCOUNT_NUMBER 
-          : process.env.BANK_ACCOUNT_NUMBER ? `****${process.env.BANK_ACCOUNT_NUMBER.slice(-4)}` : '',
+          ? process.env.ACCOUNT_NUMBER 
+          : process.env.ACCOUNT_NUMBER ? `****${process.env.ACCOUNT_NUMBER.slice(-4)}` : '',
         routing_number: process.env.SHOW_FULL_ACCOUNT_NUMBER === 'true'
-          ? process.env.BANK_ROUTING_NUMBER
-          : process.env.BANK_ROUTING_NUMBER ? `****${process.env.BANK_ROUTING_NUMBER.slice(-4)}` : '',
-        swift_code: process.env.BANK_SWIFT_CODE,
+          ? process.env.ROUTING_NUMBER
+          : process.env.ROUTING_NUMBER ? `****${process.env.ROUTING_NUMBER.slice(-4)}` : '',
+        swift_code: process.env.SWIFT_CODE,
         bank_address: process.env.BANK_ADDRESS,
-        wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS,
-        ach_instructions: process.env.BANK_ACH_INSTRUCTIONS
+        currency_type: process.env.CURRENCY_TYPE || 'USD',
+        wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS || `Please use SWIFT code ${process.env.SWIFT_CODE || ''} for international transfers`,
+        ach_instructions: process.env.BANK_ACH_INSTRUCTIONS || 'For ACH transfers, use the routing and account numbers provided above'
       }
     } else {
       // Fallback to database (using safe view with masked sensitive data)
