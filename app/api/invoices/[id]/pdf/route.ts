@@ -21,7 +21,7 @@ function generateInvoiceHTML(invoice: any): string {
     })
   }
   
-  // Use absolute URL for logo to ensure it works in PDF download
+  // Use absolute URL for logo from the actual website
   const logoUrl = 'https://www.speakabout.ai/speak-about-ai-logo.png'
 
   return `
@@ -193,9 +193,7 @@ function generateInvoiceHTML(invoice: any): string {
       <div class="invoice-container">
         <div class="header">
           <div class="company-info">
-            <div style="margin-bottom: 16px;">
-              <h1 style="color: #1e40af; font-size: 28px; margin-bottom: 8px;">Speak About AI</h1>
-            </div>
+            <img src="${logoUrl}" alt="Speak About AI" style="height: 50px; margin-bottom: 12px;" />
             <p>AI Keynote Speaker Bureau</p>
             <p>human@speakabout.ai</p>
           </div>
@@ -420,8 +418,8 @@ export async function GET(
       bank_name: process.env.BANK_NAME || '',
       account_name: process.env.ENTITY_NAME || '',
       entity_address: process.env.ENTITY_ADDRESS || '',
-      account_number: process.env.ACCOUNT_NUMBER ? `****${process.env.ACCOUNT_NUMBER.slice(-4)}` : '',
-      routing_number: process.env.ROUTING_NUMBER ? `****${process.env.ROUTING_NUMBER.slice(-4)}` : '',
+      account_number: process.env.ACCOUNT_NUMBER || '',  // Show full account number
+      routing_number: process.env.ROUTING_NUMBER || '',  // Show full routing number
       swift_code: process.env.SWIFT_CODE || '',
       bank_address: process.env.BANK_ADDRESS || '',
       currency_type: process.env.CURRENCY_TYPE || 'USD',
