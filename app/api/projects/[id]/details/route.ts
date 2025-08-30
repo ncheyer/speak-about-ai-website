@@ -18,18 +18,13 @@ export async function GET(
         client_email,
         client_phone,
         company,
-        speaker_name,
-        speaker_email,
-        event_title,
         event_date,
         event_location,
         event_type,
         attendee_count,
-        venue_details,
-        av_requirements,
-        travel_arrangements,
-        accommodation_details,
-        project_details
+        project_details,
+        details_completion_percentage,
+        has_critical_missing_info
       FROM projects 
       WHERE id = ${projectId}
     `
@@ -52,30 +47,54 @@ export async function GET(
     let dealData = null
     if (project.client_email || project.company) {
       try {
-        const dealResult = await sql`
-          SELECT 
-            organization_name,
-            specific_speaker,
-            event_budget,
-            additional_info,
-            wishlist_speakers,
-            travel_required,
-            travel_stipend,
-            flight_required,
-            hotel_required,
-            travel_notes,
-            notes
-          FROM deals 
-          WHERE (client_email = ${project.client_email} OR company = ${project.company})
-            AND event_date = ${project.event_date}
-          ORDER BY created_at DESC
-          LIMIT 1
-        `
-        if (dealResult.length > 0) {
-          dealData = dealResult[0]
+        // Build query conditionally to handle null values
+        let whereClause = []
+        let queryParams = []
+        
+        if (project.client_email) {
+          whereClause.push(`client_email = $1`)
+          queryParams.push(project.client_email)
+        }
+        
+        if (project.company) {
+          if (whereClause.length > 0) {
+            whereClause.push(`OR company = $${queryParams.length + 1}`)
+          } else {
+            whereClause.push(`company = $1`)
+          }
+          queryParams.push(project.company)
+        }
+        
+        // Only query if we have conditions
+        if (whereClause.length > 0) {
+          const dealQuery = `
+            SELECT 
+              organization_name,
+              specific_speaker,
+              event_budget,
+              additional_info,
+              wishlist_speakers,
+              travel_required,
+              travel_stipend,
+              flight_required,
+              hotel_required,
+              travel_notes,
+              notes
+            FROM deals 
+            WHERE (${whereClause.join(' ')})
+            ORDER BY created_at DESC
+            LIMIT 1
+          `
+          
+          console.log('Deal query:', dealQuery, 'Params:', queryParams)
+          // Skip deal lookup for now to isolate the issue
+          // const dealResult = await sql(dealQuery, queryParams)
+          // if (dealResult.length > 0) {
+          //   dealData = dealResult[0]
+          // }
         }
       } catch (error) {
-        console.log('No matching deal found or error:', error)
+        console.log('Error querying deal:', error)
       }
     }
     
@@ -87,7 +106,7 @@ export async function GET(
       ...existingDetails,
       overview: {
         ...(existingDetails.overview || {}),
-        speaker_name: existingDetails.overview?.speaker_name || project.speaker_name || '',
+        speaker_name: existingDetails.overview?.speaker_name || '',
         company_name: existingDetails.overview?.company_name || project.company || '',
         event_location: existingDetails.overview?.event_location || project.event_location || '',
         event_date: existingDetails.overview?.event_date || project.event_date || '',
@@ -104,7 +123,7 @@ export async function GET(
       },
       event_details: {
         ...(existingDetails.event_details || {}),
-        event_title: existingDetails.event_details?.event_title || project.event_title || '',
+        event_title: existingDetails.event_details?.event_title || project.project_name || '',
         event_type: existingDetails.event_details?.event_type || project.event_type || '',
       },
       audience: {
@@ -113,28 +132,24 @@ export async function GET(
       },
       venue: {
         ...(existingDetails.venue || {}),
-        name: existingDetails.venue?.name || 
-              (project.venue_details ? String(project.venue_details).split('\n')[0] : ''),
+        name: existingDetails.venue?.name || '',
       },
       speaker_requirements: {
         ...(existingDetails.speaker_requirements || {}),
         av_needs: {
           ...(existingDetails.speaker_requirements?.av_needs || {}),
-          presentation_notes: existingDetails.speaker_requirements?.av_needs?.presentation_notes || 
-                            project.av_requirements || '',
+          presentation_notes: existingDetails.speaker_requirements?.av_needs?.presentation_notes || '',
         }
       },
       travel: {
         ...(existingDetails.travel || {}),
         hotel: {
           ...(existingDetails.travel?.hotel || {}),
-          additional_info: existingDetails.travel?.hotel?.additional_info || 
-                          project.accommodation_details || '',
+          additional_info: existingDetails.travel?.hotel?.additional_info || '',
         },
         flights: {
           ...(existingDetails.travel?.flights || {}),
           notes: existingDetails.travel?.flights?.notes || 
-                project.travel_arrangements || 
                 dealData?.travel_notes || '',
         },
         ground_transportation: {
@@ -159,9 +174,17 @@ export async function GET(
       details: mergedDetails || {}
     })
   } catch (error) {
-    console.error('Error fetching project details:', error)
+    console.error('Error fetching project details - Full error:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      projectId: params.id
+    })
     return NextResponse.json(
-      { error: 'Failed to fetch project details' },
+      { 
+        error: 'Failed to fetch project details',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }
