@@ -2024,12 +2024,64 @@ export default function EnhancedProjectManagementPage() {
                     <ProjectDetailsManager
                       projectId={selectedProjectForDetails.id}
                       projectName={selectedProjectForDetails.project_name}
-                      onGenerateTasks={(tasks) => {
-                        toast({
-                          title: "Tasks Generated",
-                          description: `${tasks.length} tasks have been identified based on missing information`
-                        })
-                        // Here you could add logic to actually create these tasks
+                      onGenerateTasks={async (tasks) => {
+                        // Create tasks in the database
+                        try {
+                          // Map task categories to stages
+                          const tasksWithStages = tasks.map(task => {
+                            let stage = 'logistics_planning' // default stage
+                            if (task.category === 'overview' || task.category === 'contacts') {
+                              stage = 'invoicing'
+                            } else if (task.category === 'travel' || task.category === 'venue') {
+                              stage = 'logistics_planning'
+                            } else if (task.category === 'event_details' || task.category === 'audience') {
+                              stage = 'pre_event'
+                            } else if (task.category === 'speaker_requirements') {
+                              stage = 'pre_event'
+                            }
+                            
+                            return {
+                              ...task,
+                              stage
+                            }
+                          })
+                          
+                          // Create tasks via API
+                          const response = await fetch(`/api/projects/${selectedProjectForDetails.id}/tasks`, {
+                            method: 'POST',
+                            headers: { 
+                              'Content-Type': 'application/json',
+                              'x-dev-admin-bypass': 'dev-admin-access'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                              tasks: tasksWithStages
+                            })
+                          })
+                          
+                          if (response.ok) {
+                            const result = await response.json()
+                            toast({
+                              title: "Tasks Generated",
+                              description: `${result.count} tasks have been created for this project`
+                            })
+                            
+                            // Switch to tasks tab to show the new tasks
+                            setActiveTab('tasks')
+                            
+                            // Refresh data to show new tasks
+                            loadData()
+                          } else {
+                            throw new Error('Failed to save tasks')
+                          }
+                        } catch (error) {
+                          console.error('Error creating tasks:', error)
+                          toast({
+                            title: "Error",
+                            description: "Failed to create generated tasks",
+                            variant: "destructive"
+                          })
+                        }
                       }}
                     />
                   )}
