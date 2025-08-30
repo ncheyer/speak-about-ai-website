@@ -29,11 +29,8 @@ export async function GET(
         speaker_av_requirements,
         venue_name,
         venue_address,
-        venue_details,
         venue_contact,
         contact_person,
-        accommodation_details,
-        travel_arrangements,
         travel_required,
         accommodation_required,
         av_requirements,
@@ -176,13 +173,11 @@ export async function GET(
         ...(existingDetails.travel || {}),
         hotel: {
           ...(existingDetails.travel?.hotel || {}),
-          additional_info: existingDetails.travel?.hotel?.additional_info || 
-                          project.accommodation_details || '',
+          additional_info: existingDetails.travel?.hotel?.additional_info || '',
         },
         flights: {
           ...(existingDetails.travel?.flights || {}),
           notes: existingDetails.travel?.flights?.notes || 
-                project.travel_arrangements || 
                 dealData?.travel_notes || '',
         },
         ground_transportation: {
