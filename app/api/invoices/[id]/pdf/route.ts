@@ -287,20 +287,28 @@ function generateInvoiceHTML(invoice: any): string {
         ` : ''}
 
         <div class="footer" style="margin-top: 40px;">
+          ${invoice.banking_info ? `
           <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Banking Information</h3>
+            <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Payment Information</h3>
             <div style="color: #111827; line-height: 1.6;">
-              <strong>Bank Name:</strong> ${process.env.BANK_NAME || 'Please contact for banking details'}<br>
-              <strong>Account Name:</strong> ${process.env.BANK_ACCOUNT_NAME || 'Speak About AI LLC'}<br>
-              ${process.env.BANK_ACCOUNT_NUMBER ? `<strong>Account Number:</strong> ${process.env.BANK_ACCOUNT_NUMBER}<br>` : ''}
-              ${process.env.BANK_ROUTING_NUMBER ? `<strong>Routing Number:</strong> ${process.env.BANK_ROUTING_NUMBER}<br>` : ''}
-              ${process.env.BANK_SWIFT_CODE ? `<strong>SWIFT Code:</strong> ${process.env.BANK_SWIFT_CODE}<br>` : ''}
-              ${process.env.BANK_ADDRESS ? `<strong>Bank Address:</strong> ${process.env.BANK_ADDRESS}<br>` : ''}
-              ${process.env.BANK_WIRE_INSTRUCTIONS ? `<br><strong>Wire Instructions:</strong> ${process.env.BANK_WIRE_INSTRUCTIONS}` : ''}
+              ${invoice.banking_info.bank_name ? `<strong>Bank Name:</strong> ${invoice.banking_info.bank_name}<br>` : ''}
+              ${invoice.banking_info.account_name ? `<strong>Account Name:</strong> ${invoice.banking_info.account_name}<br>` : ''}
+              ${invoice.banking_info.account_number ? `<strong>Account Number:</strong> ${invoice.banking_info.account_number}<br>` : ''}
+              ${invoice.banking_info.routing_number ? `<strong>Routing Number:</strong> ${invoice.banking_info.routing_number}<br>` : ''}
+              ${invoice.banking_info.swift_code ? `<strong>SWIFT Code:</strong> ${invoice.banking_info.swift_code}<br>` : ''}
+              ${invoice.banking_info.bank_address ? `<strong>Bank Address:</strong> ${invoice.banking_info.bank_address}<br>` : ''}
+              ${invoice.banking_info.wire_instructions ? `<br><strong>Wire Instructions:</strong> ${invoice.banking_info.wire_instructions}` : ''}
+              ${invoice.banking_info.ach_instructions ? `<br><strong>ACH Instructions:</strong> ${invoice.banking_info.ach_instructions}` : ''}
             </div>
           </div>
+          ` : `
+          <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 12px;">Payment Information</h3>
+            <p style="color: #6b7280;">Please contact us for payment details.</p>
+          </div>
+          `}
           <p>Thank you for your business!</p>
-          <p>Payment terms: ${invoice.invoice_type === 'deposit' ? process.env.INVOICE_DEPOSIT_TERMS || 'Net 30 days from issue date' : process.env.INVOICE_FINAL_TERMS || 'Due on event date'}</p>
+          <p>Payment terms: ${invoice.payment_terms || (invoice.invoice_type === 'deposit' ? 'Net 30 days from issue date' : 'Due on event date')}</p>
           <p>Please reference invoice number ${invoice.invoice_number} with your payment</p>
         </div>
       </div>
@@ -375,6 +383,53 @@ export async function GET(
       }
     }
 
+    // Fetch banking configuration securely
+    let bankingInfo = null
+    
+    // First check environment variables (highest priority)
+    if (process.env.BANK_NAME || process.env.BANK_ACCOUNT_NAME) {
+      bankingInfo = {
+        bank_name: process.env.BANK_NAME,
+        account_name: process.env.BANK_ACCOUNT_NAME,
+        // Only show masked account numbers unless explicitly configured
+        account_number: process.env.SHOW_FULL_ACCOUNT_NUMBER === 'true' 
+          ? process.env.BANK_ACCOUNT_NUMBER 
+          : process.env.BANK_ACCOUNT_NUMBER ? `****${process.env.BANK_ACCOUNT_NUMBER.slice(-4)}` : '',
+        routing_number: process.env.SHOW_FULL_ACCOUNT_NUMBER === 'true'
+          ? process.env.BANK_ROUTING_NUMBER
+          : process.env.BANK_ROUTING_NUMBER ? `****${process.env.BANK_ROUTING_NUMBER.slice(-4)}` : '',
+        swift_code: process.env.BANK_SWIFT_CODE,
+        bank_address: process.env.BANK_ADDRESS,
+        wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS,
+        ach_instructions: process.env.BANK_ACH_INSTRUCTIONS
+      }
+    } else {
+      // Fallback to database (using safe view with masked sensitive data)
+      try {
+        const bankingConfigs = await sql`
+          SELECT config_key, value FROM banking_info_safe
+          WHERE config_key IN (
+            'bank_name', 'account_name', 'account_number', 'routing_number',
+            'swift_code', 'bank_address', 'wire_instructions', 'ach_instructions'
+          )
+        `
+        
+        if (bankingConfigs.length > 0) {
+          bankingInfo = {}
+          bankingConfigs.forEach(config => {
+            bankingInfo[config.config_key] = config.value
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching banking config:', error)
+      }
+    }
+
+    // Get payment terms
+    const paymentTerms = invoice.invoice_type === 'deposit' 
+      ? (process.env.INVOICE_DEPOSIT_TERMS || 'Net 30 days from issue date')
+      : (process.env.INVOICE_FINAL_TERMS || 'Due on event date')
+
     // Merge overrides with invoice data
     const invoiceWithOverrides = {
       ...invoice,
@@ -386,7 +441,9 @@ export async function GET(
       program_length: overrides.program_length || invoice.program_length,
       qa_length: overrides.qa_length || invoice.qa_length,
       audience_size: overrides.audience_size || invoice.audience_size,
-      deliverables: overrides.deliverables || invoice.deliverables
+      deliverables: overrides.deliverables || invoice.deliverables,
+      banking_info: bankingInfo,
+      payment_terms: paymentTerms
     }
 
     // Generate HTML
