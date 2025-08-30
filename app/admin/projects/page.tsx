@@ -56,6 +56,8 @@ import { useToast } from "@/hooks/use-toast"
 import { InvoicePDFDialog } from "@/components/invoice-pdf-viewer"
 import { InvoiceEditorModal } from "@/components/invoice-editor-modal"
 import { TASK_DEFINITIONS, calculateTaskUrgency, getTaskOwnerLabel, getPriorityColor } from "@/lib/task-definitions"
+import { ProjectDetailsManager } from "@/components/project-details-manager"
+import { ProjectDetails } from "@/lib/project-details-schema"
 
 interface Project {
   id: number
@@ -913,12 +915,13 @@ export default function EnhancedProjectManagementPage() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 max-w-3xl">
+            <TabsList className="grid w-full grid-cols-6 max-w-4xl">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
               <TabsTrigger value="tasks">Tasks</TabsTrigger>
               <TabsTrigger value="logistics">Logistics</TabsTrigger>
+              <TabsTrigger value="details">Details</TabsTrigger>
             </TabsList>
 
             {/* Dashboard Tab */}
@@ -1978,6 +1981,64 @@ export default function EnhancedProjectManagementPage() {
                       </CardContent>
                     </Card>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Details Tab */}
+            <TabsContent value="details" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Project Details Management</CardTitle>
+                  <CardDescription>
+                    Select a project to manage comprehensive event details
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {/* Project selector */}
+                  <div className="mb-6">
+                    <Label>Select Project</Label>
+                    <Select
+                      value={selectedProject?.id?.toString() || ""}
+                      onValueChange={(value) => {
+                        const project = projects.find(p => p.id === parseInt(value))
+                        setSelectedProject(project || null)
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a project to manage details" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projects.map((project) => (
+                          <SelectItem key={project.id} value={project.id.toString()}>
+                            {project.project_name} - {project.client_name} ({new Date(project.event_date).toLocaleDateString()})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Project Details Manager */}
+                  {selectedProject && (
+                    <ProjectDetailsManager
+                      projectId={selectedProject.id}
+                      projectName={selectedProject.project_name}
+                      onGenerateTasks={(tasks) => {
+                        toast({
+                          title: "Tasks Generated",
+                          description: `${tasks.length} tasks have been identified based on missing information`
+                        })
+                        // Here you could add logic to actually create these tasks
+                      }}
+                    />
+                  )}
+                  
+                  {!selectedProject && (
+                    <div className="text-center py-12 text-gray-500">
+                      <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>Select a project to view and manage its details</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
