@@ -1,5 +1,7 @@
 # Production Environment Variables Setup
 
+**Status: Environment variables have been configured in production**
+
 ## Required Banking Information Variables
 
 To display banking information on invoices in production, you need to set the following environment variables in your deployment platform (e.g., Vercel):
