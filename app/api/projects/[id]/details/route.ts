@@ -21,7 +21,6 @@ export async function GET(
         event_date,
         event_location,
         event_type,
-        event_title,
         attendee_count,
         requested_speaker_name,
         speaker_bio,
@@ -55,6 +54,9 @@ export async function GET(
       name: project.project_name,
       client_name: project.client_name,
       event_date: project.event_date,
+      requested_speaker_name: project.requested_speaker_name,
+      venue_name: project.venue_name,
+      contact_person: project.contact_person,
       has_project_details: !!project.project_details,
       details_keys: project.project_details ? Object.keys(project.project_details) : []
     })
@@ -139,7 +141,7 @@ export async function GET(
       },
       event_details: {
         ...(existingDetails.event_details || {}),
-        event_title: existingDetails.event_details?.event_title || project.event_title || project.project_name || '',
+        event_title: existingDetails.event_details?.event_title || project.project_name || '',
         event_type: existingDetails.event_details?.event_type || project.event_type || '',
       },
       audience: {
