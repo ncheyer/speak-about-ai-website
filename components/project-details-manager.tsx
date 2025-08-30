@@ -59,7 +59,30 @@ export function ProjectDetailsManager({
   const [activeTab, setActiveTab] = useState("overview")
   const [unsavedChanges, setUnsavedChanges] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+
+  // Load project details when component mounts or projectId changes
+  useEffect(() => {
+    const loadProjectDetails = async () => {
+      setLoading(true)
+      try {
+        const response = await fetch(`/api/projects/${projectId}/details`)
+        if (response.ok) {
+          const data = await response.json()
+          setDetails(data.details || {})
+        }
+      } catch (error) {
+        console.error('Error loading project details:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (projectId) {
+      loadProjectDetails()
+    }
+  }, [projectId])
 
   // Calculate completion
   const completion = calculateProjectCompletion(details)
@@ -123,6 +146,17 @@ export function ProjectDetailsManager({
         description: `${tasks.length} tasks created based on missing information`
       })
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading project details...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -361,6 +395,22 @@ export function ProjectDetailsManager({
                     />
                   </div>
                   <div>
+                    <Label>City, State, ZIP</Label>
+                    <Input
+                      value={details.travel?.hotel?.city_state_zip || ''}
+                      onChange={(e) => updateField('travel.hotel.city_state_zip', e.target.value)}
+                      placeholder="City, ST 12345"
+                    />
+                  </div>
+                  <div>
+                    <Label>Room Type</Label>
+                    <Input
+                      value={details.travel?.hotel?.room_type || ''}
+                      onChange={(e) => updateField('travel.hotel.room_type', e.target.value)}
+                      placeholder="e.g., King, Suite"
+                    />
+                  </div>
+                  <div>
                     <Label>Check-in Date</Label>
                     <Input
                       type="date"
@@ -385,6 +435,22 @@ export function ProjectDetailsManager({
                     />
                   </div>
                   <div>
+                    <Label>Secondary Confirmation # (if any)</Label>
+                    <Input
+                      value={details.travel?.hotel?.confirmation_number_2 || ''}
+                      onChange={(e) => updateField('travel.hotel.confirmation_number_2', e.target.value)}
+                      placeholder="Additional confirmation #"
+                    />
+                  </div>
+                  <div>
+                    <Label>Travel Time to Airport</Label>
+                    <Input
+                      value={details.travel?.hotel?.travel_time_to_airport || ''}
+                      onChange={(e) => updateField('travel.hotel.travel_time_to_airport', e.target.value)}
+                      placeholder="e.g., 10 miles / 20 minutes"
+                    />
+                  </div>
+                  <div>
                     <Label>Travel Time to Venue</Label>
                     <Input
                       value={details.travel?.hotel?.travel_time_to_venue || ''}
@@ -392,85 +458,209 @@ export function ProjectDetailsManager({
                       placeholder="e.g., 10 miles / 20 minutes"
                     />
                   </div>
+                  <div>
+                    <Label>Arranged By</Label>
+                    <Select
+                      value={details.travel?.hotel?.arranged_by || ''}
+                      onValueChange={(value) => updateField('travel.hotel.arranged_by', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Who arranged?" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sponsor">Sponsor/Client</SelectItem>
+                        <SelectItem value="speaker">Speaker</SelectItem>
+                        <SelectItem value="agency">Agency</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <Label>Additional Hotel Information</Label>
+                  <Textarea
+                    value={details.travel?.hotel?.additional_info || ''}
+                    onChange={(e) => updateField('travel.hotel.additional_info', e.target.value)}
+                    placeholder="Any special notes about the hotel, amenities, etc."
+                    rows={2}
+                  />
                 </div>
               </div>
             </TabsContent>
 
             {/* Venue Tab */}
-            <TabsContent value="venue" className="p-6 space-y-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <Building className="h-5 w-5" />
-                Venue Information
-              </h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Venue Name</Label>
-                  <Input
-                    value={details.venue?.name || ''}
-                    onChange={(e) => updateField('venue.name', e.target.value)}
-                    placeholder="Venue name"
-                  />
+            <TabsContent value="venue" className="p-6 space-y-6">
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Venue Information
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Venue Name</Label>
+                    <Input
+                      value={details.venue?.name || ''}
+                      onChange={(e) => updateField('venue.name', e.target.value)}
+                      placeholder="Venue name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Phone Number</Label>
+                    <Input
+                      value={details.venue?.phone || ''}
+                      onChange={(e) => updateField('venue.phone', e.target.value)}
+                      placeholder="Venue phone"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Address</Label>
+                    <Input
+                      value={details.venue?.address || ''}
+                      onChange={(e) => updateField('venue.address', e.target.value)}
+                      placeholder="Full venue address"
+                    />
+                  </div>
+                  <div>
+                    <Label>City, State, ZIP</Label>
+                    <Input
+                      value={details.venue?.city_state_zip || ''}
+                      onChange={(e) => updateField('venue.city_state_zip', e.target.value)}
+                      placeholder="City, ST 12345"
+                    />
+                  </div>
+                  <div>
+                    <Label>Venue Website</Label>
+                    <Input
+                      value={details.venue?.venue_website || ''}
+                      onChange={(e) => updateField('venue.venue_website', e.target.value)}
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div>
+                    <Label>Meeting Room Name</Label>
+                    <Input
+                      value={details.venue?.meeting_room_name || ''}
+                      onChange={(e) => updateField('venue.meeting_room_name', e.target.value)}
+                      placeholder="Room/hall name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Room Capacity</Label>
+                    <Input
+                      type="number"
+                      value={details.venue?.room_capacity || ''}
+                      onChange={(e) => updateField('venue.room_capacity', parseInt(e.target.value))}
+                      placeholder="Maximum capacity"
+                    />
+                  </div>
+                  <div>
+                    <Label>Room Setup</Label>
+                    <Select
+                      value={details.venue?.room_setup || ''}
+                      onValueChange={(value) => updateField('venue.room_setup', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select setup" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="theater">Theater</SelectItem>
+                        <SelectItem value="classroom">Classroom</SelectItem>
+                        <SelectItem value="rounds">Rounds</SelectItem>
+                        <SelectItem value="u-shape">U-Shape</SelectItem>
+                        <SelectItem value="boardroom">Boardroom</SelectItem>
+                        <SelectItem value="auditorium">Auditorium</SelectItem>
+                        <SelectItem value="arena">Arena</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Closest Airport</Label>
+                    <Input
+                      value={details.venue?.closest_airport || ''}
+                      onChange={(e) => updateField('venue.closest_airport', e.target.value)}
+                      placeholder="Airport code (e.g., LAX)"
+                    />
+                  </div>
+                  <div>
+                    <Label>Distance from Airport</Label>
+                    <Input
+                      value={details.venue?.distance_from_airport || ''}
+                      onChange={(e) => updateField('venue.distance_from_airport', e.target.value)}
+                      placeholder="e.g., 10 miles / 20 minutes"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label>Phone Number</Label>
-                  <Input
-                    value={details.venue?.phone || ''}
-                    onChange={(e) => updateField('venue.phone', e.target.value)}
-                    placeholder="Venue phone"
-                  />
+              </div>
+
+              {/* Venue Logistics */}
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Venue Logistics
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <Label>Parking Information</Label>
+                    <Textarea
+                      value={details.venue?.parking_info || ''}
+                      onChange={(e) => updateField('venue.parking_info', e.target.value)}
+                      placeholder="Describe parking options, costs, validation, etc."
+                      rows={2}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Loading Dock / Equipment Access</Label>
+                    <Textarea
+                      value={details.venue?.loading_dock_info || ''}
+                      onChange={(e) => updateField('venue.loading_dock_info', e.target.value)}
+                      placeholder="Loading dock location, access restrictions, elevator availability"
+                      rows={2}
+                    />
+                  </div>
                 </div>
-                <div className="md:col-span-2">
-                  <Label>Address</Label>
-                  <Input
-                    value={details.venue?.address || ''}
-                    onChange={(e) => updateField('venue.address', e.target.value)}
-                    placeholder="Full venue address"
-                  />
-                </div>
-                <div>
-                  <Label>Meeting Room Name</Label>
-                  <Input
-                    value={details.venue?.meeting_room_name || ''}
-                    onChange={(e) => updateField('venue.meeting_room_name', e.target.value)}
-                    placeholder="Room/hall name"
-                  />
-                </div>
-                <div>
-                  <Label>Room Setup</Label>
-                  <Select
-                    value={details.venue?.room_setup || ''}
-                    onValueChange={(value) => updateField('venue.room_setup', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select setup" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="theater">Theater</SelectItem>
-                      <SelectItem value="classroom">Classroom</SelectItem>
-                      <SelectItem value="rounds">Rounds</SelectItem>
-                      <SelectItem value="u-shape">U-Shape</SelectItem>
-                      <SelectItem value="boardroom">Boardroom</SelectItem>
-                      <SelectItem value="auditorium">Auditorium</SelectItem>
-                      <SelectItem value="arena">Arena</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Closest Airport</Label>
-                  <Input
-                    value={details.venue?.closest_airport || ''}
-                    onChange={(e) => updateField('venue.closest_airport', e.target.value)}
-                    placeholder="Airport code (e.g., LAX)"
-                  />
-                </div>
-                <div>
-                  <Label>Distance from Airport</Label>
-                  <Input
-                    value={details.venue?.distance_from_airport || ''}
-                    onChange={(e) => updateField('venue.distance_from_airport', e.target.value)}
-                    placeholder="e.g., 10 miles / 20 minutes"
-                  />
+              </div>
+
+              {/* Venue Contact */}
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Venue Contact Person
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Name</Label>
+                    <Input
+                      value={details.venue?.venue_contact?.name || ''}
+                      onChange={(e) => updateField('venue.venue_contact.name', e.target.value)}
+                      placeholder="Venue contact name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Title</Label>
+                    <Input
+                      value={details.venue?.venue_contact?.title || ''}
+                      onChange={(e) => updateField('venue.venue_contact.title', e.target.value)}
+                      placeholder="Job title"
+                    />
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <Input
+                      type="email"
+                      value={details.venue?.venue_contact?.email || ''}
+                      onChange={(e) => updateField('venue.venue_contact.email', e.target.value)}
+                      placeholder="Email address"
+                    />
+                  </div>
+                  <div>
+                    <Label>Phone</Label>
+                    <Input
+                      value={details.venue?.venue_contact?.office_phone || ''}
+                      onChange={(e) => updateField('venue.venue_contact.office_phone', e.target.value)}
+                      placeholder="Phone number"
+                    />
+                  </div>
                 </div>
               </div>
             </TabsContent>
@@ -575,6 +765,35 @@ export function ProjectDetailsManager({
                       onChange={(e) => updateField('contacts.av_contact.cell_phone', e.target.value)}
                       placeholder="Phone number"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Important Contacts */}
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Additional Contacts
+                </h3>
+                <div className="space-y-3">
+                  <div className="text-sm text-gray-600 mb-2">Add any other important contacts for this event</div>
+                  <div className="p-4 border rounded-lg bg-gray-50">
+                    <Label>Event Coordinator</Label>
+                    <div className="grid md:grid-cols-2 gap-3 mt-2">
+                      <Input placeholder="Name" />
+                      <Input placeholder="Phone" />
+                      <Input placeholder="Email" type="email" />
+                      <Input placeholder="Role/Title" />
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg bg-gray-50">
+                    <Label>Client Executive Sponsor</Label>
+                    <div className="grid md:grid-cols-2 gap-3 mt-2">
+                      <Input placeholder="Name" />
+                      <Input placeholder="Phone" />
+                      <Input placeholder="Email" type="email" />
+                      <Input placeholder="Role/Title" />
+                    </div>
                   </div>
                 </div>
               </div>
