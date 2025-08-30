@@ -21,7 +21,23 @@ export async function GET(
         event_date,
         event_location,
         event_type,
+        event_title,
         attendee_count,
+        requested_speaker_name,
+        speaker_bio,
+        speaker_fee,
+        speaker_presentation_title,
+        speaker_av_requirements,
+        venue_name,
+        venue_address,
+        venue_details,
+        venue_contact,
+        contact_person,
+        accommodation_details,
+        travel_arrangements,
+        travel_required,
+        accommodation_required,
+        av_requirements,
         project_details,
         details_completion_percentage,
         has_critical_missing_info
@@ -106,7 +122,7 @@ export async function GET(
       ...existingDetails,
       overview: {
         ...(existingDetails.overview || {}),
-        speaker_name: existingDetails.overview?.speaker_name || '',
+        speaker_name: existingDetails.overview?.speaker_name || project.requested_speaker_name || '',
         company_name: existingDetails.overview?.company_name || project.company || '',
         event_location: existingDetails.overview?.event_location || project.event_location || '',
         event_date: existingDetails.overview?.event_date || project.event_date || '',
@@ -115,7 +131,7 @@ export async function GET(
         ...(existingDetails.contacts || {}),
         on_site: {
           ...(existingDetails.contacts?.on_site || {}),
-          name: existingDetails.contacts?.on_site?.name || project.client_name || '',
+          name: existingDetails.contacts?.on_site?.name || project.contact_person || project.client_name || '',
           email: existingDetails.contacts?.on_site?.email || project.client_email || '',
           cell_phone: existingDetails.contacts?.on_site?.cell_phone || project.client_phone || '',
           company: existingDetails.contacts?.on_site?.company || project.company || '',
@@ -123,7 +139,7 @@ export async function GET(
       },
       event_details: {
         ...(existingDetails.event_details || {}),
-        event_title: existingDetails.event_details?.event_title || project.project_name || '',
+        event_title: existingDetails.event_details?.event_title || project.event_title || project.project_name || '',
         event_type: existingDetails.event_details?.event_type || project.event_type || '',
       },
       audience: {
@@ -132,24 +148,39 @@ export async function GET(
       },
       venue: {
         ...(existingDetails.venue || {}),
-        name: existingDetails.venue?.name || '',
+        name: existingDetails.venue?.name || project.venue_name || '',
+        address: existingDetails.venue?.address || project.venue_address || '',
+        venue_contact: {
+          ...(existingDetails.venue?.venue_contact || {}),
+          name: existingDetails.venue?.venue_contact?.name || project.venue_contact || '',
+        }
       },
       speaker_requirements: {
         ...(existingDetails.speaker_requirements || {}),
+        introduction: {
+          ...(existingDetails.speaker_requirements?.introduction || {}),
+          text: existingDetails.speaker_requirements?.introduction?.text || project.speaker_bio || '',
+        },
         av_needs: {
           ...(existingDetails.speaker_requirements?.av_needs || {}),
-          presentation_notes: existingDetails.speaker_requirements?.av_needs?.presentation_notes || '',
+          presentation_notes: existingDetails.speaker_requirements?.av_needs?.presentation_notes || 
+                            project.speaker_av_requirements || project.av_requirements || '',
+        },
+        presentation: {
+          ...(existingDetails.speaker_requirements?.presentation || {}),
         }
       },
       travel: {
         ...(existingDetails.travel || {}),
         hotel: {
           ...(existingDetails.travel?.hotel || {}),
-          additional_info: existingDetails.travel?.hotel?.additional_info || '',
+          additional_info: existingDetails.travel?.hotel?.additional_info || 
+                          project.accommodation_details || '',
         },
         flights: {
           ...(existingDetails.travel?.flights || {}),
           notes: existingDetails.travel?.flights?.notes || 
+                project.travel_arrangements || 
                 dealData?.travel_notes || '',
         },
         ground_transportation: {
