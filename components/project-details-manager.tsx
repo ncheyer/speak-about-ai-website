@@ -168,11 +168,6 @@ export function ProjectDetailsManager({
 
   return (
     <div className="space-y-6">
-      {/* Debug info - remove after testing */}
-      <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
-        Project ID: {projectId} | Details loaded: {Object.keys(details).length > 0 ? 'Yes' : 'No'} | Active tab: {activeTab}
-      </div>
-      
       {/* Completion Overview */}
       <Card>
         <CardHeader>

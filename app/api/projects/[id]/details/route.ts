@@ -14,6 +14,21 @@ export async function GET(
       SELECT 
         id,
         project_name,
+        client_name,
+        client_email,
+        client_phone,
+        company,
+        speaker_name,
+        speaker_email,
+        event_title,
+        event_date,
+        event_location,
+        event_type,
+        attendee_count,
+        venue_details,
+        av_requirements,
+        travel_arrangements,
+        accommodation_details,
         project_details
       FROM projects 
       WHERE id = ${projectId}
@@ -23,10 +38,107 @@ export async function GET(
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
+    const project = result[0]
+    
+    // Try to find a matching deal for additional data
+    let dealData = null
+    if (project.client_email || project.company) {
+      try {
+        const dealResult = await sql`
+          SELECT 
+            organization_name,
+            specific_speaker,
+            event_budget,
+            additional_info,
+            wishlist_speakers,
+            travel_required,
+            travel_stipend,
+            flight_required,
+            hotel_required,
+            travel_notes,
+            notes
+          FROM deals 
+          WHERE (client_email = ${project.client_email} OR company = ${project.company})
+            AND event_date = ${project.event_date}
+          ORDER BY created_at DESC
+          LIMIT 1
+        `
+        if (dealResult.length > 0) {
+          dealData = dealResult[0]
+        }
+      } catch (error) {
+        console.log('No matching deal found or error:', error)
+      }
+    }
+    
+    // Merge existing project data with project_details
+    // This pre-populates fields from the main projects table and deal data if available
+    const mergedDetails = {
+      ...project.project_details,
+      overview: {
+        ...project.project_details?.overview,
+        speaker_name: project.project_details?.overview?.speaker_name || project.speaker_name,
+        company_name: project.project_details?.overview?.company_name || project.company,
+        event_location: project.project_details?.overview?.event_location || project.event_location,
+        event_date: project.project_details?.overview?.event_date || project.event_date,
+      },
+      contacts: {
+        ...project.project_details?.contacts,
+        on_site: {
+          ...project.project_details?.contacts?.on_site,
+          name: project.project_details?.contacts?.on_site?.name || project.client_name,
+          email: project.project_details?.contacts?.on_site?.email || project.client_email,
+          cell_phone: project.project_details?.contacts?.on_site?.cell_phone || project.client_phone,
+          company: project.project_details?.contacts?.on_site?.company || project.company,
+        }
+      },
+      event_details: {
+        ...project.project_details?.event_details,
+        event_title: project.project_details?.event_details?.event_title || project.event_title,
+        event_type: project.project_details?.event_details?.event_type || project.event_type,
+      },
+      audience: {
+        ...project.project_details?.audience,
+        expected_size: project.project_details?.audience?.expected_size || project.attendee_count,
+      },
+      venue: {
+        ...project.project_details?.venue,
+        name: project.project_details?.venue?.name || 
+              (project.venue_details ? project.venue_details.split('\n')[0] : ''),
+      },
+      speaker_requirements: {
+        ...project.project_details?.speaker_requirements,
+        av_needs: {
+          ...project.project_details?.speaker_requirements?.av_needs,
+          presentation_notes: project.project_details?.speaker_requirements?.av_needs?.presentation_notes || 
+                            project.av_requirements,
+        }
+      },
+      travel: {
+        ...project.project_details?.travel,
+        hotel: {
+          ...project.project_details?.travel?.hotel,
+          additional_info: project.project_details?.travel?.hotel?.additional_info || 
+                          project.accommodation_details,
+        },
+        flights: {
+          ...project.project_details?.travel?.flights,
+          notes: project.project_details?.travel?.flights?.notes || 
+                project.travel_arrangements || 
+                dealData?.travel_notes,
+        },
+        ground_transportation: {
+          ...project.project_details?.travel?.ground_transportation,
+          details: project.project_details?.travel?.ground_transportation?.details ||
+                  (dealData?.travel_notes ? `Travel budget: $${dealData.travel_stipend || 0}` : ''),
+        }
+      }
+    }
+
     return NextResponse.json({
       projectId: result[0].id,
       projectName: result[0].project_name,
-      details: result[0].project_details || {}
+      details: mergedDetails || {}
     })
   } catch (error) {
     console.error('Error fetching project details:', error)
