@@ -50,20 +50,26 @@ export async function GET(
 
     // Check for overrides stored in invoice notes (as JSON)
     let overrides = {}
+    let notesText = invoice.notes
+    
     if (invoice.notes) {
       try {
         const notesData = JSON.parse(invoice.notes)
-        if (notesData.overrides) {
+        if (typeof notesData === 'object' && notesData.overrides) {
           overrides = notesData.overrides
+          notesText = notesData.text || ''
         }
       } catch (e) {
-        // Notes might not be JSON, that's okay
+        // Notes might not be JSON, that's okay - use as plain text
+        notesText = invoice.notes
       }
     }
 
     // Merge overrides with project data
     const fullInvoice = {
       ...invoice,
+      // Use plain text notes
+      notes: notesText,
       // Use overrides if available, otherwise use project data
       event_name: overrides.event_name || invoice.event_name,
       speaker_name: overrides.speaker_name || invoice.speaker_name,

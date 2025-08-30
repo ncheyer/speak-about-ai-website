@@ -22,13 +22,16 @@ export async function PATCH(
 
     // Prepare notes with overrides
     let finalNotes = notes || ""
-    if (overrides) {
-      // Store overrides as JSON in notes field
-      const notesData = {
-        text: notes || "",
-        overrides: overrides
+    if (overrides && Object.keys(overrides).some(key => overrides[key])) {
+      // Only store as JSON if there are actual overrides
+      const hasOverrides = Object.values(overrides).some(v => v !== null && v !== undefined && v !== '')
+      if (hasOverrides) {
+        const notesData = {
+          text: notes || "",
+          overrides: overrides
+        }
+        finalNotes = JSON.stringify(notesData)
       }
-      finalNotes = JSON.stringify(notesData)
     }
 
     // Update invoice

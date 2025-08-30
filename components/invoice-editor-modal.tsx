@@ -85,6 +85,8 @@ export function InvoiceEditorModal({
     try {
       setLoading(true)
       
+      console.log('Fetching invoice data for ID:', invoiceId)
+      
       // Fetch invoice with project details
       const response = await fetch(`/api/invoices/${invoiceId}/full`, {
         headers: {
@@ -94,12 +96,15 @@ export function InvoiceEditorModal({
 
       if (response.ok) {
         const data = await response.json()
+        console.log('Fetched invoice data:', data)
         setInvoiceData(data)
         setEditedData(data)
       } else {
+        const errorData = await response.json()
+        console.error('Failed to fetch invoice:', errorData)
         toast({
           title: "Error",
-          description: "Failed to load invoice data",
+          description: errorData.error || "Failed to load invoice data",
           variant: "destructive"
         })
       }
@@ -131,6 +136,11 @@ export function InvoiceEditorModal({
     try {
       setSaving(true)
       
+      console.log('Saving invoice details:', {
+        invoiceId,
+        editedData
+      })
+      
       // Save edited data to invoice
       const response = await fetch(`/api/invoices/${invoiceId}/update-details`, {
         method: 'PATCH',
@@ -156,6 +166,9 @@ export function InvoiceEditorModal({
       })
 
       if (response.ok) {
+        const result = await response.json()
+        console.log('Save successful:', result)
+        
         toast({
           title: "Success",
           description: "Invoice details updated"
@@ -165,10 +178,14 @@ export function InvoiceEditorModal({
         
         // Open PDF viewer after save
         if (onViewPDF) {
-          onViewPDF(invoiceId)
+          setTimeout(() => {
+            onViewPDF(invoiceId)
+          }, 100)
         }
       } else {
-        throw new Error('Failed to save changes')
+        const errorData = await response.json()
+        console.error('Save failed:', errorData)
+        throw new Error(errorData.error || 'Failed to save changes')
       }
     } catch (error) {
       console.error("Error saving invoice:", error)

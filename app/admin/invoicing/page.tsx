@@ -698,8 +698,13 @@ export default function InvoicingPage() {
         <InvoiceEditorModal
           invoiceId={selectedInvoiceForEdit}
           open={!!selectedInvoiceForEdit}
-          onClose={() => {
-            setSelectedInvoiceForEdit(null)
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedInvoiceForEdit(null)
+              loadData()
+            }
+          }}
+          onSave={() => {
             loadData()
           }}
         />

@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -40,6 +41,58 @@ export function ContractTemplates() {
   const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null)
   const [editingSection, setEditingSection] = useState<ContractSection | null>(null)
   const [showVariableHelp, setShowVariableHelp] = useState(false)
+  const [newTemplateName, setNewTemplateName] = useState("")
+  const [newTemplateDescription, setNewTemplateDescription] = useState("")
+
+  const handleCreateTemplate = () => {
+    if (!newTemplateName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a template name",
+        variant: "destructive"
+      })
+      return
+    }
+
+    const newTemplate: ContractTemplate = {
+      id: `custom-${Date.now()}`,
+      name: newTemplateName,
+      description: newTemplateDescription || "Custom contract template",
+      sections: [
+        {
+          id: "intro",
+          title: "Introduction",
+          content: "This agreement is entered into between {{client_company}} and {{speaker_name}}.",
+          order: 1,
+          isRequired: true
+        },
+        {
+          id: "services",
+          title: "Services",
+          content: "The Speaker agrees to provide speaking services for {{event_title}} on {{event_date}}.",
+          order: 2,
+          isRequired: true
+        },
+        {
+          id: "compensation",
+          title: "Compensation",
+          content: "The Client agrees to pay the Speaker {{speaker_fee}} for the services.",
+          order: 3,
+          isRequired: true
+        }
+      ]
+    }
+
+    setTemplates([...templates, newTemplate])
+    setSelectedTemplate(newTemplate)
+    setNewTemplateName("")
+    setNewTemplateDescription("")
+    
+    toast({
+      title: "Success",
+      description: "New template created successfully"
+    })
+  }
 
   const handleDuplicateTemplate = (template: ContractTemplate) => {
     const newTemplate: ContractTemplate = {
@@ -97,10 +150,58 @@ export function ContractTemplates() {
           <h3 className="text-lg font-semibold">Contract Templates</h3>
           <p className="text-sm text-gray-600">Manage and customize your contract templates</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Create Template
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Template
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Template</DialogTitle>
+              <DialogDescription>
+                Create a new contract template with custom sections
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="template-name">Template Name</Label>
+                <Input
+                  id="template-name"
+                  placeholder="e.g., Standard Speaking Agreement"
+                  value={newTemplateName}
+                  onChange={(e) => setNewTemplateName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="template-description">Description</Label>
+                <Textarea
+                  id="template-description"
+                  placeholder="Brief description of this template..."
+                  value={newTemplateDescription}
+                  onChange={(e) => setNewTemplateDescription(e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" onClick={() => {
+                  setNewTemplateName("")
+                  setNewTemplateDescription("")
+                }}>
+                  Cancel
+                </Button>
+              </DialogClose>
+              <DialogClose asChild>
+                <Button onClick={handleCreateTemplate} className="bg-blue-600 hover:bg-blue-700">
+                  Create Template
+                </Button>
+              </DialogClose>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Variable Help */}
