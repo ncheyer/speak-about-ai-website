@@ -2,6 +2,13 @@ import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
 import { requireAdminAuth } from "@/lib/auth-middleware"
 
+// Log environment variables at module load time
+console.log('=== MODULE LOAD ENV CHECK ===')
+console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL)
+console.log('ENTITY_NAME exists:', !!process.env.ENTITY_NAME)
+console.log('BANK_NAME exists:', !!process.env.BANK_NAME)
+console.log('=== END MODULE LOAD CHECK ===')
+
 const sql = neon(process.env.DATABASE_URL!)
 
 function generateInvoiceHTML(invoice: any): string {
@@ -443,19 +450,28 @@ export async function GET(
     console.log('=== END ENV VARS CHECK ===')
     
     // Always try to set banking info from environment variables
-    // TEMPORARY: Adding fallback values for testing
     bankingInfo = {
-      bank_name: process.env.BANK_NAME || 'Chase Bank',
-      account_name: process.env.ENTITY_NAME || 'Speak About AI LLC',
-      entity_address: process.env.ENTITY_ADDRESS || '123 Main St, San Francisco, CA 94105',
-      account_number: process.env.ACCOUNT_NUMBER ? `****${process.env.ACCOUNT_NUMBER.slice(-4)}` : '****6789',
-      routing_number: process.env.ROUTING_NUMBER ? `****${process.env.ROUTING_NUMBER.slice(-4)}` : '****4321',
-      swift_code: process.env.SWIFT_CODE || 'CHASUS33',
-      bank_address: process.env.BANK_ADDRESS || '1 Chase Plaza, New York, NY 10005',
+      bank_name: process.env.BANK_NAME || '',
+      account_name: process.env.ENTITY_NAME || '',
+      entity_address: process.env.ENTITY_ADDRESS || '',
+      account_number: process.env.ACCOUNT_NUMBER ? `****${process.env.ACCOUNT_NUMBER.slice(-4)}` : '',
+      routing_number: process.env.ROUTING_NUMBER ? `****${process.env.ROUTING_NUMBER.slice(-4)}` : '',
+      swift_code: process.env.SWIFT_CODE || '',
+      bank_address: process.env.BANK_ADDRESS || '',
       currency_type: process.env.CURRENCY_TYPE || 'USD',
-      wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS || (process.env.SWIFT_CODE ? `Please use SWIFT code ${process.env.SWIFT_CODE} for international transfers` : 'Please use SWIFT code CHASUS33 for international transfers'),
+      wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS || (process.env.SWIFT_CODE ? `Please use SWIFT code ${process.env.SWIFT_CODE} for international transfers` : ''),
       ach_instructions: process.env.BANK_ACH_INSTRUCTIONS || 'For ACH transfers, use the routing and account numbers provided above'
     }
+    
+    // Log the actual values for debugging
+    console.log('=== ENV VAR VALUES ===')
+    console.log('ENTITY_NAME value:', process.env.ENTITY_NAME)
+    console.log('BANK_NAME value:', process.env.BANK_NAME)
+    console.log('SWIFT_CODE value:', process.env.SWIFT_CODE)
+    console.log('CURRENCY_TYPE value:', process.env.CURRENCY_TYPE)
+    console.log('All env keys containing ENTITY:', Object.keys(process.env).filter(k => k.includes('ENTITY')))
+    console.log('All env keys containing BANK:', Object.keys(process.env).filter(k => k.includes('BANK')))
+    console.log('=== END ENV VAR VALUES ===')
     
     console.log('=== BANKING INFO AFTER ENV VARS ===')
     console.log('Full bankingInfo object:', JSON.stringify(bankingInfo, null, 2))
