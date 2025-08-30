@@ -689,7 +689,9 @@ export default function InvoicingPage() {
           invoiceId={selectedInvoiceForPDF.id}
           invoiceNumber={selectedInvoiceForPDF.number}
           open={!!selectedInvoiceForPDF}
-          onClose={() => setSelectedInvoiceForPDF(null)}
+          onOpenChange={(open) => {
+            if (!open) setSelectedInvoiceForPDF(null)
+          }}
         />
       )}
 
