@@ -59,7 +59,7 @@ export function ProjectDetailsManager({
   const [activeTab, setActiveTab] = useState("overview")
   const [unsavedChanges, setUnsavedChanges] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
   // Load project details when component mounts or projectId changes
@@ -71,9 +71,13 @@ export function ProjectDetailsManager({
         if (response.ok) {
           const data = await response.json()
           setDetails(data.details || {})
+        } else {
+          console.error('Failed to load project details')
+          setDetails({})
         }
       } catch (error) {
         console.error('Error loading project details:', error)
+        setDetails({})
       } finally {
         setLoading(false)
       }
@@ -81,6 +85,9 @@ export function ProjectDetailsManager({
 
     if (projectId) {
       loadProjectDetails()
+    } else {
+      setDetails({})
+      setLoading(false)
     }
   }, [projectId])
 
@@ -161,6 +168,11 @@ export function ProjectDetailsManager({
 
   return (
     <div className="space-y-6">
+      {/* Debug info - remove after testing */}
+      <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
+        Project ID: {projectId} | Details loaded: {Object.keys(details).length > 0 ? 'Yes' : 'No'} | Active tab: {activeTab}
+      </div>
+      
       {/* Completion Overview */}
       <Card>
         <CardHeader>
@@ -223,7 +235,7 @@ export function ProjectDetailsManager({
       <Card>
         <CardContent className="p-0">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full justify-start rounded-none border-b">
+            <TabsList className="w-full justify-start rounded-none border-b overflow-x-auto flex-nowrap">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="travel">Travel & Hotel</TabsTrigger>
               <TabsTrigger value="venue">Venue</TabsTrigger>
