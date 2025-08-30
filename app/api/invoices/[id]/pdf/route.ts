@@ -241,7 +241,15 @@ function generateInvoiceHTML(invoice: any): string {
                     <br>
                     <strong>Deliverables:</strong><br>
                     ${invoice.deliverables ? 
-                      invoice.deliverables.split('\n').map(item => `• ${item}<br>`).join('') :
+                      invoice.deliverables
+                        .split('\n')
+                        .filter(item => item.trim())
+                        .map(item => {
+                          // Clean up the item - remove existing bullet points and trim
+                          const cleanItem = item.replace(/^[•\-\*]\s*/, '').trim()
+                          return cleanItem ? `• ${cleanItem}<br>` : ''
+                        })
+                        .join('') :
                       `• Pre-event consultation and content customization<br>
                        • ${invoice.program_length || 60}-minute ${invoice.program_type || 'keynote presentation'}<br>
                        ${invoice.qa_length ? `• ${invoice.qa_length}-minute Q&A session<br>` : ''}
@@ -251,7 +259,6 @@ function generateInvoiceHTML(invoice: any): string {
                        • Post-event follow-up (as requested)<br>`
                     }
                   </div>
-                  ${invoice.notes ? `<br><small style="color: #6b7280">Notes: ${invoice.notes}</small>` : ''}
                 </td>
                 <td class="amount" style="vertical-align: top; padding-top: 24px;">${formatCurrency(parseFloat(invoice.amount))}</td>
               </tr>
@@ -351,8 +358,39 @@ export async function GET(
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 })
     }
 
+    // Parse overrides from notes if they exist
+    let overrides: any = {}
+    let plainNotes = invoice.notes
+    
+    if (invoice.notes) {
+      try {
+        const notesData = JSON.parse(invoice.notes)
+        if (typeof notesData === 'object' && notesData.overrides) {
+          overrides = notesData.overrides
+          plainNotes = notesData.text || ''
+        }
+      } catch (e) {
+        // Notes might be plain text, that's okay
+        plainNotes = invoice.notes
+      }
+    }
+
+    // Merge overrides with invoice data
+    const invoiceWithOverrides = {
+      ...invoice,
+      notes: plainNotes,
+      event_name: overrides.event_name || invoice.event_name,
+      speaker_name: overrides.speaker_name || invoice.speaker_name || invoice.requested_speaker_name,
+      program_topic: overrides.program_topic || invoice.program_topic,
+      program_type: overrides.program_type || invoice.program_type,
+      program_length: overrides.program_length || invoice.program_length,
+      qa_length: overrides.qa_length || invoice.qa_length,
+      audience_size: overrides.audience_size || invoice.audience_size,
+      deliverables: overrides.deliverables || invoice.deliverables
+    }
+
     // Generate HTML
-    const html = generateInvoiceHTML(invoice)
+    const html = generateInvoiceHTML(invoiceWithOverrides)
 
     // Return HTML with appropriate headers for PDF generation
     return new NextResponse(html, {
