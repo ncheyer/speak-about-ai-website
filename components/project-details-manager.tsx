@@ -67,12 +67,16 @@ export function ProjectDetailsManager({
     const loadProjectDetails = async () => {
       setLoading(true)
       try {
+        console.log('Loading details for project:', projectId)
         const response = await fetch(`/api/projects/${projectId}/details`)
+        
         if (response.ok) {
           const data = await response.json()
+          console.log('Received project details:', data)
           setDetails(data.details || {})
         } else {
-          console.error('Failed to load project details')
+          const errorText = await response.text()
+          console.error('Failed to load project details:', response.status, errorText)
           setDetails({})
         }
       } catch (error) {

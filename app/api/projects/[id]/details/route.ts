@@ -39,6 +39,14 @@ export async function GET(
     }
 
     const project = result[0]
+    console.log('Found project:', {
+      id: project.id,
+      name: project.project_name,
+      client_name: project.client_name,
+      event_date: project.event_date,
+      has_project_details: !!project.project_details,
+      details_keys: project.project_details ? Object.keys(project.project_details) : []
+    })
     
     // Try to find a matching deal for additional data
     let dealData = null
@@ -73,67 +81,77 @@ export async function GET(
     
     // Merge existing project data with project_details
     // This pre-populates fields from the main projects table and deal data if available
+    const existingDetails = project.project_details || {}
+    
     const mergedDetails = {
-      ...project.project_details,
+      ...existingDetails,
       overview: {
-        ...project.project_details?.overview,
-        speaker_name: project.project_details?.overview?.speaker_name || project.speaker_name,
-        company_name: project.project_details?.overview?.company_name || project.company,
-        event_location: project.project_details?.overview?.event_location || project.event_location,
-        event_date: project.project_details?.overview?.event_date || project.event_date,
+        ...(existingDetails.overview || {}),
+        speaker_name: existingDetails.overview?.speaker_name || project.speaker_name || '',
+        company_name: existingDetails.overview?.company_name || project.company || '',
+        event_location: existingDetails.overview?.event_location || project.event_location || '',
+        event_date: existingDetails.overview?.event_date || project.event_date || '',
       },
       contacts: {
-        ...project.project_details?.contacts,
+        ...(existingDetails.contacts || {}),
         on_site: {
-          ...project.project_details?.contacts?.on_site,
-          name: project.project_details?.contacts?.on_site?.name || project.client_name,
-          email: project.project_details?.contacts?.on_site?.email || project.client_email,
-          cell_phone: project.project_details?.contacts?.on_site?.cell_phone || project.client_phone,
-          company: project.project_details?.contacts?.on_site?.company || project.company,
+          ...(existingDetails.contacts?.on_site || {}),
+          name: existingDetails.contacts?.on_site?.name || project.client_name || '',
+          email: existingDetails.contacts?.on_site?.email || project.client_email || '',
+          cell_phone: existingDetails.contacts?.on_site?.cell_phone || project.client_phone || '',
+          company: existingDetails.contacts?.on_site?.company || project.company || '',
         }
       },
       event_details: {
-        ...project.project_details?.event_details,
-        event_title: project.project_details?.event_details?.event_title || project.event_title,
-        event_type: project.project_details?.event_details?.event_type || project.event_type,
+        ...(existingDetails.event_details || {}),
+        event_title: existingDetails.event_details?.event_title || project.event_title || '',
+        event_type: existingDetails.event_details?.event_type || project.event_type || '',
       },
       audience: {
-        ...project.project_details?.audience,
-        expected_size: project.project_details?.audience?.expected_size || project.attendee_count,
+        ...(existingDetails.audience || {}),
+        expected_size: existingDetails.audience?.expected_size || project.attendee_count || 0,
       },
       venue: {
-        ...project.project_details?.venue,
-        name: project.project_details?.venue?.name || 
-              (project.venue_details ? project.venue_details.split('\n')[0] : ''),
+        ...(existingDetails.venue || {}),
+        name: existingDetails.venue?.name || 
+              (project.venue_details ? String(project.venue_details).split('\n')[0] : ''),
       },
       speaker_requirements: {
-        ...project.project_details?.speaker_requirements,
+        ...(existingDetails.speaker_requirements || {}),
         av_needs: {
-          ...project.project_details?.speaker_requirements?.av_needs,
-          presentation_notes: project.project_details?.speaker_requirements?.av_needs?.presentation_notes || 
-                            project.av_requirements,
+          ...(existingDetails.speaker_requirements?.av_needs || {}),
+          presentation_notes: existingDetails.speaker_requirements?.av_needs?.presentation_notes || 
+                            project.av_requirements || '',
         }
       },
       travel: {
-        ...project.project_details?.travel,
+        ...(existingDetails.travel || {}),
         hotel: {
-          ...project.project_details?.travel?.hotel,
-          additional_info: project.project_details?.travel?.hotel?.additional_info || 
-                          project.accommodation_details,
+          ...(existingDetails.travel?.hotel || {}),
+          additional_info: existingDetails.travel?.hotel?.additional_info || 
+                          project.accommodation_details || '',
         },
         flights: {
-          ...project.project_details?.travel?.flights,
-          notes: project.project_details?.travel?.flights?.notes || 
+          ...(existingDetails.travel?.flights || {}),
+          notes: existingDetails.travel?.flights?.notes || 
                 project.travel_arrangements || 
-                dealData?.travel_notes,
+                dealData?.travel_notes || '',
         },
         ground_transportation: {
-          ...project.project_details?.travel?.ground_transportation,
-          details: project.project_details?.travel?.ground_transportation?.details ||
-                  (dealData?.travel_notes ? `Travel budget: $${dealData.travel_stipend || 0}` : ''),
+          ...(existingDetails.travel?.ground_transportation || {}),
+          details: existingDetails.travel?.ground_transportation?.details ||
+                  (dealData?.travel_notes ? `Travel budget: $${dealData?.travel_stipend || 0}` : ''),
         }
       }
     }
+    
+    console.log('Merged details:', {
+      has_overview: !!mergedDetails.overview,
+      overview_speaker: mergedDetails.overview?.speaker_name,
+      overview_company: mergedDetails.overview?.company_name,
+      contacts_name: mergedDetails.contacts?.on_site?.name,
+      event_title: mergedDetails.event_details?.event_title,
+    })
 
     return NextResponse.json({
       projectId: result[0].id,
