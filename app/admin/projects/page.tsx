@@ -781,6 +781,7 @@ export default function EnhancedProjectManagementPage() {
     }
   }
 
+  // Filter projects based on search and status
   const filteredProjects = projects.filter(project => {
     const matchesSearch = 
       (project.project_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
@@ -1958,7 +1959,7 @@ export default function EnhancedProjectManagementPage() {
             </TabsContent>
           </Tabs>
         </div>
-      </main>
+      </div>
 
       {/* Create Project Dialog */}
       <Dialog open={showCreateProject} onOpenChange={setShowCreateProject}>
