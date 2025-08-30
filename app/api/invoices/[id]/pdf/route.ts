@@ -2,28 +2,9 @@ import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
 import { requireAdminAuth } from "@/lib/auth-middleware"
 
-// Log environment variables at module load time
-console.log('=== MODULE LOAD ENV CHECK ===')
-console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL)
-console.log('ENTITY_NAME exists:', !!process.env.ENTITY_NAME)
-console.log('BANK_NAME exists:', !!process.env.BANK_NAME)
-console.log('=== END MODULE LOAD CHECK ===')
-
 const sql = neon(process.env.DATABASE_URL!)
 
 function generateInvoiceHTML(invoice: any): string {
-  // Enhanced debug logging
-  console.log('=== generateInvoiceHTML START ===')
-  console.log('Invoice object keys:', Object.keys(invoice))
-  console.log('Invoice banking_info exists?', !!invoice.banking_info)
-  console.log('Invoice banking_info type:', typeof invoice.banking_info)
-  if (invoice.banking_info) {
-    console.log('Full banking_info:', JSON.stringify(invoice.banking_info, null, 2))
-    const hasContent = invoice.banking_info.account_name || invoice.banking_info.bank_name || 
-                      invoice.banking_info.account_number || invoice.banking_info.routing_number
-    console.log('Has actual content?', hasContent)
-  }
-  console.log('=== generateInvoiceHTML END ===')
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -434,21 +415,6 @@ export async function GET(
       process.env.ROUTING_NUMBER
     )
     
-    console.log('=== BANKING ENV VARS CHECK ===')
-    console.log('Has env vars:', hasEnvVars)
-    if (hasEnvVars) {
-      console.log('Found environment variables:')
-      console.log('- ENTITY_NAME:', process.env.ENTITY_NAME ? 'SET' : 'NOT SET')
-      console.log('- ENTITY_ADDRESS:', process.env.ENTITY_ADDRESS ? 'SET' : 'NOT SET')
-      console.log('- BANK_NAME:', process.env.BANK_NAME ? 'SET' : 'NOT SET')
-      console.log('- BANK_ADDRESS:', process.env.BANK_ADDRESS ? 'SET' : 'NOT SET')
-      console.log('- ACCOUNT_NUMBER:', process.env.ACCOUNT_NUMBER ? 'SET' : 'NOT SET')
-      console.log('- ROUTING_NUMBER:', process.env.ROUTING_NUMBER ? 'SET' : 'NOT SET')
-      console.log('- SWIFT_CODE:', process.env.SWIFT_CODE ? 'SET' : 'NOT SET')
-      console.log('- CURRENCY_TYPE:', process.env.CURRENCY_TYPE ? 'SET' : 'NOT SET')
-    }
-    console.log('=== END ENV VARS CHECK ===')
-    
     // Always try to set banking info from environment variables
     bankingInfo = {
       bank_name: process.env.BANK_NAME || '',
@@ -463,26 +429,11 @@ export async function GET(
       ach_instructions: process.env.BANK_ACH_INSTRUCTIONS || 'For ACH transfers, use the routing and account numbers provided above'
     }
     
-    // Log the actual values for debugging
-    console.log('=== ENV VAR VALUES ===')
-    console.log('ENTITY_NAME value:', process.env.ENTITY_NAME)
-    console.log('BANK_NAME value:', process.env.BANK_NAME)
-    console.log('SWIFT_CODE value:', process.env.SWIFT_CODE)
-    console.log('CURRENCY_TYPE value:', process.env.CURRENCY_TYPE)
-    console.log('All env keys containing ENTITY:', Object.keys(process.env).filter(k => k.includes('ENTITY')))
-    console.log('All env keys containing BANK:', Object.keys(process.env).filter(k => k.includes('BANK')))
-    console.log('=== END ENV VAR VALUES ===')
-    
-    console.log('=== BANKING INFO AFTER ENV VARS ===')
-    console.log('Full bankingInfo object:', JSON.stringify(bankingInfo, null, 2))
-    const hasValidBankingInfo = !!(bankingInfo.account_name || bankingInfo.bank_name || bankingInfo.account_number)
-    console.log('Has valid banking info?', hasValidBankingInfo)
-    console.log('=== END BANKING INFO ===')
     
     // Only try database if we don't have valid banking info yet
     const needsDatabase = !(bankingInfo.account_name || bankingInfo.bank_name || bankingInfo.account_number)
     if (needsDatabase) {
-      console.log('No env vars found, checking database...')
+      // No env vars found, checking database
       // Fallback to database (using safe view with masked sensitive data)
       try {
         const bankingConfigs = await sql`
@@ -494,7 +445,6 @@ export async function GET(
           )
         `
         
-        console.log('Database query returned', bankingConfigs.length, 'rows')
         
         if (bankingConfigs.length > 0) {
           const dbBankingInfo = {}
@@ -508,7 +458,6 @@ export async function GET(
               dbBankingInfo[config.config_key] = config.value
             }
           })
-          console.log('Database banking info:', dbBankingInfo)
           // Use database values if env vars are not set
           bankingInfo = dbBankingInfo
         }
@@ -537,11 +486,6 @@ export async function GET(
       banking_info: bankingInfo,
       payment_terms: paymentTerms
     }
-    
-    console.log('=== FINAL INVOICE DATA ===')
-    console.log('Invoice has banking_info?', !!invoiceWithOverrides.banking_info)
-    console.log('Banking info content:', JSON.stringify(invoiceWithOverrides.banking_info, null, 2))
-    console.log('=== END FINAL DATA ===')
 
     // Generate HTML
     const html = generateInvoiceHTML(invoiceWithOverrides)
