@@ -211,6 +211,7 @@ export default function EnhancedProjectManagementPage() {
   const { toast } = useToast()
   const [projects, setProjects] = useState<Project[]>([])
   const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [customTasks, setCustomTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -280,6 +281,32 @@ export default function EnhancedProjectManagementPage() {
       if (projectsResponse.ok) {
         const projectsData = await projectsResponse.json()
         setProjects(projectsData)
+        
+        // Load custom tasks for all projects
+        const allCustomTasks = []
+        for (const project of projectsData) {
+          try {
+            const tasksRes = await fetch(`/api/projects/${project.id}/tasks`, {
+              headers: { 
+                'x-dev-admin-bypass': 'dev-admin-access'
+              },
+              credentials: 'include',
+            })
+            if (tasksRes.ok) {
+              const tasks = await tasksRes.json()
+              allCustomTasks.push(...tasks.map(task => ({
+                ...task,
+                projectId: project.id,
+                projectName: project.project_name,
+                clientName: project.client_name,
+                eventDate: project.event_date
+              })))
+            }
+          } catch (error) {
+            console.error(`Error loading tasks for project ${project.id}:`, error)
+          }
+        }
+        setCustomTasks(allCustomTasks)
       }
 
       if (invoicesResponse.ok) {
@@ -1641,6 +1668,42 @@ export default function EnhancedProjectManagementPage() {
                     // Collect all tasks from all projects
                     const allTasks = []
                     
+                    // First, add custom generated tasks
+                    customTasks.forEach(task => {
+                      if (!task.completed) {
+                        const project = projects.find(p => p.id === task.projectId)
+                        if (project && !["completed", "cancelled"].includes(project.status)) {
+                          const daysUntilEvent = project.event_date 
+                            ? Math.ceil((new Date(project.event_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                            : null
+                          
+                          allTasks.push({
+                            id: `custom-${task.id}`,
+                            projectId: task.projectId,
+                            projectName: task.projectName,
+                            clientName: task.clientName,
+                            stage: task.stage || 'logistics_planning',
+                            taskKey: `custom_${task.id}`,
+                            taskName: task.task_name,
+                            taskDescription: task.description,
+                            taskRequirements: [],
+                            taskDeliverables: [],
+                            taskOwner: task.assigned_to || 'Team',
+                            estimatedTime: null,
+                            priority: task.priority || 'medium',
+                            urgency: task.priority === 'critical' ? 'critical' : 
+                                    task.priority === 'high' ? 'high' : 
+                                    task.priority === 'medium' ? 'medium' : 'low',
+                            daysUntilEvent: daysUntilEvent,
+                            eventDate: task.eventDate,
+                            isCustom: true,
+                            customTaskId: task.id
+                          })
+                        }
+                      }
+                    })
+                    
+                    // Then add predefined tasks
                     projects.forEach(project => {
                       if (["completed", "cancelled"].includes(project.status)) return
                       
@@ -1816,12 +1879,49 @@ export default function EnhancedProjectManagementPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleUpdateStageCompletion(
-                                    task.projectId, 
-                                    task.stage, 
-                                    task.taskKey, 
-                                    true
-                                  )}
+                                  onClick={async () => {
+                                    if (task.isCustom) {
+                                      // Handle custom task completion
+                                      try {
+                                        const response = await fetch(`/api/projects/${task.projectId}/tasks`, {
+                                          method: 'PATCH',
+                                          headers: { 
+                                            'Content-Type': 'application/json',
+                                            'x-dev-admin-bypass': 'dev-admin-access'
+                                          },
+                                          credentials: 'include',
+                                          body: JSON.stringify({
+                                            taskId: task.customTaskId,
+                                            completed: true,
+                                            status: 'completed'
+                                          })
+                                        })
+                                        
+                                        if (response.ok) {
+                                          toast({
+                                            title: "Task Completed",
+                                            description: task.taskName
+                                          })
+                                          loadData() // Refresh to update task list
+                                        }
+                                      } catch (error) {
+                                        console.error('Error completing custom task:', error)
+                                        toast({
+                                          title: "Error",
+                                          description: "Failed to complete task",
+                                          variant: "destructive"
+                                        })
+                                      }
+                                    } else {
+                                      // Handle predefined task completion
+                                      handleUpdateStageCompletion(
+                                        task.projectId, 
+                                        task.stage, 
+                                        task.taskKey, 
+                                        true
+                                      )
+                                    }
+                                  }}
                                   className="ml-4 min-w-[100px]"
                                 >
                                   <Check className="h-4 w-4 mr-1" />
