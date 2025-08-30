@@ -55,6 +55,7 @@ import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
 import { InvoicePDFDialog } from "@/components/invoice-pdf-viewer"
 import { InvoiceEditorModal } from "@/components/invoice-editor-modal"
+import { TASK_DEFINITIONS, calculateTaskUrgency, getTaskOwnerLabel, getPriorityColor } from "@/lib/task-definitions"
 
 interface Project {
   id: number
@@ -1651,44 +1652,8 @@ export default function EnhancedProjectManagementPage() {
                         follow_up: 1
                       }
                       
-                      // Define tasks for each stage
-                      const stageTasks = {
-                        invoicing: {
-                          initial_invoice_sent: "Send initial invoice (Net 30)",
-                          final_invoice_sent: "Send final invoice",
-                          kickoff_meeting_planned: "Schedule kickoff meeting with client",
-                          client_contacts_documented: "Document all client contacts & roles",
-                          project_folder_created: "Create project folder & documentation",
-                          internal_team_briefed: "Brief internal team on project details",
-                          event_details_confirmed: "Confirm & document all event specifications"
-                        },
-                        logistics_planning: {
-                          details_confirmed: "Confirm event details",
-                          av_requirements_gathered: "Gather A/V requirements",
-                          press_pack_sent: "Send press pack to client",
-                          calendar_confirmed: "Confirm speaker calendar",
-                          client_contact_obtained: "Obtain client contact info",
-                          speaker_materials_ready: "Prepare speaker materials",
-                          vendor_onboarding_complete: "Complete vendor onboarding"
-                        },
-                        pre_event: {
-                          logistics_confirmed: "Confirm all logistics",
-                          speaker_prepared: "Ensure speaker is prepared",
-                          client_materials_sent: "Send materials to client",
-                          ready_for_execution: "Ready for event execution"
-                        },
-                        event_week: {
-                          final_preparations_complete: "Complete final preparations",
-                          event_executed: "Execute event",
-                          support_provided: "Provide event support"
-                        },
-                        follow_up: {
-                          follow_up_sent: "Send follow-up communications",
-                          client_feedback_requested: "Request client feedback",
-                          speaker_feedback_requested: "Request speaker feedback",
-                          lessons_documented: "Document lessons learned"
-                        }
-                      }
+                      // Use detailed task definitions
+                      const stageTasks = TASK_DEFINITIONS
                       
                       // Calculate days until event
                       const daysUntilEvent = project.event_date 
@@ -1697,9 +1662,10 @@ export default function EnhancedProjectManagementPage() {
                       
                       // Add tasks from current stage
                       if (stageTasks[currentStage]) {
-                        Object.entries(stageTasks[currentStage]).forEach(([taskKey, taskName]) => {
+                        Object.entries(stageTasks[currentStage]).forEach(([taskKey, taskDefinition]) => {
                           const isCompleted = stageCompletion[currentStage]?.[taskKey] || false
                           if (!isCompleted) {
+                            const urgency = calculateTaskUrgency(currentStage, daysUntilEvent, taskKey)
                             allTasks.push({
                               id: project.id + "-" + taskKey,
                               projectId: project.id,
@@ -1707,19 +1673,14 @@ export default function EnhancedProjectManagementPage() {
                               clientName: project.client_name,
                               stage: currentStage,
                               taskKey: taskKey,
-                              taskName: taskName,
-                              priority: stagePriorities[currentStage] || 0,
-                              urgency: (() => {
-                                // For invoicing tasks, they should be done 2 months (60 days) before event
-                                if (currentStage === "invoicing" && daysUntilEvent !== null) {
-                                  if (daysUntilEvent < 60) return "high" // Less than 2 months - urgent!
-                                  if (daysUntilEvent < 90) return "medium" // Less than 3 months
-                                  return "low"
-                                }
-                                // For other stages, use standard urgency
-                                return daysUntilEvent !== null && daysUntilEvent < 30 ? "high" : 
-                                       daysUntilEvent !== null && daysUntilEvent < 60 ? "medium" : "low"
-                              })(),
+                              taskName: taskDefinition.name,
+                              taskDescription: taskDefinition.description,
+                              taskRequirements: taskDefinition.requirements,
+                              taskDeliverables: taskDefinition.deliverables,
+                              taskOwner: taskDefinition.owner,
+                              estimatedTime: taskDefinition.estimatedTime,
+                              priority: taskDefinition.priority,
+                              urgency: urgency,
                               daysUntilEvent: daysUntilEvent,
                               eventDate: project.event_date
                             })
@@ -1731,14 +1692,15 @@ export default function EnhancedProjectManagementPage() {
                     // Sort tasks by urgency, priority, and days until event
                     allTasks.sort((a, b) => {
                       // First sort by urgency
-                      const urgencyOrder = { high: 3, medium: 2, low: 1 }
+                      const urgencyOrder = { critical: 4, high: 3, medium: 2, low: 1 }
                       if (urgencyOrder[a.urgency] !== urgencyOrder[b.urgency]) {
                         return urgencyOrder[b.urgency] - urgencyOrder[a.urgency]
                       }
                       
                       // Then by priority
-                      if (a.priority !== b.priority) {
-                        return b.priority - a.priority
+                      const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 }
+                      if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                        return priorityOrder[b.priority] - priorityOrder[a.priority]
                       }
                       
                       // Finally by days until event (sooner first)
@@ -1761,13 +1723,19 @@ export default function EnhancedProjectManagementPage() {
                     return (
                       <div className="space-y-4">
                         {/* Task summary */}
-                        <div className="grid grid-cols-4 gap-4 mb-6">
+                        <div className="grid grid-cols-5 gap-4 mb-6">
                           <div className="text-center p-3 bg-gray-50 rounded-lg">
                             <div className="text-2xl font-bold">{allTasks.length}</div>
                             <div className="text-sm text-gray-600">Total Tasks</div>
                           </div>
                           <div className="text-center p-3 bg-red-50 rounded-lg">
                             <div className="text-2xl font-bold text-red-600">
+                              {allTasks.filter(t => t.urgency === "critical").length}
+                            </div>
+                            <div className="text-sm text-gray-600">Critical</div>
+                          </div>
+                          <div className="text-center p-3 bg-orange-50 rounded-lg">
+                            <div className="text-2xl font-bold text-orange-600">
                               {allTasks.filter(t => t.urgency === "high").length}
                             </div>
                             <div className="text-sm text-gray-600">Urgent</div>
@@ -1782,7 +1750,7 @@ export default function EnhancedProjectManagementPage() {
                             <div className="text-2xl font-bold text-blue-600">
                               {allTasks.filter(t => t.daysUntilEvent !== null && t.daysUntilEvent <= 7).length}
                             </div>
-                            <div className="text-sm text-gray-600">Within 7 Days</div>
+                            <div className="text-sm text-gray-600">This Week</div>
                           </div>
                         </div>
                         
@@ -1790,51 +1758,107 @@ export default function EnhancedProjectManagementPage() {
                         {allTasks.map((task) => (
                           <div 
                             key={task.id} 
-                            className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                            className="border rounded-lg overflow-hidden hover:shadow-md transition-all"
                           >
-                            <div className="flex items-start justify-between">
-                              <div className="space-y-1 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-medium">{task.taskName}</h4>
-                                  <Badge 
-                                    variant={task.urgency === "high" ? "destructive" : 
-                                            task.urgency === "medium" ? "warning" : "secondary"}
-                                    className="text-xs"
-                                  >
-                                    {task.urgency === "high" ? "Urgent" : 
-                                     task.urgency === "medium" ? "Soon" : "Normal"}
-                                  </Badge>
-                                  <Badge className={(PROJECT_STATUSES[task.stage]?.color || "bg-gray-500") + " text-white text-xs"}>
-                                    {PROJECT_STATUSES[task.stage]?.label || task.stage}
-                                  </Badge>
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                  <span className="font-medium">{task.projectName}</span> • {task.clientName}
-                                </div>
-                                {task.daysUntilEvent !== null && (
-                                  <div className="text-sm text-gray-500">
-                                    <CalendarDays className="inline h-3 w-3 mr-1" />
-                                    {task.daysUntilEvent === 0 ? "Event today!" :
-                                     task.daysUntilEvent === 1 ? "Event tomorrow" :
-                                     task.daysUntilEvent < 0 ? Math.abs(task.daysUntilEvent) + " days ago" :
-                                     task.daysUntilEvent + " days until event"}
+                            <div className="p-4">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <h4 className="font-semibold text-lg">{task.taskName}</h4>
+                                    <Badge 
+                                      className={`text-xs ${
+                                        task.urgency === "critical" ? "bg-red-100 text-red-700" :
+                                        task.urgency === "high" ? "bg-orange-100 text-orange-700" : 
+                                        task.urgency === "medium" ? "bg-yellow-100 text-yellow-700" : 
+                                        "bg-gray-100 text-gray-700"
+                                      }`}
+                                    >
+                                      {task.urgency === "critical" ? "🔴 Critical" :
+                                       task.urgency === "high" ? "🟠 Urgent" : 
+                                       task.urgency === "medium" ? "🟡 Soon" : "Normal"}
+                                    </Badge>
+                                    <Badge className={(PROJECT_STATUSES[task.stage]?.color || "bg-gray-500") + " text-white text-xs"}>
+                                      {PROJECT_STATUSES[task.stage]?.label || task.stage}
+                                    </Badge>
+                                    {task.taskOwner && (
+                                      <Badge variant="outline" className="text-xs">
+                                        <Users className="h-3 w-3 mr-1" />
+                                        {getTaskOwnerLabel(task.taskOwner)}
+                                      </Badge>
+                                    )}
+                                    {task.estimatedTime && (
+                                      <Badge variant="outline" className="text-xs">
+                                        <Timer className="h-3 w-3 mr-1" />
+                                        {task.estimatedTime}
+                                      </Badge>
+                                    )}
                                   </div>
-                                )}
+                                  <p className="text-sm text-gray-600 mb-2">{task.taskDescription}</p>
+                                  <div className="text-sm text-gray-500 space-y-1">
+                                    <div>
+                                      <span className="font-medium text-gray-700">{task.projectName}</span> • {task.clientName}
+                                    </div>
+                                    {task.daysUntilEvent !== null && (
+                                      <div className={task.daysUntilEvent <= 7 ? "text-red-600 font-medium" : ""}>
+                                        <CalendarDays className="inline h-3 w-3 mr-1" />
+                                        {task.daysUntilEvent === 0 ? "🚨 Event today!" :
+                                         task.daysUntilEvent === 1 ? "⚠️ Event tomorrow" :
+                                         task.daysUntilEvent < 0 ? `${Math.abs(task.daysUntilEvent)} days ago` :
+                                         `${task.daysUntilEvent} days until event`}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleUpdateStageCompletion(
+                                    task.projectId, 
+                                    task.stage, 
+                                    task.taskKey, 
+                                    true
+                                  )}
+                                  className="ml-4 min-w-[100px]"
+                                >
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Complete
+                                </Button>
                               </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleUpdateStageCompletion(
-                                  task.projectId, 
-                                  task.stage, 
-                                  task.taskKey, 
-                                  true
-                                )}
-                                className="ml-4"
-                              >
-                                <Check className="h-4 w-4 mr-1" />
-                                Complete
-                              </Button>
+                              
+                              {/* Expandable details section */}
+                              <details className="mt-3 border-t pt-3">
+                                <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+                                  View Requirements & Deliverables
+                                </summary>
+                                <div className="mt-3 grid md:grid-cols-2 gap-4">
+                                  {task.taskRequirements && task.taskRequirements.length > 0 && (
+                                    <div>
+                                      <h5 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Requirements:</h5>
+                                      <ul className="space-y-1">
+                                        {task.taskRequirements.map((req, idx) => (
+                                          <li key={idx} className="text-xs text-gray-600 flex items-start">
+                                            <CheckSquare className="h-3 w-3 mr-1 mt-0.5 text-gray-400" />
+                                            {req}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {task.taskDeliverables && task.taskDeliverables.length > 0 && (
+                                    <div>
+                                      <h5 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Deliverables:</h5>
+                                      <ul className="space-y-1">
+                                        {task.taskDeliverables.map((del, idx) => (
+                                          <li key={idx} className="text-xs text-gray-600 flex items-start">
+                                            <Target className="h-3 w-3 mr-1 mt-0.5 text-gray-400" />
+                                            {del}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              </details>
                             </div>
                           </div>
                         ))}
