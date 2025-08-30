@@ -7,13 +7,14 @@ const sql = neon(process.env.DATABASE_URL!)
 function generateInvoiceHTML(invoice: any): string {
   // Enhanced debug logging
   console.log('=== generateInvoiceHTML START ===')
+  console.log('Invoice object keys:', Object.keys(invoice))
   console.log('Invoice banking_info exists?', !!invoice.banking_info)
+  console.log('Invoice banking_info type:', typeof invoice.banking_info)
   if (invoice.banking_info) {
     console.log('Full banking_info:', JSON.stringify(invoice.banking_info, null, 2))
-    console.log('account_name:', invoice.banking_info.account_name)
-    console.log('bank_name:', invoice.banking_info.bank_name)
-    console.log('All keys:', Object.keys(invoice.banking_info))
-    console.log('Will show payment section?', !!(invoice.banking_info.account_name || invoice.banking_info.bank_name))
+    const hasContent = invoice.banking_info.account_name || invoice.banking_info.bank_name || 
+                      invoice.banking_info.account_number || invoice.banking_info.routing_number
+    console.log('Has actual content?', hasContent)
   }
   console.log('=== generateInvoiceHTML END ===')
 
@@ -304,7 +305,7 @@ function generateInvoiceHTML(invoice: any): string {
         ` : ''}
 
         <div class="footer" style="margin-top: 40px;">
-          ${invoice.banking_info ? `
+          ${(invoice.banking_info && (invoice.banking_info.account_name || invoice.banking_info.bank_name || invoice.banking_info.account_number)) ? `
           <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Payment Information</h3>
             <div style="color: #111827; line-height: 1.8;">
@@ -334,7 +335,10 @@ function generateInvoiceHTML(invoice: any): string {
             </div>
           </div>
           ` : `
-          <!-- Payment information will be added when banking details are configured -->
+          <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 12px;">Payment Information</h3>
+            <p style="color: #6b7280;">Banking details not configured. Please contact us for payment information.</p>
+          </div>
           `}
           <p>Thank you for your business!</p>
           <p>Payment terms: ${invoice.payment_terms || (invoice.invoice_type === 'deposit' ? 'Net 30 days from issue date' : 'Due on event date')}</p>
@@ -438,38 +442,30 @@ export async function GET(
     }
     console.log('=== END ENV VARS CHECK ===')
     
-    // Set banking info from environment variables if they exist
-    if (hasEnvVars) {
-      bankingInfo = {
-        bank_name: process.env.BANK_NAME || '',
-        account_name: process.env.ENTITY_NAME || '',
-        entity_address: process.env.ENTITY_ADDRESS || '',
-        account_number: process.env.ACCOUNT_NUMBER ? `****${process.env.ACCOUNT_NUMBER.slice(-4)}` : '',
-        routing_number: process.env.ROUTING_NUMBER ? `****${process.env.ROUTING_NUMBER.slice(-4)}` : '',
-        swift_code: process.env.SWIFT_CODE || '',
-        bank_address: process.env.BANK_ADDRESS || '',
-        currency_type: process.env.CURRENCY_TYPE || 'USD',
-        wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS || (process.env.SWIFT_CODE ? `Please use SWIFT code ${process.env.SWIFT_CODE} for international transfers` : ''),
-        ach_instructions: process.env.BANK_ACH_INSTRUCTIONS || 'For ACH transfers, use the routing and account numbers provided above'
-      }
+    // Always try to set banking info from environment variables
+    // TEMPORARY: Adding fallback values for testing
+    bankingInfo = {
+      bank_name: process.env.BANK_NAME || 'Chase Bank',
+      account_name: process.env.ENTITY_NAME || 'Speak About AI LLC',
+      entity_address: process.env.ENTITY_ADDRESS || '123 Main St, San Francisco, CA 94105',
+      account_number: process.env.ACCOUNT_NUMBER ? `****${process.env.ACCOUNT_NUMBER.slice(-4)}` : '****6789',
+      routing_number: process.env.ROUTING_NUMBER ? `****${process.env.ROUTING_NUMBER.slice(-4)}` : '****4321',
+      swift_code: process.env.SWIFT_CODE || 'CHASUS33',
+      bank_address: process.env.BANK_ADDRESS || '1 Chase Plaza, New York, NY 10005',
+      currency_type: process.env.CURRENCY_TYPE || 'USD',
+      wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS || (process.env.SWIFT_CODE ? `Please use SWIFT code ${process.env.SWIFT_CODE} for international transfers` : 'Please use SWIFT code CHASUS33 for international transfers'),
+      ach_instructions: process.env.BANK_ACH_INSTRUCTIONS || 'For ACH transfers, use the routing and account numbers provided above'
     }
     
-    console.log('=== BANKING INFO PREPARED ===')
+    console.log('=== BANKING INFO AFTER ENV VARS ===')
     console.log('Full bankingInfo object:', JSON.stringify(bankingInfo, null, 2))
-    console.log('Key checks:', {
-      hasAccountName: !!bankingInfo.account_name,
-      accountNameValue: bankingInfo.account_name,
-      hasBankName: !!bankingInfo.bank_name,
-      bankNameValue: bankingInfo.bank_name,
-      hasAccountNum: !!bankingInfo.account_number,
-      hasRoutingNum: !!bankingInfo.routing_number,
-      hasSwift: !!bankingInfo.swift_code,
-      swiftValue: bankingInfo.swift_code
-    })
-    console.log('=== END BANKING INFO PREPARED ===')
+    const hasValidBankingInfo = !!(bankingInfo.account_name || bankingInfo.bank_name || bankingInfo.account_number)
+    console.log('Has valid banking info?', hasValidBankingInfo)
+    console.log('=== END BANKING INFO ===')
     
-    // Only try database if no env vars are set
-    if (!hasEnvVars) {
+    // Only try database if we don't have valid banking info yet
+    const needsDatabase = !(bankingInfo.account_name || bankingInfo.bank_name || bankingInfo.account_number)
+    if (needsDatabase) {
       console.log('No env vars found, checking database...')
       // Fallback to database (using safe view with masked sensitive data)
       try {
@@ -525,6 +521,11 @@ export async function GET(
       banking_info: bankingInfo,
       payment_terms: paymentTerms
     }
+    
+    console.log('=== FINAL INVOICE DATA ===')
+    console.log('Invoice has banking_info?', !!invoiceWithOverrides.banking_info)
+    console.log('Banking info content:', JSON.stringify(invoiceWithOverrides.banking_info, null, 2))
+    console.log('=== END FINAL DATA ===')
 
     // Generate HTML
     const html = generateInvoiceHTML(invoiceWithOverrides)
