@@ -5,6 +5,7 @@ import { requireAdminAuth } from "@/lib/auth-middleware"
 const sql = neon(process.env.DATABASE_URL!)
 
 function generateInvoiceHTML(invoice: any): string {
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -19,6 +20,9 @@ function generateInvoiceHTML(invoice: any): string {
       day: 'numeric'
     })
   }
+  
+  // Use absolute URL for logo from the actual website
+  const logoUrl = 'https://www.speakabout.ai/speak-about-ai-logo.png'
 
   return `
     <!DOCTYPE html>
@@ -189,7 +193,7 @@ function generateInvoiceHTML(invoice: any): string {
       <div class="invoice-container">
         <div class="header">
           <div class="company-info">
-            <img src="https://www.speakabout.ai/speak-about-ai-logo.png" alt="Speak About AI" style="height: 60px; margin-bottom: 16px;">
+            <img src="${logoUrl}" alt="Speak About AI" style="height: 50px; margin-bottom: 12px;" />
             <p>AI Keynote Speaker Bureau</p>
             <p>human@speakabout.ai</p>
           </div>
@@ -241,7 +245,15 @@ function generateInvoiceHTML(invoice: any): string {
                     <br>
                     <strong>Deliverables:</strong><br>
                     ${invoice.deliverables ? 
-                      invoice.deliverables.split('\n').map(item => `• ${item}<br>`).join('') :
+                      invoice.deliverables
+                        .split('\n')
+                        .filter(item => item.trim())
+                        .map(item => {
+                          // Clean up the item - remove existing bullet points and trim
+                          const cleanItem = item.replace(/^[•\-\*]\s*/, '').trim()
+                          return cleanItem ? `• ${cleanItem}<br>` : ''
+                        })
+                        .join('') :
                       `• Pre-event consultation and content customization<br>
                        • ${invoice.program_length || 60}-minute ${invoice.program_type || 'keynote presentation'}<br>
                        ${invoice.qa_length ? `• ${invoice.qa_length}-minute Q&A session<br>` : ''}
@@ -251,7 +263,6 @@ function generateInvoiceHTML(invoice: any): string {
                        • Post-event follow-up (as requested)<br>`
                     }
                   </div>
-                  ${invoice.notes ? `<br><small style="color: #6b7280">Notes: ${invoice.notes}</small>` : ''}
                 </td>
                 <td class="amount" style="vertical-align: top; padding-top: 24px;">${formatCurrency(parseFloat(invoice.amount))}</td>
               </tr>
@@ -280,20 +291,43 @@ function generateInvoiceHTML(invoice: any): string {
         ` : ''}
 
         <div class="footer" style="margin-top: 40px;">
+          ${(invoice.banking_info && (invoice.banking_info.account_name || invoice.banking_info.bank_name || invoice.banking_info.account_number)) ? `
           <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Banking Information</h3>
-            <div style="color: #111827; line-height: 1.6;">
-              <strong>Bank Name:</strong> ${process.env.BANK_NAME || 'Please contact for banking details'}<br>
-              <strong>Account Name:</strong> ${process.env.BANK_ACCOUNT_NAME || 'Speak About AI LLC'}<br>
-              ${process.env.BANK_ACCOUNT_NUMBER ? `<strong>Account Number:</strong> ${process.env.BANK_ACCOUNT_NUMBER}<br>` : ''}
-              ${process.env.BANK_ROUTING_NUMBER ? `<strong>Routing Number:</strong> ${process.env.BANK_ROUTING_NUMBER}<br>` : ''}
-              ${process.env.BANK_SWIFT_CODE ? `<strong>SWIFT Code:</strong> ${process.env.BANK_SWIFT_CODE}<br>` : ''}
-              ${process.env.BANK_ADDRESS ? `<strong>Bank Address:</strong> ${process.env.BANK_ADDRESS}<br>` : ''}
-              ${process.env.BANK_WIRE_INSTRUCTIONS ? `<br><strong>Wire Instructions:</strong> ${process.env.BANK_WIRE_INSTRUCTIONS}` : ''}
+            <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Payment Information</h3>
+            <div style="color: #111827; line-height: 1.8;">
+              ${invoice.banking_info.account_name ? `
+              <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb;">
+                <strong style="color: #4b5563;">Beneficiary Information</strong><br>
+                <strong>Entity Name:</strong> ${invoice.banking_info.account_name}<br>
+                ${invoice.banking_info.entity_address ? `<strong>Entity Address:</strong> ${invoice.banking_info.entity_address}<br>` : ''}
+              </div>` : ''}
+              
+              <div style="margin-bottom: 12px;">
+                <strong style="color: #4b5563;">Banking Details</strong><br>
+                ${invoice.banking_info.bank_name ? `<strong>Bank Name:</strong> ${invoice.banking_info.bank_name}<br>` : ''}
+                ${invoice.banking_info.bank_address ? `<strong>Bank Address:</strong> ${invoice.banking_info.bank_address}<br>` : ''}
+                ${invoice.banking_info.account_number ? `<strong>Account Number:</strong> ${invoice.banking_info.account_number}<br>` : ''}
+                ${invoice.banking_info.routing_number ? `<strong>Routing Number (ABA):</strong> ${invoice.banking_info.routing_number}<br>` : ''}
+                ${invoice.banking_info.swift_code ? `<strong>SWIFT/BIC Code:</strong> ${invoice.banking_info.swift_code}<br>` : ''}
+                ${invoice.banking_info.currency_type ? `<strong>Currency:</strong> ${invoice.banking_info.currency_type}<br>` : ''}
+              </div>
+              
+              ${invoice.banking_info.wire_instructions || invoice.banking_info.ach_instructions ? `
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                <strong style="color: #4b5563;">Transfer Instructions</strong><br>
+                ${invoice.banking_info.wire_instructions ? `<strong>Wire:</strong> ${invoice.banking_info.wire_instructions}<br>` : ''}
+                ${invoice.banking_info.ach_instructions ? `<strong>ACH:</strong> ${invoice.banking_info.ach_instructions}` : ''}
+              </div>` : ''}
             </div>
           </div>
+          ` : `
+          <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="font-size: 14px; color: #6b7280; margin-bottom: 12px;">Payment Information</h3>
+            <p style="color: #6b7280;">Banking details not configured. Please contact us for payment information.</p>
+          </div>
+          `}
           <p>Thank you for your business!</p>
-          <p>Payment terms: ${invoice.invoice_type === 'deposit' ? process.env.INVOICE_DEPOSIT_TERMS || 'Net 30 days from issue date' : process.env.INVOICE_FINAL_TERMS || 'Due on event date'}</p>
+          <p>Payment terms: ${invoice.payment_terms || (invoice.invoice_type === 'deposit' ? 'Net 30 days from issue date' : 'Due on event date')}</p>
           <p>Please reference invoice number ${invoice.invoice_number} with your payment</p>
         </div>
       </div>
@@ -351,8 +385,108 @@ export async function GET(
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 })
     }
 
+    // Parse overrides from notes if they exist
+    let overrides: any = {}
+    let plainNotes = invoice.notes
+    
+    if (invoice.notes) {
+      try {
+        const notesData = JSON.parse(invoice.notes)
+        if (typeof notesData === 'object' && notesData.overrides) {
+          overrides = notesData.overrides
+          plainNotes = notesData.text || ''
+        }
+      } catch (e) {
+        // Notes might be plain text, that's okay
+        plainNotes = invoice.notes
+      }
+    }
+
+    // Fetch banking configuration securely
+    let bankingInfo = {}
+    
+    // Check if environment variables are set
+    const hasEnvVars = !!(
+      process.env.ENTITY_NAME || 
+      process.env.BANK_NAME || 
+      process.env.ACCOUNT_NUMBER || 
+      process.env.ROUTING_NUMBER
+    )
+    
+    // Always try to set banking info from environment variables
+    bankingInfo = {
+      bank_name: process.env.BANK_NAME || '',
+      account_name: process.env.ENTITY_NAME || '',
+      entity_address: process.env.ENTITY_ADDRESS || '',
+      account_number: process.env.ACCOUNT_NUMBER || '',  // Show full account number
+      routing_number: process.env.ROUTING_NUMBER || '',  // Show full routing number
+      swift_code: process.env.SWIFT_CODE || '',
+      bank_address: process.env.BANK_ADDRESS || '',
+      currency_type: process.env.CURRENCY_TYPE || 'USD',
+      wire_instructions: process.env.BANK_WIRE_INSTRUCTIONS || (process.env.SWIFT_CODE ? `Please use SWIFT code ${process.env.SWIFT_CODE} for international transfers` : ''),
+      ach_instructions: process.env.BANK_ACH_INSTRUCTIONS || 'For ACH transfers, use the routing and account numbers provided above'
+    }
+    
+    
+    // Only try database if we don't have valid banking info yet
+    const needsDatabase = !(bankingInfo.account_name || bankingInfo.bank_name || bankingInfo.account_number)
+    if (needsDatabase) {
+      // No env vars found, checking database
+      // Fallback to database (using safe view with masked sensitive data)
+      try {
+        const bankingConfigs = await sql`
+          SELECT config_key, value FROM banking_info_safe
+          WHERE config_key IN (
+            'bank_name', 'account_name', 'account_number', 'routing_number',
+            'swift_code', 'bank_address', 'wire_instructions', 'ach_instructions',
+            'entity_name', 'entity_address'
+          )
+        `
+        
+        
+        if (bankingConfigs.length > 0) {
+          const dbBankingInfo = {}
+          bankingConfigs.forEach(config => {
+            // Map entity_name to account_name for consistency
+            if (config.config_key === 'entity_name') {
+              dbBankingInfo['account_name'] = config.value
+            } else if (config.config_key === 'account_name' && !dbBankingInfo['account_name']) {
+              dbBankingInfo['account_name'] = config.value
+            } else {
+              dbBankingInfo[config.config_key] = config.value
+            }
+          })
+          // Use database values if env vars are not set
+          bankingInfo = dbBankingInfo
+        }
+      } catch (error) {
+        console.error('Error fetching banking config from database:', error)
+      }
+    }
+
+    // Get payment terms
+    const paymentTerms = invoice.invoice_type === 'deposit' 
+      ? (process.env.INVOICE_DEPOSIT_TERMS || 'Net 30 days from issue date')
+      : (process.env.INVOICE_FINAL_TERMS || 'Due on event date')
+
+    // Merge overrides with invoice data
+    const invoiceWithOverrides = {
+      ...invoice,
+      notes: plainNotes,
+      event_name: overrides.event_name || invoice.event_name,
+      speaker_name: overrides.speaker_name || invoice.speaker_name || invoice.requested_speaker_name,
+      program_topic: overrides.program_topic || invoice.program_topic,
+      program_type: overrides.program_type || invoice.program_type,
+      program_length: overrides.program_length || invoice.program_length,
+      qa_length: overrides.qa_length || invoice.qa_length,
+      audience_size: overrides.audience_size || invoice.audience_size,
+      deliverables: overrides.deliverables || invoice.deliverables,
+      banking_info: bankingInfo,
+      payment_terms: paymentTerms
+    }
+
     // Generate HTML
-    const html = generateInvoiceHTML(invoice)
+    const html = generateInvoiceHTML(invoiceWithOverrides)
 
     // Return HTML with appropriate headers for PDF generation
     return new NextResponse(html, {

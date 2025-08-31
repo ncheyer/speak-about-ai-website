@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { DealStatusDropdown } from "@/components/deal-status-dropdown"
+import { LostDealModal, type LostDealData } from "@/components/lost-deal-modal"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -148,6 +150,11 @@ export default function AdminCRMPage() {
   const [contractDeal, setContractDeal] = useState<Deal | null>(null)
   const [showContractPreview, setShowContractPreview] = useState(false)
   const [contractPreviewContent, setContractPreviewContent] = useState("")
+  const [showLostDealModal, setShowLostDealModal] = useState(false)
+  const [lostDealInfo, setLostDealInfo] = useState<{ id: number; name: string } | null>(null)
+  const [pastDealsSearch, setPastDealsSearch] = useState("")
+  const [pastDealsFilter, setPastDealsFilter] = useState<"all" | "won" | "lost">("all")
+  const [pastDealsDateRange, setPastDealsDateRange] = useState<"all" | "30days" | "90days" | "1year">("all")
   const [contractFormData, setContractFormData] = useState({
     speaker_name: "",
     speaker_email: "",
@@ -308,7 +315,7 @@ export default function AdminCRMPage() {
       setSubmitting(true)
       
       // Generate preview directly in the client
-      const speakerFee = parseFloat(contractFormData.speaker_fee) || contractDeal.deal_value
+      const speakerFee = parseFloat(contractFormData.speaker_fee) || contractDeal.deal_value || 0
       const eventDate = new Date(contractDeal.event_date)
       const eventDateFormatted = eventDate.toLocaleDateString('en-US', {
         weekday: 'long',
@@ -392,7 +399,7 @@ Event Reference: ${contractRef}
 Client & Name of Event: ${contractDeal.company} / ${contractDeal.event_title} ("Event")
 Date(s)/Time(s): ${eventDateFormatted} from ${eventTime}
 Location(s): ${contractDeal.event_location}
-The fee and any other consideration payable to the Agent: $${speakerFee.toLocaleString('en-US')} USD
+The fee and any other consideration payable to the Agent: $${(speakerFee || 0).toLocaleString('en-US')} USD
 ${contractDeal.travel_required ? `Travel: Travel stipend of $${(contractDeal.travel_stipend || 2500).toLocaleString('en-US')}, plus ${contractDeal.hotel_required ? 'one night accommodation at a 4-star hotel of the client\'s choice nearby the venue.' : 'travel arrangements as agreed.'}` : ''}
 For that fee, the Speaker will provide:
 ${generateEngagementDetails()}
@@ -706,6 +713,123 @@ d) An immediate family member is stricken by serious injury, illness, or death.
     }
   }
 
+  const handleQuickStatusChange = async (dealId: number, newStatus: string, dealName: string) => {
+    // If marking as lost, show the lost deal modal
+    if (newStatus === 'lost') {
+      setLostDealInfo({ id: dealId, name: dealName })
+      setShowLostDealModal(true)
+      return
+    }
+
+    // Otherwise, update the status directly
+    try {
+      const response = await fetch(`/api/deals/${dealId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: `Deal status updated to ${newStatus}`,
+        })
+        loadData() // Reload deals
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to update deal status",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error updating deal status:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update deal status",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleLostDealSubmit = async (lostData: LostDealData) => {
+    if (!lostDealInfo) return
+
+    try {
+      // Build the notes to append to the deal
+      const lostNotes = `\n\n--- MARKED AS LOST ---\nDate: ${new Date().toLocaleDateString()}\nReason: ${lostData.reason}\nDetails: ${lostData.specificReason}\n${lostData.worthFollowUp ? `Follow up in: ${lostData.followUpTimeframe}` : 'No follow-up needed'}\nNext Steps: ${lostData.nextSteps}\n${lostData.competitorWon ? `Competitor won: ${lostData.competitorWon}` : ''}\n${lostData.budgetMismatch ? `Budget issue: ${lostData.budgetMismatch}` : ''}\n${lostData.otherNotes ? `Additional notes: ${lostData.otherNotes}` : ''}`
+
+      // Find the current deal to append to existing notes
+      const currentDeal = deals.find(d => d.id === lostDealInfo.id)
+      const updatedNotes = (currentDeal?.notes || '') + lostNotes
+
+      const response = await fetch(`/api/deals/${lostDealInfo.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          status: 'lost',
+          notes: updatedNotes,
+          // Store structured data in dedicated columns
+          lost_reason: lostData.reason,
+          lost_details: lostData.specificReason,
+          worth_follow_up: lostData.worthFollowUp,
+          follow_up_date: lostData.worthFollowUp && lostData.followUpTimeframe !== 'never' 
+            ? calculateFollowUpDate(lostData.followUpTimeframe) 
+            : null,
+          lost_competitor: lostData.competitorWon,
+          lost_next_steps: lostData.nextSteps,
+          closed_notes: lostData.otherNotes
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Deal marked as lost",
+          description: "Lost deal information has been recorded",
+        })
+        setShowLostDealModal(false)
+        setLostDealInfo(null)
+        loadData() // Reload deals
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to update deal",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error marking deal as lost:", error)
+      toast({
+        title: "Error",
+        description: "Failed to mark deal as lost",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const calculateFollowUpDate = (timeframe: string): string => {
+    const date = new Date()
+    switch (timeframe) {
+      case '1month':
+        date.setMonth(date.getMonth() + 1)
+        break
+      case '3months':
+        date.setMonth(date.getMonth() + 3)
+        break
+      case '6months':
+        date.setMonth(date.getMonth() + 6)
+        break
+      case '1year':
+        date.setFullYear(date.getFullYear() + 1)
+        break
+      default:
+        return ''
+    }
+    return date.toISOString().split('T')[0]
+  }
+
   const handleReactivateDeal = async (deal: Deal) => {
     if (!confirm(`Are you sure you want to reactivate the deal "${deal.event_title}"? It will be moved back to the "lead" stage.`)) {
       return
@@ -746,6 +870,9 @@ d) An immediate family member is stricken by serious injury, illness, or death.
   }
 
   const filteredDeals = deals.filter((deal) => {
+    // Exclude won and lost deals - they go to Past Deals tab
+    if (deal.status === "won" || deal.status === "lost") return false
+    
     const matchesSearch =
       deal.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       deal.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1177,9 +1304,9 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                 <CheckSquare className="h-4 w-4" />
                 Contracts
               </TabsTrigger>
-              <TabsTrigger value="lost-deals" className="flex items-center gap-2">
-                <XCircle className="h-4 w-4" />
-                Lost Deals
+              <TabsTrigger value="past-deals" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Past Deals
               </TabsTrigger>
             </TabsList>
 
@@ -1278,9 +1405,12 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                               ${new Intl.NumberFormat('en-US').format(deal.deal_value)}
                             </TableCell>
                             <TableCell>
-                              <Badge className={`${DEAL_STATUSES[deal.status].color} text-white`}>
-                                {DEAL_STATUSES[deal.status].label}
-                              </Badge>
+                              <DealStatusDropdown
+                                currentStatus={deal.status}
+                                dealId={deal.id}
+                                dealName={deal.event_title}
+                                onStatusChange={handleQuickStatusChange}
+                              />
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline" className={PRIORITY_COLORS[deal.priority]}>
@@ -1376,7 +1506,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                                   <p className="text-sm text-gray-500">{new Date(contract.event_date).toLocaleDateString()}</p>
                                 </div>
                               </TableCell>
-                              <TableCell>${contract.total_amount.toLocaleString()}</TableCell>
+                              <TableCell>${(contract.fee_amount || contract.speaker_fee || 0).toLocaleString()}</TableCell>
                               <TableCell>
                                 <Badge className={`${statusColor} text-white`}>
                                   <StatusIcon className="mr-1 h-3 w-3" />
@@ -1450,23 +1580,87 @@ d) An immediate family member is stricken by serious injury, illness, or death.
               </Card>
             </TabsContent>
 
-            {/* Lost Deals Tab */}
-            <TabsContent value="lost-deals" className="space-y-6">
+            {/* Past Deals Tab - Won and Lost Deals */}
+            <TabsContent value="past-deals" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Lost Deals Analysis</CardTitle>
-                  <CardDescription>
-                    Review and analyze lost opportunities to improve future conversion rates
-                  </CardDescription>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <CardTitle>Past Deals</CardTitle>
+                      <CardDescription>
+                        View and analyze completed deals (won and lost)
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search past deals..."
+                          value={pastDealsSearch}
+                          onChange={(e) => setPastDealsSearch(e.target.value)}
+                          className="pl-8 w-64"
+                        />
+                      </div>
+                      <Select value={pastDealsFilter} onValueChange={(value: any) => setPastDealsFilter(value)}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Deals</SelectItem>
+                          <SelectItem value="won">Won Only</SelectItem>
+                          <SelectItem value="lost">Lost Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={pastDealsDateRange} onValueChange={(value: any) => setPastDealsDateRange(value)}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Time</SelectItem>
+                          <SelectItem value="30days">Last 30 Days</SelectItem>
+                          <SelectItem value="90days">Last 90 Days</SelectItem>
+                          <SelectItem value="1year">Last Year</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  {/* Lost Deals Stats */}
+                  {/* Past Deals Stats */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <Card>
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm text-muted-foreground">Total Lost</p>
+                            <p className="text-sm text-muted-foreground">Won Deals</p>
+                            <p className="text-2xl font-bold">{deals.filter(d => d.status === "won").length}</p>
+                          </div>
+                          <CheckCircle className="h-8 w-8 text-green-500" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Won Value</p>
+                            <p className="text-2xl font-bold">
+                              {formatCurrency(
+                                deals
+                                  .filter(d => d.status === "won")
+                                  .reduce((sum, deal) => sum + (typeof deal.deal_value === 'string' ? parseFloat(deal.deal_value) || 0 : deal.deal_value), 0)
+                              )}
+                            </p>
+                          </div>
+                          <TrendingUp className="h-8 w-8 text-green-500" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Lost Deals</p>
                             <p className="text-2xl font-bold">{deals.filter(d => d.status === "lost").length}</p>
                           </div>
                           <XCircle className="h-8 w-8 text-red-500" />
@@ -1477,78 +1671,107 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm text-muted-foreground">Lost Value</p>
+                            <p className="text-sm text-muted-foreground">Win Rate</p>
                             <p className="text-2xl font-bold">
-                              {formatCurrency(
-                                deals
-                                  .filter(d => d.status === "lost")
-                                  .reduce((sum, deal) => sum + (typeof deal.deal_value === 'string' ? parseFloat(deal.deal_value) || 0 : deal.deal_value), 0)
-                              )}
+                              {(() => {
+                                const wonCount = deals.filter(d => d.status === "won").length
+                                const lostCount = deals.filter(d => d.status === "lost").length
+                                const total = wonCount + lostCount
+                                return total > 0 ? `${Math.round((wonCount / total) * 100)}%` : '0%'
+                              })()}
                             </p>
                           </div>
-                          <TrendingDown className="h-8 w-8 text-red-500" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-muted-foreground">Lost This Month</p>
-                            <p className="text-2xl font-bold">
-                              {deals.filter(d => {
-                                if (d.status !== "lost") return false
-                                const lostDate = new Date(d.updated_at)
-                                const now = new Date()
-                                return lostDate.getMonth() === now.getMonth() && lostDate.getFullYear() === now.getFullYear()
-                              }).length}
-                            </p>
-                          </div>
-                          <Calendar className="h-8 w-8 text-orange-500" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-muted-foreground">Avg Lost Value</p>
-                            <p className="text-2xl font-bold">
-                              {formatCurrency(
-                                deals.filter(d => d.status === "lost").length > 0
-                                  ? deals
-                                      .filter(d => d.status === "lost")
-                                      .reduce((sum, deal) => sum + (typeof deal.deal_value === 'string' ? parseFloat(deal.deal_value) || 0 : deal.deal_value), 0) /
-                                    deals.filter(d => d.status === "lost").length
-                                  : 0
-                              )}
-                            </p>
-                          </div>
-                          <Calculator className="h-8 w-8 text-gray-500" />
+                          <BarChart3 className="h-8 w-8 text-blue-500" />
                         </div>
                       </CardContent>
                     </Card>
                   </div>
 
-                  {/* Lost Deals Table */}
+                  {/* Past Deals Table */}
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Status</TableHead>
                         <TableHead>Client</TableHead>
                         <TableHead>Event</TableHead>
-                        <TableHead>Date Lost</TableHead>
+                        <TableHead>Event Date</TableHead>
                         <TableHead>Value</TableHead>
-                        <TableHead>Stage Lost At</TableHead>
-                        <TableHead>Reason</TableHead>
+                        <TableHead>Closed Date</TableHead>
+                        <TableHead>Details</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {deals
-                        .filter(deal => deal.status === "lost")
-                        .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-                        .map((deal) => (
+                      {(() => {
+                        // Filter past deals
+                        let filteredPastDeals = deals.filter(deal => 
+                          deal.status === "won" || deal.status === "lost"
+                        )
+
+                        // Apply status filter
+                        if (pastDealsFilter !== "all") {
+                          filteredPastDeals = filteredPastDeals.filter(deal => 
+                            deal.status === pastDealsFilter
+                          )
+                        }
+
+                        // Apply search filter
+                        if (pastDealsSearch) {
+                          const search = pastDealsSearch.toLowerCase()
+                          filteredPastDeals = filteredPastDeals.filter(deal =>
+                            deal.client_name.toLowerCase().includes(search) ||
+                            deal.company.toLowerCase().includes(search) ||
+                            deal.event_title.toLowerCase().includes(search) ||
+                            (deal.lost_reason && deal.lost_reason.toLowerCase().includes(search)) ||
+                            (deal.lost_details && deal.lost_details.toLowerCase().includes(search))
+                          )
+                        }
+
+                        // Apply date range filter
+                        if (pastDealsDateRange !== "all") {
+                          const now = new Date()
+                          const cutoffDate = new Date()
+                          
+                          switch (pastDealsDateRange) {
+                            case "30days":
+                              cutoffDate.setDate(now.getDate() - 30)
+                              break
+                            case "90days":
+                              cutoffDate.setDate(now.getDate() - 90)
+                              break
+                            case "1year":
+                              cutoffDate.setFullYear(now.getFullYear() - 1)
+                              break
+                          }
+
+                          filteredPastDeals = filteredPastDeals.filter(deal => {
+                            const dealDate = new Date(deal.updated_at)
+                            return dealDate >= cutoffDate
+                          })
+                        }
+
+                        // Sort by most recent
+                        filteredPastDeals.sort((a, b) => 
+                          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+                        )
+
+                        return filteredPastDeals.map((deal) => (
                           <TableRow key={deal.id}>
+                            <TableCell>
+                              <Badge 
+                                className={deal.status === "won" 
+                                  ? "bg-green-500 text-white" 
+                                  : "bg-red-500 text-white"
+                                }
+                              >
+                                {deal.status === "won" ? (
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                ) : (
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                )}
+                                {deal.status.toUpperCase()}
+                              </Badge>
+                            </TableCell>
                             <TableCell>
                               <div>
                                 <p className="font-medium">{deal.client_name}</p>
@@ -1558,62 +1781,73 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                             <TableCell>
                               <div>
                                 <p className="font-medium">{deal.event_title}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {deal.event_type} • {formatDate(deal.event_date)}
-                                </p>
+                                <p className="text-sm text-muted-foreground">{deal.event_location}</p>
                               </div>
                             </TableCell>
-                            <TableCell>{formatDate(deal.updated_at)}</TableCell>
+                            <TableCell>{formatDate(deal.event_date)}</TableCell>
                             <TableCell className="font-semibold">
                               {formatCurrency(typeof deal.deal_value === 'string' ? parseFloat(deal.deal_value) || 0 : deal.deal_value)}
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline">
-                                {deal.notes?.includes("Stage:") 
-                                  ? deal.notes.split("Stage:")[1].split("\n")[0].trim()
-                                  : "Unknown"}
-                              </Badge>
+                              {formatDate(deal.status === "won" ? deal.won_date : deal.lost_date || deal.updated_at)}
                             </TableCell>
                             <TableCell>
-                              <span className="text-sm text-muted-foreground">
-                                {deal.notes?.includes("Reason:") 
-                                  ? deal.notes.split("Reason:")[1].split("\n")[0].trim()
-                                  : "No reason provided"}
-                              </span>
+                              {deal.status === "lost" ? (
+                                <div className="text-sm">
+                                  {deal.lost_reason && (
+                                    <p className="font-medium">Reason: {deal.lost_reason}</p>
+                                  )}
+                                  {deal.worth_follow_up && (
+                                    <p className="text-muted-foreground">
+                                      Follow up: {deal.follow_up_date ? formatDate(deal.follow_up_date) : 'TBD'}
+                                    </p>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Successfully closed</span>
+                              )}
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-2">
                                 <Button 
                                   size="sm" 
-                                  variant="outline"
-                                  onClick={() => handleReactivateDeal(deal)}
-                                >
-                                  <RefreshCw className="h-4 w-4 mr-1" />
-                                  Reactivate
-                                </Button>
-                                <Button 
-                                  size="sm" 
                                   variant="ghost"
-                                  onClick={() => handleEdit(deal)}
+                                  onClick={() => setSelectedDeal(deal)}
                                 >
-                                  <Edit className="h-4 w-4" />
+                                  <Eye className="h-4 w-4" />
                                 </Button>
+                                {deal.status === "lost" && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleReactivateDeal(deal)}
+                                  >
+                                    <RefreshCw className="h-4 w-4" />
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
-                        ))}
+                        ))
+                      })()}
                     </TableBody>
                   </Table>
 
-                  {deals.filter(d => d.status === "lost").length === 0 && (
-                    <div className="text-center py-12">
-                      <XCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-lg text-muted-foreground">No lost deals yet</p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Lost deals will appear here for analysis and potential recovery
-                      </p>
-                    </div>
-                  )}
+                  {(() => {
+                    const hasPastDeals = deals.some(d => d.status === "won" || d.status === "lost")
+                    if (!hasPastDeals) {
+                      return (
+                        <div className="text-center py-12">
+                          <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                          <p className="text-lg text-muted-foreground">No past deals yet</p>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            Won and lost deals will appear here for historical tracking
+                          </p>
+                        </div>
+                      )
+                    }
+                    return null
+                  })()}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -2269,6 +2503,17 @@ d) An immediate family member is stricken by serious injury, illness, or death.
           </Card>
         </div>
       )}
+
+      {/* Lost Deal Modal */}
+      <LostDealModal
+        isOpen={showLostDealModal}
+        onClose={() => {
+          setShowLostDealModal(false)
+          setLostDealInfo(null)
+        }}
+        onSubmit={handleLostDealSubmit}
+        dealName={lostDealInfo?.name || ''}
+      />
     </div>
   )
 }

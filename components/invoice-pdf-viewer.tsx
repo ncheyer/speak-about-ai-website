@@ -24,11 +24,14 @@ export function InvoicePDFViewer({ invoiceId, invoiceNumber, onClose }: InvoiceP
   const fetchInvoiceHTML = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/invoices/${invoiceId}/pdf`, {
+      // Add cache-busting to ensure fresh data
+      const response = await fetch(`/api/invoices/${invoiceId}/pdf?t=${Date.now()}`, {
         headers: {
-          'x-dev-admin-bypass': 'dev-admin-access'
+          'x-dev-admin-bypass': 'dev-admin-access',
+          'Cache-Control': 'no-cache'
         },
-        credentials: 'include'
+        credentials: 'include',
+        cache: 'no-store'
       })
 
       if (response.ok) {
@@ -73,8 +76,8 @@ export function InvoicePDFViewer({ invoiceId, invoiceNumber, onClose }: InvoiceP
         iframeDoc.write(htmlContent)
         iframeDoc.close()
 
-        // Wait for content to load
-        await new Promise(resolve => setTimeout(resolve, 500))
+        // Wait for content and images to load
+        await new Promise(resolve => setTimeout(resolve, 1000))
 
         // Use html2canvas if available, otherwise use jsPDF's html method
         try {
@@ -82,7 +85,9 @@ export function InvoicePDFViewer({ invoiceId, invoiceNumber, onClose }: InvoiceP
           const canvas = await html2canvas(iframeDoc.body, {
             scale: 2,
             useCORS: true,
-            logging: false
+            allowTaint: true,
+            logging: false,
+            imageTimeout: 15000
           })
 
           const imgData = canvas.toDataURL('image/png')

@@ -50,6 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { ExternalLink } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -567,10 +568,18 @@ export default function AdminSpeakersPage() {
               <h1 className="text-3xl font-bold text-gray-900">Speaker Management</h1>
               <p className="mt-2 text-gray-600">Manage speaker profiles and applications</p>
             </div>
-            <Button onClick={() => setShowInviteDialog(true)}>
-              <Send className="mr-2 h-4 w-4" />
-              Invite Speaker
-            </Button>
+            <div className="flex gap-2">
+              <Link href="/admin/speakers/new">
+                <Button variant="default">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Speaker
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={() => setShowInviteDialog(true)}>
+                <Send className="mr-2 h-4 w-4" />
+                Invite Speaker
+              </Button>
+            </div>
           </div>
 
           <Tabs defaultValue="speakers" className="space-y-6">

@@ -11,7 +11,6 @@ import {
   DollarSign,
   CheckSquare,
   FileText,
-  Database,
   Upload,
   Calendar,
   Settings,
@@ -24,7 +23,8 @@ import {
   X,
   Heart,
   Mail,
-  TrendingUp
+  TrendingUp,
+  FileSignature
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -57,7 +57,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       title: "Master Panel",
       href: "/admin/manage",
       icon: Settings,
-      description: "System Control",
+      description: "Operations Hub",
       color: "text-slate-600",
       bgColor: "bg-slate-50"
     },
@@ -65,17 +65,33 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       title: "CRM",
       href: "/admin/crm",
       icon: BarChart3,
-      description: "Deals, Proposals & Contracts",
+      description: "Deals & Proposals",
       color: "text-blue-600",
       bgColor: "bg-blue-50"
+    },
+    {
+      title: "Contracts Hub",
+      href: "/admin/contracts-hub",
+      icon: FileSignature,
+      description: "Contract Management",
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50"
     },
     {
       title: "Project Management",
       href: "/admin/projects",
       icon: CheckSquare,
-      description: "Live Projects & Invoicing",
+      description: "Live Projects",
       color: "text-orange-600",
       bgColor: "bg-orange-50"
+    },
+    {
+      title: "Invoicing",
+      href: "/admin/invoicing",
+      icon: DollarSign,
+      description: "Invoice Management",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50"
     },
     {
       title: "Speaker Management",
@@ -116,14 +132,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       description: "Client Access",
       color: "text-emerald-600",
       bgColor: "bg-emerald-50"
-    },
-    {
-      title: "Database",
-      href: "/debug-neon",
-      icon: Database,
-      description: "System Debug",
-      color: "text-red-600",
-      bgColor: "bg-red-50"
     }
   ]
 
@@ -163,7 +171,9 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       <nav className="flex-1 overflow-y-auto p-4 space-y-2">
         {navigationItems.map((item) => {
           const isActive = pathname === item.href || 
-            (item.href === "/admin/dashboard" && pathname.startsWith("/admin/dashboard"))
+            (item.href === "/admin/dashboard" && pathname.startsWith("/admin/dashboard")) ||
+            (item.href === "/admin/contracts-hub" && pathname.startsWith("/admin/contracts-hub")) ||
+            (item.href === "/admin/invoicing" && pathname.startsWith("/admin/invoicing"))
           
           return (
             <Link key={item.href} href={item.href}>

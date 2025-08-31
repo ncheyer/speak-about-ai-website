@@ -2,48 +2,56 @@ import { neon } from "@neondatabase/serverless"
 import { generateContractContent, generateContractHTML as generateHTMLFromTemplate, validateContractData, type ContractData } from "./contract-template"
 import type { Deal } from "./deals-db"
 
-// Initialize Neon client with error handling
+// Lazy initialize Neon client to avoid build-time errors
 let sql: any = null
 let databaseAvailable = false
+let initialized = false
 
-try {
-  if (process.env.DATABASE_URL) {
-    console.log("Contracts DB: Initializing Neon client...")
-    sql = neon(process.env.DATABASE_URL)
-    databaseAvailable = true
-    console.log("Contracts DB: Neon client initialized successfully")
-  } else {
-    console.warn("DATABASE_URL environment variable is not set - contracts database unavailable")
+function initializeDatabase() {
+  if (initialized) return
+  initialized = true
+  
+  try {
+    if (process.env.DATABASE_URL) {
+      console.log("Contracts DB: Initializing Neon client...")
+      sql = neon(process.env.DATABASE_URL)
+      databaseAvailable = true
+      console.log("Contracts DB: Neon client initialized successfully")
+    } else {
+      console.warn("DATABASE_URL environment variable is not set - contracts database unavailable")
+    }
+  } catch (error) {
+    console.error("Failed to initialize Neon client for contracts:", error)
   }
-} catch (error) {
-  console.error("Failed to initialize Neon client for contracts:", error)
 }
 
 export interface Contract {
   id: number
-  deal_id: number
+  deal_id?: number
   contract_number: string
   title: string
+  type: string
   status: "draft" | "sent" | "partially_signed" | "fully_executed" | "cancelled"
   
   // Contract content
-  template_version: string
-  terms: string
+  terms?: string
+  description?: string
+  special_requirements?: string
   
   // Financial terms
-  total_amount: number
+  fee_amount?: number
   payment_terms?: string
+  currency?: string
   
   // Event details
-  event_title: string
-  event_date: string
-  event_location: string
+  event_title?: string
+  event_date?: string
+  event_location?: string
   event_type?: string
-  attendee_count?: number
   
   // Client information
-  client_name: string
-  client_email: string
+  client_name?: string
+  client_email?: string
   client_company?: string
   
   // Speaker information
@@ -52,19 +60,19 @@ export interface Contract {
   speaker_fee?: number
   
   // Contract lifecycle
-  generated_at: string
+  generated_at?: string
   sent_at?: string
   expires_at?: string
-  completed_at?: string
-  
-  // Security tokens
-  access_token: string
-  client_signing_token?: string
-  speaker_signing_token?: string
+  signed_at?: string
   
   // Audit
   created_by?: string
-  updated_at: string
+  created_at?: string
+  updated_at?: string
+  
+  // Additional data
+  template_settings?: any
+  contract_data?: any
 }
 
 export interface ContractSignature {
@@ -117,6 +125,7 @@ export async function createContractFromDeal(
   createdBy?: string,
   clientSignerInfo?: { name: string; email: string }
 ): Promise<Contract | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("createContractFromDeal: Database not available")
     return null
@@ -164,26 +173,30 @@ export async function createContractFromDeal(
     
     const [contract] = await sql`
       INSERT INTO contracts (
-        deal_id, contract_number, title, status, template_version, terms,
-        total_amount, payment_terms, event_title, event_date, event_location,
-        event_type, attendee_count, client_name, client_email, client_company,
-        client_signer_name, client_signer_email,
+        deal_id, contract_number, title, type, status, terms,
+        fee_amount, payment_terms, event_title, event_date, event_location,
+        event_type, client_name, client_email, client_company,
         speaker_name, speaker_email, speaker_fee, expires_at,
-        access_token, client_signing_token, speaker_signing_token, created_by,
-        sent_at, tokens_expire_at
+        created_by, sent_at, contract_data
       ) VALUES (
         ${deal.id}, ${contractData.contract_number}, 
         ${`Speaker Engagement Agreement - ${deal.event_title}`},
-        'draft', 'v1.0', ${contractContent},
+        'client_speaker', 'draft', ${contractContent},
         ${contractData.deal_value}, ${contractData.payment_terms},
         ${deal.event_title}, ${deal.event_date}, ${deal.event_location},
-        ${deal.event_type}, ${deal.attendee_count},
+        ${deal.event_type},
         ${deal.client_name}, ${deal.client_email}, ${deal.company},
-        ${clientSigner.name}, ${clientSigner.email},
         ${contractData.speaker_name}, ${contractData.speaker_email}, 
         ${contractData.speaker_fee}, ${expiresAt.toISOString()},
-        ${accessToken}, ${clientSigningToken}, ${speakerSigningToken}, ${createdBy},
-        NOW(), ${expiresAt.toISOString()}
+        ${createdBy}, NOW(), ${JSON.stringify({
+          clientSigner: clientSigner,
+          attendeeCount: deal.attendee_count,
+          tokens: {
+            access: accessToken,
+            clientSigning: clientSigningToken,
+            speakerSigning: speakerSigningToken
+          }
+        })}::jsonb
       )
       RETURNING *
     `
@@ -203,6 +216,7 @@ export async function createContractFromDeal(
 }
 
 export async function getAllContracts(): Promise<Contract[]> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getAllContracts: Database not available")
     return []
@@ -225,6 +239,7 @@ export async function getAllContracts(): Promise<Contract[]> {
 }
 
 export async function getContractById(id: number): Promise<Contract | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getContractById: Database not available")
     return null
@@ -246,6 +261,7 @@ export async function getContractById(id: number): Promise<Contract | null> {
 }
 
 export async function getContractByToken(token: string): Promise<Contract | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getContractByToken: Database not available")
     return null
@@ -271,6 +287,7 @@ export async function updateContractStatus(
   status: Contract['status'],
   updatedBy?: string
 ): Promise<Contract | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("updateContractStatus: Database not available")
     return null
@@ -311,6 +328,7 @@ export async function addContractSignature(
   ipAddress?: string,
   userAgent?: string
 ): Promise<ContractSignature | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("addContractSignature: Database not available")
     return null
@@ -361,6 +379,7 @@ export async function addContractSignature(
 }
 
 export async function getContractSignatures(contractId: number): Promise<ContractSignature[]> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getContractSignatures: Database not available")
     return []
@@ -422,7 +441,95 @@ export async function generateContractHTML(contractId: number): Promise<string |
   }
 }
 
+export async function updateContract(id: number, data: any): Promise<Contract | null> {
+  initializeDatabase()
+  if (!databaseAvailable || !sql) {
+    console.warn("updateContract: Database not available")
+    return null
+  }
+  
+  try {
+    console.log("Updating contract ID:", id)
+    
+    // Build update fields dynamically
+    const updates: string[] = []
+    const values: any = { id }
+    
+    if (data.title) {
+      updates.push('title = ${title}')
+      values.title = data.title
+    }
+    
+    if (data.type) {
+      updates.push('type = ${type}')
+      values.type = data.type
+    }
+    
+    if (data.contract_data) {
+      updates.push('contract_data = ${contract_data}::jsonb')
+      values.contract_data = JSON.stringify(data.contract_data)
+    }
+    
+    if (data.status) {
+      updates.push('status = ${status}')
+      values.status = data.status
+    }
+    
+    if (data.updated_by) {
+      updates.push('created_by = ${updated_by}')
+      values.updated_by = data.updated_by
+    }
+    
+    // Update fee_amount if speaker_fee is provided in contract_data
+    if (data.contract_data && data.contract_data.speaker_fee) {
+      updates.push('fee_amount = ${fee_amount}')
+      values.fee_amount = parseFloat(data.contract_data.speaker_fee) || 0
+      updates.push('speaker_fee = ${speaker_fee}')
+      values.speaker_fee = parseFloat(data.contract_data.speaker_fee) || 0
+    }
+    
+    // Update event details if provided
+    if (data.contract_data) {
+      if (data.contract_data.event_title) {
+        updates.push('event_title = ${event_title}')
+        values.event_title = data.contract_data.event_title
+      }
+      if (data.contract_data.event_date) {
+        updates.push('event_date = ${event_date}')
+        values.event_date = data.contract_data.event_date
+      }
+      if (data.contract_data.event_location) {
+        updates.push('event_location = ${event_location}')
+        values.event_location = data.contract_data.event_location
+      }
+    }
+    
+    // Always update the timestamp
+    updates.push('updated_at = NOW()')
+    
+    if (updates.length === 1) {
+      // Only timestamp update, no other changes
+      return await getContractById(id)
+    }
+    
+    // Execute the update
+    const result = await sql`
+      UPDATE contracts 
+      SET ${sql.unsafe(updates.join(', '))}
+      WHERE id = ${id}
+      RETURNING *
+    `
+    
+    console.log("Successfully updated contract ID:", id)
+    return result.length > 0 ? result[0] : null
+  } catch (error) {
+    console.error("Error updating contract:", error)
+    return null
+  }
+}
+
 export async function deleteContract(id: number): Promise<boolean> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("deleteContract: Database not available")
     return false
@@ -441,6 +548,7 @@ export async function deleteContract(id: number): Promise<boolean> {
 
 // Get contract by ID and token for signing
 export async function getContractByIdAndToken(id: number, token: string): Promise<Contract | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("getContractByIdAndToken: Database not available")
     return null
@@ -470,6 +578,7 @@ export async function signContract(data: {
   ipAddress?: string
   userAgent?: string
 }): Promise<{ id: number; contractFullyExecuted: boolean } | null> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     console.warn("signContract: Database not available")
     return null
@@ -559,6 +668,7 @@ export async function signContract(data: {
 
 // Test connection function
 export async function testContractsConnection(): Promise<boolean> {
+  initializeDatabase()
   if (!databaseAvailable || !sql) {
     return false
   }

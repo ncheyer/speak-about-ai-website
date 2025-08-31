@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getAllContracts, createContractFromDeal, updateContractStatus } from "@/lib/contracts-db"
-import { getDealById } from "@/lib/deals-db"
+import { getDealById, type Deal } from "@/lib/deals-db"
 import { requireAdminAuth } from "@/lib/auth-middleware"
 import { generateContractContent } from "@/lib/contract-template"
 import { sendSpeakerContractEmail, sendClientContractEmail } from "@/lib/email-service"
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     // }
     
     const body = await request.json()
+    console.log("Contract POST request body:", JSON.stringify(body, null, 2))
     
     // Check if this is a preview request
     const { searchParams } = new URL(request.url)
@@ -96,9 +97,90 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Validate required fields
+    // Handle template-based contract creation
+    if (body.template_id && body.values) {
+      console.log("Processing template-based contract creation")
+      console.log("Template ID:", body.template_id)
+      console.log("Values:", body.values)
+      
+      // This is a contract created from a template
+      const contractData = {
+        ...body.values,
+        template_id: body.template_id,
+        type: body.type || 'client_speaker',
+        category: body.category || 'external',
+        title: body.title || `Contract - ${body.values.event_title || 'Draft'}`,
+        status: body.status || 'draft'
+      }
+
+      // Create a deal-like object from the template data with proper defaults
+      const dealData: Deal = {
+        id: body.deal_id || 0,
+        client_name: contractData.client_contact_name || contractData.client_signer_name || 'Client Name',
+        client_email: contractData.client_email || 'client@example.com',
+        client_phone: contractData.client_phone || '',
+        company: contractData.client_company || 'Client Company',
+        event_title: contractData.event_title || 'Event',
+        event_date: contractData.event_date || new Date().toISOString().split('T')[0],
+        event_location: contractData.event_location || 'TBD',
+        event_type: contractData.event_type || 'conference',
+        speaker_requested: contractData.speaker_name || 'TBD',
+        attendee_count: parseInt(contractData.attendee_count) || 0,
+        budget_range: '$10,000-$25,000',
+        deal_value: parseFloat(contractData.speaker_fee) || 0,
+        status: 'won' as const,
+        priority: 'medium' as const,
+        source: 'manual',
+        notes: contractData.additional_requirements || '',
+        created_at: new Date().toISOString(),
+        last_contact: new Date().toISOString().split('T')[0],
+        updated_at: new Date().toISOString(),
+        travel_required: contractData.travel_required || false,
+        flight_required: contractData.flight_required || false,
+        hotel_required: contractData.hotel_required || false,
+        travel_stipend: parseFloat(contractData.travel_stipend) || 0,
+        travel_notes: contractData.travel_notes || ''
+      }
+
+      console.log("Created dealData:", dealData)
+
+      const speakerInfo = contractData.speaker_name ? {
+        name: contractData.speaker_name,
+        email: contractData.speaker_email || '',
+        fee: parseFloat(contractData.speaker_fee) || 0
+      } : undefined
+
+      const clientSignerInfo = {
+        name: contractData.client_signer_name || contractData.client_contact_name || dealData.client_name,
+        email: contractData.client_email || dealData.client_email
+      }
+
+      console.log("Speaker info:", speakerInfo)
+      console.log("Client signer info:", clientSignerInfo)
+
+      const contract = await createContractFromDeal(
+        dealData,
+        speakerInfo,
+        contractData.additional_terms || contractData.additional_requirements,
+        body.created_by || 'admin',
+        clientSignerInfo
+      )
+
+      if (!contract) {
+        return NextResponse.json({ error: "Failed to create contract" }, { status: 500 })
+      }
+
+      // Send for signature if requested
+      if (body.send_for_signature) {
+        await updateContractStatus(contract.id, 'sent')
+      }
+
+      return NextResponse.json(contract, { status: 201 })
+    }
+
+    // Original deal-based contract creation
     if (!body.deal_id) {
-      return NextResponse.json({ error: "deal_id is required" }, { status: 400 })
+      return NextResponse.json({ error: "deal_id is required for deal-based contracts" }, { status: 400 })
     }
 
     // Get the deal information

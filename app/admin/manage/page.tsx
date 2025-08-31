@@ -42,7 +42,8 @@ import {
   Download,
   Copy,
   Trash2,
-  MoreHorizontal
+  MoreHorizontal,
+  Receipt
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -117,6 +118,19 @@ interface Project {
   deadline?: string
 }
 
+interface Invoice {
+  id: number
+  invoice_number: string
+  project_id: number
+  project_name?: string
+  client_name?: string
+  amount: number
+  status: "draft" | "sent" | "paid" | "overdue"
+  due_date: string
+  created_at: string
+  type: "deposit" | "final" | "additional"
+}
+
 const STATUS_COLORS = {
   // Deal statuses
   lead: "bg-gray-500",
@@ -152,6 +166,7 @@ export default function MasterAdminPanel() {
   const [deals, setDeals] = useState<Deal[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [proposals, setProposals] = useState<Proposal[]>([])
+  const [invoices, setInvoices] = useState<Invoice[]>([])
   const [analyticsData, setAnalyticsData] = useState<any>(null)
   const [realTimeData, setRealTimeData] = useState<any>(null)
   
@@ -160,6 +175,7 @@ export default function MasterAdminPanel() {
   const [dealsLoading, setDealsLoading] = useState(true)
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [proposalsLoading, setProposalsLoading] = useState(true)
+  const [invoicesLoading, setInvoicesLoading] = useState(true)
   const [analyticsLoading, setAnalyticsLoading] = useState(true)
   
   // Filter states
@@ -175,6 +191,9 @@ export default function MasterAdminPanel() {
   
   const [proposalSearch, setProposalSearch] = useState("")
   const [proposalStatusFilter, setProposalStatusFilter] = useState("all")
+  
+  const [invoiceSearch, setInvoiceSearch] = useState("")
+  const [invoiceStatusFilter, setInvoiceStatusFilter] = useState("all")
 
   // Check authentication
   useEffect(() => {
@@ -190,6 +209,7 @@ export default function MasterAdminPanel() {
     loadDeals()
     loadProjects()
     loadProposals()
+    loadInvoices()
     loadAnalytics()
   }, [router])
 
@@ -363,6 +383,45 @@ export default function MasterAdminPanel() {
     }
   }
 
+  const loadInvoices = async () => {
+    try {
+      setInvoicesLoading(true)
+      const token = localStorage.getItem("adminSessionToken")
+      
+      const response = await fetch("/api/invoices", {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'x-dev-admin-bypass': 'dev-admin-access'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setInvoices(Array.isArray(data) ? data : [])
+      } else {
+        const error = await response.json()
+        console.error("Invoices API error:", error)
+        if (response.status === 401) {
+          toast({
+            title: "Authentication Error",
+            description: "Session expired. Please log in again.",
+            variant: "destructive",
+          })
+          router.push("/admin")
+        }
+      }
+    } catch (error) {
+      console.error("Error loading invoices:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load invoices",
+        variant: "destructive",
+      })
+    } finally {
+      setInvoicesLoading(false)
+    }
+  }
+
   const loadAnalytics = async () => {
     try {
       setAnalyticsLoading(true)
@@ -473,6 +532,17 @@ export default function MasterAdminPanel() {
     return matchesSearch && matchesStatus
   })
 
+  const filteredInvoices = invoices.filter((invoice) => {
+    const matchesSearch = 
+      invoice.invoice_number.toLowerCase().includes(invoiceSearch.toLowerCase()) ||
+      (invoice.project_name?.toLowerCase().includes(invoiceSearch.toLowerCase()) || false) ||
+      (invoice.client_name?.toLowerCase().includes(invoiceSearch.toLowerCase()) || false)
+    
+    const matchesStatus = invoiceStatusFilter === "all" || invoice.status === invoiceStatusFilter
+    
+    return matchesSearch && matchesStatus
+  })
+
   if (!isLoggedIn) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -516,6 +586,16 @@ export default function MasterAdminPanel() {
     conversionRate: proposals.filter(p => ["sent", "viewed", "accepted", "rejected"].includes(p.status)).length > 0 
       ? (proposals.filter(p => p.status === "accepted").length / proposals.filter(p => ["sent", "viewed", "accepted", "rejected"].includes(p.status)).length) * 100 
       : 0
+  }
+
+  const invoiceStats = {
+    total: invoices.length,
+    paid: invoices.filter(i => i.status === "paid").length,
+    pending: invoices.filter(i => ["sent", "overdue"].includes(i.status)).length,
+    draft: invoices.filter(i => i.status === "draft").length,
+    totalAmount: invoices.reduce((sum, inv) => sum + inv.amount, 0),
+    paidAmount: invoices.filter(i => i.status === "paid").reduce((sum, inv) => sum + inv.amount, 0),
+    pendingAmount: invoices.filter(i => ["sent", "overdue"].includes(i.status)).reduce((sum, inv) => sum + inv.amount, 0)
   }
 
   const analyticsStats = {
@@ -607,7 +687,7 @@ export default function MasterAdminPanel() {
 
         {/* Tabbed Interface */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="speakers" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Speakers ({speakerStats.total})
@@ -623,6 +703,10 @@ export default function MasterAdminPanel() {
             <TabsTrigger value="proposals" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Proposals ({proposalStats.total})
+            </TabsTrigger>
+            <TabsTrigger value="invoices" className="flex items-center gap-2">
+              <Receipt className="h-4 w-4" />
+              Invoices ({invoiceStats.total})
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
@@ -1176,6 +1260,187 @@ export default function MasterAdminPanel() {
                                 }}>
                                   <Send className="h-4 w-4 mr-2" />
                                   Send to Client
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </Card>
+          </TabsContent>
+
+          {/* Invoices Tab */}
+          <TabsContent value="invoices" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Invoice Management</h2>
+              <Button onClick={() => router.push("/admin/invoices/new")}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Invoice
+              </Button>
+            </div>
+
+            {/* Invoice Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Invoices</p>
+                    <p className="text-2xl font-bold">{invoiceStats.total}</p>
+                  </div>
+                  <Receipt className="h-8 w-8 text-gray-400" />
+                </div>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Paid</p>
+                    <p className="text-2xl font-bold text-green-600">{formatCurrency(invoiceStats.paidAmount)}</p>
+                    <p className="text-xs text-gray-500">{invoiceStats.paid} invoices</p>
+                  </div>
+                  <CheckCircle className="h-8 w-8 text-green-400" />
+                </div>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Pending</p>
+                    <p className="text-2xl font-bold text-yellow-600">{formatCurrency(invoiceStats.pendingAmount)}</p>
+                    <p className="text-xs text-gray-500">{invoiceStats.pending} invoices</p>
+                  </div>
+                  <Clock className="h-8 w-8 text-yellow-400" />
+                </div>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Amount</p>
+                    <p className="text-2xl font-bold">{formatCurrency(invoiceStats.totalAmount)}</p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-blue-400" />
+                </div>
+              </Card>
+            </div>
+
+            {/* Search and Filters */}
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search by invoice number, project, or client..."
+                  value={invoiceSearch}
+                  onChange={(e) => setInvoiceSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={invoiceStatusFilter} onValueChange={setInvoiceStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="sent">Sent</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="overdue">Overdue</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Invoices Table */}
+            <Card>
+              {invoicesLoading ? (
+                <div className="p-8 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                  <p className="text-gray-500">Loading invoices...</p>
+                </div>
+              ) : filteredInvoices.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Receipt className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-4">No invoices found</p>
+                  <Button onClick={() => router.push("/admin/invoices/new")}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Invoice
+                  </Button>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Invoice #</TableHead>
+                      <TableHead>Project</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredInvoices.map((invoice) => (
+                      <TableRow key={invoice.id}>
+                        <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                        <TableCell>{invoice.project_name || "N/A"}</TableCell>
+                        <TableCell>{invoice.client_name || "N/A"}</TableCell>
+                        <TableCell className="font-semibold">{formatCurrency(invoice.amount)}</TableCell>
+                        <TableCell>
+                          {(() => {
+                            switch (invoice.status) {
+                              case "draft":
+                                return <Badge variant="secondary">Draft</Badge>
+                              case "sent":
+                                return <Badge className="bg-blue-100 text-blue-800">Sent</Badge>
+                              case "paid":
+                                return <Badge className="bg-green-100 text-green-800">Paid</Badge>
+                              case "overdue":
+                                return <Badge variant="destructive">Overdue</Badge>
+                              default:
+                                return null
+                            }
+                          })()}
+                        </TableCell>
+                        <TableCell>{formatDate(invoice.due_date)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {invoice.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => router.push(`/admin/invoices/${invoice.id}`)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => router.push(`/admin/invoices/${invoice.id}/edit`)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Download className="h-4 w-4 mr-2" />
+                                Download PDF
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {invoice.status === "draft" && (
+                                <DropdownMenuItem>
+                                  <Send className="h-4 w-4 mr-2" />
+                                  Send to Client
+                                </DropdownMenuItem>
+                              )}
+                              {invoice.status === "sent" && (
+                                <DropdownMenuItem>
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  Mark as Paid
                                 </DropdownMenuItem>
                               )}
                             </DropdownMenuContent>

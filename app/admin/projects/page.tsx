@@ -55,6 +55,9 @@ import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
 import { InvoicePDFDialog } from "@/components/invoice-pdf-viewer"
 import { InvoiceEditorModal } from "@/components/invoice-editor-modal"
+import { TASK_DEFINITIONS, calculateTaskUrgency, getTaskOwnerLabel, getPriorityColor } from "@/lib/task-definitions"
+import { ProjectDetailsManager } from "@/components/project-details-manager"
+import { ProjectDetails } from "@/lib/project-details-schema"
 
 interface Project {
   id: number
@@ -208,11 +211,13 @@ export default function EnhancedProjectManagementPage() {
   const { toast } = useToast()
   const [projects, setProjects] = useState<Project[]>([])
   const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [customTasks, setCustomTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [activeTab, setActiveTab] = useState("dashboard")
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [selectedProjectForDetails, setSelectedProjectForDetails] = useState<Project | null>(null)
   const [showCreateInvoice, setShowCreateInvoice] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showCreateProject, setShowCreateProject] = useState(false)
@@ -276,6 +281,32 @@ export default function EnhancedProjectManagementPage() {
       if (projectsResponse.ok) {
         const projectsData = await projectsResponse.json()
         setProjects(projectsData)
+        
+        // Load custom tasks for all projects
+        const allCustomTasks = []
+        for (const project of projectsData) {
+          try {
+            const tasksRes = await fetch(`/api/projects/${project.id}/tasks`, {
+              headers: { 
+                'x-dev-admin-bypass': 'dev-admin-access'
+              },
+              credentials: 'include',
+            })
+            if (tasksRes.ok) {
+              const tasks = await tasksRes.json()
+              allCustomTasks.push(...tasks.map(task => ({
+                ...task,
+                projectId: project.id,
+                projectName: project.project_name,
+                clientName: project.client_name,
+                eventDate: project.event_date
+              })))
+            }
+          } catch (error) {
+            console.error(`Error loading tasks for project ${project.id}:`, error)
+          }
+        }
+        setCustomTasks(allCustomTasks)
       }
 
       if (invoicesResponse.ok) {
@@ -781,6 +812,7 @@ export default function EnhancedProjectManagementPage() {
     }
   }
 
+  // Filter projects based on search and status
   const filteredProjects = projects.filter(project => {
     const matchesSearch = 
       (project.project_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
@@ -916,8 +948,8 @@ export default function EnhancedProjectManagementPage() {
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
               <TabsTrigger value="tasks">Tasks</TabsTrigger>
-              <TabsTrigger value="invoicing">Invoicing</TabsTrigger>
               <TabsTrigger value="logistics">Logistics</TabsTrigger>
+              <TabsTrigger value="details">Details</TabsTrigger>
             </TabsList>
 
             {/* Dashboard Tab */}
@@ -1636,6 +1668,55 @@ export default function EnhancedProjectManagementPage() {
                     // Collect all tasks from all projects
                     const allTasks = []
                     
+                    // First, add custom generated tasks
+                    customTasks.forEach(task => {
+                      if (!task.completed) {
+                        const project = projects.find(p => p.id === task.projectId)
+                        if (project && !["completed", "cancelled"].includes(project.status)) {
+                          const daysUntilEvent = project.event_date 
+                            ? Math.ceil((new Date(project.event_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                            : null
+                          
+                          // Parse requirements and deliverables from notes field
+                          let taskRequirements = []
+                          let taskDeliverables = []
+                          try {
+                            if (task.notes) {
+                              const details = typeof task.notes === 'string' ? JSON.parse(task.notes) : task.notes
+                              taskRequirements = details.requirements || []
+                              taskDeliverables = details.deliverables || []
+                            }
+                          } catch (e) {
+                            console.error('Error parsing task details:', e)
+                          }
+                          
+                          allTasks.push({
+                            id: `custom-${task.id}`,
+                            projectId: task.projectId,
+                            projectName: task.projectName,
+                            clientName: task.clientName,
+                            stage: task.stage || 'logistics_planning',
+                            taskKey: `custom_${task.id}`,
+                            taskName: task.task_name,
+                            taskDescription: task.description,
+                            taskRequirements: taskRequirements,
+                            taskDeliverables: taskDeliverables,
+                            taskOwner: task.assigned_to || 'Team',
+                            estimatedTime: null,
+                            priority: task.priority || 'medium',
+                            urgency: task.priority === 'critical' ? 'critical' : 
+                                    task.priority === 'high' ? 'high' : 
+                                    task.priority === 'medium' ? 'medium' : 'low',
+                            daysUntilEvent: daysUntilEvent,
+                            eventDate: task.eventDate,
+                            isCustom: true,
+                            customTaskId: task.id
+                          })
+                        }
+                      }
+                    })
+                    
+                    // Then add predefined tasks
                     projects.forEach(project => {
                       if (["completed", "cancelled"].includes(project.status)) return
                       
@@ -1651,44 +1732,8 @@ export default function EnhancedProjectManagementPage() {
                         follow_up: 1
                       }
                       
-                      // Define tasks for each stage
-                      const stageTasks = {
-                        invoicing: {
-                          initial_invoice_sent: "Send initial invoice (Net 30)",
-                          final_invoice_sent: "Send final invoice",
-                          kickoff_meeting_planned: "Schedule kickoff meeting with client",
-                          client_contacts_documented: "Document all client contacts & roles",
-                          project_folder_created: "Create project folder & documentation",
-                          internal_team_briefed: "Brief internal team on project details",
-                          event_details_confirmed: "Confirm & document all event specifications"
-                        },
-                        logistics_planning: {
-                          details_confirmed: "Confirm event details",
-                          av_requirements_gathered: "Gather A/V requirements",
-                          press_pack_sent: "Send press pack to client",
-                          calendar_confirmed: "Confirm speaker calendar",
-                          client_contact_obtained: "Obtain client contact info",
-                          speaker_materials_ready: "Prepare speaker materials",
-                          vendor_onboarding_complete: "Complete vendor onboarding"
-                        },
-                        pre_event: {
-                          logistics_confirmed: "Confirm all logistics",
-                          speaker_prepared: "Ensure speaker is prepared",
-                          client_materials_sent: "Send materials to client",
-                          ready_for_execution: "Ready for event execution"
-                        },
-                        event_week: {
-                          final_preparations_complete: "Complete final preparations",
-                          event_executed: "Execute event",
-                          support_provided: "Provide event support"
-                        },
-                        follow_up: {
-                          follow_up_sent: "Send follow-up communications",
-                          client_feedback_requested: "Request client feedback",
-                          speaker_feedback_requested: "Request speaker feedback",
-                          lessons_documented: "Document lessons learned"
-                        }
-                      }
+                      // Use detailed task definitions
+                      const stageTasks = TASK_DEFINITIONS
                       
                       // Calculate days until event
                       const daysUntilEvent = project.event_date 
@@ -1697,9 +1742,10 @@ export default function EnhancedProjectManagementPage() {
                       
                       // Add tasks from current stage
                       if (stageTasks[currentStage]) {
-                        Object.entries(stageTasks[currentStage]).forEach(([taskKey, taskName]) => {
+                        Object.entries(stageTasks[currentStage]).forEach(([taskKey, taskDefinition]) => {
                           const isCompleted = stageCompletion[currentStage]?.[taskKey] || false
                           if (!isCompleted) {
+                            const urgency = calculateTaskUrgency(currentStage, daysUntilEvent, taskKey)
                             allTasks.push({
                               id: project.id + "-" + taskKey,
                               projectId: project.id,
@@ -1707,19 +1753,14 @@ export default function EnhancedProjectManagementPage() {
                               clientName: project.client_name,
                               stage: currentStage,
                               taskKey: taskKey,
-                              taskName: taskName,
-                              priority: stagePriorities[currentStage] || 0,
-                              urgency: (() => {
-                                // For invoicing tasks, they should be done 2 months (60 days) before event
-                                if (currentStage === "invoicing" && daysUntilEvent !== null) {
-                                  if (daysUntilEvent < 60) return "high" // Less than 2 months - urgent!
-                                  if (daysUntilEvent < 90) return "medium" // Less than 3 months
-                                  return "low"
-                                }
-                                // For other stages, use standard urgency
-                                return daysUntilEvent !== null && daysUntilEvent < 30 ? "high" : 
-                                       daysUntilEvent !== null && daysUntilEvent < 60 ? "medium" : "low"
-                              })(),
+                              taskName: taskDefinition.name,
+                              taskDescription: taskDefinition.description,
+                              taskRequirements: taskDefinition.requirements,
+                              taskDeliverables: taskDefinition.deliverables,
+                              taskOwner: taskDefinition.owner,
+                              estimatedTime: taskDefinition.estimatedTime,
+                              priority: taskDefinition.priority,
+                              urgency: urgency,
                               daysUntilEvent: daysUntilEvent,
                               eventDate: project.event_date
                             })
@@ -1731,14 +1772,15 @@ export default function EnhancedProjectManagementPage() {
                     // Sort tasks by urgency, priority, and days until event
                     allTasks.sort((a, b) => {
                       // First sort by urgency
-                      const urgencyOrder = { high: 3, medium: 2, low: 1 }
+                      const urgencyOrder = { critical: 4, high: 3, medium: 2, low: 1 }
                       if (urgencyOrder[a.urgency] !== urgencyOrder[b.urgency]) {
                         return urgencyOrder[b.urgency] - urgencyOrder[a.urgency]
                       }
                       
                       // Then by priority
-                      if (a.priority !== b.priority) {
-                        return b.priority - a.priority
+                      const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 }
+                      if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                        return priorityOrder[b.priority] - priorityOrder[a.priority]
                       }
                       
                       // Finally by days until event (sooner first)
@@ -1761,13 +1803,19 @@ export default function EnhancedProjectManagementPage() {
                     return (
                       <div className="space-y-4">
                         {/* Task summary */}
-                        <div className="grid grid-cols-4 gap-4 mb-6">
+                        <div className="grid grid-cols-5 gap-4 mb-6">
                           <div className="text-center p-3 bg-gray-50 rounded-lg">
                             <div className="text-2xl font-bold">{allTasks.length}</div>
                             <div className="text-sm text-gray-600">Total Tasks</div>
                           </div>
                           <div className="text-center p-3 bg-red-50 rounded-lg">
                             <div className="text-2xl font-bold text-red-600">
+                              {allTasks.filter(t => t.urgency === "critical").length}
+                            </div>
+                            <div className="text-sm text-gray-600">Critical</div>
+                          </div>
+                          <div className="text-center p-3 bg-orange-50 rounded-lg">
+                            <div className="text-2xl font-bold text-orange-600">
                               {allTasks.filter(t => t.urgency === "high").length}
                             </div>
                             <div className="text-sm text-gray-600">Urgent</div>
@@ -1782,7 +1830,7 @@ export default function EnhancedProjectManagementPage() {
                             <div className="text-2xl font-bold text-blue-600">
                               {allTasks.filter(t => t.daysUntilEvent !== null && t.daysUntilEvent <= 7).length}
                             </div>
-                            <div className="text-sm text-gray-600">Within 7 Days</div>
+                            <div className="text-sm text-gray-600">This Week</div>
                           </div>
                         </div>
                         
@@ -1790,435 +1838,150 @@ export default function EnhancedProjectManagementPage() {
                         {allTasks.map((task) => (
                           <div 
                             key={task.id} 
-                            className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                            className="border rounded-lg overflow-hidden hover:shadow-md transition-all"
                           >
-                            <div className="flex items-start justify-between">
-                              <div className="space-y-1 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-medium">{task.taskName}</h4>
-                                  <Badge 
-                                    variant={task.urgency === "high" ? "destructive" : 
-                                            task.urgency === "medium" ? "warning" : "secondary"}
-                                    className="text-xs"
-                                  >
-                                    {task.urgency === "high" ? "Urgent" : 
-                                     task.urgency === "medium" ? "Soon" : "Normal"}
-                                  </Badge>
-                                  <Badge className={(PROJECT_STATUSES[task.stage]?.color || "bg-gray-500") + " text-white text-xs"}>
-                                    {PROJECT_STATUSES[task.stage]?.label || task.stage}
-                                  </Badge>
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                  <span className="font-medium">{task.projectName}</span> • {task.clientName}
-                                </div>
-                                {task.daysUntilEvent !== null && (
-                                  <div className="text-sm text-gray-500">
-                                    <CalendarDays className="inline h-3 w-3 mr-1" />
-                                    {task.daysUntilEvent === 0 ? "Event today!" :
-                                     task.daysUntilEvent === 1 ? "Event tomorrow" :
-                                     task.daysUntilEvent < 0 ? Math.abs(task.daysUntilEvent) + " days ago" :
-                                     task.daysUntilEvent + " days until event"}
+                            <div className="p-4">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <h4 className="font-semibold text-lg">{task.taskName}</h4>
+                                    <Badge 
+                                      className={`text-xs ${
+                                        task.urgency === "critical" ? "bg-red-100 text-red-700" :
+                                        task.urgency === "high" ? "bg-orange-100 text-orange-700" : 
+                                        task.urgency === "medium" ? "bg-yellow-100 text-yellow-700" : 
+                                        "bg-gray-100 text-gray-700"
+                                      }`}
+                                    >
+                                      {task.urgency === "critical" ? "🔴 Critical" :
+                                       task.urgency === "high" ? "🟠 Urgent" : 
+                                       task.urgency === "medium" ? "🟡 Soon" : "Normal"}
+                                    </Badge>
+                                    <Badge className={(PROJECT_STATUSES[task.stage]?.color || "bg-gray-500") + " text-white text-xs"}>
+                                      {PROJECT_STATUSES[task.stage]?.label || task.stage}
+                                    </Badge>
+                                    {task.taskOwner && (
+                                      <Badge variant="outline" className="text-xs">
+                                        <Users className="h-3 w-3 mr-1" />
+                                        {getTaskOwnerLabel(task.taskOwner)}
+                                      </Badge>
+                                    )}
+                                    {task.estimatedTime && (
+                                      <Badge variant="outline" className="text-xs">
+                                        <Timer className="h-3 w-3 mr-1" />
+                                        {task.estimatedTime}
+                                      </Badge>
+                                    )}
                                   </div>
-                                )}
+                                  <p className="text-sm text-gray-600 mb-2">{task.taskDescription}</p>
+                                  <div className="text-sm text-gray-500 space-y-1">
+                                    <div>
+                                      <span className="font-medium text-gray-700">{task.projectName}</span> • {task.clientName}
+                                    </div>
+                                    {task.daysUntilEvent !== null && (
+                                      <div className={task.daysUntilEvent <= 7 ? "text-red-600 font-medium" : ""}>
+                                        <CalendarDays className="inline h-3 w-3 mr-1" />
+                                        {task.daysUntilEvent === 0 ? "🚨 Event today!" :
+                                         task.daysUntilEvent === 1 ? "⚠️ Event tomorrow" :
+                                         task.daysUntilEvent < 0 ? `${Math.abs(task.daysUntilEvent)} days ago` :
+                                         `${task.daysUntilEvent} days until event`}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    if (task.isCustom) {
+                                      // Handle custom task completion
+                                      try {
+                                        const response = await fetch(`/api/projects/${task.projectId}/tasks`, {
+                                          method: 'PATCH',
+                                          headers: { 
+                                            'Content-Type': 'application/json',
+                                            'x-dev-admin-bypass': 'dev-admin-access'
+                                          },
+                                          credentials: 'include',
+                                          body: JSON.stringify({
+                                            taskId: task.customTaskId,
+                                            completed: true,
+                                            status: 'completed'
+                                          })
+                                        })
+                                        
+                                        if (response.ok) {
+                                          toast({
+                                            title: "Task Completed",
+                                            description: task.taskName
+                                          })
+                                          loadData() // Refresh to update task list
+                                        }
+                                      } catch (error) {
+                                        console.error('Error completing custom task:', error)
+                                        toast({
+                                          title: "Error",
+                                          description: "Failed to complete task",
+                                          variant: "destructive"
+                                        })
+                                      }
+                                    } else {
+                                      // Handle predefined task completion
+                                      handleUpdateStageCompletion(
+                                        task.projectId, 
+                                        task.stage, 
+                                        task.taskKey, 
+                                        true
+                                      )
+                                    }
+                                  }}
+                                  className="ml-4 min-w-[100px]"
+                                >
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Complete
+                                </Button>
                               </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleUpdateStageCompletion(
-                                  task.projectId, 
-                                  task.stage, 
-                                  task.taskKey, 
-                                  true
-                                )}
-                                className="ml-4"
-                              >
-                                <Check className="h-4 w-4 mr-1" />
-                                Complete
-                              </Button>
+                              
+                              {/* Expandable details section */}
+                              <details className="mt-3 border-t pt-3">
+                                <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+                                  View Requirements & Deliverables
+                                </summary>
+                                <div className="mt-3 grid md:grid-cols-2 gap-4">
+                                  {task.taskRequirements && task.taskRequirements.length > 0 && (
+                                    <div>
+                                      <h5 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Requirements:</h5>
+                                      <ul className="space-y-1">
+                                        {task.taskRequirements.map((req, idx) => (
+                                          <li key={idx} className="text-xs text-gray-600 flex items-start">
+                                            <CheckSquare className="h-3 w-3 mr-1 mt-0.5 text-gray-400" />
+                                            {req}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {task.taskDeliverables && task.taskDeliverables.length > 0 && (
+                                    <div>
+                                      <h5 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Deliverables:</h5>
+                                      <ul className="space-y-1">
+                                        {task.taskDeliverables.map((del, idx) => (
+                                          <li key={idx} className="text-xs text-gray-600 flex items-start">
+                                            <Target className="h-3 w-3 mr-1 mt-0.5 text-gray-400" />
+                                            {del}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              </details>
                             </div>
                           </div>
                         ))}
                       </div>
                     )
                   })()}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Invoicing Tab */}
-            <TabsContent value="invoicing" className="space-y-6">
-              {/* Invoice Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Invoiced</CardTitle>
-                    <Receipt className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      ${new Intl.NumberFormat('en-US').format(
-                        invoices.reduce((sum, inv) => sum + inv.amount, 0)
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {invoices.length} total invoices
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Paid</CardTitle>
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">
-                      ${new Intl.NumberFormat('en-US').format(
-                        invoices.filter(i => i.status === "paid").reduce((sum, inv) => sum + inv.amount, 0)
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {invoices.filter(i => i.status === "paid").length} paid
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
-                    <Clock className="h-4 w-4 text-yellow-500" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-yellow-600">
-                      ${new Intl.NumberFormat('en-US').format(
-                        invoices.filter(i => ["sent", "overdue"].includes(i.status)).reduce((sum, inv) => sum + inv.amount, 0)
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {invoices.filter(i => ["sent", "overdue"].includes(i.status)).length} pending
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-red-600">
-                      ${new Intl.NumberFormat('en-US').format(
-                        invoices.filter(i => i.status === "overdue").reduce((sum, inv) => sum + inv.amount, 0)
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {invoices.filter(i => i.status === "overdue").length} overdue
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Create Invoice Card */}
-              <Card id="invoice-creation-section">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Create New Invoice</CardTitle>
-                      <CardDescription>Generate invoices for your projects</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="invoice-project">Select Project</Label>
-                      <Select 
-                        value={invoiceFormData.project_id} 
-                        onValueChange={(value) => {
-                          setInvoiceFormData({...invoiceFormData, project_id: value})
-                          if (invoiceFormData.invoice_type) {
-                            handleInvoiceTypeChange(invoiceFormData.invoice_type, value)
-                          }
-                        }}
-                      >
-                        <SelectTrigger id="invoice-project">
-                          <SelectValue placeholder="Choose a project" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {projects
-                            .filter(p => !["completed", "cancelled"].includes(p.status))
-                            .map(project => (
-                              <SelectItem key={project.id} value={project.id.toString()}>
-                                {project.event_name || project.event_title || project.project_name} - {project.client_name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="invoice-type">Invoice Type</Label>
-                      <Select 
-                        value={invoiceFormData.invoice_type}
-                        onValueChange={(value) => handleInvoiceTypeChange(value, invoiceFormData.project_id)}
-                      >
-                        <SelectTrigger id="invoice-type">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="initial">Initial Invoice (50% of Total)</SelectItem>
-                          <SelectItem value="final">Final Invoice (50% of Total)</SelectItem>
-                          <SelectItem value="full">Full Amount (Speaker Fee + Travel)</SelectItem>
-                          <SelectItem value="full-speaker-only">Speaker Fee Only</SelectItem>
-                          <SelectItem value="travel-only">Travel Expenses Only</SelectItem>
-                          <SelectItem value="custom">Custom Amount</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="invoice-amount">Amount</Label>
-                      <Input 
-                        id="invoice-amount" 
-                        type="number" 
-                        placeholder="25000"
-                        value={invoiceFormData.amount}
-                        onChange={(e) => setInvoiceFormData({...invoiceFormData, amount: e.target.value})}
-                        disabled={invoiceFormData.invoice_type !== "custom" && invoiceFormData.invoice_type !== ""}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <Label htmlFor="invoice-due-date">Due Date</Label>
-                      <Input 
-                        id="invoice-due-date" 
-                        type="date"
-                        value={invoiceFormData.due_date}
-                        onChange={(e) => setInvoiceFormData({...invoiceFormData, due_date: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="invoice-terms">Payment Terms</Label>
-                      <Select 
-                        value={invoiceFormData.payment_terms}
-                        onValueChange={(value) => setInvoiceFormData({...invoiceFormData, payment_terms: value})}
-                      >
-                        <SelectTrigger id="invoice-terms">
-                          <SelectValue placeholder="Select terms" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="net-30">Net 30</SelectItem>
-                          <SelectItem value="net-15">Net 15</SelectItem>
-                          <SelectItem value="due-on-receipt">Due on Receipt</SelectItem>
-                          <SelectItem value="net-60">Net 60</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <Label htmlFor="invoice-notes">Notes / Description</Label>
-                    <Textarea 
-                      id="invoice-notes" 
-                      placeholder="Additional notes or description for the invoice..."
-                      rows={3}
-                      value={invoiceFormData.notes}
-                      onChange={(e) => setInvoiceFormData({...invoiceFormData, notes: e.target.value})}
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2 mt-6">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" disabled={!invoiceFormData.project_id || !invoiceFormData.amount}>
-                          <FileText className="h-4 w-4 mr-2" />
-                          Preview
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle>Invoice Preview</DialogTitle>
-                          <DialogDescription>Review your invoice before sending</DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 mt-4">
-                          {/* Invoice preview content */}
-                          <div className="border rounded-lg p-6">
-                            <h3 className="text-lg font-semibold mb-4">Invoice Details</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <p className="text-sm text-gray-600">Project</p>
-                                <p className="font-medium">
-                                  {projects.find(p => p.id.toString() === invoiceFormData.project_id)?.project_name || ""}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-gray-600">Amount</p>
-                                <p className="font-medium">${invoiceFormData.amount}</p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-gray-600">Due Date</p>
-                                <p className="font-medium">{new Date(invoiceFormData.due_date).toLocaleDateString()}</p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-gray-600">Payment Terms</p>
-                                <p className="font-medium">{invoiceFormData.payment_terms.replace("-", " ").toUpperCase()}</p>
-                              </div>
-                            </div>
-                            {/* Show breakdown if project has travel expenses */}
-                            {(() => {
-                              const project = projects.find(p => p.id.toString() === invoiceFormData.project_id)
-                              if (project && parseFloat(project.travel_expenses_amount || "0") > 0) {
-                                const speakerFee = parseFloat(project.speaker_fee || project.budget || "0")
-                                const travelExpenses = parseFloat(project.travel_expenses_amount || "0")
-                                return (
-                                  <div className="mt-4 p-3 bg-gray-50 rounded">
-                                    <p className="text-sm font-medium text-gray-700 mb-2">Amount Breakdown:</p>
-                                    <div className="space-y-1">
-                                      <div className="flex justify-between text-sm">
-                                        <span>Speaker Fee:</span>
-                                        <span>${speakerFee.toLocaleString()}</span>
-                                      </div>
-                                      <div className="flex justify-between text-sm">
-                                        <span>Travel Expenses:</span>
-                                        <span>${travelExpenses.toLocaleString()}</span>
-                                      </div>
-                                      <div className="flex justify-between text-sm font-medium pt-1 border-t">
-                                        <span>Total:</span>
-                                        <span>${(speakerFee + travelExpenses).toLocaleString()}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )
-                              }
-                              return null
-                            })()}
-                            {invoiceFormData.notes && (
-                              <div className="mt-4">
-                                <p className="text-sm text-gray-600">Notes</p>
-                                <p className="font-medium">{invoiceFormData.notes}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                    <Button onClick={handleCreateNewInvoice} disabled={!invoiceFormData.project_id || !invoiceFormData.amount}>
-                      <Send className="h-4 w-4 mr-2" />
-                      Create & Send Invoice
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Existing Invoices */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Invoice History</CardTitle>
-                      <CardDescription>Track and manage all invoices</CardDescription>
-                    </div>
-                    <div className="flex gap-2">
-                      <Select defaultValue="all">
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Filter by status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Invoices</SelectItem>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="sent">Sent</SelectItem>
-                          <SelectItem value="paid">Paid</SelectItem>
-                          <SelectItem value="overdue">Overdue</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Invoice #</TableHead>
-                        <TableHead>Project</TableHead>
-                        <TableHead>Client</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Due Date</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {invoices.map((invoice) => {
-                        const project = projects.find(p => p.id === invoice.project_id)
-                        return (
-                          <TableRow key={invoice.id}>
-                            <TableCell className="font-mono">
-                              {invoice.invoice_number}
-                            </TableCell>
-                            <TableCell>
-                              {project?.event_title || "Unknown Project"}
-                            </TableCell>
-                            <TableCell>
-                              {project?.client_name || "Unknown Client"}
-                            </TableCell>
-                            <TableCell>
-                              ${new Intl.NumberFormat('en-US').format(invoice.amount)}
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={INVOICE_STATUSES[invoice.status].color + " text-white"}>
-                                {INVOICE_STATUSES[invoice.status].label}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {new Date(invoice.due_date).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-1">
-                                {invoice.status !== "paid" && (
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    className="text-green-600 hover:text-green-700"
-                                    onClick={() => handleUpdateInvoiceStatus(invoice.id, "paid")}
-                                  >
-                                    <Check className="h-4 w-4" />
-                                  </Button>
-                                )}
-                                {invoice.status === "draft" && (
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    className="text-blue-600 hover:text-blue-700"
-                                    onClick={() => handleUpdateInvoiceStatus(invoice.id, "sent")}
-                                  >
-                                    <Send className="h-4 w-4" />
-                                  </Button>
-                                )}
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => setSelectedInvoiceForEdit(invoice.id)}
-                                  title="Edit Invoice"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => setSelectedInvoiceForPDF({id: invoice.id, number: invoice.invoice_number})}
-                                  title="Preview Invoice"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost"
-                                  className="text-red-600 hover:text-red-700"
-                                  onClick={() => handleDeleteInvoice(invoice.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -2299,129 +2062,34 @@ export default function EnhancedProjectManagementPage() {
                             <CheckSquare className="h-4 w-4 text-gray-400" />
                             <span>Confirm event times in speaker's calendar</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Get client's contact number</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Ensure everything is on-hand for speaker</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Fill out vendor onboarding (if necessary)</span>
-                          </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    {/* Pre-Event Ready */}
-                    <Card className="border-l-4 border-l-yellow-500">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">
-                          Pre-Event Ready
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span>All logistics confirmed</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span>Speaker fully prepared</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span>Client has all materials</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span>Ready for event execution</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Event Week */}
-                    <Card className="border-l-4 border-l-orange-500">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">
-                          Event Week
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-orange-500" />
-                            <span>Final preparations</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-orange-500" />
-                            <span>Event execution</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-orange-500" />
-                            <span>Real-time support</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Event Follow-up */}
-                    <Card className="border-l-4 border-l-indigo-500">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">
-                          Event Follow-up
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-indigo-500" />
-                            <span>Send event follow-up</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-indigo-500" />
-                            <span>Request feedback from client</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-indigo-500" />
-                            <span>Request feedback from speaker</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Document lessons learned</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Completed */}
+                    {/* Pre-Event */}
                     <Card className="border-l-4 border-l-green-500">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg">
-                          Completed
+                          Pre-Event
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span>Event successfully delivered</span>
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Review talk & get approval</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span>All follow-up completed</span>
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Join all prep calls</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span>Feedback collected</span>
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Review session document</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span>Project archived</span>
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Final prep meeting with speaker</span>
                           </div>
                         </div>
                       </CardContent>
@@ -2429,333 +2097,294 @@ export default function EnhancedProjectManagementPage() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
 
-              {/* Active Projects Logistics */}
+            {/* Details Tab */}
+            <TabsContent value="details" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Active Projects - Logistics Overview</CardTitle>
-                  <CardDescription>Current project status and logistics management</CardDescription>
+                  <CardTitle>Project Details Management</CardTitle>
+                  <CardDescription>
+                    Select a project to manage comprehensive event details
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {activeProjects.map((project) => (
-                      <Card key={project.id} className={"border-l-4 " + (PROJECT_STATUSES[project.status]?.color?.replace('bg-', 'border-l-') || 'border-l-gray-500')}>
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg">{project.event_name || project.event_title || project.project_name}</CardTitle>
-                          <CardDescription>{project.client_name}</CardDescription>
-                          <Badge className={(PROJECT_STATUSES[project.status]?.color || "bg-gray-500") + " text-white w-fit"}>
-                            {PROJECT_STATUSES[project.status]?.label || project.status}
-                          </Badge>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Calendar className="h-4 w-4 text-gray-500" />
-                            {formatEventDate(project.event_date)}
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <MapPin className="h-4 w-4 text-gray-500" />
-                            {project.event_location}
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Users className="h-4 w-4 text-gray-500" />
-                            {project.attendee_count || "TBD"} attendees
-                          </div>
-                          <div className="pt-2 space-x-2">
-                            <Button size="sm" variant="outline">
-                              <Plane className="h-4 w-4 mr-1" />
-                              Travel
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Mic className="h-4 w-4 mr-1" />
-                              A/V
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Camera className="h-4 w-4 mr-1" />
-                              Media
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                  {/* Project selector */}
+                  <div className="mb-6">
+                    <Label>Select Project</Label>
+                    <Select
+                      value={selectedProjectForDetails?.id?.toString() || ""}
+                      onValueChange={(value) => {
+                        const project = projects.find(p => p.id === parseInt(value))
+                        setSelectedProjectForDetails(project || null)
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a project to manage details" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projects.map((project) => (
+                          <SelectItem key={project.id} value={project.id.toString()}>
+                            {project.project_name} - {project.client_name} ({new Date(project.event_date).toLocaleDateString()})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
+
+                  {/* Project Details Manager */}
+                  {selectedProjectForDetails && (
+                    <ProjectDetailsManager
+                      projectId={selectedProjectForDetails.id}
+                      projectName={selectedProjectForDetails.project_name}
+                      onGenerateTasks={async (tasks) => {
+                        // Create tasks in the database
+                        try {
+                          // Map task categories to stages
+                          const tasksWithStages = tasks.map(task => {
+                            let stage = 'logistics_planning' // default stage
+                            if (task.category === 'overview' || task.category === 'contacts') {
+                              stage = 'invoicing'
+                            } else if (task.category === 'travel' || task.category === 'venue') {
+                              stage = 'logistics_planning'
+                            } else if (task.category === 'event_details' || task.category === 'audience') {
+                              stage = 'pre_event'
+                            } else if (task.category === 'speaker_requirements') {
+                              stage = 'pre_event'
+                            }
+                            
+                            return {
+                              ...task,
+                              stage
+                            }
+                          })
+                          
+                          // Create tasks via API
+                          const response = await fetch(`/api/projects/${selectedProjectForDetails.id}/tasks`, {
+                            method: 'POST',
+                            headers: { 
+                              'Content-Type': 'application/json',
+                              'x-dev-admin-bypass': 'dev-admin-access'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                              tasks: tasksWithStages
+                            })
+                          })
+                          
+                          if (response.ok) {
+                            const result = await response.json()
+                            
+                            if (result.count > 0) {
+                              toast({
+                                title: "Tasks Generated",
+                                description: `${result.count} new tasks created${result.skipped > 0 ? ` (${result.skipped} already existed)` : ''}`
+                              })
+                              
+                              // Switch to tasks tab to show the new tasks
+                              setActiveTab('tasks')
+                              
+                              // Refresh data to show new tasks
+                              loadData()
+                            } else if (result.skipped > 0) {
+                              toast({
+                                title: "No New Tasks",
+                                description: `All ${result.skipped} tasks already exist for this project`,
+                                variant: "default"
+                              })
+                            } else {
+                              toast({
+                                title: "No Tasks Needed",
+                                description: "No missing information found that requires tasks",
+                                variant: "default"
+                              })
+                            }
+                          } else {
+                            throw new Error('Failed to save tasks')
+                          }
+                        } catch (error) {
+                          console.error('Error creating tasks:', error)
+                          toast({
+                            title: "Error",
+                            description: "Failed to create generated tasks",
+                            variant: "destructive"
+                          })
+                        }
+                      }}
+                    />
+                  )}
+                  
+                  {!selectedProjectForDetails && (
+                    <div className="text-center py-12 text-gray-500">
+                      <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>Select a project to view and manage its details</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
         </div>
       </div>
-      
-      {/* Project Task Management Dialog */}
-      {selectedProject && (
-        <Dialog open={!!selectedProject} onOpenChange={() => setSelectedProject(null)}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <DialogTitle>Task Management - {selectedProject.event_title}</DialogTitle>
-                  <DialogDescription>
-                    Manage stage completion for {selectedProject.client_name} ({formatEventDate(selectedProject.event_date)})
-                  </DialogDescription>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    router.push(`/admin/projects/${selectedProject.id}/edit`)
-                    setSelectedProject(null)
-                  }}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Project
-                </Button>
-              </div>
-            </DialogHeader>
-            
-            <div className="space-y-6">
-              {/* Time Until Event */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-blue-900">Time Until Event</h3>
-                    <p className="text-blue-700">{getTimeUntilEvent(selectedProject.event_date).text}</p>
-                  </div>
-                  <Timer className="h-8 w-8 text-blue-500" />
-                </div>
-              </div>
 
-              {/* Stage Tasks */}
-              <div className="space-y-4">
-                {/* Invoicing & Setup */}
-                {(selectedProject.status === "invoicing" || ["logistics_planning", "pre_event", "event_week", "follow_up", "completed"].includes(selectedProject.status)) && (
-                  <Card className="border-l-4 border-l-blue-500">
+      {/* Create Project Dialog */}
+      <Dialog open={showCreateProject} onOpenChange={setShowCreateProject}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Project</DialogTitle>
+            <DialogDescription>Add a new event project to the system</DialogDescription>
+          </DialogHeader>
+          <div className="p-4">
+            <p>Project creation form would go here</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Task Management Dialog */}
+      <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manage Tasks - {selectedProject?.project_name || selectedProject?.event_name}</DialogTitle>
+            <DialogDescription>
+              {selectedProject?.client_name} • {selectedProject?.event_date ? new Date(selectedProject.event_date).toLocaleDateString() : 'No date set'}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedProject && (
+            <div className="space-y-4 mt-4">
+              {/* Task stages */}
+              {Object.entries(TASK_DEFINITIONS).map(([stage, tasks]) => {
+                const stageConfig = PROJECT_STATUSES[stage]
+                const isCurrentStage = selectedProject.status === stage
+                const stageCompletion = selectedProject.stage_completion?.[stage] || {}
+                const completedCount = Object.values(stageCompletion).filter(Boolean).length
+                const totalCount = Object.keys(tasks).length
+                
+                return (
+                  <Card key={stage} className={isCurrentStage ? "border-blue-500 shadow-md" : ""}>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        {["logistics_planning", "pre_event", "event_week", "follow_up", "completed"].includes(selectedProject.status) ? (
-                          <Check className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <ClockIcon className="h-5 w-5 text-blue-500" />
-                        )}
-                        Invoicing & Setup
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {[
-                          { key: "initial_invoice_sent", label: "Send initial invoice (Net 30)" },
-                          { key: "final_invoice_sent", label: "Send final invoice" },
-                          { key: "kickoff_meeting_planned", label: "Schedule kickoff meeting with client" },
-                          { key: "client_contacts_documented", label: "Document all client contacts & roles" },
-                          { key: "project_folder_created", label: "Create project folder & documentation" },
-                          { key: "internal_team_briefed", label: "Brief internal team on project details" },
-                          { key: "event_details_confirmed", label: "Confirm & document all event specifications" }
-                        ].map((task) => (
-                          <div key={task.key} className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              id={"invoicing_" + task.key}
-                              checked={selectedProject.stage_completion?.invoicing?.[task.key] || false}
-                              onChange={(e) => handleUpdateStageCompletion(selectedProject.id, "invoicing", task.key, e.target.checked)}
-                              className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                            />
-                            <label htmlFor={"invoicing_" + task.key} className="text-sm">
-                              {task.label}
-                            </label>
-                          </div>
-                        ))}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Badge className={(stageConfig?.color || "bg-gray-500") + " text-white"}>
+                            {stageConfig?.label || stage}
+                          </Badge>
+                          {isCurrentStage && (
+                            <Badge variant="outline" className="text-blue-600 border-blue-600">
+                              Current Stage
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {completedCount} of {totalCount} completed
+                        </div>
                       </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {Object.entries(tasks).map(([taskKey, taskDef]) => {
+                        const isCompleted = stageCompletion[taskKey] || false
+                        const daysUntilEvent = selectedProject.event_date 
+                          ? Math.ceil((new Date(selectedProject.event_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                          : null
+                        const urgency = calculateTaskUrgency(stage, daysUntilEvent, taskKey)
+                        
+                        return (
+                          <div 
+                            key={taskKey}
+                            className={`p-3 rounded-lg border ${isCompleted ? 'bg-green-50 border-green-200' : 'bg-white'}`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  {isCompleted ? (
+                                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                  ) : (
+                                    <div className="h-5 w-5 rounded border-2 border-gray-300" />
+                                  )}
+                                  <span className={`font-medium ${isCompleted ? 'line-through text-gray-500' : ''}`}>
+                                    {taskDef.name}
+                                  </span>
+                                  {!isCompleted && (
+                                    <>
+                                      <Badge 
+                                        className={`text-xs ${
+                                          urgency === "critical" ? "bg-red-100 text-red-700" :
+                                          urgency === "high" ? "bg-orange-100 text-orange-700" : 
+                                          urgency === "medium" ? "bg-yellow-100 text-yellow-700" : 
+                                          "bg-gray-100 text-gray-700"
+                                        }`}
+                                      >
+                                        {urgency === "critical" ? "Critical" :
+                                         urgency === "high" ? "Urgent" : 
+                                         urgency === "medium" ? "Soon" : "Normal"}
+                                      </Badge>
+                                      {taskDef.estimatedTime && (
+                                        <span className="text-xs text-gray-500">
+                                          <Clock className="inline h-3 w-3 mr-1" />
+                                          {taskDef.estimatedTime}
+                                        </span>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 ml-7">{taskDef.description}</p>
+                              </div>
+                              {!isCompleted && isCurrentStage && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    handleUpdateStageCompletion(selectedProject.id, stage, taskKey, true)
+                                    // Update local state to reflect the change
+                                    setSelectedProject({
+                                      ...selectedProject,
+                                      stage_completion: {
+                                        ...selectedProject.stage_completion,
+                                        [stage]: {
+                                          ...stageCompletion,
+                                          [taskKey]: true
+                                        }
+                                      }
+                                    })
+                                  }}
+                                >
+                                  <Check className="h-4 w-4" />
+                                  Complete
+                                </Button>
+                              )}
+                              {isCompleted && isCurrentStage && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    handleUpdateStageCompletion(selectedProject.id, stage, taskKey, false)
+                                    // Update local state to reflect the change
+                                    setSelectedProject({
+                                      ...selectedProject,
+                                      stage_completion: {
+                                        ...selectedProject.stage_completion,
+                                        [stage]: {
+                                          ...stageCompletion,
+                                          [taskKey]: false
+                                        }
+                                      }
+                                    })
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                  Undo
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </CardContent>
                   </Card>
-                )}
-
-                {/* Logistics Planning */}
-                {(selectedProject.status === "logistics_planning" || ["pre_event", "event_week", "follow_up", "completed"].includes(selectedProject.status)) && (
-                  <Card className="border-l-4 border-l-purple-500">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        {["pre_event", "event_week", "follow_up", "completed"].includes(selectedProject.status) ? (
-                          <Check className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <ClockIcon className="h-5 w-5 text-purple-500" />
-                        )}
-                        Logistics Planning
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {[
-                          { key: "details_confirmed", label: "Confirm all logistical details" },
-                          { key: "av_requirements_gathered", label: "Get A/V requirements" },
-                          { key: "press_pack_sent", label: "Send press pack to client" },
-                          { key: "calendar_confirmed", label: "Confirm event times in speaker's calendar" },
-                          { key: "client_contact_obtained", label: "Get client's contact number" },
-                          { key: "speaker_materials_ready", label: "Ensure everything is on-hand for speaker" },
-                          { key: "vendor_onboarding_complete", label: "Fill out vendor onboarding (if necessary)" }
-                        ].map((task) => (
-                          <div key={task.key} className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              id={"logistics_" + task.key}
-                              checked={selectedProject.stage_completion?.logistics_planning?.[task.key] || false}
-                              onChange={(e) => handleUpdateStageCompletion(selectedProject.id, "logistics_planning", task.key, e.target.checked)}
-                              className="h-4 w-4 text-purple-600 rounded border-gray-300"
-                            />
-                            <label htmlFor={"logistics_" + task.key} className="text-sm">
-                              {task.label}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Pre-Event Ready */}
-                {(selectedProject.status === "pre_event" || ["event_week", "follow_up", "completed"].includes(selectedProject.status)) && (
-                  <Card className="border-l-4 border-l-yellow-500">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        {["event_week", "follow_up", "completed"].includes(selectedProject.status) ? (
-                          <Check className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <ClockIcon className="h-5 w-5 text-yellow-500" />
-                        )}
-                        Pre-Event Ready
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {[
-                          { key: "logistics_confirmed", label: "All logistics confirmed" },
-                          { key: "speaker_prepared", label: "Speaker fully prepared" },
-                          { key: "client_materials_sent", label: "Client has all materials" },
-                          { key: "ready_for_execution", label: "Ready for event execution" }
-                        ].map((task) => (
-                          <div key={task.key} className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              id={"pre_event_" + task.key}
-                              checked={selectedProject.stage_completion?.pre_event?.[task.key] || false}
-                              onChange={(e) => handleUpdateStageCompletion(selectedProject.id, "pre_event", task.key, e.target.checked)}
-                              className="h-4 w-4 text-yellow-600 rounded border-gray-300"
-                            />
-                            <label htmlFor={"pre_event_" + task.key} className="text-sm">
-                              {task.label}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Event Week */}
-                {(selectedProject.status === "event_week" || ["follow_up", "completed"].includes(selectedProject.status)) && (
-                  <Card className="border-l-4 border-l-orange-500">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        {["follow_up", "completed"].includes(selectedProject.status) ? (
-                          <Check className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <ClockIcon className="h-5 w-5 text-orange-500" />
-                        )}
-                        Event Week
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {[
-                          { key: "final_preparations_complete", label: "Final preparations complete" },
-                          { key: "event_executed", label: "Event executed successfully" },
-                          { key: "support_provided", label: "Real-time support provided" }
-                        ].map((task) => (
-                          <div key={task.key} className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              id={"event_week_" + task.key}
-                              checked={selectedProject.stage_completion?.event_week?.[task.key] || false}
-                              onChange={(e) => handleUpdateStageCompletion(selectedProject.id, "event_week", task.key, e.target.checked)}
-                              className="h-4 w-4 text-orange-600 rounded border-gray-300"
-                            />
-                            <label htmlFor={"event_week_" + task.key} className="text-sm">
-                              {task.label}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Event Follow-up */}
-                {(selectedProject.status === "follow_up" || selectedProject.status === "completed") && (
-                  <Card className="border-l-4 border-l-indigo-500">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        {selectedProject.status === "completed" ? (
-                          <Check className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <ClockIcon className="h-5 w-5 text-indigo-500" />
-                        )}
-                        Event Follow-up
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {[
-                          { key: "follow_up_sent", label: "Send event follow-up" },
-                          { key: "client_feedback_requested", label: "Request feedback from client" },
-                          { key: "speaker_feedback_requested", label: "Request feedback from speaker" },
-                          { key: "lessons_documented", label: "Document lessons learned" }
-                        ].map((task) => (
-                          <div key={task.key} className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              id={"follow_up_" + task.key}
-                              checked={selectedProject.stage_completion?.follow_up?.[task.key] || false}
-                              onChange={(e) => handleUpdateStageCompletion(selectedProject.id, "follow_up", task.key, e.target.checked)}
-                              className="h-4 w-4 text-indigo-600 rounded border-gray-300"
-                            />
-                            <label htmlFor={"follow_up_" + task.key} className="text-sm">
-                              {task.label}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+                )
+              })}
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Invoice Editor Modal */}
-      {selectedInvoiceForEdit && (
-        <InvoiceEditorModal
-          open={!!selectedInvoiceForEdit}
-          onOpenChange={(open) => !open && setSelectedInvoiceForEdit(null)}
-          invoiceId={selectedInvoiceForEdit}
-          onSave={() => {
-            fetchProjects()
-            setSelectedInvoiceForEdit(null)
-          }}
-          onViewPDF={(id) => {
-            const invoice = invoices.find(i => i.id === id)
-            if (invoice) {
-              setSelectedInvoiceForPDF({id: invoice.id, number: invoice.invoice_number})
-            }
-          }}
-        />
-      )}
-      
-      {/* Invoice PDF Dialog */}
-      <InvoicePDFDialog
-        invoiceId={selectedInvoiceForPDF?.id || null}
-        invoiceNumber={selectedInvoiceForPDF?.number || ""}
-        open={!!selectedInvoiceForPDF}
-        onOpenChange={(open) => !open && setSelectedInvoiceForPDF(null)}
-      />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

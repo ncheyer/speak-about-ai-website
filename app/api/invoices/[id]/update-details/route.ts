@@ -22,13 +22,26 @@ export async function PATCH(
 
     // Prepare notes with overrides
     let finalNotes = notes || ""
-    if (overrides) {
-      // Store overrides as JSON in notes field
-      const notesData = {
-        text: notes || "",
-        overrides: overrides
+    if (overrides && Object.keys(overrides).some(key => overrides[key])) {
+      // Only store as JSON if there are actual overrides
+      const hasOverrides = Object.values(overrides).some(v => v !== null && v !== undefined && v !== '')
+      if (hasOverrides) {
+        // Clean up deliverables in overrides if present
+        if (overrides.deliverables) {
+          overrides.deliverables = overrides.deliverables
+            .split('\n')
+            .filter((item: string) => item.trim())
+            .map((item: string) => item.replace(/^[•\-\*]\s*/, '').trim())
+            .filter((item: string) => item)
+            .join('\n')
+        }
+        
+        const notesData = {
+          text: notes || "",
+          overrides: overrides
+        }
+        finalNotes = JSON.stringify(notesData)
       }
-      finalNotes = JSON.stringify(notesData)
     }
 
     // Update invoice
@@ -51,10 +64,18 @@ export async function PATCH(
 
     // If deliverables were overridden, update the project's deliverables field too
     if (overrides?.deliverables && updatedInvoice.project_id) {
+      // Clean up deliverables before storing
+      const cleanDeliverables = overrides.deliverables
+        .split('\n')
+        .filter((item: string) => item.trim())
+        .map((item: string) => item.replace(/^[•\-\*]\s*/, '').trim())
+        .filter((item: string) => item)
+        .join('\n')
+      
       await sql`
         UPDATE projects
         SET 
-          deliverables = ${overrides.deliverables},
+          deliverables = ${cleanDeliverables},
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ${updatedInvoice.project_id}
       `
