@@ -11,7 +11,6 @@ import {
   DollarSign,
   CheckSquare,
   FileText,
-  Database,
   Upload,
   Calendar,
   Settings,
@@ -133,14 +132,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       description: "Client Access",
       color: "text-emerald-600",
       bgColor: "bg-emerald-50"
-    },
-    {
-      title: "Database",
-      href: "/debug-neon",
-      icon: Database,
-      description: "System Debug",
-      color: "text-red-600",
-      bgColor: "bg-red-50"
     }
   ]
 
