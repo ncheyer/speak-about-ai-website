@@ -17,6 +17,95 @@ const getSqlClient = () => {
   }
 }
 
+export async function POST(request: NextRequest) {
+  let sql: ReturnType<typeof getSqlClient> = null
+  
+  try {
+    // Authentication check
+    const authError = requireAdminAuth(request)
+    if (authError) {
+      return authError
+    }
+    
+    // Get SQL client
+    sql = getSqlClient()
+    
+    if (!sql) {
+      return NextResponse.json({
+        success: false,
+        error: 'Database connection failed'
+      }, { status: 500 })
+    }
+    
+    // Parse request body
+    const body = await request.json()
+    
+    // Validate required fields
+    if (!body.name || !body.email) {
+      return NextResponse.json({
+        success: false,
+        error: 'Name and email are required'
+      }, { status: 400 })
+    }
+    
+    // Insert new speaker
+    const result = await sql`
+      INSERT INTO speakers (
+        name, email, bio, short_bio, one_liner, headshot_url, website,
+        location, programs, topics, industries, videos, testimonials,
+        speaking_fee_range, travel_preferences, technical_requirements,
+        dietary_restrictions, featured, active, listed, ranking, title, slug
+      ) VALUES (
+        ${body.name},
+        ${body.email},
+        ${body.bio || ''},
+        ${body.short_bio || ''},
+        ${body.one_liner || ''},
+        ${body.headshot_url || ''},
+        ${body.website || ''},
+        ${body.location || ''},
+        ${body.programs || ''},
+        ${JSON.stringify(body.topics || [])},
+        ${JSON.stringify(body.industries || [])},
+        ${JSON.stringify(body.videos || [])},
+        ${JSON.stringify(body.testimonials || [])},
+        ${body.speaking_fee_range || ''},
+        ${body.travel_preferences || ''},
+        ${body.technical_requirements || ''},
+        ${body.dietary_restrictions || ''},
+        ${body.featured || false},
+        ${body.active !== false},
+        ${body.listed !== false},
+        ${body.ranking || 0},
+        ${body.title || ''},
+        ${body.slug || body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}
+      )
+      RETURNING *
+    `
+    
+    console.log('Admin speakers: Created new speaker:', result[0])
+    
+    return NextResponse.json({
+      success: true,
+      speaker: result[0]
+    })
+    
+  } catch (error) {
+    console.error('Create speaker error:', error)
+    
+    if (error instanceof Error && error.message.includes('duplicate key')) {
+      return NextResponse.json({
+        error: 'A speaker with this email already exists'
+      }, { status: 400 })
+    }
+    
+    return NextResponse.json({
+      error: 'Failed to create speaker',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
+  }
+}
+
 export async function GET(request: NextRequest) {
   let sql: ReturnType<typeof getSqlClient> = null
   
