@@ -54,7 +54,8 @@ export async function POST(request: NextRequest) {
         name, email, bio, short_bio, one_liner, headshot_url, website,
         location, programs, topics, industries, videos, testimonials,
         speaking_fee_range, travel_preferences, technical_requirements,
-        dietary_restrictions, featured, active, listed, ranking, title, slug
+        dietary_restrictions, featured, active, listed, ranking, title, slug,
+        social_media
       ) VALUES (
         ${body.name},
         ${body.email},
@@ -78,7 +79,8 @@ export async function POST(request: NextRequest) {
         ${body.listed !== false},
         ${body.ranking || 0},
         ${body.title || ''},
-        ${body.slug || body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}
+        ${body.slug || body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')},
+        ${JSON.stringify(body.social_media || {})}
       )
       RETURNING *
     `

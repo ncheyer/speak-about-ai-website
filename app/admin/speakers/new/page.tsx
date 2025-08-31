@@ -58,18 +58,30 @@ export default function AdminAddSpeakerPage() {
     programs: "",
     topics: [] as string[],
     industries: [] as string[],
+    videos: [] as { id: string; title: string; url: string; thumbnail?: string }[],
+    testimonials: [] as { quote: string; author: string; position?: string; company?: string }[],
     speaking_fee_range: "",
     travel_preferences: "",
     technical_requirements: "",
     dietary_restrictions: "",
+    slug: "",
     featured: false,
     active: true,
     listed: true,
-    ranking: 0
+    ranking: 0,
+    social_media: {
+      linkedin: "",
+      twitter: "",
+      instagram: "",
+      youtube: "",
+      facebook: ""
+    }
   })
 
   const [newTopic, setNewTopic] = useState("")
   const [newIndustry, setNewIndustry] = useState("")
+  const [newVideo, setNewVideo] = useState({ title: "", url: "" })
+  const [newTestimonial, setNewTestimonial] = useState({ quote: "", author: "", position: "", company: "" })
 
   // Check authentication
   useEffect(() => {
@@ -130,6 +142,49 @@ export default function AdminAddSpeakerPage() {
     }))
   }
 
+  const handleAddVideo = () => {
+    if (newVideo.title.trim() && newVideo.url.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        videos: [...prev.videos, { 
+          id: Date.now().toString(), 
+          title: newVideo.title.trim(), 
+          url: newVideo.url.trim() 
+        }]
+      }))
+      setNewVideo({ title: "", url: "" })
+    }
+  }
+
+  const handleRemoveVideo = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      videos: prev.videos.filter(v => v.id !== id)
+    }))
+  }
+
+  const handleAddTestimonial = () => {
+    if (newTestimonial.quote.trim() && newTestimonial.author.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        testimonials: [...prev.testimonials, {
+          quote: newTestimonial.quote.trim(),
+          author: newTestimonial.author.trim(),
+          position: newTestimonial.position.trim(),
+          company: newTestimonial.company.trim()
+        }]
+      }))
+      setNewTestimonial({ quote: "", author: "", position: "", company: "" })
+    }
+  }
+
+  const handleRemoveTestimonial = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      testimonials: prev.testimonials.filter((_, i) => i !== index)
+    }))
+  }
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -175,13 +230,20 @@ export default function AdminAddSpeakerPage() {
 
     setSaving(true)
     try {
+      // Generate slug if not provided
+      const slug = formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      
       const response = await fetch("/api/admin/speakers", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           'x-dev-admin-bypass': 'dev-admin-access'
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          slug,
+          social_media: formData.social_media
+        }),
       })
 
       if (response.ok) {
@@ -255,9 +317,10 @@ export default function AdminAddSpeakerPage() {
           </div>
 
           <Tabs defaultValue="basic" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsList className="grid w-full max-w-lg grid-cols-4">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="professional">Professional</TabsTrigger>
+              <TabsTrigger value="media">Media & Social</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
 
@@ -425,9 +488,22 @@ export default function AdminAddSpeakerPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Professional Details</CardTitle>
-                  <CardDescription>Speaking topics and expertise</CardDescription>
+                  <CardDescription>Speaking topics, expertise, and media</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* Slug */}
+                  <div>
+                    <Label htmlFor="slug">URL Slug</Label>
+                    <Input
+                      id="slug"
+                      name="slug"
+                      value={formData.slug}
+                      onChange={handleInputChange}
+                      placeholder="speaker-name (auto-generated if empty)"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">Used for speaker profile URL: /speakers/{formData.slug || 'speaker-name'}</p>
+                  </div>
+
                   {/* Topics */}
                   <div>
                     <Label>Speaking Topics</Label>
@@ -541,6 +617,179 @@ export default function AdminAddSpeakerPage() {
                       value={formData.dietary_restrictions}
                       onChange={handleInputChange}
                       placeholder="Vegetarian, allergies, etc."
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="media" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Videos</CardTitle>
+                  <CardDescription>Add speaker videos and demos</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      value={newVideo.title}
+                      onChange={(e) => setNewVideo({...newVideo, title: e.target.value})}
+                      placeholder="Video title"
+                    />
+                    <div className="flex gap-2">
+                      <Input
+                        value={newVideo.url}
+                        onChange={(e) => setNewVideo({...newVideo, url: e.target.value})}
+                        placeholder="Video URL"
+                      />
+                      <Button onClick={handleAddVideo} size="sm">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {formData.videos.map((video) => (
+                      <div key={video.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                        <div>
+                          <p className="font-medium">{video.title}</p>
+                          <p className="text-sm text-gray-500">{video.url}</p>
+                        </div>
+                        <Button
+                          onClick={() => handleRemoveVideo(video.id)}
+                          size="sm"
+                          variant="ghost"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Testimonials</CardTitle>
+                  <CardDescription>Add client testimonials and reviews</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Textarea
+                      value={newTestimonial.quote}
+                      onChange={(e) => setNewTestimonial({...newTestimonial, quote: e.target.value})}
+                      placeholder="Testimonial quote"
+                      rows={3}
+                    />
+                    <div className="grid grid-cols-3 gap-2">
+                      <Input
+                        value={newTestimonial.author}
+                        onChange={(e) => setNewTestimonial({...newTestimonial, author: e.target.value})}
+                        placeholder="Author name *"
+                      />
+                      <Input
+                        value={newTestimonial.position}
+                        onChange={(e) => setNewTestimonial({...newTestimonial, position: e.target.value})}
+                        placeholder="Position/Title"
+                      />
+                      <div className="flex gap-2">
+                        <Input
+                          value={newTestimonial.company}
+                          onChange={(e) => setNewTestimonial({...newTestimonial, company: e.target.value})}
+                          placeholder="Company"
+                        />
+                        <Button onClick={handleAddTestimonial} size="sm">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {formData.testimonials.map((testimonial, index) => (
+                      <div key={index} className="p-3 bg-gray-50 rounded">
+                        <p className="italic">"{testimonial.quote}"</p>
+                        <p className="text-sm text-gray-600 mt-2">
+                          — {testimonial.author}
+                          {testimonial.position && `, ${testimonial.position}`}
+                          {testimonial.company && ` at ${testimonial.company}`}
+                        </p>
+                        <Button
+                          onClick={() => handleRemoveTestimonial(index)}
+                          size="sm"
+                          variant="ghost"
+                          className="mt-2"
+                        >
+                          <X className="h-4 w-4 mr-1" /> Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Social Media</CardTitle>
+                  <CardDescription>Add social media profile links</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="linkedin">LinkedIn</Label>
+                    <Input
+                      id="linkedin"
+                      value={formData.social_media.linkedin}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        social_media: {...prev.social_media, linkedin: e.target.value}
+                      }))}
+                      placeholder="https://linkedin.com/in/..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="twitter">Twitter/X</Label>
+                    <Input
+                      id="twitter"
+                      value={formData.social_media.twitter}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        social_media: {...prev.social_media, twitter: e.target.value}
+                      }))}
+                      placeholder="https://twitter.com/..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="instagram">Instagram</Label>
+                    <Input
+                      id="instagram"
+                      value={formData.social_media.instagram}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        social_media: {...prev.social_media, instagram: e.target.value}
+                      }))}
+                      placeholder="https://instagram.com/..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="youtube">YouTube</Label>
+                    <Input
+                      id="youtube"
+                      value={formData.social_media.youtube}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        social_media: {...prev.social_media, youtube: e.target.value}
+                      }))}
+                      placeholder="https://youtube.com/..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="facebook">Facebook</Label>
+                    <Input
+                      id="facebook"
+                      value={formData.social_media.facebook}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        social_media: {...prev.social_media, facebook: e.target.value}
+                      }))}
+                      placeholder="https://facebook.com/..."
                     />
                   </div>
                 </CardContent>
