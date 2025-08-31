@@ -214,35 +214,7 @@ export default function SpeakerDashboard() {
     }
   }, [selectedPeriod])
 
-  const upcomingEvents = [
-    {
-      id: 1,
-      title: "AI Innovation Summit 2025",
-      date: "Mar 15, 2025",
-      location: "San Francisco, CA",
-      type: "Keynote",
-      status: "confirmed",
-      fee: "$15,000"
-    },
-    {
-      id: 2,
-      title: "Tech Leaders Conference",
-      date: "Apr 22, 2025",
-      location: "New York, NY",
-      type: "Panel",
-      status: "pending",
-      fee: "$8,000"
-    },
-    {
-      id: 3,
-      title: "Digital Transformation Forum",
-      date: "May 10, 2025",
-      location: "Virtual",
-      type: "Workshop",
-      status: "confirmed",
-      fee: "$12,000"
-    }
-  ]
+  const upcomingEvents: any[] = []
 
   // Format inquiries as recent activity
   const recentActivity = inquiries.length > 0 

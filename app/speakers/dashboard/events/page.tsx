@@ -35,119 +35,11 @@ export default function SpeakerEvents() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
 
-  const upcomingEvents = [
-    {
-      id: 1,
-      title: "AI Innovation Summit 2025",
-      client: "Tech Leaders Association",
-      date: "March 15, 2025",
-      time: "2:00 PM - 3:30 PM PST",
-      location: "San Francisco Convention Center",
-      type: "Keynote",
-      status: "confirmed",
-      fee: "$15,000",
-      attendees: "500+",
-      topics: ["AI Strategy", "Innovation"],
-      requirements: "Presentation clicker, wireless mic",
-      notes: "45-minute keynote + 15-minute Q&A",
-      contactPerson: "Sarah Johnson",
-      contactEmail: "sarah@techleaders.org"
-    },
-    {
-      id: 2,
-      title: "Digital Transformation Workshop",
-      client: "Fortune 500 Company",
-      date: "April 10, 2025",
-      time: "9:00 AM - 5:00 PM EST",
-      location: "Virtual",
-      type: "Workshop",
-      status: "pending",
-      fee: "$25,000",
-      attendees: "50",
-      topics: ["Digital Strategy", "AI Implementation"],
-      requirements: "Zoom, shared screen access",
-      notes: "Full-day interactive workshop with breakout sessions",
-      contactPerson: "Michael Chen",
-      contactEmail: "m.chen@company.com"
-    },
-    {
-      id: 3,
-      title: "Healthcare AI Panel Discussion",
-      client: "Medical Innovation Institute",
-      date: "May 22, 2025",
-      time: "10:00 AM - 11:00 AM CST",
-      location: "Chicago Medical Center",
-      type: "Panel",
-      status: "confirmed",
-      fee: "$8,000",
-      attendees: "200",
-      topics: ["Healthcare AI", "Ethics"],
-      requirements: "Panel mic, name plate",
-      notes: "Panel with 3 other experts",
-      contactPerson: "Dr. Emily Ross",
-      contactEmail: "e.ross@medical.org"
-    }
-  ]
+  const upcomingEvents: any[] = []
 
-  const pastEvents = [
-    {
-      id: 4,
-      title: "Global Tech Summit 2024",
-      client: "International Tech Forum",
-      date: "December 10, 2024",
-      location: "London, UK",
-      type: "Keynote",
-      status: "completed",
-      fee: "$20,000",
-      attendees: "1,000+",
-      rating: 4.9,
-      reviews: 127,
-      feedback: "Outstanding presentation! The insights on AI were transformative."
-    },
-    {
-      id: 5,
-      title: "Enterprise AI Workshop",
-      client: "Global Consulting Firm",
-      date: "November 15, 2024",
-      location: "New York, NY",
-      type: "Workshop",
-      status: "completed",
-      fee: "$18,000",
-      attendees: "75",
-      rating: 5.0,
-      reviews: 42,
-      feedback: "Best workshop we've ever hosted. Practical and actionable insights."
-    }
-  ]
+  const pastEvents: any[] = []
 
-  const requests = [
-    {
-      id: 6,
-      title: "Startup Accelerator Keynote",
-      client: "TechStars",
-      requestDate: "January 5, 2025",
-      eventDate: "June 15, 2025",
-      location: "Austin, TX",
-      type: "Keynote",
-      budget: "$10,000 - $15,000",
-      status: "new",
-      deadline: "January 15, 2025",
-      message: "We'd love to have you speak at our annual accelerator summit..."
-    },
-    {
-      id: 7,
-      title: "AI Ethics Symposium",
-      client: "University of California",
-      requestDate: "January 3, 2025",
-      eventDate: "September 20, 2025",
-      location: "Berkeley, CA",
-      type: "Academic Talk",
-      budget: "$5,000",
-      status: "reviewing",
-      deadline: "January 20, 2025",
-      message: "Invitation to speak at our annual AI ethics symposium..."
-    }
-  ]
+  const requests: any[] = []
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -182,7 +74,7 @@ export default function SpeakerEvents() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Upcoming Events</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">3</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{upcomingEvents.length}</p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-lg">
                   <Calendar className="h-6 w-6 text-blue-600" />
@@ -196,7 +88,7 @@ export default function SpeakerEvents() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Pending Requests</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">2</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{requests.filter(r => r.status === 'new' || r.status === 'reviewing').length}</p>
                 </div>
                 <div className="p-3 bg-yellow-100 rounded-lg">
                   <AlertCircle className="h-6 w-6 text-yellow-600" />
@@ -210,7 +102,7 @@ export default function SpeakerEvents() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Completed Events</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">47</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{pastEvents.length}</p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-green-600" />
