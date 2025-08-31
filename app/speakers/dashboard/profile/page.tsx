@@ -529,37 +529,199 @@ export default function SpeakerProfilePageRestructured() {
                       <div>
                         <Label>Speaking Topics</Label>
                         <div className="mt-2 space-y-2">
-                          {profile.speaking_topics?.map((topic: string, idx: number) => (
-                            <div key={idx} className="flex items-center gap-2">
-                              <Badge variant="secondary" className="flex-1 justify-start">
-                                <Mic className="h-3 w-3 mr-1" />
-                                {topic}
-                              </Badge>
-                            </div>
-                          ))}
+                          {editMode.expertise ? (
+                            <>
+                              {profile.speaking_topics?.map((topic: string, idx: number) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <Input
+                                    value={topic}
+                                    onChange={(e) => {
+                                      const newTopics = [...(profile.speaking_topics || [])];
+                                      newTopics[idx] = e.target.value;
+                                      setProfile({ ...profile, speaking_topics: newTopics });
+                                    }}
+                                    className="flex-1"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      const newTopics = profile.speaking_topics?.filter((_: string, i: number) => i !== idx);
+                                      setProfile({ ...profile, speaking_topics: newTopics });
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setProfile({ 
+                                    ...profile, 
+                                    speaking_topics: [...(profile.speaking_topics || []), ''] 
+                                  });
+                                }}
+                                className="w-full"
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Topic
+                              </Button>
+                            </>
+                          ) : (
+                            profile.speaking_topics?.map((topic: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-2">
+                                <Badge variant="secondary" className="flex-1 justify-start">
+                                  <Mic className="h-3 w-3 mr-1" />
+                                  {topic}
+                                </Badge>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
 
                       <div>
                         <Label>Areas of Expertise</Label>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          {profile.expertise_areas?.map((area: string, idx: number) => (
-                            <Badge key={idx} className="bg-green-100 text-green-800 border-green-200">
-                              {area}
-                            </Badge>
-                          ))}
+                          {editMode.expertise ? (
+                            <>
+                              {profile.expertise_areas?.map((area: string, idx: number) => (
+                                <div key={idx} className="flex items-center gap-1">
+                                  <Input
+                                    value={area}
+                                    onChange={(e) => {
+                                      const newAreas = [...(profile.expertise_areas || [])];
+                                      newAreas[idx] = e.target.value;
+                                      setProfile({ ...profile, expertise_areas: newAreas });
+                                    }}
+                                    className="w-40"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      const newAreas = profile.expertise_areas?.filter((_: string, i: number) => i !== idx);
+                                      setProfile({ ...profile, expertise_areas: newAreas });
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setProfile({ 
+                                    ...profile, 
+                                    expertise_areas: [...(profile.expertise_areas || []), ''] 
+                                  });
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Area
+                              </Button>
+                            </>
+                          ) : (
+                            profile.expertise_areas?.map((area: string, idx: number) => (
+                              <Badge key={idx} className="bg-green-100 text-green-800 border-green-200">
+                                {area}
+                              </Badge>
+                            ))
+                          )}
                         </div>
                       </div>
 
                       <div>
                         <Label>Languages</Label>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          {profile.languages?.map((lang: string, idx: number) => (
-                            <Badge key={idx} variant="outline">
-                              {lang}
-                            </Badge>
-                          ))}
+                          {editMode.expertise ? (
+                            <>
+                              {profile.languages?.map((lang: string, idx: number) => (
+                                <div key={idx} className="flex items-center gap-1">
+                                  <Input
+                                    value={lang}
+                                    onChange={(e) => {
+                                      const newLangs = [...(profile.languages || [])];
+                                      newLangs[idx] = e.target.value;
+                                      setProfile({ ...profile, languages: newLangs });
+                                    }}
+                                    className="w-32"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      const newLangs = profile.languages?.filter((_: string, i: number) => i !== idx);
+                                      setProfile({ ...profile, languages: newLangs });
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setProfile({ 
+                                    ...profile, 
+                                    languages: [...(profile.languages || []), ''] 
+                                  });
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Language
+                              </Button>
+                            </>
+                          ) : (
+                            profile.languages?.map((lang: string, idx: number) => (
+                              <Badge key={idx} variant="outline">
+                                {lang}
+                              </Badge>
+                            ))
+                          )}
                         </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-4 border-t">
+                        {editMode.expertise ? (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              onClick={() => setEditMode(prev => ({ ...prev, expertise: false }))}
+                            >
+                              Cancel
+                            </Button>
+                            <Button 
+                              onClick={() => handleSave('expertise')}
+                              disabled={isSaving}
+                              className="bg-gradient-to-r from-green-600 to-emerald-600"
+                            >
+                              {isSaving ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <Save className="h-4 w-4 mr-2" />
+                                  Save Changes
+                                </>
+                              )}
+                            </Button>
+                          </>
+                        ) : (
+                          <Button 
+                            onClick={() => setEditMode(prev => ({ ...prev, expertise: true }))}
+                            variant="outline"
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Expertise
+                          </Button>
+                        )}
                       </div>
                     </TabsContent>
 
@@ -568,29 +730,63 @@ export default function SpeakerProfilePageRestructured() {
                       <div>
                         <Label>Social Media Links</Label>
                         <div className="mt-2 space-y-2">
-                          {profile.website && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Globe className="h-4 w-4 text-gray-500" />
-                              <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                {profile.website}
-                              </a>
-                            </div>
-                          )}
-                          {profile.linkedin_url && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Linkedin className="h-4 w-4 text-gray-500" />
-                              <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                LinkedIn Profile
-                              </a>
-                            </div>
-                          )}
-                          {profile.twitter_url && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Twitter className="h-4 w-4 text-gray-500" />
-                              <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                Twitter/X Profile
-                              </a>
-                            </div>
+                          {editMode.media ? (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <Globe className="h-4 w-4 text-gray-500" />
+                                <Input
+                                  value={profile.website || ''}
+                                  onChange={(e) => setProfile({ ...profile, website: e.target.value })}
+                                  placeholder="Website URL"
+                                  className="flex-1"
+                                />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Linkedin className="h-4 w-4 text-gray-500" />
+                                <Input
+                                  value={profile.linkedin_url || ''}
+                                  onChange={(e) => setProfile({ ...profile, linkedin_url: e.target.value })}
+                                  placeholder="LinkedIn Profile URL"
+                                  className="flex-1"
+                                />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Twitter className="h-4 w-4 text-gray-500" />
+                                <Input
+                                  value={profile.twitter_url || ''}
+                                  onChange={(e) => setProfile({ ...profile, twitter_url: e.target.value })}
+                                  placeholder="Twitter/X Profile URL"
+                                  className="flex-1"
+                                />
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              {profile.website && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Globe className="h-4 w-4 text-gray-500" />
+                                  <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                    {profile.website}
+                                  </a>
+                                </div>
+                              )}
+                              {profile.linkedin_url && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Linkedin className="h-4 w-4 text-gray-500" />
+                                  <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                    LinkedIn Profile
+                                  </a>
+                                </div>
+                              )}
+                              {profile.twitter_url && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Twitter className="h-4 w-4 text-gray-500" />
+                                  <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                    Twitter/X Profile
+                                  </a>
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -598,18 +794,126 @@ export default function SpeakerProfilePageRestructured() {
                       <div>
                         <Label>Speaking Videos</Label>
                         <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {profile.videos?.map((video: any, idx: number) => (
-                            <Card key={idx} className="overflow-hidden">
-                              <div className="aspect-video bg-gray-100 relative">
-                                <Video className="h-12 w-12 text-gray-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-                              </div>
-                              <CardContent className="pt-4">
-                                <h4 className="font-medium">{video.title}</h4>
-                                <p className="text-sm text-gray-500">{video.date}</p>
-                              </CardContent>
-                            </Card>
-                          ))}
+                          {editMode.media ? (
+                            <>
+                              {profile.videos?.map((video: any, idx: number) => (
+                                <Card key={idx} className="overflow-hidden">
+                                  <CardContent className="pt-4">
+                                    <Input
+                                      value={video.title}
+                                      onChange={(e) => {
+                                        const newVideos = [...(profile.videos || [])];
+                                        newVideos[idx] = { ...newVideos[idx], title: e.target.value };
+                                        setProfile({ ...profile, videos: newVideos });
+                                      }}
+                                      placeholder="Video Title"
+                                      className="mb-2"
+                                    />
+                                    <Input
+                                      value={video.url || ''}
+                                      onChange={(e) => {
+                                        const newVideos = [...(profile.videos || [])];
+                                        newVideos[idx] = { ...newVideos[idx], url: e.target.value };
+                                        setProfile({ ...profile, videos: newVideos });
+                                      }}
+                                      placeholder="Video URL"
+                                      className="mb-2"
+                                    />
+                                    <Input
+                                      value={video.date || ''}
+                                      onChange={(e) => {
+                                        const newVideos = [...(profile.videos || [])];
+                                        newVideos[idx] = { ...newVideos[idx], date: e.target.value };
+                                        setProfile({ ...profile, videos: newVideos });
+                                      }}
+                                      placeholder="Date (e.g., March 2024)"
+                                      className="mb-2"
+                                    />
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        const newVideos = profile.videos?.filter((_: any, i: number) => i !== idx);
+                                        setProfile({ ...profile, videos: newVideos });
+                                      }}
+                                      className="w-full"
+                                    >
+                                      <X className="h-4 w-4 mr-2" />
+                                      Remove Video
+                                    </Button>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                              <Card className="overflow-hidden border-2 border-dashed">
+                                <CardContent className="pt-4">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      setProfile({ 
+                                        ...profile, 
+                                        videos: [...(profile.videos || []), { title: '', url: '', date: '' }] 
+                                      });
+                                    }}
+                                    className="w-full h-full min-h-[150px]"
+                                  >
+                                    <Plus className="h-6 w-6 mr-2" />
+                                    Add Video
+                                  </Button>
+                                </CardContent>
+                              </Card>
+                            </>
+                          ) : (
+                            profile.videos?.map((video: any, idx: number) => (
+                              <Card key={idx} className="overflow-hidden">
+                                <div className="aspect-video bg-gray-100 relative">
+                                  <Video className="h-12 w-12 text-gray-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                                </div>
+                                <CardContent className="pt-4">
+                                  <h4 className="font-medium">{video.title}</h4>
+                                  <p className="text-sm text-gray-500">{video.date}</p>
+                                </CardContent>
+                              </Card>
+                            ))
+                          )}
                         </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-4 border-t">
+                        {editMode.media ? (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              onClick={() => setEditMode(prev => ({ ...prev, media: false }))}
+                            >
+                              Cancel
+                            </Button>
+                            <Button 
+                              onClick={() => handleSave('media')}
+                              disabled={isSaving}
+                              className="bg-gradient-to-r from-green-600 to-emerald-600"
+                            >
+                              {isSaving ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <Save className="h-4 w-4 mr-2" />
+                                  Save Changes
+                                </>
+                              )}
+                            </Button>
+                          </>
+                        ) : (
+                          <Button 
+                            onClick={() => setEditMode(prev => ({ ...prev, media: true }))}
+                            variant="outline"
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Media
+                          </Button>
+                        )}
                       </div>
                     </TabsContent>
                   </div>
