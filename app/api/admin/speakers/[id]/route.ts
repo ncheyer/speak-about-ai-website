@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
+import { revalidatePath } from 'next/cache'
 import { requireAdminAuth } from '@/lib/auth-middleware'
 import { getAllSpeakers } from '@/lib/speakers-data'
 
@@ -369,6 +370,19 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     }
 
     console.log(`Successfully updated speaker ${speakerId}`)
+    
+    // Revalidate the public speaker page cache
+    try {
+      if (updatedSpeaker.slug) {
+        revalidatePath(`/speakers/${updatedSpeaker.slug}`)
+        revalidatePath('/speakers') // Also revalidate the speakers list
+        console.log(`Revalidated cache for /speakers/${updatedSpeaker.slug}`)
+      }
+    } catch (revalidateError) {
+      console.error('Failed to revalidate cache:', revalidateError)
+      // Don't fail the update if revalidation fails
+    }
+    
     return NextResponse.json({
       success: true,
       message: 'Speaker updated successfully',
