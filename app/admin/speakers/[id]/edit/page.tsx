@@ -201,7 +201,25 @@ export default function AdminSpeakerEditPage() {
   const loadSpeaker = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/admin/speakers/${params.id}`)
+      
+      // Get the admin token from localStorage
+      const token = localStorage.getItem("adminSessionToken")
+      
+      const headers: HeadersInit = {}
+      
+      // Add authentication header
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`
+      }
+      
+      // Add dev bypass for local development
+      if (process.env.NODE_ENV === 'development') {
+        headers["x-dev-admin-bypass"] = "dev-admin-access"
+      }
+      
+      const response = await fetch(`/api/admin/speakers/${params.id}`, {
+        headers
+      })
 
       if (response.ok) {
         const data = await response.json()
@@ -263,11 +281,27 @@ export default function AdminSpeakerEditPage() {
   const handleSave = async () => {
     try {
       setSaving(true)
+      
+      // Get the admin token from localStorage
+      const token = localStorage.getItem("adminSessionToken")
+      
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      }
+      
+      // Add authentication header
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`
+      }
+      
+      // Add dev bypass for local development
+      if (process.env.NODE_ENV === 'development') {
+        headers["x-dev-admin-bypass"] = "dev-admin-access"
+      }
+      
       const response = await fetch(`/api/admin/speakers/${params.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(formData),
       })
 

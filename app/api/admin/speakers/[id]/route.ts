@@ -22,16 +22,12 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     // Await params as required in Next.js 15
     const params = await context.params
     
-    // Temporarily bypass authentication for debugging
-    console.log('Admin speaker delete: BYPASSING authentication for debugging...')
-    
-    // Uncomment this when ready to re-enable auth:
-    // const authError = requireAdminAuth(request)
-    // if (authError) {
-    //   console.log('Admin speaker delete: Authentication failed')
-    //   return authError
-    // }
-    console.log('Admin speaker delete: Authentication bypassed')
+    // Check authentication - allows dev bypass with x-dev-admin-bypass header
+    const authError = requireAdminAuth(request)
+    if (authError) {
+      console.log('Admin speaker delete: Authentication failed')
+      return authError
+    }
     
     const speakerId = parseInt(params.id)
     if (isNaN(speakerId)) {
@@ -101,16 +97,12 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     // Await params as required in Next.js 15
     const params = await context.params
     
-    // Temporarily bypass authentication for debugging
-    console.log('Admin speaker detail: BYPASSING authentication for debugging...')
-    
-    // Uncomment this when ready to re-enable auth:
-    // const authError = requireAdminAuth(request)
-    // if (authError) {
-    //   console.log('Admin speaker detail: Authentication failed')
-    //   return authError
-    // }
-    console.log('Admin speaker detail: Authentication bypassed')
+    // Check authentication - allows dev bypass with x-dev-admin-bypass header
+    const authError = requireAdminAuth(request)
+    if (authError) {
+      console.log('Admin speaker detail: Authentication failed')
+      return authError
+    }
     
     const speakerId = parseInt(params.id)
     if (isNaN(speakerId)) {
@@ -286,16 +278,26 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     // Await params as required in Next.js 15
     const params = await context.params
     
-    // Temporarily bypass authentication for debugging
-    console.log('Admin speaker update: BYPASSING authentication for debugging...')
-    
-    // Uncomment this when ready to re-enable auth:
-    // const authError = requireAdminAuth(request)
-    // if (authError) return authError
-    console.log('Admin speaker update: Authentication bypassed')
+    // Check authentication - allows dev bypass with x-dev-admin-bypass header
+    const authError = requireAdminAuth(request)
+    if (authError) {
+      console.log('Admin speaker update: Authentication failed')
+      return authError
+    }
     
     const speakerId = params.id
     const updateData = await request.json()
+    
+    // Validate and truncate fields to match database constraints
+    if (updateData.short_bio && updateData.short_bio.length > 500) {
+      updateData.short_bio = updateData.short_bio.substring(0, 497) + '...'
+    }
+    if (updateData.title && updateData.title.length > 255) {
+      updateData.title = updateData.title.substring(0, 255)
+    }
+    if (updateData.one_liner && updateData.one_liner.length > 255) {
+      updateData.one_liner = updateData.one_liner.substring(0, 255)
+    }
     
     // Get SQL client
     const sql = getSqlClient()
@@ -382,8 +384,34 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 
   } catch (error) {
     console.error('Update admin speaker error:', error)
+    
+    // Check for specific database errors
+    if (error instanceof Error) {
+      if (error.message.includes('value too long for type character varying')) {
+        return NextResponse.json(
+          { 
+            error: 'One or more fields exceed the maximum allowed length',
+            details: 'Please ensure short_bio is under 500 chars, title and one_liner are under 255 chars'
+          },
+          { status: 400 }
+        )
+      }
+      if (error.message.includes('violates check constraint')) {
+        return NextResponse.json(
+          { 
+            error: 'Invalid data format',
+            details: error.message
+          },
+          { status: 400 }
+        )
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to update speaker' },
+      { 
+        error: 'Failed to update speaker',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

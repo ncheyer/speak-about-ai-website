@@ -1063,6 +1063,32 @@ export default function SpeakerProfilePageRestructured() {
 
                     {/* Logistics Section */}
                     <TabsContent value="logistics" className="mt-0 space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="preferred_airport">Preferred Airport</Label>
+                          <Input
+                            id="preferred_airport"
+                            value={profile.preferred_airport || ''}
+                            onChange={(e) => setProfile({ ...profile, preferred_airport: e.target.value })}
+                            disabled={!editMode.logistics}
+                            className="mt-2"
+                            placeholder="e.g., SFO - San Francisco International"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="alternate_airports">Alternate Airports</Label>
+                          <Input
+                            id="alternate_airports"
+                            value={profile.alternate_airports || ''}
+                            onChange={(e) => setProfile({ ...profile, alternate_airports: e.target.value })}
+                            disabled={!editMode.logistics}
+                            className="mt-2"
+                            placeholder="e.g., OAK, SJC"
+                          />
+                        </div>
+                      </div>
+
                       <div>
                         <Label htmlFor="travel_preferences">Travel Preferences</Label>
                         <Textarea
@@ -1072,7 +1098,7 @@ export default function SpeakerProfilePageRestructured() {
                           onChange={(e) => setProfile({ ...profile, travel_preferences: e.target.value })}
                           disabled={!editMode.logistics}
                           className="mt-2"
-                          placeholder="Flight class preferences, airline preferences, seat preferences..."
+                          placeholder="Flight class preferences, airline preferences, seat preferences, TSA PreCheck/Global Entry..."
                         />
                       </div>
 
@@ -1102,8 +1128,36 @@ export default function SpeakerProfilePageRestructured() {
                         />
                       </div>
 
+                      <Separator className="my-4" />
+
                       <div>
-                        <Label htmlFor="technical_requirements">Technical Requirements</Label>
+                        <Label htmlFor="av_requirements">A/V & Tech Requirements</Label>
+                        <Textarea
+                          id="av_requirements"
+                          rows={4}
+                          value={profile.av_requirements || ''}
+                          onChange={(e) => setProfile({ ...profile, av_requirements: e.target.value })}
+                          disabled={!editMode.logistics}
+                          className="mt-2"
+                          placeholder="Microphone type (lapel, handheld, headset), clicker/presentation remote, confidence monitor, lighting preferences..."
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="stage_requirements">Stage Setup Requirements</Label>
+                        <Textarea
+                          id="stage_requirements"
+                          rows={3}
+                          value={profile.stage_requirements || ''}
+                          onChange={(e) => setProfile({ ...profile, stage_requirements: e.target.value })}
+                          disabled={!editMode.logistics}
+                          className="mt-2"
+                          placeholder="Podium preference, stool/chair needs, table for materials, water placement..."
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="technical_requirements">Technical & Presentation Requirements</Label>
                         <Textarea
                           id="technical_requirements"
                           rows={3}
@@ -1111,8 +1165,118 @@ export default function SpeakerProfilePageRestructured() {
                           onChange={(e) => setProfile({ ...profile, technical_requirements: e.target.value })}
                           disabled={!editMode.logistics}
                           className="mt-2"
-                          placeholder="Microphone type, presentation setup, screen requirements..."
+                          placeholder="Screen resolution, adapter needs, internet requirements, presentation software..."
                         />
+                      </div>
+
+                      <Separator className="my-4" />
+
+                      <div>
+                        <Label>Fee Structure by Event Type</Label>
+                        <div className="mt-2 space-y-3">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="fee_keynote" className="text-sm">Keynote Speaking Fee</Label>
+                              <Input
+                                id="fee_keynote"
+                                value={profile.fee_keynote || ''}
+                                onChange={(e) => setProfile({ ...profile, fee_keynote: e.target.value })}
+                                disabled={!editMode.logistics}
+                                className="mt-1"
+                                placeholder="e.g., $15,000 - $25,000"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="fee_workshop" className="text-sm">Workshop/Training Fee</Label>
+                              <Input
+                                id="fee_workshop"
+                                value={profile.fee_workshop || ''}
+                                onChange={(e) => setProfile({ ...profile, fee_workshop: e.target.value })}
+                                disabled={!editMode.logistics}
+                                className="mt-1"
+                                placeholder="e.g., $10,000 - $15,000"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="fee_panel" className="text-sm">Panel Discussion Fee</Label>
+                              <Input
+                                id="fee_panel"
+                                value={profile.fee_panel || ''}
+                                onChange={(e) => setProfile({ ...profile, fee_panel: e.target.value })}
+                                disabled={!editMode.logistics}
+                                className="mt-1"
+                                placeholder="e.g., $5,000 - $10,000"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="fee_virtual" className="text-sm">Virtual Presentation Fee</Label>
+                              <Input
+                                id="fee_virtual"
+                                value={profile.fee_virtual || ''}
+                                onChange={(e) => setProfile({ ...profile, fee_virtual: e.target.value })}
+                                disabled={!editMode.logistics}
+                                className="mt-1"
+                                placeholder="e.g., $5,000 - $10,000"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label>Fee Adjustments by Location</Label>
+                        <div className="mt-2 space-y-3">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="fee_local" className="text-sm">Local (within 100 miles)</Label>
+                              <Input
+                                id="fee_local"
+                                value={profile.fee_local || ''}
+                                onChange={(e) => setProfile({ ...profile, fee_local: e.target.value })}
+                                disabled={!editMode.logistics}
+                                className="mt-1"
+                                placeholder="e.g., Standard rate"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="fee_domestic" className="text-sm">Domestic (US)</Label>
+                              <Input
+                                id="fee_domestic"
+                                value={profile.fee_domestic || ''}
+                                onChange={(e) => setProfile({ ...profile, fee_domestic: e.target.value })}
+                                disabled={!editMode.logistics}
+                                className="mt-1"
+                                placeholder="e.g., +$2,500 travel fee"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="fee_international" className="text-sm">International</Label>
+                              <Input
+                                id="fee_international"
+                                value={profile.fee_international || ''}
+                                onChange={(e) => setProfile({ ...profile, fee_international: e.target.value })}
+                                disabled={!editMode.logistics}
+                                className="mt-1"
+                                placeholder="e.g., +$5,000 travel fee"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="fee_nonprofit" className="text-sm">Non-Profit Discount</Label>
+                              <Input
+                                id="fee_nonprofit"
+                                value={profile.fee_nonprofit || ''}
+                                onChange={(e) => setProfile({ ...profile, fee_nonprofit: e.target.value })}
+                                disabled={!editMode.logistics}
+                                className="mt-1"
+                                placeholder="e.g., 20% discount"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
                       <div>
@@ -1126,6 +1290,44 @@ export default function SpeakerProfilePageRestructured() {
                           className="mt-2"
                           placeholder="Minimum notice period, contract requirements, cancellation policy..."
                         />
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-4 border-t">
+                        {editMode.logistics ? (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              onClick={() => setEditMode(prev => ({ ...prev, logistics: false }))}
+                            >
+                              Cancel
+                            </Button>
+                            <Button 
+                              onClick={() => handleSave('logistics')}
+                              disabled={isSaving}
+                              className="bg-gradient-to-r from-green-600 to-emerald-600"
+                            >
+                              {isSaving ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <Save className="h-4 w-4 mr-2" />
+                                  Save Changes
+                                </>
+                              )}
+                            </Button>
+                          </>
+                        ) : (
+                          <Button 
+                            onClick={() => setEditMode(prev => ({ ...prev, logistics: true }))}
+                            variant="outline"
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Logistics
+                          </Button>
+                        )}
                       </div>
                     </TabsContent>
 
