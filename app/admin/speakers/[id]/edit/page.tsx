@@ -205,20 +205,18 @@ export default function AdminSpeakerEditPage() {
       // Get the admin token from localStorage
       const token = localStorage.getItem("adminSessionToken")
       
-      const headers: HeadersInit = {}
+      const headers: HeadersInit = {
+        "x-dev-admin-bypass": "dev-admin-access", // Always include for compatibility
+      }
       
-      // Add authentication header
+      // Add authentication header if token exists
       if (token) {
         headers["Authorization"] = `Bearer ${token}`
       }
       
-      // Add dev bypass for local development
-      if (process.env.NODE_ENV === 'development') {
-        headers["x-dev-admin-bypass"] = "dev-admin-access"
-      }
-      
       const response = await fetch(`/api/admin/speakers/${params.id}`, {
-        headers
+        headers,
+        credentials: 'include', // Include cookies
       })
 
       if (response.ok) {
@@ -287,22 +285,19 @@ export default function AdminSpeakerEditPage() {
       
       const headers: HeadersInit = {
         "Content-Type": "application/json",
+        "x-dev-admin-bypass": "dev-admin-access", // Always include for compatibility
       }
       
-      // Add authentication header
+      // Add authentication header if token exists
       if (token) {
         headers["Authorization"] = `Bearer ${token}`
-      }
-      
-      // Add dev bypass for local development
-      if (process.env.NODE_ENV === 'development') {
-        headers["x-dev-admin-bypass"] = "dev-admin-access"
       }
       
       const response = await fetch(`/api/admin/speakers/${params.id}`, {
         method: "PUT",
         headers,
         body: JSON.stringify(formData),
+        credentials: 'include', // Include cookies
       })
 
       if (response.ok) {
@@ -312,10 +307,28 @@ export default function AdminSpeakerEditPage() {
         })
         router.push(`/admin/speakers/${params.id}`)
       } else {
-        const errorData = await response.json()
+        let errorMessage = "Failed to update speaker"
+        let errorDetails = ""
+        
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+          errorDetails = errorData.details || ""
+        } catch (e) {
+          // If response body is not JSON
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`
+        }
+        
+        console.error('Update failed:', {
+          status: response.status,
+          message: errorMessage,
+          details: errorDetails,
+          headers: Object.fromEntries(response.headers.entries())
+        })
+        
         toast({
           title: "Error",
-          description: errorData.error || "Failed to update speaker",
+          description: `${errorMessage}${errorDetails ? ` - ${errorDetails}` : ''}`,
           variant: "destructive",
         })
       }

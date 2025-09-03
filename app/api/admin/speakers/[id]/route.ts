@@ -275,18 +275,30 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    console.log('PUT /api/admin/speakers/[id] - Starting request')
+    
     // Await params as required in Next.js 15
     const params = await context.params
+    console.log(`Speaker ID: ${params.id}`)
+    
+    // Log headers for debugging
+    console.log('Headers received:', {
+      authorization: request.headers.get('authorization') ? 'Present' : 'Missing',
+      'x-dev-admin-bypass': request.headers.get('x-dev-admin-bypass'),
+      'content-type': request.headers.get('content-type'),
+    })
     
     // Check authentication - allows dev bypass with x-dev-admin-bypass header
     const authError = requireAdminAuth(request)
     if (authError) {
-      console.log('Admin speaker update: Authentication failed')
+      console.log('Admin speaker update: Authentication failed', authError)
       return authError
     }
+    console.log('Authentication passed')
     
     const speakerId = params.id
     const updateData = await request.json()
+    console.log('Update data received, fields:', Object.keys(updateData))
     
     // Validate and truncate fields to match database constraints
     if (updateData.short_bio && updateData.short_bio.length > 500) {
@@ -303,12 +315,16 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     const sql = getSqlClient()
     
     if (!sql) {
+      console.error('Database client not available - check DATABASE_URL')
       return NextResponse.json({
-        error: 'Database not available'
+        error: 'Database not available',
+        details: 'Unable to connect to database'
       }, { status: 503 })
     }
+    console.log('Database client obtained')
 
     // Update speaker profile with all fields
+    console.log(`Attempting to update speaker ${speakerId} in database`)
     const [updatedSpeaker] = await sql`
       UPDATE speakers SET
         name = COALESCE(${updateData.name || null}, name),
@@ -345,12 +361,14 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     `
 
     if (!updatedSpeaker) {
+      console.error(`No speaker returned from update for ID ${speakerId}`)
       return NextResponse.json(
         { error: 'Speaker not found or update failed' },
         { status: 404 }
       )
     }
 
+    console.log(`Successfully updated speaker ${speakerId}`)
     return NextResponse.json({
       success: true,
       message: 'Speaker updated successfully',
