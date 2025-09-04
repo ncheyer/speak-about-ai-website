@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     url: "https://speakabout.ai",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/hero-image.jpg",
         width: 1200,
         height: 630,
         alt: "Speak About AI - Top AI Keynote Speakers",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     title: "AI Keynote Speakers | Book Top AI Speakers for 2025",
     description:
       "Book world-class AI keynote speakers. The only AI-exclusive speaker bureau trusted by Fortune 500s.",
-    images: ["/og-image.jpg"],
+    images: ["/hero-image.jpg"],
   },
   alternates: {
     canonical: "https://speakabout.ai",
