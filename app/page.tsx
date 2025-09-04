@@ -5,7 +5,6 @@ import FeaturedSpeakers from "@/components/featured-speakers"
 import WhyChooseUs from "@/components/why-choose-us"
 import BookingCTA from "@/components/booking-cta"
 import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
-import Script from "next/script"
 
 export const metadata: Metadata = {
   title: "AI Keynote Speakers | Book Top AI Speakers for 2025 | Speak About AI",
@@ -109,15 +108,13 @@ export default async function HomePage() {
 
   return (
     <>
-      <Script
-        id="organization-schema"
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(organizationSchema),
         }}
       />
-      <Script
-        id="service-schema"
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(serviceSchema),

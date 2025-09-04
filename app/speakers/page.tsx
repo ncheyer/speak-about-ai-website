@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import SpeakerDirectory from "@/components/speaker-directory"
 import { getAllSpeakers, getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
-import Script from "next/script"
 
 export async function generateMetadata(): Promise<Metadata> {
   // Get featured speakers for dynamic metadata
@@ -98,8 +97,7 @@ export default async function SpeakersPage() {
 
   return (
     <>
-      <Script
-        id="speakers-directory-schema"
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />

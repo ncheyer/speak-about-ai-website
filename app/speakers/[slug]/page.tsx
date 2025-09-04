@@ -2,7 +2,6 @@ import { notFound } from "next/navigation"
 import { getSpeakerBySlug, getAllSpeakers } from "@/lib/speakers-data"
 import SpeakerProfile from "@/components/speaker-profile"
 import ScrollToTop from "./scroll-to-top"
-import Script from "next/script"
 
 interface SpeakerPageProps {
   params: Promise<{ slug: string }>
@@ -44,8 +43,7 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
 
   return (
     <>
-      <Script
-        id="structured-data"
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
