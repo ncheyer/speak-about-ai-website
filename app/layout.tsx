@@ -75,6 +75,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  other: {
+    'sitemap': 'https://speakabout.ai/sitemap.xml',
+  },
   icons: {
     icon: [
       { url: "/new-ai-logo.png", sizes: "32x32", type: "image/png" },

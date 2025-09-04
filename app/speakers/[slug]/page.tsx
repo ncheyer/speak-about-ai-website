@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { getSpeakerBySlug, getAllSpeakers } from "@/lib/speakers-data"
 import SpeakerProfile from "@/components/speaker-profile"
 import ScrollToTop from "./scroll-to-top"
+import Script from "next/script"
 
 interface SpeakerPageProps {
   params: Promise<{ slug: string }>
@@ -15,8 +16,39 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
     notFound()
   }
 
+  // Generate structured data for Google
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": speaker.name,
+    "jobTitle": speaker.title || "AI Keynote Speaker",
+    "description": speaker.bio || speaker.title || "",
+    "image": speaker.image?.startsWith('http') 
+      ? speaker.image 
+      : `https://speakabout.ai${speaker.image || '/placeholder.jpg'}`,
+    "url": `https://speakabout.ai/speakers/${slug}`,
+    "sameAs": [
+      speaker.linkedin && `https://linkedin.com/in/${speaker.linkedin}`,
+      speaker.twitter && `https://twitter.com/${speaker.twitter}`,
+      speaker.website
+    ].filter(Boolean),
+    "worksFor": {
+      "@type": "Organization",
+      "name": "Speak About AI",
+      "url": "https://speakabout.ai"
+    },
+    "knowsAbout": [...(speaker.topics || []), ...(speaker.expertise || [])].filter(Boolean),
+    "alumniOf": speaker.education || undefined,
+    "award": speaker.awards || undefined,
+  }
+
   return (
     <>
+      <Script
+        id="structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <SpeakerProfile speaker={speaker} />
       <ScrollToTop />
     </>

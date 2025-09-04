@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import SpeakerDirectory from "@/components/speaker-directory"
 import { getAllSpeakers, getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
+import Script from "next/script"
 
 export async function generateMetadata(): Promise<Metadata> {
   // Get featured speakers for dynamic metadata
@@ -72,9 +73,39 @@ export default async function SpeakersPage() {
     console.error("SpeakersPage: Failed to load speakers:", error)
   }
 
+  // Generate structured data for the speakers directory
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "AI Keynote Speakers Directory",
+    "description": "Browse our comprehensive directory of AI keynote speakers and artificial intelligence experts available for booking.",
+    "numberOfItems": allSpeakers.length,
+    "itemListElement": allSpeakers.slice(0, 10).map((speaker, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "Person",
+        "name": speaker.name,
+        "jobTitle": speaker.title || "AI Keynote Speaker",
+        "url": `https://speakabout.ai/speakers/${speaker.slug}`,
+        "image": speaker.image?.startsWith('http') 
+          ? speaker.image 
+          : `https://speakabout.ai${speaker.image || '/placeholder.jpg'}`,
+        "description": speaker.short_bio || speaker.bio || "",
+      }
+    }))
+  }
+
   return (
-    <div className="min-h-screen bg-white">
-      <SpeakerDirectory initialSpeakers={allSpeakers} />
-    </div>
+    <>
+      <Script
+        id="speakers-directory-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <div className="min-h-screen bg-white">
+        <SpeakerDirectory initialSpeakers={allSpeakers} />
+      </div>
+    </>
   )
 }
