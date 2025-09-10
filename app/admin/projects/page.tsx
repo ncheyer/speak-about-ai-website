@@ -417,6 +417,7 @@ export default function EnhancedProjectManagementPage() {
           description: `Task ${completed ? "completed" : "unmarked"}`
         })
         loadData()
+        return true // Return true for success
       } else {
         const errorData = await response.json()
         toast({
@@ -424,6 +425,7 @@ export default function EnhancedProjectManagementPage() {
           description: errorData.error || "Failed to update task",
           variant: "destructive"
         })
+        return false // Return false for failure
       }
     } catch (error) {
       console.error("Error updating stage completion:", error)
@@ -432,6 +434,7 @@ export default function EnhancedProjectManagementPage() {
         description: "Failed to update task",
         variant: "destructive"
       })
+      return false // Return false for error
     }
   }
 
@@ -1927,7 +1930,7 @@ export default function EnhancedProjectManagementPage() {
                                       }
                                     } else {
                                       // Handle predefined task completion
-                                      handleUpdateStageCompletion(
+                                      await handleUpdateStageCompletion(
                                         task.projectId, 
                                         task.stage, 
                                         task.taskKey, 
@@ -2331,19 +2334,21 @@ export default function EnhancedProjectManagementPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => {
-                                    handleUpdateStageCompletion(selectedProject.id, stage, taskKey, true)
-                                    // Update local state to reflect the change
-                                    setSelectedProject({
-                                      ...selectedProject,
-                                      stage_completion: {
-                                        ...selectedProject.stage_completion,
-                                        [stage]: {
-                                          ...stageCompletion,
-                                          [taskKey]: true
+                                  onClick={async () => {
+                                    const success = await handleUpdateStageCompletion(selectedProject.id, stage, taskKey, true)
+                                    // Only update local state if API call was successful
+                                    if (success) {
+                                      setSelectedProject({
+                                        ...selectedProject,
+                                        stage_completion: {
+                                          ...selectedProject.stage_completion,
+                                          [stage]: {
+                                            ...stageCompletion,
+                                            [taskKey]: true
+                                          }
                                         }
-                                      }
-                                    })
+                                      })
+                                    }
                                   }}
                                 >
                                   <Check className="h-4 w-4" />
@@ -2354,19 +2359,21 @@ export default function EnhancedProjectManagementPage() {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  onClick={() => {
-                                    handleUpdateStageCompletion(selectedProject.id, stage, taskKey, false)
-                                    // Update local state to reflect the change
-                                    setSelectedProject({
-                                      ...selectedProject,
-                                      stage_completion: {
-                                        ...selectedProject.stage_completion,
-                                        [stage]: {
-                                          ...stageCompletion,
-                                          [taskKey]: false
+                                  onClick={async () => {
+                                    const success = await handleUpdateStageCompletion(selectedProject.id, stage, taskKey, false)
+                                    // Only update local state if API call was successful
+                                    if (success) {
+                                      setSelectedProject({
+                                        ...selectedProject,
+                                        stage_completion: {
+                                          ...selectedProject.stage_completion,
+                                          [stage]: {
+                                            ...stageCompletion,
+                                            [taskKey]: false
+                                          }
                                         }
-                                      }
-                                    })
+                                      })
+                                    }
                                   }}
                                 >
                                   <X className="h-4 w-4" />
