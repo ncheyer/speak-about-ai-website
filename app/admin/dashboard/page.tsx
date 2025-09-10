@@ -872,7 +872,7 @@ export default function AdminDashboard() {
                 <Card>
                   <CardContent className="p-6 overflow-x-auto">
                     <div className="min-w-[1200px]">
-                      <DealsKanban />
+                      <DealsKanban onDealClick={(deal) => setSelectedDeal(deal)} />
                     </div>
                   </CardContent>
                 </Card>

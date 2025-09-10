@@ -12,16 +12,29 @@ interface Deal {
   id: number
   client_name: string
   client_email: string
+  client_phone?: string
   company: string
   event_title: string
   event_date: string
   event_location: string
   event_type: string
+  speaker_requested?: string
   attendee_count: number
+  budget_range?: string
   deal_value: number
+  travel_required?: boolean
+  travel_stipend?: number
+  flight_required?: boolean
+  hotel_required?: boolean
+  travel_notes?: string
   status: string
   priority: string
+  source?: string
+  notes?: string
   created_at: string
+  last_contact?: string
+  next_follow_up?: string
+  updated_at?: string
 }
 
 const STAGES = [
@@ -40,7 +53,11 @@ const PRIORITY_COLORS = {
   urgent: "bg-red-100 text-red-800",
 }
 
-export function DealsKanban() {
+interface DealsKanbanProps {
+  onDealClick?: (deal: Deal) => void
+}
+
+export function DealsKanban({ onDealClick }: DealsKanbanProps = {}) {
   const [deals, setDeals] = useState<Deal[]>([])
   const [loading, setLoading] = useState(true)
   const [draggedDeal, setDraggedDeal] = useState<Deal | null>(null)
@@ -158,6 +175,7 @@ export function DealsKanban() {
                     className="cursor-move hover:shadow-lg transition-shadow"
                     draggable
                     onDragStart={(e) => handleDragStart(e, deal)}
+                    onClick={() => onDealClick && onDealClick(deal)}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">

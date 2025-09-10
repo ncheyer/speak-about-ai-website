@@ -94,14 +94,29 @@ interface Deal {
   id: number
   client_name: string
   client_email: string
+  client_phone?: string
   company: string
   event_title: string
   event_date: string
   event_location: string
+  event_type?: string
+  speaker_requested?: string
+  attendee_count: number
+  budget_range?: string
   deal_value: number
+  travel_required?: boolean
+  travel_stipend?: number
+  flight_required?: boolean
+  hotel_required?: boolean
+  travel_notes?: string
   status: "lead" | "qualified" | "proposal" | "negotiation" | "won" | "lost"
   priority: "low" | "medium" | "high" | "urgent"
+  source?: string
+  notes?: string
   created_at: string
+  last_contact?: string
+  next_follow_up?: string
+  updated_at?: string
 }
 
 interface Project {
@@ -148,6 +163,15 @@ const STATUS_COLORS = {
   "cancelled": "bg-red-500"
 }
 
+const DEAL_STATUSES = {
+  lead: { label: "New Lead", color: "bg-gray-500" },
+  qualified: { label: "Qualified", color: "bg-blue-500" },
+  proposal: { label: "Proposal Sent", color: "bg-yellow-500" },
+  negotiation: { label: "Negotiating", color: "bg-orange-500" },
+  won: { label: "Won", color: "bg-green-500" },
+  lost: { label: "Lost", color: "bg-red-500" },
+}
+
 const PRIORITY_COLORS = {
   low: "bg-gray-100 text-gray-800",
   medium: "bg-blue-100 text-blue-800",
@@ -169,6 +193,7 @@ export default function MasterAdminPanel() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [analyticsData, setAnalyticsData] = useState<any>(null)
   const [realTimeData, setRealTimeData] = useState<any>(null)
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
   
   // Loading states
   const [speakersLoading, setSpeakersLoading] = useState(true)
@@ -946,7 +971,7 @@ export default function MasterAdminPanel() {
                   <CardDescription>Drag and drop deals to update their status</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <DealsKanban />
+                  <DealsKanban onDealClick={(deal) => setSelectedDeal(deal)} />
                 </CardContent>
               </Card>
             )}
@@ -1667,6 +1692,142 @@ export default function MasterAdminPanel() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Deal Detail Modal */}
+        {selectedDeal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <CardTitle>{selectedDeal.event_title}</CardTitle>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedDeal(null)}>
+                    ×
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Client Information</h4>
+                  <p className="text-sm">
+                    <strong>Name:</strong> {selectedDeal.client_name}
+                  </p>
+                  <p className="text-sm">
+                    <strong>Company:</strong> {selectedDeal.company}
+                  </p>
+                  {selectedDeal.client_email && (
+                    <p className="text-sm">
+                      <strong>Email:</strong> {selectedDeal.client_email}
+                    </p>
+                  )}
+                  {selectedDeal.client_phone && (
+                    <p className="text-sm">
+                      <strong>Phone:</strong> {selectedDeal.client_phone}
+                    </p>
+                  )}
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-2">Event Details</h4>
+                  <p className="text-sm">
+                    <strong>Date:</strong> {new Date(selectedDeal.event_date).toLocaleDateString()}
+                  </p>
+                  <p className="text-sm">
+                    <strong>Location:</strong> {selectedDeal.event_location}
+                  </p>
+                  {selectedDeal.event_type && (
+                    <p className="text-sm">
+                      <strong>Type:</strong> {selectedDeal.event_type}
+                    </p>
+                  )}
+                  <p className="text-sm">
+                    <strong>Attendees:</strong> {selectedDeal.attendee_count}
+                  </p>
+                  {selectedDeal.speaker_requested && (
+                    <p className="text-sm">
+                      <strong>Speaker Requested:</strong> {selectedDeal.speaker_requested}
+                    </p>
+                  )}
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-2">Deal Information</h4>
+                  <p className="text-sm">
+                    <strong>Value:</strong> ${new Intl.NumberFormat('en-US', { 
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0 
+                    }).format(selectedDeal.deal_value)}
+                  </p>
+                  {selectedDeal.budget_range && (
+                    <p className="text-sm">
+                      <strong>Budget Range:</strong> {selectedDeal.budget_range}
+                    </p>
+                  )}
+                  <p className="text-sm">
+                    <strong>Status:</strong> <Badge className={`${DEAL_STATUSES[selectedDeal.status].color} text-white`}>
+                      {DEAL_STATUSES[selectedDeal.status].label}
+                    </Badge>
+                  </p>
+                  <p className="text-sm">
+                    <strong>Priority:</strong> <Badge className={PRIORITY_COLORS[selectedDeal.priority]}>
+                      {selectedDeal.priority.toUpperCase()}
+                    </Badge>
+                  </p>
+                  {selectedDeal.source && (
+                    <p className="text-sm">
+                      <strong>Source:</strong> {selectedDeal.source}
+                    </p>
+                  )}
+                </div>
+                
+                {(selectedDeal.travel_required || selectedDeal.flight_required || selectedDeal.hotel_required) && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Travel Information</h4>
+                    {selectedDeal.flight_required && (
+                      <p className="text-sm">✈️ Flight Required</p>
+                    )}
+                    {selectedDeal.hotel_required && (
+                      <p className="text-sm">🏨 Hotel Required</p>
+                    )}
+                    {selectedDeal.travel_stipend && selectedDeal.travel_stipend > 0 && (
+                      <p className="text-sm">
+                        <strong>Travel Stipend:</strong> ${selectedDeal.travel_stipend}
+                      </p>
+                    )}
+                    {selectedDeal.travel_notes && (
+                      <p className="text-sm">
+                        <strong>Travel Notes:</strong> {selectedDeal.travel_notes}
+                      </p>
+                    )}
+                  </div>
+                )}
+                
+                <div>
+                  <h4 className="font-semibold mb-2">Timeline</h4>
+                  <p className="text-sm">
+                    <strong>Created:</strong> {new Date(selectedDeal.created_at).toLocaleDateString()}
+                  </p>
+                  {selectedDeal.last_contact && (
+                    <p className="text-sm">
+                      <strong>Last Contact:</strong> {new Date(selectedDeal.last_contact).toLocaleDateString()}
+                    </p>
+                  )}
+                  {selectedDeal.next_follow_up && (
+                    <p className="text-sm">
+                      <strong>Next Follow-up:</strong> {new Date(selectedDeal.next_follow_up).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+                
+                {selectedDeal.notes && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Notes</h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedDeal.notes}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
         </div>
       </div>
     </div>
