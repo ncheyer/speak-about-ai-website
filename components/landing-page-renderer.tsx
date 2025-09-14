@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle, ChevronDown, ChevronUp } from "lucide-react"
+import { CheckCircle, ChevronDown, ChevronUp, Loader2 } from "lucide-react"
+import { submitLandingPageForm } from "@/app/actions/submit-landing-page-form"
 
 interface LandingPageRendererProps {
   page: LandingPage
@@ -54,15 +55,34 @@ const richTextOptions = {
 export default function LandingPageRenderer({ page }: LandingPageRendererProps) {
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [expandedFaqs, setExpandedFaqs] = useState<Record<string, boolean>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
   const handleInputChange = (fieldName: string, value: string) => {
     setFormData(prev => ({ ...prev, [fieldName]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Form submitted:", formData)
-    // Add your form submission logic here
+    setIsSubmitting(true)
+    setSubmitStatus(null)
+
+    try {
+      // Pass form data directly to the new action
+      const result = await submitLandingPageForm(formData)
+
+      if (result.success) {
+        setSubmitStatus({ type: 'success', message: 'Thank you! Your submission has been received.' })
+        setFormData({}) // Clear form on success
+      } else {
+        setSubmitStatus({ type: 'error', message: result.message || 'Something went wrong. Please try again.' })
+      }
+    } catch (error) {
+      console.error('Form submission error:', error)
+      setSubmitStatus({ type: 'error', message: 'An unexpected error occurred. Please try again.' })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const toggleFaq = (index: string) => {
@@ -155,8 +175,29 @@ export default function LandingPageRenderer({ page }: LandingPageRendererProps) 
                       </div>
                     )
                   })}
-                  <Button type="submit" className="w-full">
-                    Submit
+                  {submitStatus && (
+                    <div className={`p-4 rounded-lg ${
+                      submitStatus.type === 'success' 
+                        ? 'bg-green-50 text-green-800 border border-green-200' 
+                        : 'bg-red-50 text-red-800 border border-red-200'
+                    }`}>
+                      {submitStatus.message}
+                    </div>
+                  )}
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      'Submit'
+                    )}
                   </Button>
                 </form>
               </CardContent>
