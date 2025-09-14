@@ -128,8 +128,11 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
       console.log('Could not get headers:', headerError)
     }
 
-    // Database connection - use environment variable or fallback to direct connection
-    const databaseUrl = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_2KsQRpzJ8yji@ep-icy-bonus-afhpjby9-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require'
+    // Database connection - must use environment variable
+    const databaseUrl = process.env.DATABASE_URL
+    if (!databaseUrl) {
+      throw new Error('DATABASE_URL environment variable is not configured')
+    }
     const sql = neon(databaseUrl)
 
     // Save to form_submissions table

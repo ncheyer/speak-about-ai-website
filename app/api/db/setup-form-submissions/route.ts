@@ -3,7 +3,13 @@ import { neon } from '@neondatabase/serverless'
 
 export async function GET() {
   try {
-    const databaseUrl = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_2KsQRpzJ8yji@ep-icy-bonus-afhpjby9-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require'
+    const databaseUrl = process.env.DATABASE_URL
+    if (!databaseUrl) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'DATABASE_URL environment variable is not configured' 
+      }, { status: 500 })
+    }
     const sql = neon(databaseUrl)
 
     // Create form_submissions table

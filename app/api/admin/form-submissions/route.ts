@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 
-const databaseUrl = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_2KsQRpzJ8yji@ep-icy-bonus-afhpjby9-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require'
-
 export async function GET() {
   try {
+    const databaseUrl = process.env.DATABASE_URL
+    if (!databaseUrl) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
+    }
     const sql = neon(databaseUrl)
     
     const submissions = await sql`
