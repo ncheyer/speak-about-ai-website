@@ -42,12 +42,12 @@ async function sendConfirmationEmail(formData: FormData) {
     await resend.emails.send({
       from: fromEmail,
       to: adminEmails,
-      subject: `New Form Submission: ${formData.name} - ${formData.organizationName || formData.company || 'N/A'}`,
+      subject: `New Form Submission: ${formData.name || formData.email} - ${formData.organizationName || formData.company || 'N/A'}`,
       html: `
         <h2>New Landing Page Form Submission</h2>
         <h3>Contact Information</h3>
         <ul>
-          <li><strong>Name:</strong> ${formData.name}</li>
+          <li><strong>Name:</strong> ${formData.name || 'Not provided'}</li>
           <li><strong>Email:</strong> ${formData.email}</li>
           <li><strong>Phone:</strong> ${formData.phone || 'Not provided'}</li>
           <li><strong>Organization:</strong> ${formData.organizationName || formData.company || 'Not provided'}</li>
@@ -81,12 +81,12 @@ async function sendConfirmationEmail(formData: FormData) {
       subject: 'Thank you for contacting Speak About AI',
       html: `
         <h2>Thank you for your interest!</h2>
-        <p>Dear ${formData.name},</p>
+        <p>Dear ${formData.name || 'Valued Customer'},</p>
         <p>We've received your submission and will get back to you within 24 hours.</p>
         
         <h3>What you submitted:</h3>
         <ul>
-          <li><strong>Name:</strong> ${formData.name}</li>
+          <li><strong>Name:</strong> ${formData.name || 'Not provided'}</li>
           <li><strong>Email:</strong> ${formData.email}</li>
           ${formData.organizationName || formData.company ? `<li><strong>Organization:</strong> ${formData.organizationName || formData.company}</li>` : ''}
           ${formData.message || formData.additionalInfo ? `<li><strong>Message:</strong> ${formData.message || formData.additionalInfo}</li>` : ''}
@@ -159,7 +159,7 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
       ) VALUES (
         'landing_page',
         ${referer},
-        ${formData.name},
+        ${formData.name || 'Website Visitor'},
         ${formData.email.toLowerCase()},
         ${formData.phone || null},
         ${formData.organizationName || formData.company || null},
@@ -197,7 +197,7 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
               email, name, company, status, source
             ) VALUES (
               ${formData.email.toLowerCase()},
-              ${formData.name},
+              ${formData.name || 'Website Visitor'},
               ${formData.organizationName || formData.company || null},
               'active',
               'landing_page_form'
@@ -211,7 +211,7 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
             SET status = 'active', 
                 subscribed_at = CURRENT_TIMESTAMP,
                 unsubscribed_at = NULL,
-                name = ${formData.name},
+                name = ${formData.name || 'Website Visitor'},
                 company = ${formData.organizationName || formData.company || null}
             WHERE id = ${existing[0].id}
           `
