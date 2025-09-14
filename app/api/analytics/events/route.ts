@@ -14,6 +14,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Skip tracking for admin users
+    const isAdmin = request.cookies.get('adminLoggedIn')?.value === 'true'
+    if (isAdmin) {
+      return NextResponse.json({ success: true, skipped: 'admin' })
+    }
+
     // Get visitor and session IDs from cookies
     const visitorId = request.cookies.get('visitor_id')?.value
     const sessionId = request.cookies.get('session_id')?.value

@@ -9,11 +9,14 @@ export async function middleware(request: NextRequest) {
   // Check if this is an API route
   const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
 
+  // Check if user is an admin (has adminLoggedIn cookie)
+  const isAdmin = request.cookies.get('adminLoggedIn')?.value === 'true'
+
   // Extract analytics data from the request
   const analyticsData = extractAnalyticsFromRequest(request)
   
-  // Check if we should track this request (skip for API routes)
-  if (isApiRoute || !shouldTrackRequest(request, analyticsData)) {
+  // Check if we should track this request (skip for API routes and admin users)
+  if (isApiRoute || isAdmin || !shouldTrackRequest(request, analyticsData)) {
     // For API routes, we still want to ensure session cookie is set
     if (isApiRoute && !request.cookies.get('session_id')?.value) {
       const sessionId = generateSessionId()

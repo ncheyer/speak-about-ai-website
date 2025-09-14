@@ -18,6 +18,11 @@
   // Check if analytics is opted in
   function hasAnalyticsConsent() {
     try {
+      // Skip analytics for admin users
+      if (localStorage.getItem('adminLoggedIn') === 'true') {
+        return false;
+      }
+      
       const consent = localStorage.getItem('cookie-consent');
       if (!consent) return false;
       const parsed = JSON.parse(consent);

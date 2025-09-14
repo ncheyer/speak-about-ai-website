@@ -19,6 +19,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { query, resultCount, industry, page, speakerResults } = body
 
+    // Skip tracking for admin users
+    const isAdmin = request.cookies.get('adminLoggedIn')?.value === 'true'
+    if (isAdmin) {
+      return NextResponse.json({ success: true, skipped: 'admin' })
+    }
+
     if (!query) {
       return NextResponse.json(
         { error: 'Search query is required' },

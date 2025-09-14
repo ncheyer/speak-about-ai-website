@@ -68,17 +68,23 @@ export default function LandingPageRenderer({ page }: LandingPageRendererProps) 
     setSubmitStatus(null)
 
     try {
+      console.log('[LandingPageRenderer] Submitting form data:', formData)
       // Pass form data directly to the new action
       const result = await submitLandingPageForm(formData)
+      console.log('[LandingPageRenderer] Result:', result)
 
       if (result.success) {
-        setSubmitStatus({ type: 'success', message: 'Thank you! Your submission has been received.' })
+        setSubmitStatus({ type: 'success', message: result.message || 'Thank you! Your submission has been received.' })
         setFormData({}) // Clear form on success
       } else {
         setSubmitStatus({ type: 'error', message: result.message || 'Something went wrong. Please try again.' })
       }
     } catch (error) {
-      console.error('Form submission error:', error)
+      console.error('[LandingPageRenderer] Form submission error:', error)
+      console.error('[LandingPageRenderer] Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      })
       setSubmitStatus({ type: 'error', message: 'An unexpected error occurred. Please try again.' })
     } finally {
       setIsSubmitting(false)

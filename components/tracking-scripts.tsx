@@ -2,7 +2,7 @@
 
 import Script from "next/script"
 import { usePathname } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 interface TrackingScriptsProps {
   trackingCodes?: {
@@ -14,11 +14,21 @@ interface TrackingScriptsProps {
 
 export default function TrackingScripts({ trackingCodes }: TrackingScriptsProps) {
   const pathname = usePathname()
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
+    // Check if user is an admin
+    const adminStatus = localStorage.getItem('adminLoggedIn') === 'true'
+    setIsAdmin(adminStatus)
+    
     // This effect can be used for client-side page view tracking if needed.
     // For example: window.gtag('event', 'page_view', { page_path: pathname });
   }, [pathname])
+
+  // Don't load any tracking scripts for admin users
+  if (isAdmin) {
+    return null
+  }
 
   return (
     <>
@@ -28,6 +38,7 @@ export default function TrackingScripts({ trackingCodes }: TrackingScriptsProps)
         src="https://cloud.umami.is/script.js"
         data-website-id="e9883970-17ec-4067-a92a-a32cfe6a36d0"
         strategy="afterInteractive"
+        data-exclude-admin="true"
       />
 
       {/* Custom tracking codes if provided */}

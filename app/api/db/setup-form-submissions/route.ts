@@ -3,7 +3,7 @@ import { neon } from '@neondatabase/serverless'
 
 export async function GET() {
   try {
-    const databaseUrl = 'postgresql://neondb_owner:npg_2KsQRpzJ8yji@ep-icy-bonus-afhpjby9-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require'
+    const databaseUrl = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_2KsQRpzJ8yji@ep-icy-bonus-afhpjby9-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require'
     const sql = neon(databaseUrl)
 
     // Create form_submissions table
