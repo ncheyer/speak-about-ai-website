@@ -46,7 +46,16 @@ export default function LandingResourcesPage() {
       const response = await fetch('/api/admin/landing-resources')
       if (response.ok) {
         const data = await response.json()
-        setResources(data)
+        // Transform database format to component format
+        const transformedData = data.map((item: any) => ({
+          id: item.id,
+          urlPatterns: item.url_patterns || item.urlPatterns || [],
+          titlePatterns: item.title_patterns || item.titlePatterns || [],
+          subject: item.subject,
+          resourceContent: item.resource_content || item.resourceContent,
+          isActive: item.is_active !== undefined ? item.is_active : item.isActive
+        }))
+        setResources(transformedData)
       }
     } catch (error) {
       console.error('Error fetching resources:', error)
@@ -57,10 +66,15 @@ export default function LandingResourcesPage() {
 
   const saveResource = async (resource: EmailResource, index: number) => {
     try {
+      // Use the resource's database ID if available
+      const resourceId = resources[index]?.id
       const response = await fetch('/api/admin/landing-resources', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resource, index })
+        body: JSON.stringify({ 
+          resource, 
+          index: resourceId ? parseInt(resourceId) - 1 : index 
+        })
       })
       
       if (response.ok) {
@@ -82,7 +96,10 @@ export default function LandingResourcesPage() {
     if (!confirm('Are you sure you want to delete this resource?')) return
     
     try {
-      const response = await fetch(`/api/admin/landing-resources/${index}`, {
+      // Use the resource's database ID if available
+      const resourceId = resources[index]?.id
+      const deleteIndex = resourceId ? parseInt(resourceId) - 1 : index
+      const response = await fetch(`/api/admin/landing-resources/${deleteIndex}`, {
         method: 'DELETE'
       })
       

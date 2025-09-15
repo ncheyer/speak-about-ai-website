@@ -35,6 +35,23 @@ export async function GET() {
       ORDER BY priority DESC, created_at DESC
     `
     
+    // If no resources in database, return the static config as initial data
+    if (resources.length === 0) {
+      const { emailResources } = await import('@/lib/email-resources-config')
+      const configResources = emailResources.map((resource, index) => ({
+        id: index + 1,
+        url_patterns: resource.urlPatterns || [],
+        title_patterns: resource.titlePatterns || [],
+        subject: resource.subject,
+        resource_content: resource.resourceContent,
+        priority: 0,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }))
+      return NextResponse.json(configResources)
+    }
+    
     return NextResponse.json(resources)
   } catch (error) {
     console.error('Error fetching resources:', error)
