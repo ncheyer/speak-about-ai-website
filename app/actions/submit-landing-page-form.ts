@@ -192,6 +192,31 @@ async function sendConfirmationEmail(formData: FormData) {
 export async function submitLandingPageForm(formData: FormData): Promise<{ success: boolean; message: string }> {
   console.log("[Server Action] submitLandingPageForm called with:", formData)
 
+  // Normalize field names (handle both lowercase and capitalized versions)
+  const normalizedData: FormData = {
+    email: formData.email || formData.Email || formData.EMAIL || '',
+    name: formData.name || formData.Name || formData.NAME,
+    phone: formData.phone || formData.Phone || formData.PHONE,
+    organizationName: formData.organizationName || formData.OrganizationName || formData.company || formData.Company,
+    message: formData.message || formData.Message || formData.MESSAGE,
+    additionalInfo: formData.additionalInfo || formData.AdditionalInfo,
+    sourceUrl: formData.sourceUrl,
+    landingPageTitle: formData.landingPageTitle,
+    ...formData // Keep any other fields
+  }
+
+  // Use normalized data from here on
+  formData = normalizedData
+
+  // Validate required email field
+  if (!formData.email) {
+    console.error('[Server Action] No email provided in form data')
+    return {
+      success: false,
+      message: "Email address is required. Please provide a valid email."
+    }
+  }
+
   try {
     // Get request headers for tracking
     let userAgent = ''
