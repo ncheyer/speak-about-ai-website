@@ -173,7 +173,7 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
         status
       ) VALUES (
         'landing_page',
-        ${referer},
+        ${formData.sourceUrl || referer},
         ${formData.name || 'Website Visitor'},
         ${formData.email.toLowerCase()},
         ${formData.phone || null},
@@ -197,6 +197,9 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
     console.log('[Server Action] Form submission saved with ID:', submission.id)
 
     // Add to newsletter if opted in
+    console.log('[Server Action] Newsletter opt-out status:', formData.newsletterOptOut)
+    console.log('[Server Action] Will add to newsletter:', !formData.newsletterOptOut)
+    
     if (!formData.newsletterOptOut) {
       try {
         // Check if email already exists
@@ -204,6 +207,8 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
           SELECT id, status FROM newsletter_signups 
           WHERE email = ${formData.email.toLowerCase()}
         `
+        
+        console.log('[Server Action] Existing newsletter entries:', existing.length)
         
         if (existing.length === 0) {
           // New subscriber
@@ -220,6 +225,8 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
           const sourceLabel = formData.landingPageTitle ? 
             `LP: ${formData.landingPageTitle}` 
             : `landing_page: ${pageSlug}`
+          
+          console.log('[Server Action] Adding to newsletter with source:', sourceLabel)
             
           await sql`
             INSERT INTO newsletter_signups (
@@ -233,7 +240,7 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
               ${ip}
             )
           `
-          console.log('Added to newsletter')
+          console.log('[Server Action] Successfully added to newsletter')
         } else if (existing[0].status === 'unsubscribed') {
           // Reactivate unsubscribed user
           let pageSlug = 'direct'
@@ -259,10 +266,12 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
                 source = ${sourceLabel}
             WHERE id = ${existing[0].id}
           `
-          console.log('Reactivated newsletter subscription')
+          console.log('[Server Action] Reactivated newsletter subscription for:', existing[0].id)
+        } else {
+          console.log('[Server Action] Email already subscribed to newsletter')
         }
       } catch (error) {
-        console.error('Newsletter signup error:', error)
+        console.error('[Server Action] Newsletter signup error:', error)
         // Don't fail the form submission if newsletter signup fails
       }
     }
