@@ -2,6 +2,7 @@
 
 import { neon } from '@neondatabase/serverless'
 import { headers } from 'next/headers'
+import { getEmailResourceForPage } from '@/lib/email-resources-config'
 
 interface FormData {
   name?: string
@@ -30,71 +31,17 @@ try {
   console.warn('Resend not available for email notifications')
 }
 
-// Generate email content based on the landing page
+// Generate email content based on the landing page using configuration
 function getResourceEmailContent(formData: FormData): { subject: string; html: string } {
-  // Default content
-  let subject = 'Thank you for contacting Speak About AI'
-  let resourceContent = ''
-  
-  // Customize based on the landing page URL or title
-  if (formData.sourceUrl?.includes('ai-tools-for-event-planners') || 
-      formData.landingPageTitle?.toLowerCase().includes('ai tools')) {
-    subject = 'Your 5 Essential AI Tools for Event Planning'
-    resourceContent = `
-      <h3>🎯 Your AI Tools for Event Planning</h3>
-      <p>Here are the 5 essential free AI tools we promised:</p>
-      
-      <ol style="line-height: 1.8;">
-        <li><strong>ChatGPT</strong> - For creating event content, email templates, and attendee communications<br>
-            <a href="https://chat.openai.com" style="color: #1E68C6;">Access ChatGPT →</a></li>
-        
-        <li><strong>Claude</strong> - For detailed event planning, vendor communications, and budget analysis<br>
-            <a href="https://claude.ai" style="color: #1E68C6;">Access Claude →</a></li>
-        
-        <li><strong>Canva AI</strong> - For creating event graphics, social media posts, and presentations<br>
-            <a href="https://www.canva.com/ai-image-generator/" style="color: #1E68C6;">Access Canva AI →</a></li>
-        
-        <li><strong>Otter.ai</strong> - For transcribing meetings, speaker sessions, and creating event summaries<br>
-            <a href="https://otter.ai" style="color: #1E68C6;">Access Otter.ai →</a></li>
-        
-        <li><strong>Gamma</strong> - For creating beautiful presentations and event proposals with AI<br>
-            <a href="https://gamma.app" style="color: #1E68C6;">Access Gamma →</a></li>
-      </ol>
-      
-      <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <p style="margin: 0;"><strong>💡 Pro Tip:</strong> Start with ChatGPT or Claude for planning, then use the other tools for specific tasks like design or transcription.</p>
-      </div>
-    `
-  } else if (formData.sourceUrl?.includes('event-planning-checklist')) {
-    subject = 'Your Event Planning Checklist Generator'
-    resourceContent = `
-      <h3>📋 Your Custom Event Planning Checklist Generator</h3>
-      <p>Click the link below to access your personalized event planning checklist generator:</p>
-      
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="https://chat.openai.com/g/g-example" style="display: inline-block; background: #1E68C6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-          Access Your Checklist Generator →
-        </a>
-      </div>
-      
-      <p>This AI-powered tool will help you:</p>
-      <ul>
-        <li>Create customized checklists for any event type</li>
-        <li>Set automatic reminders and deadlines</li>
-        <li>Track your progress in real-time</li>
-        <li>Collaborate with your team</li>
-      </ul>
-    `
-  }
+  // Get resources from configuration
+  const resources = getEmailResourceForPage(formData.sourceUrl, formData.landingPageTitle)
   
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #1E68C6;">Thank you for your interest!</h2>
       <p>Dear ${formData.name || 'Event Planning Professional'},</p>
       
-      ${resourceContent || `
-        <p>We've received your submission and will get back to you within 24 hours with the resources you requested.</p>
-      `}
+      ${resources.resourceContent}
       
       <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
       
@@ -124,7 +71,7 @@ function getResourceEmailContent(formData: FormData): { subject: string; html: s
     </div>
   `
   
-  return { subject, html }
+  return { subject: resources.subject, html }
 }
 
 async function sendConfirmationEmail(formData: FormData) {

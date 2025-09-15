@@ -80,7 +80,7 @@ export default function LandingPageRenderer({ page }: LandingPageRendererProps) 
       console.log('[LandingPageRenderer] Result:', result)
 
       if (result.success) {
-        setSubmitStatus({ type: 'success', message: result.message || 'Thank you! Your submission has been received.' })
+        setSubmitStatus({ type: 'success', message: '✅ Success! Check your email inbox - your resources should arrive within a few minutes.' })
         setFormData({}) // Clear form on success
       } else {
         setSubmitStatus({ type: 'error', message: result.message || 'Something went wrong. Please try again.' })
