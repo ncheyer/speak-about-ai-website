@@ -39,7 +39,6 @@ async function getResourceEmailContent(formData: FormData): Promise<{ subject: s
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #1E68C6;">Thank you for your interest!</h2>
-      <p>Dear ${formData.name || 'Event Planning Professional'},</p>
       
       ${resources.resourceContent}
       
@@ -66,7 +65,7 @@ async function getResourceEmailContent(formData: FormData): Promise<{ subject: s
       <p style="color: #666; font-size: 12px; text-align: center;">
         Speak About AI | Premier AI Keynote Speakers Bureau<br>
         <a href="https://speakabout.ai" style="color: #1E68C6;">speakabout.ai</a> | 
-        <a href="mailto:hello@speakabout.ai" style="color: #1E68C6;">hello@speakabout.ai</a>
+        <a href="mailto:human@speakabout.ai" style="color: #1E68C6;">human@speakabout.ai</a>
       </p>
     </div>
   `
@@ -81,46 +80,9 @@ async function sendConfirmationEmail(formData: FormData) {
   }
 
   const fromEmail = process.env.RESEND_FROM_EMAIL || 'hello@speakabout.ai'
-  const adminEmails = ['human@speakabout.ai', 'noah@speakabout.ai']
   
   try {
-    // Send admin notification
-    await resend.emails.send({
-      from: fromEmail,
-      to: adminEmails,
-      subject: `New Form Submission: ${formData.name || formData.email} - ${formData.organizationName || formData.company || 'N/A'}`,
-      html: `
-        <h2>New Landing Page Form Submission</h2>
-        <h3>Contact Information</h3>
-        <ul>
-          <li><strong>Name:</strong> ${formData.name || 'Not provided'}</li>
-          <li><strong>Email:</strong> ${formData.email}</li>
-          <li><strong>Phone:</strong> ${formData.phone || 'Not provided'}</li>
-          <li><strong>Organization:</strong> ${formData.organizationName || formData.company || 'Not provided'}</li>
-        </ul>
-        
-        ${formData.eventDate || formData.eventLocation || formData.eventBudget ? `
-        <h3>Event Details</h3>
-        <ul>
-          ${formData.specificSpeaker ? `<li><strong>Speaker Interest:</strong> ${formData.specificSpeaker}</li>` : ''}
-          ${formData.eventDate ? `<li><strong>Event Date:</strong> ${formData.eventDate}</li>` : ''}
-          ${formData.eventLocation ? `<li><strong>Location:</strong> ${formData.eventLocation}</li>` : ''}
-          ${formData.eventBudget ? `<li><strong>Budget:</strong> ${formData.eventBudget}</li>` : ''}
-        </ul>
-        ` : ''}
-        
-        ${formData.additionalInfo || formData.message ? `
-        <h3>Message</h3>
-        <p>${formData.additionalInfo || formData.message}</p>
-        ` : ''}
-        
-        <p><strong>Newsletter:</strong> ${!formData.newsletterOptOut ? 'Opted In' : 'Opted Out'}</p>
-        <hr>
-        <p style="color: #666; font-size: 12px;">Submitted at ${new Date().toLocaleString()}</p>
-      `
-    })
-
-    // Send client confirmation with resources
+    // Send client confirmation with resources only (no admin notification)
     const emailContent = await getResourceEmailContent(formData)
     await resend.emails.send({
       from: fromEmail,
