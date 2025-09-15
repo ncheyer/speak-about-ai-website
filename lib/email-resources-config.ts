@@ -155,6 +155,64 @@ export const defaultEmailContent = {
 
 /**
  * Find the matching email resource for a given form submission
+ * This is now async to support database fetching
+ */
+export async function getEmailResourceForPageAsync(sourceUrl?: string, pageTitle?: string): Promise<{ subject: string; resourceContent: string }> {
+  try {
+    // Try to fetch from database first
+    const databaseUrl = process.env.DATABASE_URL
+    if (databaseUrl) {
+      const { neon } = await import('@neondatabase/serverless')
+      const sql = neon(databaseUrl)
+      
+      // Fetch active resources from database
+      const dbResources = await sql`
+        SELECT url_patterns, title_patterns, subject, resource_content
+        FROM landing_page_resources 
+        WHERE is_active = true 
+        ORDER BY priority DESC, created_at DESC
+      `
+      
+      if (dbResources.length > 0) {
+        // Check database resources
+        for (const resource of dbResources) {
+          // Check URL patterns
+          if (sourceUrl && resource.url_patterns) {
+            for (const pattern of resource.url_patterns) {
+              if (sourceUrl.toLowerCase().includes(pattern.toLowerCase())) {
+                return {
+                  subject: resource.subject,
+                  resourceContent: resource.resource_content
+                }
+              }
+            }
+          }
+          
+          // Check title patterns
+          if (pageTitle && resource.title_patterns) {
+            for (const pattern of resource.title_patterns) {
+              if (pageTitle.toLowerCase().includes(pattern.toLowerCase())) {
+                return {
+                  subject: resource.subject,
+                  resourceContent: resource.resource_content
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching from database, falling back to config:', error)
+  }
+  
+  // Fallback to static config
+  return getEmailResourceForPage(sourceUrl, pageTitle)
+}
+
+/**
+ * Find the matching email resource for a given form submission (synchronous version)
+ * This uses the static configuration only
  */
 export function getEmailResourceForPage(sourceUrl?: string, pageTitle?: string): { subject: string; resourceContent: string } {
   // Try to find a matching resource

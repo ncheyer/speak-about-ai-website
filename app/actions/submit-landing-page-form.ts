@@ -2,7 +2,7 @@
 
 import { neon } from '@neondatabase/serverless'
 import { headers } from 'next/headers'
-import { getEmailResourceForPage } from '@/lib/email-resources-config'
+import { getEmailResourceForPageAsync } from '@/lib/email-resources-config'
 
 interface FormData {
   name?: string
@@ -32,9 +32,9 @@ try {
 }
 
 // Generate email content based on the landing page using configuration
-function getResourceEmailContent(formData: FormData): { subject: string; html: string } {
-  // Get resources from configuration
-  const resources = getEmailResourceForPage(formData.sourceUrl, formData.landingPageTitle)
+async function getResourceEmailContent(formData: FormData): Promise<{ subject: string; html: string }> {
+  // Get resources from configuration (now async to support database)
+  const resources = await getEmailResourceForPageAsync(formData.sourceUrl, formData.landingPageTitle)
   
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -121,7 +121,7 @@ async function sendConfirmationEmail(formData: FormData) {
     })
 
     // Send client confirmation with resources
-    const emailContent = getResourceEmailContent(formData)
+    const emailContent = await getResourceEmailContent(formData)
     await resend.emails.send({
       from: fromEmail,
       to: formData.email,
