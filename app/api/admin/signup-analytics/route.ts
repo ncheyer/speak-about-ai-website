@@ -12,19 +12,36 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const timeRange = searchParams.get('range') || '30' // Default to 30 days
     
-    // Get signup counts by landing page
-    const signupsByPage = await sql`
-      SELECT 
-        COALESCE(source_url, 'Direct/Unknown') as page_url,
-        COALESCE(form_data->>'landingPageTitle', COALESCE(source_url, 'Untitled Page')) as page_title,
-        COUNT(*) as total_signups,
-        COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '${timeRange} days' THEN 1 END) as recent_signups,
-        MAX(created_at) as last_signup,
-        MIN(created_at) as first_signup
-      FROM form_submissions
-      GROUP BY source_url, form_data->>'landingPageTitle'
-      ORDER BY total_signups DESC
-    `
+    // Try to get signup counts from the dedicated tracking table first
+    let signupsByPage
+    try {
+      signupsByPage = await sql`
+        SELECT 
+          COALESCE(landing_page_url, 'Direct/Unknown') as page_url,
+          COALESCE(landing_page_title, page_slug, 'Untitled Page') as page_title,
+          COUNT(DISTINCT email) as total_signups,
+          COUNT(DISTINCT CASE WHEN created_at >= CURRENT_DATE - INTERVAL '${timeRange} days' THEN email END) as recent_signups,
+          MAX(created_at) as last_signup,
+          MIN(created_at) as first_signup
+        FROM landing_page_signups
+        GROUP BY landing_page_url, landing_page_title, page_slug
+        ORDER BY total_signups DESC
+      `
+    } catch (e) {
+      // Fallback to form_submissions table if tracking table doesn't exist
+      signupsByPage = await sql`
+        SELECT 
+          COALESCE(source_url, 'Direct/Unknown') as page_url,
+          COALESCE(form_data->>'landingPageTitle', COALESCE(source_url, 'Untitled Page')) as page_title,
+          COUNT(*) as total_signups,
+          COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '${timeRange} days' THEN 1 END) as recent_signups,
+          MAX(created_at) as last_signup,
+          MIN(created_at) as first_signup
+        FROM form_submissions
+        GROUP BY source_url, form_data->>'landingPageTitle'
+        ORDER BY total_signups DESC
+      `
+    }
 
     // Get total statistics
     const totalStats = await sql`

@@ -99,7 +99,8 @@ async function sendConfirmationEmail(formData: FormData) {
 }
 
 export async function submitLandingPageForm(formData: FormData): Promise<{ success: boolean; message: string }> {
-  console.log("[Server Action] submitLandingPageForm called with:", formData)
+  console.log("[Server Action] submitLandingPageForm called with:", JSON.stringify(formData, null, 2))
+  console.log("[Server Action] Form data keys:", Object.keys(formData))
 
   // Normalize field names (handle both lowercase and capitalized versions)
   const normalizedData: FormData = {
@@ -111,9 +112,12 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
     additionalInfo: formData.additionalInfo || formData.AdditionalInfo,
     sourceUrl: formData.sourceUrl,
     landingPageTitle: formData.landingPageTitle,
+    newsletterOptOut: formData.newsletterOptOut,
     ...formData // Keep any other fields
   }
 
+  console.log("[Server Action] Normalized data:", JSON.stringify(normalizedData, null, 2))
+  
   // Use normalized data from here on
   formData = normalizedData
 
@@ -196,6 +200,46 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
     
     console.log('[Server Action] Form submission saved with ID:', submission.id)
 
+    // Track ALL landing page signups (regardless of newsletter status)
+    try {
+      let pageSlug = 'direct'
+      try {
+        if (formData.sourceUrl) {
+          const url = new URL(formData.sourceUrl)
+          pageSlug = url.pathname.split('/').pop() || 'homepage'
+        }
+      } catch (e) {
+        pageSlug = 'direct'
+      }
+      
+      await sql`
+        INSERT INTO landing_page_signups (
+          email,
+          name,
+          company,
+          landing_page_url,
+          landing_page_title,
+          page_slug,
+          newsletter_opted_in,
+          ip_address
+        ) VALUES (
+          ${formData.email.toLowerCase()},
+          ${formData.name || 'Website Visitor'},
+          ${formData.organizationName || formData.company || null},
+          ${formData.sourceUrl || referer},
+          ${formData.landingPageTitle || null},
+          ${pageSlug},
+          ${!formData.newsletterOptOut},
+          ${ip}
+        )
+        ON CONFLICT (email, landing_page_url, created_at) DO NOTHING
+      `
+      console.log('[Server Action] Tracked landing page signup for analytics')
+    } catch (trackingError) {
+      console.error('[Server Action] Failed to track landing page signup:', trackingError)
+      // Don't fail the submission if tracking fails
+    }
+
     // Add to newsletter if opted in
     console.log('[Server Action] Newsletter opt-out status:', formData.newsletterOptOut)
     console.log('[Server Action] Will add to newsletter:', !formData.newsletterOptOut)
@@ -268,7 +312,27 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
           `
           console.log('[Server Action] Reactivated newsletter subscription for:', existing[0].id)
         } else {
-          console.log('[Server Action] Email already subscribed to newsletter')
+          // Update source for existing active subscriber to track landing page
+          let pageSlug = 'direct'
+          try {
+            if (formData.sourceUrl) {
+              const url = new URL(formData.sourceUrl)
+              pageSlug = url.pathname.split('/').pop() || 'homepage'
+            }
+          } catch (e) {
+            pageSlug = 'direct'
+          }
+          const sourceLabel = formData.landingPageTitle ? 
+            `LP: ${formData.landingPageTitle}` 
+            : `landing_page: ${pageSlug}`
+          
+          await sql`
+            UPDATE newsletter_signups 
+            SET source = ${sourceLabel},
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ${existing[0].id}
+          `
+          console.log('[Server Action] Updated source for existing subscriber:', existing[0].id, 'to:', sourceLabel)
         }
       } catch (error) {
         console.error('[Server Action] Newsletter signup error:', error)
