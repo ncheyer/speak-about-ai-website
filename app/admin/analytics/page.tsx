@@ -770,7 +770,7 @@ export default function AdminAnalyticsPage() {
               <p className="text-gray-600">No search analytics data available yet.</p>
               <p className="text-sm text-gray-500 mt-2">Search tracking will begin when users search the speaker directory.</p>
             </div>
- : null}
+          ) : null}
         </div>
       </div>
     </div>
