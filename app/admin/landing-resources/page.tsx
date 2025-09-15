@@ -354,7 +354,7 @@ export default function LandingResourcesPage() {
                           {resource.subject || 'No subject set'}
                         </CardTitle>
                         <div className="mt-2 space-y-1">
-                          {resource.urlPatterns.length > 0 && (
+                          {resource.urlPatterns && resource.urlPatterns.length > 0 && (
                             <div className="flex items-center gap-2">
                               <Link className="w-4 h-4 text-gray-500" />
                               <div className="flex flex-wrap gap-1">
@@ -366,7 +366,7 @@ export default function LandingResourcesPage() {
                               </div>
                             </div>
                           )}
-                          {resource.titlePatterns.length > 0 && (
+                          {resource.titlePatterns && resource.titlePatterns.length > 0 && (
                             <div className="flex items-center gap-2">
                               <FileText className="w-4 h-4 text-gray-500" />
                               <div className="flex flex-wrap gap-1">
@@ -405,7 +405,9 @@ export default function LandingResourcesPage() {
                       <div 
                         className="prose prose-sm max-w-none"
                         dangerouslySetInnerHTML={{ 
-                          __html: resource.resourceContent.substring(0, 200) + '...' 
+                          __html: resource.resourceContent ? 
+                            (resource.resourceContent.substring(0, 200) + '...') : 
+                            '<p class="text-gray-500">No content preview available</p>'
                         }}
                       />
                     </div>

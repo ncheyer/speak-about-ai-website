@@ -42,8 +42,8 @@ export async function GET() {
         id: index + 1,
         url_patterns: resource.urlPatterns || [],
         title_patterns: resource.titlePatterns || [],
-        subject: resource.subject,
-        resource_content: resource.resourceContent,
+        subject: resource.subject || '',
+        resource_content: resource.resourceContent || '',
         priority: 0,
         is_active: true,
         created_at: new Date().toISOString(),
@@ -52,7 +52,16 @@ export async function GET() {
       return NextResponse.json(configResources)
     }
     
-    return NextResponse.json(resources)
+    // Ensure all fields have proper defaults
+    const sanitizedResources = resources.map(resource => ({
+      ...resource,
+      url_patterns: resource.url_patterns || [],
+      title_patterns: resource.title_patterns || [],
+      subject: resource.subject || '',
+      resource_content: resource.resource_content || ''
+    }))
+    
+    return NextResponse.json(sanitizedResources)
   } catch (error) {
     console.error('Error fetching resources:', error)
     return NextResponse.json({ error: 'Failed to fetch resources' }, { status: 500 })
