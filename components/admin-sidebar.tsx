@@ -136,6 +136,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       bgColor: "bg-cyan-50"
     },
     {
+      title: "Signup Analytics",
+      href: "/admin/signup-analytics",
+      icon: BarChart3,
+      description: "Landing Page Signups",
+      color: "text-amber-600",
+      bgColor: "bg-amber-50"
+    },
+    {
       title: "Client Portal",
       href: "/admin/clients",
       icon: Users,
