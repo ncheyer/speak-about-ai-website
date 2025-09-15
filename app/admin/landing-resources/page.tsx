@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { AdminSidebar } from "@/components/admin-sidebar"
 import { 
   Plus, 
   Save, 
@@ -29,16 +31,24 @@ interface EmailResource {
 }
 
 export default function LandingResourcesPage() {
+  const router = useRouter()
   const [resources, setResources] = useState<EmailResource[]>([])
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editForm, setEditForm] = useState<EmailResource | null>(null)
   const [loading, setLoading] = useState(true)
   const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null)
   const [showNewForm, setShowNewForm] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
+    const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
+    if (!isAdminLoggedIn) {
+      router.push("/admin")
+      return
+    }
+    setIsLoggedIn(true)
     fetchResources()
-  }, [])
+  }, [router])
 
   const fetchResources = async () => {
     setLoading(true)
@@ -252,13 +262,25 @@ export default function LandingResourcesPage() {
     </Card>
   )
 
+  if (!isLoggedIn) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+  }
+
   return (
-    <div className="container mx-auto py-6 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Landing Page Resources</h1>
-          <p className="text-gray-600 mt-1">Manage email resources sent for each landing page</p>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex-1 ml-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-3xl font-bold">Landing Page Resources</h1>
+              <p className="text-gray-600 mt-1">Manage email resources sent for each landing page</p>
+            </div>
         <div className="flex gap-2">
           {resources.length === 0 && (
             <Button onClick={importFromConfig} variant="outline">
@@ -417,6 +439,8 @@ export default function LandingResourcesPage() {
             </div>
           ))
         )}
+      </div>
+        </div>
       </div>
     </div>
   )
