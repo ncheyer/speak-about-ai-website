@@ -68,9 +68,15 @@ export default function LandingPageRenderer({ page }: LandingPageRendererProps) 
     setSubmitStatus(null)
 
     try {
-      console.log('[LandingPageRenderer] Submitting form data:', formData)
+      // Add source URL and page title for resource delivery
+      const enrichedFormData = {
+        ...formData,
+        sourceUrl: window.location.href,
+        landingPageTitle: page.pageTitle || document.title
+      }
+      console.log('[LandingPageRenderer] Submitting form data:', enrichedFormData)
       // Pass form data directly to the new action
-      const result = await submitLandingPageForm(formData)
+      const result = await submitLandingPageForm(enrichedFormData)
       console.log('[LandingPageRenderer] Result:', result)
 
       if (result.success) {
