@@ -73,7 +73,7 @@ export default function LandingResourcesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           resource, 
-          index: resourceId ? parseInt(resourceId) - 1 : index 
+          id: resourceId 
         })
       })
       
@@ -98,8 +98,11 @@ export default function LandingResourcesPage() {
     try {
       // Use the resource's database ID if available
       const resourceId = resources[index]?.id
-      const deleteIndex = resourceId ? parseInt(resourceId) - 1 : index
-      const response = await fetch(`/api/admin/landing-resources/${deleteIndex}`, {
+      if (!resourceId) {
+        setSaveStatus({ type: 'error', message: 'Cannot delete unsaved resource' })
+        return
+      }
+      const response = await fetch(`/api/admin/landing-resources/${resourceId}`, {
         method: 'DELETE'
       })
       
@@ -137,6 +140,25 @@ export default function LandingResourcesPage() {
     setEditForm(newResource)
     setShowNewForm(true)
     setEditingIndex(null)
+  }
+
+  const importFromConfig = async () => {
+    try {
+      const response = await fetch('/api/admin/landing-resources/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setSaveStatus({ type: 'success', message: data.message })
+        await fetchResources()
+        setTimeout(() => setSaveStatus(null), 3000)
+      }
+    } catch (error) {
+      console.error('Error importing resources:', error)
+      setSaveStatus({ type: 'error', message: 'Error importing resources' })
+    }
   }
 
   const saveNewResource = async () => {
@@ -237,10 +259,18 @@ export default function LandingResourcesPage() {
           <h1 className="text-3xl font-bold">Landing Page Resources</h1>
           <p className="text-gray-600 mt-1">Manage email resources sent for each landing page</p>
         </div>
-        <Button onClick={addNewResource} disabled={showNewForm}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Resource
-        </Button>
+        <div className="flex gap-2">
+          {resources.length === 0 && (
+            <Button onClick={importFromConfig} variant="outline">
+              <FileText className="w-4 h-4 mr-2" />
+              Import from Config
+            </Button>
+          )}
+          <Button onClick={addNewResource} disabled={showNewForm}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Resource
+          </Button>
+        </div>
       </div>
 
       {saveStatus && (

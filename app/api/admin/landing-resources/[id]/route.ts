@@ -12,7 +12,7 @@ export async function DELETE(
     }
 
     const { id } = await params
-    const resourceId = parseInt(id) + 1 // Convert index to database ID
+    const resourceId = parseInt(id) // Use ID directly
     
     const sql = neon(databaseUrl)
     

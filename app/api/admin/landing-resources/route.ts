@@ -110,12 +110,11 @@ export async function PUT(request: Request) {
     }
 
     const sql = neon(databaseUrl)
-    const { resource, index } = await request.json()
+    const { resource, id } = await request.json()
     
-    // If index is provided, use it as the ID
-    // Otherwise, try to match by subject
     let result
-    if (index !== undefined) {
+    if (id) {
+      // Update existing resource
       result = await sql`
         UPDATE landing_page_resources 
         SET 
@@ -126,9 +125,33 @@ export async function PUT(request: Request) {
           priority = ${resource.priority || 0},
           is_active = ${resource.isActive !== false},
           updated_at = CURRENT_TIMESTAMP
-        WHERE id = ${index + 1}
+        WHERE id = ${id}
         RETURNING *
       `
+      
+      if (result.length === 0) {
+        // If no resource found with that ID, insert as new
+        result = await sql`
+          INSERT INTO landing_page_resources (
+            url_patterns,
+            title_patterns,
+            subject,
+            resource_content,
+            priority,
+            is_active,
+            created_by
+          ) VALUES (
+            ${resource.urlPatterns || []},
+            ${resource.titlePatterns || []},
+            ${resource.subject},
+            ${resource.resourceContent},
+            ${resource.priority || 0},
+            ${resource.isActive !== false},
+            'admin'
+          )
+          RETURNING *
+        `
+      }
     } else {
       // Insert as new if no ID provided
       result = await sql`
