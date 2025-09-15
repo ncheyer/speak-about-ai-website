@@ -24,7 +24,9 @@ import {
   Heart,
   Mail,
   TrendingUp,
-  FileSignature
+  FileSignature,
+  Send,
+  MessageSquare
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -124,6 +126,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       description: "Subscriber Management",
       color: "text-pink-600",
       bgColor: "bg-pink-50"
+    },
+    {
+      title: "Landing Resources",
+      href: "/admin/landing-resources",
+      icon: Send,
+      description: "Email Resources",
+      color: "text-cyan-600",
+      bgColor: "bg-cyan-50"
     },
     {
       title: "Client Portal",
