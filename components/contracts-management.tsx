@@ -239,6 +239,21 @@ export function ContractsManagement() {
     }
   }
 
+  const handlePreviewContract = async (contractId: number) => {
+    try {
+      // Simply open the preview URL - cookies will be sent automatically
+      const previewUrl = `/api/contracts/${contractId}/preview`
+      window.open(previewUrl, '_blank')
+    } catch (error) {
+      console.error("Error opening preview:", error)
+      toast({
+        title: "Error",
+        description: "Failed to open contract preview",
+        variant: "destructive"
+      })
+    }
+  }
+
   const generateSigningLink = (contract: Contract, signerType: 'client' | 'speaker') => {
     const token = signerType === 'client' ? contract.client_signing_token : contract.speaker_signing_token
     if (!token) return ''
@@ -556,7 +571,8 @@ export function ContractsManagement() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => window.open(`/api/contracts/${contract.id}/preview`, '_blank')}
+                            onClick={() => handlePreviewContract(contract.id)}
+                            title="Preview contract"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>

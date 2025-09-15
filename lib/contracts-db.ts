@@ -404,33 +404,45 @@ export async function generateContractHTML(contractId: number): Promise<string |
     const contract = await getContractById(contractId)
     if (!contract) return null
     
+    // Parse contract_data if it exists for additional information
+    let contractMetadata: any = {}
+    if (contract.contract_data) {
+      try {
+        contractMetadata = typeof contract.contract_data === 'string' 
+          ? JSON.parse(contract.contract_data)
+          : contract.contract_data
+      } catch (e) {
+        console.warn("Failed to parse contract_data:", e)
+      }
+    }
+    
     // Create contract data object for HTML generation
     const contractData: ContractData = {
-      id: contract.deal_id,
+      id: contract.deal_id || contract.id,
       contract_number: contract.contract_number,
-      client_name: contract.client_name,
-      client_email: contract.client_email,
+      client_name: contract.client_name || '',
+      client_email: contract.client_email || '',
       client_phone: '', // We'll need to get this from the deal if needed
       company: contract.client_company || '',
-      event_title: contract.event_title,
-      event_date: contract.event_date,
-      event_location: contract.event_location,
+      event_title: contract.event_title || '',
+      event_date: contract.event_date || new Date().toISOString(),
+      event_location: contract.event_location || '',
       event_type: contract.event_type || '',
-      speaker_requested: contract.speaker_name,
-      attendee_count: contract.attendee_count || 0,
+      speaker_requested: contract.speaker_name || '',
+      attendee_count: contractMetadata.attendeeCount || 0,
       budget_range: '',
-      deal_value: contract.total_amount,
+      deal_value: contract.fee_amount || 0,
       status: 'won', // Since we're generating a contract
       priority: 'medium',
       source: '',
       notes: '',
-      created_at: contract.generated_at,
+      created_at: contract.generated_at || contract.created_at || new Date().toISOString(),
       last_contact: '',
-      updated_at: contract.updated_at,
-      speaker_name: contract.speaker_name,
-      speaker_email: contract.speaker_email,
-      speaker_fee: contract.speaker_fee,
-      payment_terms: contract.payment_terms,
+      updated_at: contract.updated_at || new Date().toISOString(),
+      speaker_name: contract.speaker_name || '',
+      speaker_email: contract.speaker_email || '',
+      speaker_fee: contract.speaker_fee || contract.fee_amount || 0,
+      payment_terms: contract.payment_terms || 'Payment due within 30 days of event completion',
       travel_stipend: 0 // Default value as contracts table might not have this field
     }
     
