@@ -30,7 +30,11 @@ import {
   Clock,
   Loader2,
   Search,
-  XCircle
+  XCircle,
+  Mail,
+  ExternalLink,
+  Download,
+  Activity
 } from "lucide-react"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
@@ -78,11 +82,50 @@ interface SearchAnalytics {
   topSearchedSpeakers: Array<{ name: string; slug: string; count: number }>
 }
 
+interface SignupPageStats {
+  page_url: string
+  page_title: string
+  total_signups: number
+  recent_signups: number
+  last_signup: string
+  first_signup: string
+}
+
+interface SignupTotalStats {
+  total_signups: number
+  week_signups: number
+  month_signups: number
+  newsletter_subscribers: number
+}
+
+interface RecentSignup {
+  email: string
+  name: string
+  company: string
+  source_url: string
+  landing_page_title: string
+  created_at: string
+}
+
+interface SignupDailyTrend {
+  date: string
+  signups: number
+}
+
 export default function AdminAnalyticsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [searchAnalytics, setSearchAnalytics] = useState<SearchAnalytics | null>(null)
+  const [signupsByPage, setSignupsByPage] = useState<SignupPageStats[]>([])
+  const [signupTotalStats, setSignupTotalStats] = useState<SignupTotalStats>({
+    total_signups: 0,
+    week_signups: 0,
+    month_signups: 0,
+    newsletter_subscribers: 0
+  })
+  const [recentSignups, setRecentSignups] = useState<RecentSignup[]>([])
+  const [signupDailyTrend, setSignupDailyTrend] = useState<SignupDailyTrend[]>([])
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState("7")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -102,14 +145,15 @@ export default function AdminAnalyticsPage() {
     try {
       setLoading(true)
       
-      // Load both website analytics and search analytics in parallel
-      const [websiteResponse, searchResponse] = await Promise.all([
+      // Load website analytics, search analytics, and signup analytics in parallel
+      const [websiteResponse, searchResponse, signupResponse] = await Promise.all([
         fetch(`/api/analytics/umami?days=${timeRange}`, {
           headers: { 'x-admin-request': 'true' }
         }),
         fetch(`/api/analytics/search?days=${timeRange}`, {
           headers: { 'x-admin-request': 'true' }
-        })
+        }),
+        fetch(`/api/admin/signup-analytics?range=${timeRange}`)
       ])
       
       if (websiteResponse.ok) {
@@ -136,6 +180,17 @@ export default function AdminAnalyticsPage() {
         setSearchAnalytics(searchData.analytics)
       } else {
         console.error('Failed to load search analytics')
+      }
+      
+      // Load signup analytics
+      if (signupResponse.ok) {
+        const signupData = await signupResponse.json()
+        setSignupsByPage(signupData.signupsByPage)
+        setSignupTotalStats(signupData.totalStats)
+        setRecentSignups(signupData.recentSignups)
+        setSignupDailyTrend(signupData.dailyTrend)
+      } else {
+        console.error('Failed to load signup analytics')
       }
     } catch (error) {
       console.error("Error loading analytics:", error)
@@ -220,6 +275,16 @@ export default function AdminAnalyticsPage() {
               }`}
             >
               Search Analytics
+            </button>
+            <button
+              onClick={() => setActiveTab("signups")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === "signups"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Signup Analytics
             </button>
           </div>
 
@@ -769,6 +834,196 @@ export default function AdminAnalyticsPage() {
               <p className="text-gray-600">No search analytics data available yet.</p>
               <p className="text-sm text-gray-500 mt-2">Search tracking will begin when users search the speaker directory.</p>
             </div>
+          ) : activeTab === "signups" ? (
+            <>
+              {/* Signup Analytics Stats Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600">Total Signups</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{signupTotalStats.total_signups}</div>
+                    <p className="text-xs text-gray-500 mt-1">All time</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600">This Week</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">{signupTotalStats.week_signups}</div>
+                    <p className="text-xs text-gray-500 mt-1">Last 7 days</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600">This Month</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-blue-600">{signupTotalStats.month_signups}</div>
+                    <p className="text-xs text-gray-500 mt-1">Last 30 days</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600">Newsletter Subscribers</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-purple-600">{signupTotalStats.newsletter_subscribers}</div>
+                    <p className="text-xs text-gray-500 mt-1">Opted in</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Signups by Page */}
+                <div className="lg:col-span-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5" />
+                        Signups by Landing Page
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {signupsByPage.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">No signups yet</div>
+                      ) : (
+                        <div className="space-y-3">
+                          {signupsByPage.map((page, index) => {
+                            const getPageSlug = (url: string) => {
+                              if (!url || url === 'Direct/Unknown') return 'direct'
+                              try {
+                                const urlObj = new URL(url)
+                                return urlObj.pathname.split('/').pop() || 'homepage'
+                              } catch {
+                                return url.split('/').pop() || url
+                              }
+                            }
+                            
+                            return (
+                              <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div className="flex-1">
+                                    <h3 className="font-semibold text-gray-900">{page.page_title}</h3>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <span className="text-sm text-gray-500">
+                                        {getPageSlug(page.page_url)}
+                                      </span>
+                                      {page.page_url !== 'Direct/Unknown' && (
+                                        <a 
+                                          href={page.page_url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:text-blue-700"
+                                        >
+                                          <ExternalLink className="w-3 h-3" />
+                                        </a>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-2xl font-bold">{page.total_signups}</div>
+                                    <div className="text-xs text-gray-500">total signups</div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex gap-4 mt-3 pt-3 border-t">
+                                  <div className="flex items-center gap-2">
+                                    <TrendingUp className="w-4 h-4 text-green-600" />
+                                    <span className="text-sm">
+                                      <strong>{page.recent_signups}</strong> in last {timeRange} days
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-gray-400" />
+                                    <span className="text-sm text-gray-600">
+                                      Last: {new Date(page.last_signup).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                {/* Conversion bar */}
+                                <div className="mt-3">
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div 
+                                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                      style={{ 
+                                        width: `${Math.min((page.recent_signups / page.total_signups) * 100, 100)}%` 
+                                      }}
+                                    />
+                                  </div>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {((page.recent_signups / page.total_signups) * 100).toFixed(1)}% recent activity
+                                  </p>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Recent Activity */}
+                <div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Activity className="w-5 h-5" />
+                        Recent Signups
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {recentSignups.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">No recent signups</div>
+                      ) : (
+                        <div className="space-y-3">
+                          {recentSignups.map((signup, index) => {
+                            const getPageSlug = (url: string) => {
+                              if (!url || url === 'Direct/Unknown') return 'direct'
+                              try {
+                                const urlObj = new URL(url)
+                                return urlObj.pathname.split('/').pop() || 'homepage'
+                              } catch {
+                                return url.split('/').pop() || url
+                              }
+                            }
+                            
+                            return (
+                              <div key={index} className="border-b last:border-0 pb-3 last:pb-0">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm truncate">
+                                      {signup.name || 'Anonymous'}
+                                    </p>
+                                    <p className="text-xs text-gray-500 truncate">{signup.email}</p>
+                                    {signup.company && (
+                                      <p className="text-xs text-gray-500">{signup.company}</p>
+                                    )}
+                                  </div>
+                                  <Badge variant="outline" className="ml-2 text-xs">
+                                    {getPageSlug(signup.source_url)}
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  {new Date(signup.created_at).toLocaleString()}
+                                </p>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </>
           ) : null}
         </div>
       </div>
