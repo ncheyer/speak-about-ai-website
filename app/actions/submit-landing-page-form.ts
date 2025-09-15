@@ -207,27 +207,56 @@ export async function submitLandingPageForm(formData: FormData): Promise<{ succe
         
         if (existing.length === 0) {
           // New subscriber
+          // Get the source page info for tracking
+          let pageSlug = 'direct'
+          try {
+            if (formData.sourceUrl) {
+              const url = new URL(formData.sourceUrl)
+              pageSlug = url.pathname.split('/').pop() || 'homepage'
+            }
+          } catch (e) {
+            pageSlug = 'direct'
+          }
+          const sourceLabel = formData.landingPageTitle ? 
+            `LP: ${formData.landingPageTitle}` 
+            : `landing_page: ${pageSlug}`
+            
           await sql`
             INSERT INTO newsletter_signups (
-              email, name, company, status, source
+              email, name, company, status, source, ip_address
             ) VALUES (
               ${formData.email.toLowerCase()},
               ${formData.name || 'Website Visitor'},
               ${formData.organizationName || formData.company || null},
               'active',
-              'landing_page_form'
+              ${sourceLabel},
+              ${ip}
             )
           `
           console.log('Added to newsletter')
         } else if (existing[0].status === 'unsubscribed') {
           // Reactivate unsubscribed user
+          let pageSlug = 'direct'
+          try {
+            if (formData.sourceUrl) {
+              const url = new URL(formData.sourceUrl)
+              pageSlug = url.pathname.split('/').pop() || 'homepage'
+            }
+          } catch (e) {
+            pageSlug = 'direct'
+          }
+          const sourceLabel = formData.landingPageTitle ? 
+            `LP: ${formData.landingPageTitle}` 
+            : `landing_page: ${pageSlug}`
+            
           await sql`
             UPDATE newsletter_signups 
             SET status = 'active', 
                 subscribed_at = CURRENT_TIMESTAMP,
                 unsubscribed_at = NULL,
                 name = ${formData.name || 'Website Visitor'},
-                company = ${formData.organizationName || formData.company || null}
+                company = ${formData.organizationName || formData.company || null},
+                source = ${sourceLabel}
             WHERE id = ${existing[0].id}
           `
           console.log('Reactivated newsletter subscription')

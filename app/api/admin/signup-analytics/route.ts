@@ -16,13 +16,13 @@ export async function GET(request: Request) {
     const signupsByPage = await sql`
       SELECT 
         COALESCE(source_url, 'Direct/Unknown') as page_url,
-        COALESCE(landing_page_title, 'Untitled Page') as page_title,
+        COALESCE(form_data->>'landingPageTitle', COALESCE(source_url, 'Untitled Page')) as page_title,
         COUNT(*) as total_signups,
         COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '${timeRange} days' THEN 1 END) as recent_signups,
         MAX(created_at) as last_signup,
         MIN(created_at) as first_signup
       FROM form_submissions
-      GROUP BY source_url, landing_page_title
+      GROUP BY source_url, form_data->>'landingPageTitle'
       ORDER BY total_signups DESC
     `
 
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
         COUNT(*) as total_signups,
         COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as week_signups,
         COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as month_signups,
-        COUNT(CASE WHEN newsletter_opt_out = false OR newsletter_opt_out IS NULL THEN 1 END) as newsletter_subscribers
+        COUNT(CASE WHEN newsletter_opt_in = true THEN 1 END) as newsletter_subscribers
       FROM form_submissions
     `
 
@@ -41,9 +41,9 @@ export async function GET(request: Request) {
       SELECT 
         email,
         name,
-        company,
+        organization_name as company,
         source_url,
-        landing_page_title,
+        COALESCE(form_data->>'landingPageTitle', source_url) as landing_page_title,
         created_at
       FROM form_submissions
       ORDER BY created_at DESC
