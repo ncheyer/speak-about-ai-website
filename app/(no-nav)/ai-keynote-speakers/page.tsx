@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   keywords:
     "hire AI speakers, book AI keynote speakers, AI experts for hire, artificial intelligence speakers, machine learning speakers",
   alternates: {
-    canonical: "/ai-keynote-speakers",
+    canonical: "https://speakabout.ai/ai-keynote-speakers",
   },
 }
 

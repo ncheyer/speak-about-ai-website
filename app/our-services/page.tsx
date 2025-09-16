@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   keywords:
     "AI speaker services, AI keynote speakers, AI panel discussions, AI fireside chats, SprintAI workshop, artificial intelligence speaking bureau",
   alternates: {
-    canonical: "/our-services",
+    canonical: "https://speakabout.ai/our-services",
   },
 }
 

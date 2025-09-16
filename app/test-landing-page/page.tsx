@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: pageData.pageTitle,
     description: pageData.metaDescription,
     alternates: {
-      canonical: `/test-landing-page`,
+      canonical: `https://speakabout.ai/test-landing-page`,
     },
   }
 }

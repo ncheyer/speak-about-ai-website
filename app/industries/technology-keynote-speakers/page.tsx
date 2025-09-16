@@ -14,10 +14,10 @@ export const metadata: Metadata = {
     description:
       "Book world-class technology keynote speakers. AI pioneers, Silicon Valley executives, and digital transformation experts for your tech event.",
     type: "website",
-    url: "https://www.speakabout.ai/industries/technology-keynote-speakers",
+    url: "https://speakabout.ai/industries/technology-keynote-speakers",
   },
   alternates: {
-    canonical: "https://www.speakabout.ai/industries/technology-keynote-speakers",
+    canonical: "https://speakabout.ai/industries/technology-keynote-speakers",
   },
   robots: {
     index: true,

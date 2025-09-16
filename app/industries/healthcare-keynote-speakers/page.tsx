@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     "AI in healthcare speakers",
   ],
   alternates: {
-    canonical: "/industries/healthcare-keynote-speakers",
+    canonical: "https://speakabout.ai/industries/healthcare-keynote-speakers",
   },
 }
 

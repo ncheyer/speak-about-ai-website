@@ -54,7 +54,7 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [ogImage],
     },
     alternates: {
-      canonical: "/speakers",
+      canonical: "https://speakabout.ai/speakers",
     },
   }
 }

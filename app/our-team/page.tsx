@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   keywords:
     "AI speaker bureau team, Speak About AI team, AI keynote speaker experts, artificial intelligence bureau staff",
   alternates: {
-    canonical: "/our-team",
+    canonical: "https://speakabout.ai/our-team",
   },
 }
 

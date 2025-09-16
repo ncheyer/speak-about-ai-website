@@ -154,7 +154,7 @@ export async function generateMetadata({ params }: SpeakerPageProps) {
       creator: speaker.twitter || undefined,
     },
     alternates: {
-      canonical: `/speakers/${slug}`,
+      canonical: `https://speakabout.ai/speakers/${slug}`,
     },
   }
 }

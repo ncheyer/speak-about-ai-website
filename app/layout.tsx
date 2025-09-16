@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL("https://speakabout.ai"),
   alternates: {
-    canonical: "/",
+    canonical: "https://speakabout.ai/",
   },
   openGraph: {
     type: "website",

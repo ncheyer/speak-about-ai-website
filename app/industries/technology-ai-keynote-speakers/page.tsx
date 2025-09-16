@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   keywords:
     "technology keynote speakers, tech keynote speaker, ai keynote speaker, enterprise technology speakers, digital transformation speakers, artificial intelligence experts",
   alternates: {
-    canonical: "/industries/technology-ai-keynote-speakers",
+    canonical: "https://speakabout.ai/industries/technology-ai-keynote-speakers",
   },
 }
 

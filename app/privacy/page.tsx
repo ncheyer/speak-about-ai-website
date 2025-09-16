@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description:
     "Learn how Speak About AI collects, uses, and protects your personal information. Our privacy policy explains our data practices and your rights.",
   alternates: {
-    canonical: "/privacy",
+    canonical: "https://speakabout.ai/privacy",
   },
 }
 

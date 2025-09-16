@@ -104,7 +104,7 @@ export async function generateMetadata({ params }: BlogPostPageProps, parent: Re
     description: description,
     keywords: post.categories?.map((cat) => cat.name).join(", "),
     alternates: {
-      canonical: `/blog/${post.slug}`,
+      canonical: `https://speakabout.ai/blog/${post.slug}`,
     },
     openGraph: {
       title: post.title,

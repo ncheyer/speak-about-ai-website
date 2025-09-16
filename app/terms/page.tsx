@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     "Read the terms and conditions for using Speak About AI website and services. Understand your rights and obligations.", // 119 chars
   alternates: {
-    canonical: "/terms",
+    canonical: "https://speakabout.ai/terms",
   },
 }
 
