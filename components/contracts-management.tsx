@@ -36,6 +36,7 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { Deal } from "@/lib/deals-db"
+import { formatDateShortPST } from "@/lib/date-utils"
 
 interface Contract {
   id: number
@@ -547,7 +548,7 @@ export function ContractsManagement() {
                           <p className="font-medium">{contract.event_title}</p>
                           <div className="flex items-center gap-1 text-sm text-gray-500">
                             <Calendar className="w-3 h-3" />
-                            {new Date(contract.event_date).toLocaleDateString()}
+                            {formatDateShortPST(contract.event_date)}
                           </div>
                         </div>
                       </TableCell>
@@ -564,7 +565,7 @@ export function ContractsManagement() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {new Date(contract.generated_at).toLocaleDateString()}
+                        {formatDateShortPST(contract.generated_at)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">

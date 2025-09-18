@@ -37,6 +37,7 @@ import {
   Clock
 } from "lucide-react"
 import { formatDate } from "@/lib/utils"
+import { formatDateShortPST, getPSTTimezoneLabel } from "@/lib/date-utils"
 
 interface FormSubmission {
   id: number
@@ -104,7 +105,7 @@ export default function FormSubmissionsPage() {
   const exportToCSV = () => {
     const headers = ['Date', 'Name', 'Email', 'Phone', 'Organization', 'Event Date', 'Location', 'Budget', 'Status']
     const csvData = submissions.map(s => [
-      new Date(s.created_at).toLocaleDateString(),
+      formatDateShortPST(s.created_at),
       s.name,
       s.email,
       s.phone || '',

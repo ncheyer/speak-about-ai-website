@@ -50,6 +50,7 @@ import { useToast } from "@/hooks/use-toast"
 import { DealsKanban } from "@/components/deals-kanban"
 import { ProjectsKanban } from "@/components/projects-kanban"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { getPSTTimezoneLabel } from "@/lib/date-utils"
 import {
   Table,
   TableBody,
@@ -645,6 +646,7 @@ export default function MasterAdminPanel() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Master Admin Panel</h1>
               <p className="mt-2 text-gray-600">Manage speakers, deals, and projects from one place</p>
+              <p className="text-sm text-gray-500 mt-1">All times displayed in {getPSTTimezoneLabel()}</p>
             </div>
           </div>
 

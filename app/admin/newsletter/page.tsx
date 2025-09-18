@@ -19,6 +19,7 @@ import {
   Clock,
   Building
 } from 'lucide-react'
+import { formatDateTimePST, getPSTTimezoneLabel } from '@/lib/date-utils'
 
 interface NewsletterSignup {
   id: number
@@ -122,7 +123,7 @@ export default function AdminNewsletterPage() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return formatDateTimePST(dateString, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

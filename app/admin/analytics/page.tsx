@@ -34,6 +34,7 @@ import {
 } from "lucide-react"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
+import { formatDateTimePST, getPSTTimezoneLabel } from "@/lib/date-utils"
 
 interface AnalyticsData {
   totalPageViews: number
@@ -180,6 +181,7 @@ export default function AdminAnalyticsPage() {
               <p className="mt-2 text-gray-600">
                 {analytics?.period ? 'Powered by Umami Analytics' : 'Analytics Dashboard'} - Track visitor behavior, search patterns, and website performance
               </p>
+              <p className="text-sm text-gray-500 mt-1">All times displayed in {getPSTTimezoneLabel()}</p>
             </div>
             <div className="flex gap-4">
               <Select value={timeRange} onValueChange={setTimeRange}>
@@ -504,7 +506,7 @@ export default function AdminAnalyticsPage() {
                           <TableCell className="font-medium">{event.event_name}</TableCell>
                           <TableCell>{event.page_path}</TableCell>
                           <TableCell>
-                            {new Date(event.created_at).toLocaleString()}
+                            {formatDateTimePST(event.created_at)}
                           </TableCell>
                           <TableCell>
                             {event.metadata && (
