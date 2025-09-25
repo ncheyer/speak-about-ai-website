@@ -90,14 +90,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       bgColor: "bg-orange-50"
     },
     {
-      title: "Invoicing",
-      href: "/admin/invoicing",
-      icon: DollarSign,
-      description: "Invoice Management",
-      color: "text-green-600",
-      bgColor: "bg-green-50"
-    },
-    {
       title: "Speaker Management",
       href: "/admin/speakers",
       icon: Users,
@@ -152,6 +144,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       description: "System Debug",
       color: "text-red-600",
       bgColor: "bg-red-50"
+    },
+    {
+      title: "Invoicing (BETA)",
+      href: "/admin/invoicing",
+      icon: DollarSign,
+      description: "Invoice Management",
+      color: "text-green-600",
+      bgColor: "bg-green-50"
     },
     {
       title: "Contracts Hub (BETA)",
