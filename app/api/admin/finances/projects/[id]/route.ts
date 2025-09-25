@@ -48,10 +48,44 @@ export async function PUT(
       }, { status: 404 })
     }
     
-    return NextResponse.json({ 
-      project: result[0],
-      success: true 
-    })
+    const updatedProject = result[0]
+    
+    // Sync budget back to related deal(s)
+    try {
+      const dealUpdateResult = await sql`
+        UPDATE deals 
+        SET 
+          deal_value = ${budget},
+          commission_percentage = ${commission_percentage},
+          commission_amount = ${calculatedCommission},
+          payment_status = ${payment_status},
+          payment_date = ${payment_date},
+          financial_notes = ${financial_notes},
+          updated_at = NOW()
+        WHERE company = ${updatedProject.company}
+          AND client_name = ${updatedProject.client_name}
+          AND (event_date = ${updatedProject.event_date} 
+               OR event_title = ${updatedProject.project_name})
+          AND status = 'won'
+        RETURNING id, event_title
+      `
+      
+      console.log(`Updated ${dealUpdateResult.length} related deal(s) for project ${projectId}`)
+      
+      return NextResponse.json({ 
+        project: updatedProject,
+        dealsUpdated: dealUpdateResult.length,
+        success: true 
+      })
+    } catch (dealError) {
+      console.error('Warning: Failed to sync to deals:', dealError)
+      // Still return success for project update even if deal sync fails
+      return NextResponse.json({ 
+        project: updatedProject,
+        success: true,
+        warning: 'Project updated but deal sync failed'
+      })
+    }
     
   } catch (error) {
     console.error('Error updating project:', error)

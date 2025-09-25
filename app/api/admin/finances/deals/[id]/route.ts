@@ -57,10 +57,47 @@ export async function PUT(
       }, { status: 404 })
     }
     
-    return NextResponse.json({ 
-      deal: result[0],
-      success: true 
-    })
+    const updatedDeal = result[0]
+    
+    // Sync budget to related project(s)
+    try {
+      const projectUpdateResult = await sql`
+        UPDATE projects 
+        SET 
+          budget = ${deal_value},
+          speaker_fee = ${deal_value},
+          commission_percentage = ${commission_percentage},
+          commission_amount = ${calculatedCommission},
+          payment_status = ${payment_status},
+          payment_date = ${payment_date},
+          financial_notes = ${notes},
+          contract_link = ${contract_link},
+          invoice_link_1 = ${invoice_link_1},
+          invoice_link_2 = ${invoice_link_2},
+          updated_at = NOW()
+        WHERE company = ${updatedDeal.company}
+          AND client_name = ${updatedDeal.client_name}
+          AND (event_date = ${updatedDeal.event_date} 
+               OR project_name = ${updatedDeal.event_title})
+        RETURNING id, project_name
+      `
+      
+      console.log(`Updated ${projectUpdateResult.length} related project(s) for deal ${dealId}`)
+      
+      return NextResponse.json({ 
+        deal: updatedDeal,
+        projectsUpdated: projectUpdateResult.length,
+        success: true 
+      })
+    } catch (projectError) {
+      console.error('Warning: Failed to sync to projects:', projectError)
+      // Still return success for deal update even if project sync fails
+      return NextResponse.json({ 
+        deal: updatedDeal,
+        success: true,
+        warning: 'Deal updated but project sync failed'
+      })
+    }
     
   } catch (error) {
     console.error('Error updating deal:', error)
