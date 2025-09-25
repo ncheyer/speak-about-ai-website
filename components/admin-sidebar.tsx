@@ -24,7 +24,8 @@ import {
   X,
   Heart,
   Mail,
-  TrendingUp
+  TrendingUp,
+  Wallet
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -60,6 +61,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       description: "System Control",
       color: "text-slate-600",
       bgColor: "bg-slate-50"
+    },
+    {
+      title: "Finances",
+      href: "/admin/finances",
+      icon: Wallet,
+      description: "Revenue & Commissions",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50"
     },
     {
       title: "Project Management",
@@ -106,8 +115,8 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       href: "/admin/clients",
       icon: Users,
       description: "Client Access",
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50"
+      color: "text-cyan-600",
+      bgColor: "bg-cyan-50"
     },
     {
       title: "Database",
