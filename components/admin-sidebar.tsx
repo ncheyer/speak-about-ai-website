@@ -82,14 +82,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       bgColor: "bg-blue-50"
     },
     {
-      title: "Contracts Hub",
-      href: "/admin/contracts-hub",
-      icon: FileSignature,
-      description: "Contract Management",
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50"
-    },
-    {
       title: "Project Management",
       href: "/admin/projects",
       icon: CheckSquare,
@@ -160,6 +152,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       description: "System Debug",
       color: "text-red-600",
       bgColor: "bg-red-50"
+    },
+    {
+      title: "Contracts Hub (BETA)",
+      href: "/admin/contracts-hub",
+      icon: FileSignature,
+      description: "Contract Management",
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50"
     }
   ]
 
