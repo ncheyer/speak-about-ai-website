@@ -596,7 +596,24 @@ export default function ProjectEditPage() {
                   </div>
                   <div>
                     <Label htmlFor="event_classification">Event Classification</Label>
-                    <Select value={formData.event_classification} onValueChange={(value) => updateField("event_classification", value)}>
+                    <Select 
+                      value={formData.event_classification} 
+                      onValueChange={(value) => {
+                        updateField("event_classification", value);
+                        // Auto-clear travel and venue fields when switching to virtual
+                        if (value === "virtual") {
+                          updateField("travel_required", false);
+                          updateField("accommodation_required", false);
+                          updateField("airport_transport_provided", false);
+                          updateField("venue_transport_provided", false);
+                          updateField("venue_name", "");
+                          updateField("venue_contact_name", "");
+                          updateField("venue_contact_email", "");
+                          updateField("venue_contact_phone", "");
+                          updateField("venue_address", "");
+                        }
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select classification" />
                       </SelectTrigger>
@@ -617,46 +634,66 @@ export default function ProjectEditPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="venue_name">Venue Name</Label>
+                    <Label htmlFor="venue_name" className={formData.event_classification === "virtual" ? "text-gray-400" : ""}>
+                      Venue Name {formData.event_classification === "virtual" && <span className="text-xs">(Not required - Virtual)</span>}
+                    </Label>
                     <Input
                       id="venue_name"
                       value={formData.venue_name || ""}
                       onChange={(e) => updateField("venue_name", e.target.value)}
+                      disabled={formData.event_classification === "virtual"}
+                      placeholder={formData.event_classification === "virtual" ? "Not applicable for virtual event" : ""}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="venue_contact_name">Venue Contact</Label>
+                    <Label htmlFor="venue_contact_name" className={formData.event_classification === "virtual" ? "text-gray-400" : ""}>
+                      Venue Contact {formData.event_classification === "virtual" && <span className="text-xs">(Not required - Virtual)</span>}
+                    </Label>
                     <Input
                       id="venue_contact_name"
                       value={formData.venue_contact_name || ""}
                       onChange={(e) => updateField("venue_contact_name", e.target.value)}
+                      disabled={formData.event_classification === "virtual"}
+                      placeholder={formData.event_classification === "virtual" ? "Not applicable for virtual event" : ""}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="venue_contact_email">Venue Contact Email</Label>
+                    <Label htmlFor="venue_contact_email" className={formData.event_classification === "virtual" ? "text-gray-400" : ""}>
+                      Venue Contact Email {formData.event_classification === "virtual" && <span className="text-xs">(Not required - Virtual)</span>}
+                    </Label>
                     <Input
                       id="venue_contact_email"
                       type="email"
                       value={formData.venue_contact_email || ""}
                       onChange={(e) => updateField("venue_contact_email", e.target.value)}
+                      disabled={formData.event_classification === "virtual"}
+                      placeholder={formData.event_classification === "virtual" ? "Not applicable for virtual event" : ""}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="venue_contact_phone">Venue Contact Phone</Label>
+                    <Label htmlFor="venue_contact_phone" className={formData.event_classification === "virtual" ? "text-gray-400" : ""}>
+                      Venue Contact Phone {formData.event_classification === "virtual" && <span className="text-xs">(Not required - Virtual)</span>}
+                    </Label>
                     <Input
                       id="venue_contact_phone"
                       value={formData.venue_contact_phone || ""}
                       onChange={(e) => updateField("venue_contact_phone", e.target.value)}
+                      disabled={formData.event_classification === "virtual"}
+                      placeholder={formData.event_classification === "virtual" ? "Not applicable for virtual event" : ""}
                     />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="venue_address">Venue Address</Label>
+                  <Label htmlFor="venue_address" className={formData.event_classification === "virtual" ? "text-gray-400" : ""}>
+                    Venue Address {formData.event_classification === "virtual" && <span className="text-xs">(Not required - Virtual)</span>}
+                  </Label>
                   <Textarea
                     id="venue_address"
                     value={formData.venue_address || ""}
                     onChange={(e) => updateField("venue_address", e.target.value)}
                     rows={2}
+                    disabled={formData.event_classification === "virtual"}
+                    placeholder={formData.event_classification === "virtual" ? "Not applicable for virtual event" : ""}
                   />
                 </div>
               </CardContent>
@@ -1083,11 +1120,24 @@ export default function ProjectEditPage() {
 
           {/* Logistics */}
           <TabsContent value="logistics" className="space-y-6">
-            <Card>
+            {/* Show notice for virtual events */}
+            {formData.event_classification === "virtual" && (
+              <Alert className="border-blue-200 bg-blue-50">
+                <Monitor className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Virtual Event</strong> - Travel, accommodation, and physical venue arrangements are not required for this event.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <Card className={formData.event_classification === "virtual" ? "opacity-50" : ""}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Plane className="h-5 w-5" />
                   Travel & Accommodation
+                  {formData.event_classification === "virtual" && (
+                    <Badge variant="secondary" className="ml-2">Not Required - Virtual Event</Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1095,18 +1145,24 @@ export default function ProjectEditPage() {
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="travel_required"
-                      checked={formData.travel_required || false}
+                      checked={formData.event_classification === "virtual" ? false : (formData.travel_required || false)}
                       onCheckedChange={(checked) => updateField("travel_required", checked)}
+                      disabled={formData.event_classification === "virtual"}
                     />
-                    <Label htmlFor="travel_required">Travel Required</Label>
+                    <Label htmlFor="travel_required" className={formData.event_classification === "virtual" ? "text-gray-400" : ""}>
+                      Travel Required
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="accommodation_required"
-                      checked={formData.accommodation_required || false}
+                      checked={formData.event_classification === "virtual" ? false : (formData.accommodation_required || false)}
                       onCheckedChange={(checked) => updateField("accommodation_required", checked)}
+                      disabled={formData.event_classification === "virtual"}
                     />
-                    <Label htmlFor="accommodation_required">Accommodation Required</Label>
+                    <Label htmlFor="accommodation_required" className={formData.event_classification === "virtual" ? "text-gray-400" : ""}>
+                      Accommodation Required
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -1126,7 +1182,7 @@ export default function ProjectEditPage() {
                   </div>
                 </div>
 
-                {formData.travel_required && (
+                {formData.travel_required && formData.event_classification !== "virtual" && (
                   <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
                     <h5 className="font-medium text-blue-900">Travel Details</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1179,7 +1235,7 @@ export default function ProjectEditPage() {
                   </div>
                 )}
 
-                {formData.accommodation_required && (
+                {formData.accommodation_required && formData.event_classification !== "virtual" && (
                   <div className="space-y-4 p-4 border rounded-lg bg-green-50">
                     <h5 className="font-medium text-green-900">Accommodation Details</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
