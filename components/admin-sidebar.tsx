@@ -119,6 +119,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Revenue & Commissions",
           color: "text-emerald-600",
           bgColor: "bg-emerald-50"
+        },
+        {
+          title: "Client Portal",
+          href: "/admin/clients",
+          icon: Users,
+          description: "Client Access",
+          color: "text-cyan-600",
+          bgColor: "bg-cyan-50"
         }
       ]
     },
@@ -146,14 +154,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           bgColor: "bg-indigo-50"
         },
         {
-          title: "Landing Resources",
-          href: "/admin/landing-resources",
-          icon: Send,
-          description: "Email Resources",
-          color: "text-cyan-600",
-          bgColor: "bg-cyan-50"
-        },
-        {
           title: "Analytics",
           href: "/admin/analytics",
           icon: TrendingUp,
@@ -179,10 +179,10 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           bgColor: "bg-pink-50"
         },
         {
-          title: "Client Portal",
-          href: "/admin/clients",
-          icon: Users,
-          description: "Client Access",
+          title: "Landing Resources",
+          href: "/admin/landing-resources",
+          icon: Send,
+          description: "Email Resources",
           color: "text-cyan-600",
           bgColor: "bg-cyan-50"
         }
