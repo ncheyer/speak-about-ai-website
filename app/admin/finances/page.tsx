@@ -56,7 +56,10 @@ import {
   Building,
   User,
   CreditCard,
-  Banknote
+  Banknote,
+  ExternalLink,
+  Link2,
+  FileSignature
 } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/utils"
 
@@ -75,6 +78,12 @@ interface FinancialDeal {
   invoice_number?: string
   notes?: string
   won_date: string
+  contract_link?: string
+  invoice_link_1?: string
+  invoice_link_2?: string
+  contract_signed_date?: string
+  invoice_1_sent_date?: string
+  invoice_2_sent_date?: string
   project?: {
     id: number
     project_name: string
@@ -224,7 +233,13 @@ export default function FinancesPage() {
           payment_status: editingDeal.payment_status,
           payment_date: editingDeal.payment_date,
           invoice_number: editingDeal.invoice_number,
-          notes: editingDeal.notes
+          notes: editingDeal.notes,
+          contract_link: editingDeal.contract_link,
+          invoice_link_1: editingDeal.invoice_link_1,
+          invoice_link_2: editingDeal.invoice_link_2,
+          contract_signed_date: editingDeal.contract_signed_date,
+          invoice_1_sent_date: editingDeal.invoice_1_sent_date,
+          invoice_2_sent_date: editingDeal.invoice_2_sent_date
         })
       })
 
@@ -474,7 +489,7 @@ export default function FinancesPage() {
                         <TableHead className="text-right">Deal Value</TableHead>
                         <TableHead className="text-right">Commission</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Invoice</TableHead>
+                        <TableHead>Documents</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -521,7 +536,42 @@ export default function FinancesPage() {
                               )}
                             </TableCell>
                             <TableCell>
-                              {deal.invoice_number || '-'}
+                              <div className="flex gap-2">
+                                {deal.contract_link && (
+                                  <a
+                                    href={deal.contract_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800"
+                                    title="View Contract"
+                                  >
+                                    <FileSignature className="h-4 w-4" />
+                                  </a>
+                                )}
+                                {deal.invoice_link_1 && (
+                                  <a
+                                    href={deal.invoice_link_1}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-green-600 hover:text-green-800"
+                                    title="View Invoice 1"
+                                  >
+                                    <FileText className="h-4 w-4" />
+                                  </a>
+                                )}
+                                {deal.invoice_link_2 && (
+                                  <a
+                                    href={deal.invoice_link_2}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-green-600 hover:text-green-800"
+                                    title="View Invoice 2"
+                                  >
+                                    <FileText className="h-4 w-4" />
+                                  </a>
+                                )}
+                                {!deal.contract_link && !deal.invoice_link_1 && !deal.invoice_link_2 && '-'}
+                              </div>
                             </TableCell>
                             <TableCell className="text-right">
                               <Button
@@ -653,6 +703,133 @@ export default function FinancesPage() {
                   })}
                   rows={3}
                 />
+              </div>
+
+              {/* Contract and Invoice Links Section */}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="font-medium text-lg">Documents</h3>
+                
+                <div>
+                  <Label htmlFor="contract_link">Contract Link (Google Drive)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="contract_link"
+                      type="url"
+                      placeholder="https://drive.google.com/..."
+                      value={editingDeal.contract_link || ''}
+                      onChange={(e) => setEditingDeal({
+                        ...editingDeal,
+                        contract_link: e.target.value
+                      })}
+                      className="flex-1"
+                    />
+                    {editingDeal.contract_link && (
+                      <a
+                        href={editingDeal.contract_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="invoice_link_1">Invoice 1 Link (50% Upfront)</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="invoice_link_1"
+                        type="url"
+                        placeholder="https://drive.google.com/..."
+                        value={editingDeal.invoice_link_1 || ''}
+                        onChange={(e) => setEditingDeal({
+                          ...editingDeal,
+                          invoice_link_1: e.target.value
+                        })}
+                        className="flex-1"
+                      />
+                      {editingDeal.invoice_link_1 && (
+                        <a
+                          href={editingDeal.invoice_link_1}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-green-600 hover:text-green-800"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="invoice_1_sent_date">Invoice 1 Sent Date</Label>
+                    <Input
+                      id="invoice_1_sent_date"
+                      type="date"
+                      value={editingDeal.invoice_1_sent_date || ''}
+                      onChange={(e) => setEditingDeal({
+                        ...editingDeal,
+                        invoice_1_sent_date: e.target.value
+                      })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="invoice_link_2">Invoice 2 Link (50% on Completion)</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="invoice_link_2"
+                        type="url"
+                        placeholder="https://drive.google.com/..."
+                        value={editingDeal.invoice_link_2 || ''}
+                        onChange={(e) => setEditingDeal({
+                          ...editingDeal,
+                          invoice_link_2: e.target.value
+                        })}
+                        className="flex-1"
+                      />
+                      {editingDeal.invoice_link_2 && (
+                        <a
+                          href={editingDeal.invoice_link_2}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-green-600 hover:text-green-800"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="invoice_2_sent_date">Invoice 2 Sent Date</Label>
+                    <Input
+                      id="invoice_2_sent_date"
+                      type="date"
+                      value={editingDeal.invoice_2_sent_date || ''}
+                      onChange={(e) => setEditingDeal({
+                        ...editingDeal,
+                        invoice_2_sent_date: e.target.value
+                      })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="contract_signed_date">Contract Signed Date</Label>
+                  <Input
+                    id="contract_signed_date"
+                    type="date"
+                    value={editingDeal.contract_signed_date || ''}
+                    onChange={(e) => setEditingDeal({
+                      ...editingDeal,
+                      contract_signed_date: e.target.value
+                    })}
+                  />
+                </div>
               </div>
             </div>
           )}

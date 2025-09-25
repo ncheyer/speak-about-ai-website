@@ -17,7 +17,13 @@ export async function PUT(
       payment_status,
       payment_date,
       invoice_number,
-      notes
+      notes,
+      contract_link,
+      invoice_link_1,
+      invoice_link_2,
+      contract_signed_date,
+      invoice_1_sent_date,
+      invoice_2_sent_date
     } = body
     
     // Calculate commission amount if percentage is provided
@@ -34,6 +40,12 @@ export async function PUT(
         payment_date = ${payment_date},
         invoice_number = ${invoice_number},
         financial_notes = ${notes},
+        contract_link = ${contract_link},
+        invoice_link_1 = ${invoice_link_1},
+        invoice_link_2 = ${invoice_link_2},
+        contract_signed_date = ${contract_signed_date},
+        invoice_1_sent_date = ${invoice_1_sent_date},
+        invoice_2_sent_date = ${invoice_2_sent_date},
         updated_at = NOW()
       WHERE id = ${dealId}
       RETURNING *
