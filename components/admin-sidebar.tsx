@@ -11,6 +11,7 @@ import {
   DollarSign,
   CheckSquare,
   FileText,
+  Database,
   Upload,
   Calendar,
   Settings,
@@ -24,6 +25,7 @@ import {
   Heart,
   Mail,
   TrendingUp,
+  Wallet,
   FileSignature,
   Send,
   MessageSquare
@@ -64,6 +66,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       bgColor: "bg-slate-50"
     },
     {
+      title: "Finances",
+      href: "/admin/finances",
+      icon: Wallet,
+      description: "Revenue & Commissions",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50"
+    },
+    {
       title: "CRM",
       href: "/admin/crm",
       icon: BarChart3,
@@ -92,8 +102,8 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       href: "/admin/invoicing",
       icon: DollarSign,
       description: "Invoice Management",
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50"
+      color: "text-green-600",
+      bgColor: "bg-green-50"
     },
     {
       title: "Speaker Management",
@@ -140,8 +150,16 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       href: "/admin/clients",
       icon: Users,
       description: "Client Access",
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50"
+      color: "text-cyan-600",
+      bgColor: "bg-cyan-50"
+    },
+    {
+      title: "Database",
+      href: "/debug-neon",
+      icon: Database,
+      description: "System Debug",
+      color: "text-red-600",
+      bgColor: "bg-red-50"
     }
   ]
 

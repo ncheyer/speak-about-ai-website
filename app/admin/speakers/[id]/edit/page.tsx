@@ -129,7 +129,7 @@ export default function AdminSpeakerEditPage() {
   const [newTopic, setNewTopic] = useState("")
   const [newIndustry, setNewIndustry] = useState("")
   const [newProgram, setNewProgram] = useState("")
-  const [newVideo, setNewVideo] = useState<Video>({ id: "", title: "", url: "" })
+  const [newVideo, setNewVideo] = useState<Video>({ id: "", title: "", url: "", thumbnail: "" })
   const [newTestimonial, setNewTestimonial] = useState<Testimonial>({ quote: "", author: "" })
 
   useEffect(() => {
@@ -379,17 +379,35 @@ export default function AdminSpeakerEditPage() {
     }))
   }
 
+  // Function to extract YouTube video ID from URL
+  const getYouTubeId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+    const match = url?.match(regExp)
+    return (match && match[2].length === 11) ? match[2] : null
+  }
+
+  // Function to get YouTube thumbnail
+  const getYouTubeThumbnail = (url: string) => {
+    const videoId = getYouTubeId(url)
+    if (videoId) {
+      return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+    }
+    return null
+  }
+
   const addVideo = () => {
     if (newVideo.title.trim() && newVideo.url.trim()) {
       const videoToAdd = {
         ...newVideo,
-        id: newVideo.id || Date.now().toString()
+        id: newVideo.id || Date.now().toString(),
+        // Automatically generate thumbnail for YouTube videos
+        thumbnail: newVideo.thumbnail || getYouTubeThumbnail(newVideo.url) || undefined
       }
       setFormData(prev => ({
         ...prev,
         videos: [...prev.videos, videoToAdd]
       }))
-      setNewVideo({ id: "", title: "", url: "" })
+      setNewVideo({ id: "", title: "", url: "", thumbnail: "" })
     }
   }
 
@@ -907,6 +925,12 @@ export default function AdminSpeakerEditPage() {
                       value={newVideo.duration || ""}
                       onChange={(e) => setNewVideo(prev => ({ ...prev, duration: e.target.value }))}
                       placeholder="Duration (optional)"
+                    />
+                    <Input
+                      value={newVideo.thumbnail || ""}
+                      onChange={(e) => setNewVideo(prev => ({ ...prev, thumbnail: e.target.value }))}
+                      placeholder="Thumbnail URL (auto-generated for YouTube)"
+                      className="md:col-span-2"
                     />
                   </div>
                   <Button onClick={addVideo} size="sm">
