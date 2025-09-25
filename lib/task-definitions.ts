@@ -18,6 +18,26 @@ export interface StageTaskDefinitions {
 
 export const TASK_DEFINITIONS: StageTaskDefinitions = {
   invoicing: {
+    send_internal_contract: {
+      key: 'send_internal_contract',
+      name: 'Send Internal Contract to Speaker',
+      description: 'Send the internal speaker agreement for review and signature',
+      requirements: [
+        'Speaker details confirmed',
+        'Event details finalized',
+        'Fee structure agreed',
+        'Terms and conditions ready'
+      ],
+      deliverables: [
+        'Contract sent to speaker',
+        'Signature tracking initiated',
+        'Follow-up reminders scheduled',
+        'Signed copy received and filed'
+      ],
+      priority: 'critical',
+      estimatedTime: '30 min',
+      owner: 'operations'
+    },
     initial_invoice_sent: {
       key: 'initial_invoice_sent',
       name: 'Send Initial Deposit Invoice',
@@ -74,64 +94,6 @@ export const TASK_DEFINITIONS: StageTaskDefinitions = {
       priority: 'high',
       estimatedTime: '45 min',
       owner: 'sales'
-    },
-    client_contacts_documented: {
-      key: 'client_contacts_documented',
-      name: 'Document Client Contact Hierarchy',
-      description: 'Create comprehensive contact list with roles, responsibilities, and communication preferences',
-      requirements: [
-        'Primary contact identified',
-        'Decision makers listed',
-        'Technical contacts noted',
-        'Emergency contacts obtained'
-      ],
-      deliverables: [
-        'Contact spreadsheet created',
-        'Communication matrix defined',
-        'Escalation path documented',
-        'Shared with internal team'
-      ],
-      priority: 'medium',
-      estimatedTime: '1 hour',
-      owner: 'operations'
-    },
-    project_folder_created: {
-      key: 'project_folder_created',
-      name: 'Create Project Documentation Structure',
-      description: 'Set up organized digital folder structure for all project materials and communications',
-      requirements: [
-        'Project code assigned',
-        'Folder template available',
-        'Access permissions defined'
-      ],
-      deliverables: [
-        'Google Drive/Dropbox folder created',
-        'Subfolders organized by category',
-        'Initial documents uploaded',
-        'Team members granted access'
-      ],
-      priority: 'medium',
-      estimatedTime: '30 min',
-      owner: 'operations'
-    },
-    internal_team_briefed: {
-      key: 'internal_team_briefed',
-      name: 'Brief Internal Team on Project',
-      description: 'Conduct comprehensive briefing session with all internal stakeholders',
-      requirements: [
-        'Project details compiled',
-        'Team members identified',
-        'Briefing materials prepared'
-      ],
-      deliverables: [
-        'Team briefing completed',
-        'Q&A session conducted',
-        'Action items assigned',
-        'Follow-up scheduled if needed'
-      ],
-      priority: 'high',
-      estimatedTime: '1 hour',
-      owner: 'operations'
     },
     event_details_confirmed: {
       key: 'event_details_confirmed',
@@ -540,7 +502,7 @@ export function calculateTaskUrgency(
   const urgencyRules = {
     invoicing: {
       thresholds: { critical: 45, high: 60, medium: 90 },
-      criticalTasks: ['initial_invoice_sent', 'event_details_confirmed']
+      criticalTasks: ['send_internal_contract', 'initial_invoice_sent', 'event_details_confirmed']
     },
     logistics_planning: {
       thresholds: { critical: 21, high: 30, medium: 45 },
