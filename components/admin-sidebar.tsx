@@ -18,6 +18,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Home,
   Activity,
   Menu,
@@ -28,7 +29,11 @@ import {
   Wallet,
   FileSignature,
   Send,
-  MessageSquare
+  MessageSquare,
+  ShoppingCart,
+  Briefcase,
+  Globe,
+  Megaphone
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -37,6 +42,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ className }: AdminSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const [expandedSections, setExpandedSections] = useState<string[]>(['sales', 'operations', 'website', 'marketing'])
   const pathname = usePathname()
   const router = useRouter()
 
@@ -56,110 +62,164 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
     }
   }
 
-  const navigationItems = [
+  const toggleSection = (sectionName: string) => {
+    setExpandedSections(prev => 
+      prev.includes(sectionName) 
+        ? prev.filter(s => s !== sectionName)
+        : [...prev, sectionName]
+    )
+  }
+
+  const navigationSections = [
     {
       title: "Master Panel",
       href: "/admin/manage",
       icon: Settings,
       description: "Operations Hub",
       color: "text-slate-600",
-      bgColor: "bg-slate-50"
+      bgColor: "bg-slate-50",
+      standalone: true
     },
     {
-      title: "Finances",
-      href: "/admin/finances",
-      icon: Wallet,
-      description: "Revenue & Commissions",
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50"
-    },
-    {
-      title: "CRM",
-      href: "/admin/crm",
-      icon: BarChart3,
-      description: "Deals & Proposals",
+      title: "Sales",
+      icon: ShoppingCart,
+      sectionKey: "sales",
       color: "text-blue-600",
-      bgColor: "bg-blue-50"
+      bgColor: "bg-blue-50",
+      items: [
+        {
+          title: "CRM",
+          href: "/admin/crm",
+          icon: BarChart3,
+          description: "Deals & Proposals",
+          color: "text-blue-600",
+          bgColor: "bg-blue-50"
+        }
+      ]
     },
     {
-      title: "Project Management",
-      href: "/admin/projects",
-      icon: CheckSquare,
-      description: "Live Projects",
+      title: "Operations",
+      icon: Briefcase,
+      sectionKey: "operations",
       color: "text-orange-600",
-      bgColor: "bg-orange-50"
+      bgColor: "bg-orange-50",
+      items: [
+        {
+          title: "Project Management",
+          href: "/admin/projects",
+          icon: CheckSquare,
+          description: "Live Projects",
+          color: "text-orange-600",
+          bgColor: "bg-orange-50"
+        },
+        {
+          title: "Finances",
+          href: "/admin/finances",
+          icon: Wallet,
+          description: "Revenue & Commissions",
+          color: "text-emerald-600",
+          bgColor: "bg-emerald-50"
+        }
+      ]
     },
     {
-      title: "Speaker Management",
-      href: "/admin/speakers",
-      icon: Users,
-      description: "Profiles & Content",
-      color: "text-green-600",
-      bgColor: "bg-green-50"
-    },
-    {
-      title: "Analytics",
-      href: "/admin/analytics",
-      icon: TrendingUp,
-      description: "Website Insights",
+      title: "Website",
+      icon: Globe,
+      sectionKey: "website",
       color: "text-purple-600",
-      bgColor: "bg-purple-50"
+      bgColor: "bg-purple-50",
+      items: [
+        {
+          title: "Speaker Management",
+          href: "/admin/speakers",
+          icon: Users,
+          description: "Profiles & Content",
+          color: "text-green-600",
+          bgColor: "bg-green-50"
+        },
+        {
+          title: "Activity Log",
+          href: "/admin/activity",
+          icon: Activity,
+          description: "Speaker Updates",
+          color: "text-indigo-600",
+          bgColor: "bg-indigo-50"
+        },
+        {
+          title: "Landing Resources",
+          href: "/admin/landing-resources",
+          icon: Send,
+          description: "Email Resources",
+          color: "text-cyan-600",
+          bgColor: "bg-cyan-50"
+        },
+        {
+          title: "Analytics",
+          href: "/admin/analytics",
+          icon: TrendingUp,
+          description: "Website Insights",
+          color: "text-purple-600",
+          bgColor: "bg-purple-50"
+        }
+      ]
     },
     {
-      title: "Activity Log",
-      href: "/admin/activity",
-      icon: Activity,
-      description: "Speaker Updates",
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50"
-    },
-    {
-      title: "Newsletter",
-      href: "/admin/newsletter",
-      icon: Mail,
-      description: "Subscriber Management",
+      title: "Marketing",
+      icon: Megaphone,
+      sectionKey: "marketing",
       color: "text-pink-600",
-      bgColor: "bg-pink-50"
+      bgColor: "bg-pink-50",
+      items: [
+        {
+          title: "Newsletter",
+          href: "/admin/newsletter",
+          icon: Mail,
+          description: "Subscriber Management",
+          color: "text-pink-600",
+          bgColor: "bg-pink-50"
+        },
+        {
+          title: "Client Portal",
+          href: "/admin/clients",
+          icon: Users,
+          description: "Client Access",
+          color: "text-cyan-600",
+          bgColor: "bg-cyan-50"
+        }
+      ]
     },
     {
-      title: "Landing Resources",
-      href: "/admin/landing-resources",
-      icon: Send,
-      description: "Email Resources",
-      color: "text-cyan-600",
-      bgColor: "bg-cyan-50"
-    },
-    {
-      title: "Client Portal",
-      href: "/admin/clients",
-      icon: Users,
-      description: "Client Access",
-      color: "text-cyan-600",
-      bgColor: "bg-cyan-50"
-    },
-    {
-      title: "Database",
-      href: "/debug-neon",
-      icon: Database,
-      description: "System Debug",
-      color: "text-red-600",
-      bgColor: "bg-red-50"
-    },
-    {
-      title: "Invoicing (BETA)",
-      href: "/admin/invoicing",
-      icon: DollarSign,
-      description: "Invoice Management",
-      color: "text-green-600",
-      bgColor: "bg-green-50"
-    },
-    {
-      title: "Contracts Hub (BETA)",
-      href: "/admin/contracts-hub",
-      icon: FileSignature,
-      description: "Contract Management",
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50"
+      title: "System",
+      icon: Settings,
+      sectionKey: "system",
+      color: "text-gray-600",
+      bgColor: "bg-gray-50",
+      items: [
+        {
+          title: "Database",
+          href: "/debug-neon",
+          icon: Database,
+          description: "System Debug",
+          color: "text-red-600",
+          bgColor: "bg-red-50"
+        },
+        {
+          title: "Invoicing (BETA)",
+          href: "/admin/invoicing",
+          icon: DollarSign,
+          description: "Invoice Management",
+          color: "text-green-600",
+          bgColor: "bg-green-50"
+        },
+        {
+          title: "Contracts Hub (BETA)",
+          href: "/admin/contracts-hub",
+          icon: FileSignature,
+          description: "Contract Management",
+          color: "text-indigo-600",
+          bgColor: "bg-indigo-50"
+        }
+      ]
     }
   ]
 
@@ -197,65 +257,160 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-2">
-        {navigationItems.map((item) => {
-          const isActive = pathname === item.href || 
-            (item.href === "/admin/dashboard" && pathname.startsWith("/admin/dashboard")) ||
-            (item.href === "/admin/contracts-hub" && pathname.startsWith("/admin/contracts-hub")) ||
-            (item.href === "/admin/invoicing" && pathname.startsWith("/admin/invoicing"))
+        {navigationSections.map((section) => {
+          // Standalone items (like Master Panel)
+          if (section.standalone) {
+            const isActive = pathname === section.href
+            return (
+              <Link key={section.href} href={section.href}>
+                <div
+                  className={cn(
+                    "group relative overflow-hidden rounded-xl transition-all duration-200 ease-in-out",
+                    collapsed ? "p-3" : "p-4",
+                    isActive 
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg transform scale-105" 
+                      : "hover:bg-slate-700/50 hover:transform hover:scale-102"
+                  )}
+                >
+                  {isActive && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-xl" />
+                  )}
+                  
+                  <div className="relative flex items-center">
+                    <div className={cn(
+                      "flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200",
+                      isActive 
+                        ? "bg-white/20 text-white shadow-md" 
+                        : `${section.bgColor} ${section.color} group-hover:scale-110`
+                    )}>
+                      <section.icon className="h-5 w-5" />
+                    </div>
+                    
+                    {!collapsed && (
+                      <div className="ml-4 flex-1 min-w-0">
+                        <div className={cn(
+                          "text-sm font-semibold transition-colors duration-200",
+                          isActive ? "text-white" : "text-slate-200 group-hover:text-white"
+                        )}>
+                          {section.title}
+                        </div>
+                        <div className={cn(
+                          "text-xs mt-0.5 transition-colors duration-200",
+                          isActive ? "text-blue-100" : "text-slate-400 group-hover:text-slate-300"
+                        )}>
+                          {section.description}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {isActive && !collapsed && (
+                      <div className="w-2 h-2 bg-white rounded-full shadow-lg animate-pulse" />
+                    )}
+                  </div>
+                  
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 ease-in-out" />
+                </div>
+              </Link>
+            )
+          }
+
+          // Sections with items
+          const isExpanded = expandedSections.includes(section.sectionKey!)
+          const hasActiveChild = section.items?.some(item => pathname === item.href)
           
           return (
-            <Link key={item.href} href={item.href}>
+            <div key={section.sectionKey}>
+              {/* Section Header */}
               <div
+                onClick={() => !collapsed && toggleSection(section.sectionKey!)}
                 className={cn(
-                  "group relative overflow-hidden rounded-xl transition-all duration-200 ease-in-out",
-                  collapsed ? "p-3" : "p-4",
-                  isActive 
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg transform scale-105" 
-                    : "hover:bg-slate-700/50 hover:transform hover:scale-102"
+                  "group relative overflow-hidden rounded-xl transition-all duration-200 ease-in-out cursor-pointer",
+                  collapsed ? "p-3" : "p-3 mb-1",
+                  hasActiveChild
+                    ? "bg-slate-700/30"
+                    : "hover:bg-slate-700/20"
                 )}
               >
-                {/* Background gradient for active state */}
-                {isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-xl" />
-                )}
-                
                 <div className="relative flex items-center">
                   <div className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200",
-                    isActive 
-                      ? "bg-white/20 text-white shadow-md" 
-                      : `${item.bgColor} ${item.color} group-hover:scale-110`
+                    "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200",
+                    `${section.bgColor} ${section.color}`
                   )}>
-                    <item.icon className="h-5 w-5" />
+                    <section.icon className="h-4 w-4" />
                   </div>
                   
                   {!collapsed && (
-                    <div className="ml-4 flex-1 min-w-0">
-                      <div className={cn(
-                        "text-sm font-semibold transition-colors duration-200",
-                        isActive ? "text-white" : "text-slate-200 group-hover:text-white"
-                      )}>
-                        {item.title}
+                    <>
+                      <div className="ml-3 flex-1 min-w-0">
+                        <div className="text-sm font-bold text-slate-200">
+                          {section.title}
+                        </div>
                       </div>
-                      <div className={cn(
-                        "text-xs mt-0.5 transition-colors duration-200",
-                        isActive ? "text-blue-100" : "text-slate-400 group-hover:text-slate-300"
-                      )}>
-                        {item.description}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Active indicator */}
-                  {isActive && !collapsed && (
-                    <div className="w-2 h-2 bg-white rounded-full shadow-lg animate-pulse" />
+                      <ChevronDown className={cn(
+                        "h-4 w-4 text-slate-400 transition-transform duration-200",
+                        isExpanded ? "transform rotate-180" : ""
+                      )} />
+                    </>
                   )}
                 </div>
-                
-                {/* Hover effect overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 ease-in-out" />
               </div>
-            </Link>
+
+              {/* Section Items */}
+              {!collapsed && isExpanded && section.items && (
+                <div className="ml-4 space-y-1 mt-1">
+                  {section.items.map((item) => {
+                    const isActive = pathname === item.href || 
+                      (item.href === "/admin/contracts-hub" && pathname.startsWith("/admin/contracts-hub")) ||
+                      (item.href === "/admin/invoicing" && pathname.startsWith("/admin/invoicing"))
+                    
+                    return (
+                      <Link key={item.href} href={item.href}>
+                        <div
+                          className={cn(
+                            "group relative overflow-hidden rounded-lg transition-all duration-200 ease-in-out p-3",
+                            isActive 
+                              ? "bg-gradient-to-r from-blue-600 to-purple-600 shadow-md" 
+                              : "hover:bg-slate-700/40"
+                          )}
+                        >
+                          <div className="relative flex items-center">
+                            <div className={cn(
+                              "flex items-center justify-center w-8 h-8 rounded-md transition-all duration-200",
+                              isActive 
+                                ? "bg-white/20 text-white" 
+                                : `${item.bgColor} ${item.color} group-hover:scale-110`
+                            )}>
+                              <item.icon className="h-4 w-4" />
+                            </div>
+                            
+                            <div className="ml-3 flex-1 min-w-0">
+                              <div className={cn(
+                                "text-xs font-semibold transition-colors duration-200",
+                                isActive ? "text-white" : "text-slate-300 group-hover:text-white"
+                              )}>
+                                {item.title}
+                              </div>
+                              {item.description && (
+                                <div className={cn(
+                                  "text-xs mt-0.5 transition-colors duration-200",
+                                  isActive ? "text-blue-100" : "text-slate-500 group-hover:text-slate-400"
+                                )}>
+                                  {item.description}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {isActive && (
+                              <div className="w-1.5 h-1.5 bg-white rounded-full shadow-lg animate-pulse" />
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           )
         })}
       </nav>
