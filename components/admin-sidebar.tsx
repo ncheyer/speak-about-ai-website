@@ -62,14 +62,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       bgColor: "bg-slate-50"
     },
     {
-      title: "CRM",
-      href: "/admin/crm",
-      icon: BarChart3,
-      description: "Deals, Proposals & Contracts",
-      color: "text-blue-600",
-      bgColor: "bg-blue-50"
-    },
-    {
       title: "Project Management",
       href: "/admin/projects",
       icon: CheckSquare,
@@ -124,6 +116,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       description: "System Debug",
       color: "text-red-600",
       bgColor: "bg-red-50"
+    },
+    {
+      title: "CRM (Beta)",
+      href: "/admin/crm",
+      icon: BarChart3,
+      description: "Deals, Proposals & Contracts",
+      color: "text-blue-600",
+      bgColor: "bg-blue-50"
     }
   ]
 
