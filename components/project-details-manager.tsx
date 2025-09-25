@@ -236,8 +236,20 @@ export function ProjectDetailsManager({
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="w-full justify-start rounded-none border-b overflow-x-auto flex-nowrap">
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="travel">Travel & Hotel</TabsTrigger>
-              <TabsTrigger value="venue">Venue</TabsTrigger>
+              <TabsTrigger 
+                value="travel" 
+                disabled={details.overview?.event_classification === 'virtual'}
+                className={details.overview?.event_classification === 'virtual' ? 'opacity-50' : ''}
+              >
+                Travel & Hotel {details.overview?.event_classification === 'virtual' && '(N/A)'}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="venue"
+                disabled={details.overview?.event_classification === 'virtual'}
+                className={details.overview?.event_classification === 'virtual' ? 'opacity-50' : ''}
+              >
+                Venue {details.overview?.event_classification === 'virtual' && '(N/A)'}
+              </TabsTrigger>
               <TabsTrigger value="contacts">Contacts</TabsTrigger>
               <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
               <TabsTrigger value="audience">Audience</TabsTrigger>
@@ -297,11 +309,67 @@ export function ProjectDetailsManager({
                     onChange={(e) => updateField('overview.event_time', e.target.value)}
                   />
                 </div>
+                <div className="md:col-span-2">
+                  <Label>Event Classification</Label>
+                  <Select 
+                    value={details.overview?.event_classification || ''}
+                    onValueChange={(value) => {
+                      updateField('overview.event_classification', value);
+                      // Auto-clear travel and venue fields when switching to virtual
+                      if (value === 'virtual') {
+                        // Clear travel data
+                        setDetails(prev => ({
+                          ...prev,
+                          travel: {},
+                          venue: {}
+                        }));
+                        setUnsavedChanges(true);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select event type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="virtual">
+                        <div className="flex items-center gap-2">
+                          <Monitor className="h-4 w-4" />
+                          Virtual Event (No travel/venue required)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="local">
+                        <div className="flex items-center gap-2">
+                          <Building className="h-4 w-4" />
+                          Local Event (Venue required, no travel)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="travel">
+                        <div className="flex items-center gap-2">
+                          <Plane className="h-4 w-4" />
+                          Travel Required (Full logistics needed)
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {details.overview?.event_classification === 'virtual' && (
+                    <p className="text-sm text-blue-600 mt-1">
+                      ℹ️ Travel and venue tabs are disabled for virtual events
+                    </p>
+                  )}
+                </div>
               </div>
             </TabsContent>
 
             {/* Travel & Hotel Tab */}
             <TabsContent value="travel" className="p-6 space-y-6">
+              {details.overview?.event_classification === 'virtual' && (
+                <Alert className="border-blue-200 bg-blue-50">
+                  <Monitor className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Virtual Event</strong> - Travel and accommodation arrangements are not required for this event.
+                  </AlertDescription>
+                </Alert>
+              )}
               {/* Flights Section */}
               <div>
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -310,20 +378,22 @@ export function ProjectDetailsManager({
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <Label>Outbound Flight Details</Label>
+                    <Label className={details.overview?.event_classification === 'virtual' ? 'text-gray-400' : ''}>Outbound Flight Details</Label>
                     <Textarea
                       value={details.travel?.flights?.notes || ''}
                       onChange={(e) => updateField('travel.flights.notes', e.target.value)}
-                      placeholder="Enter flight details (airline, flight numbers, times, etc.)"
+                      placeholder={details.overview?.event_classification === 'virtual' ? "Not applicable for virtual event" : "Enter flight details (airline, flight numbers, times, etc.)"}
                       rows={3}
+                      disabled={details.overview?.event_classification === 'virtual'}
                     />
                   </div>
                   <div>
-                    <Label>Confirmation Numbers</Label>
+                    <Label className={details.overview?.event_classification === 'virtual' ? 'text-gray-400' : ''}>Confirmation Numbers</Label>
                     <Input
                       value={details.travel?.flights?.confirmation_numbers?.join(', ') || ''}
                       onChange={(e) => updateField('travel.flights.confirmation_numbers', e.target.value.split(', '))}
-                      placeholder="Enter confirmation numbers"
+                      placeholder={details.overview?.event_classification === 'virtual' ? "Not applicable for virtual event" : "Enter confirmation numbers"}
+                      disabled={details.overview?.event_classification === 'virtual'}
                     />
                   </div>
                 </div>
@@ -501,6 +571,14 @@ export function ProjectDetailsManager({
 
             {/* Venue Tab */}
             <TabsContent value="venue" className="p-6 space-y-6">
+              {details.overview?.event_classification === 'virtual' && (
+                <Alert className="border-blue-200 bg-blue-50">
+                  <Monitor className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Virtual Event</strong> - Physical venue arrangements are not required for this event.
+                  </AlertDescription>
+                </Alert>
+              )}
               <div>
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
                   <Building className="h-5 w-5" />

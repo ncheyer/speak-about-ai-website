@@ -9,6 +9,7 @@ export interface ProjectDetails {
     event_location?: string
     event_date?: string // ISO date string
     event_time?: string
+    event_classification?: 'virtual' | 'local' | 'travel' // Add event classification
   }
 
   // Travel & Logistics
