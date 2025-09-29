@@ -21,14 +21,13 @@ export async function GET(request: NextRequest) {
         d.contract_signed_date,
         d.invoice_1_sent_date,
         d.invoice_2_sent_date,
-        p.id as project_id,
+        d.project_id,
         p.project_name,
         p.budget as project_budget,
         p.speaker_fee,
         p.status as project_status
       FROM deals d
-      LEFT JOIN projects p ON p.client_email = d.client_email 
-        AND p.event_date = d.event_date
+      LEFT JOIN projects p ON p.id = d.project_id
       WHERE d.status = 'won'
       ORDER BY d.won_date DESC
     `
