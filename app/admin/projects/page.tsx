@@ -307,6 +307,32 @@ export default function EnhancedProjectManagementPage() {
           }
         }
         setCustomTasks(allCustomTasks)
+      } else {
+        // Log the error for debugging
+        console.error('Failed to load projects:', {
+          status: projectsResponse.status,
+          statusText: projectsResponse.statusText
+        })
+        
+        try {
+          const errorData = await projectsResponse.json()
+          console.error('Error details:', errorData)
+          
+          toast({
+            title: "Error Loading Projects",
+            description: errorData.error || "Failed to load projects from database",
+            variant: "destructive"
+          })
+        } catch (parseError) {
+          console.error('Could not parse error response:', parseError)
+          toast({
+            title: "Error Loading Projects",
+            description: `Server error: ${projectsResponse.status} ${projectsResponse.statusText}`,
+            variant: "destructive"
+          })
+        }
+        
+        setProjects([])
       }
 
       if (invoicesResponse.ok) {

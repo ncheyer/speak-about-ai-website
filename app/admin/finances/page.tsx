@@ -187,12 +187,28 @@ export default function FinancesPage() {
 
     dealsData.forEach(deal => {
       stats.totalRevenue += Number(deal.deal_value) || 0
-      const commission = deal.commission_amount || (deal.deal_value * (deal.commission_percentage || 20) / 100)
+      
+      // Calculate commission: use commission_amount if set, otherwise calculate from percentage
+      let commission = 0
+      if (deal.commission_amount !== null && deal.commission_amount !== undefined && deal.commission_amount !== 0) {
+        commission = Number(deal.commission_amount)
+      } else {
+        // If no commission_amount is set, calculate it from deal value and percentage
+        const percentage = deal.commission_percentage || 20
+        commission = (Number(deal.deal_value) * percentage) / 100
+      }
+      
       stats.totalCommission += commission
       
+      // Categorize by payment status
       if (deal.payment_status === 'paid') {
         stats.paidAmount += commission
+      } else if (deal.payment_status === 'partial') {
+        // For partial payments, we could track separately or add to pending
+        // For now, adding to pending as it's not fully paid
+        stats.pendingAmount += commission
       } else {
+        // 'pending' or any other status
         stats.pendingAmount += commission
       }
       
@@ -201,7 +217,7 @@ export default function FinancesPage() {
       }
     })
 
-    if (dealsData.length > 0) {
+    if (dealsData.length > 0 && stats.totalRevenue > 0) {
       stats.averageCommission = (stats.totalCommission / stats.totalRevenue) * 100
     }
 
