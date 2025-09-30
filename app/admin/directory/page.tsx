@@ -22,9 +22,10 @@ import {
 import { 
   Building2, Users, Plus, Edit, Trash2, Eye, 
   CheckCircle, XCircle, Clock, Search, Filter,
-  Mail, Download, Upload, Star, TrendingUp
+  Mail, Download, Upload, Star, TrendingUp, FileSpreadsheet
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { VendorCSVImport } from "@/components/vendor-csv-import"
 import {
   Dialog,
   DialogContent,
@@ -350,6 +351,10 @@ export default function AdminDirectoryPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="vendors">Vendors</TabsTrigger>
+          <TabsTrigger value="import">
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Import
+          </TabsTrigger>
           <TabsTrigger value="subscribers">Subscribers</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -501,6 +506,10 @@ export default function AdminDirectoryPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="import">
+          <VendorCSVImport />
         </TabsContent>
 
         <TabsContent value="subscribers">

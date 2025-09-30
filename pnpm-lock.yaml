@@ -113,6 +113,9 @@ importers:
       '@types/nodemailer':
         specifier: ^6.4.17
         version: 6.4.20
+      '@types/papaparse':
+        specifier: ^5.3.16
+        version: 5.3.16
       '@types/react-signature-canvas':
         specifier: ^1.0.7
         version: 1.0.7
@@ -185,6 +188,9 @@ importers:
       nodemailer:
         specifier: ^7.0.5
         version: 7.0.6
+      papaparse:
+        specifier: ^5.5.3
+        version: 5.5.3
       path:
         specifier: latest
         version: 0.12.7
@@ -1599,6 +1605,9 @@ packages:
 
   '@types/nodemailer@6.4.20':
     resolution: {integrity: sha512-uj83z0GqwqMUE6RI4EKptPlav0FYE6vpIlqJAnxzu+/sSezRdbH69rSBCMsdW6DdsCAzoFQZ52c2UIlhRVQYDA==}
+
+  '@types/papaparse@5.3.16':
+    resolution: {integrity: sha512-T3VuKMC2H0lgsjI9buTB3uuKj3EMD2eap1MOuEQuBQ44EnDx/IkGhU6EwiTf9zG3za4SKlmwKAImdDKdNnCsXg==}
 
   '@types/pg@8.15.5':
     resolution: {integrity: sha512-LF7lF6zWEKxuT3/OR8wAZGzkg4ENGXFNyiV/JeOt9z5B+0ZVwbql9McqX5c/WStFq1GaGso7H1AzP/qSzmlCKQ==}
@@ -3313,6 +3322,9 @@ packages:
 
   pako@1.0.11:
     resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
+
+  papaparse@5.5.3:
+    resolution: {integrity: sha512-5QvjGxYVjxO59MGU2lHVYpRWBBtKHnlIAcSe1uNFCkkptUh63NFRj0FJQm7nR67puEruUci/ZkjmEFrjCAyP4A==}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -5870,6 +5882,10 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
+  '@types/papaparse@5.3.16':
+    dependencies:
+      '@types/node': 22.18.0
+
   '@types/pg@8.15.5':
     dependencies:
       '@types/node': 22.18.0
@@ -7951,6 +7967,8 @@ snapshots:
   package-json-from-dist@1.0.1: {}
 
   pako@1.0.11: {}
+
+  papaparse@5.5.3: {}
 
   parent-module@1.0.1:
     dependencies:
