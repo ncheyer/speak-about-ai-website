@@ -57,7 +57,7 @@
     "clsx": "^2.1.1",
     "cmdk": "latest",
     "contentful": "latest",
-    "dotenv": "^17.2.1",
+    "dotenv": "^17.2.3",
     "embla-carousel-react": "latest",
     "fs": "latest",
     "glob": "latest",
