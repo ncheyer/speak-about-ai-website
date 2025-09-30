@@ -236,23 +236,36 @@ export default function MasterAdminPanel() {
   const [projectSearch, setProjectSearch] = useState("")
   const [projectStatusFilter, setProjectStatusFilter] = useState("all")
 
-  // Check authentication
-  useEffect(() => {
-    const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
-    if (!isAdminLoggedIn) {
-      router.push("/admin")
-      return
+  // Data loading functions
+  const loadDeals = async () => {
+    try {
+      setDealsLoading(true)
+      const token = localStorage.getItem("adminSessionToken")
+      
+      const response = await fetch("/api/deals", {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'x-dev-admin-bypass': 'dev-admin-access'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        // The API returns the deals array directly
+        const dealsArray = Array.isArray(data) ? data : (data.deals || [])
+        setDeals(dealsArray)
+      }
+    } catch (error) {
+      console.error("Error loading deals:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load deals",
+        variant: "destructive",
+      })
+    } finally {
+      setDealsLoading(false)
     }
-    setIsLoggedIn(true)
-    
-    // Load all data
-    loadDeals()
-    loadProjects()
-    loadProposals()
-    loadInvoices()
-    loadSpeakers()
-    loadAnalytics()
-  }, [router])
+  }
 
   const loadSpeakers = async () => {
     try {
@@ -274,42 +287,6 @@ export default function MasterAdminPanel() {
       console.error("Error loading speakers:", error)
     } finally {
       setSpeakersLoading(false)
-    }
-  }
-
-  const loadDeals = async () => {
-    try {
-      setDealsLoading(true)
-      const token = localStorage.getItem("adminSessionToken")
-      
-      const response = await fetch("/api/deals", {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        const dealsArray = data.deals || []
-        console.log(`Loaded ${dealsArray.length} deals from API:`, {
-          total: dealsArray.length,
-          won: dealsArray.filter(d => d.status === "won").length,
-          proposal: dealsArray.filter(d => d.status === "proposal").length,
-          negotiation: dealsArray.filter(d => d.status === "negotiation").length,
-          lost: dealsArray.filter(d => d.status === "lost").length
-        })
-        setDeals(dealsArray)
-      }
-    } catch (error) {
-      console.error("Error loading deals:", error)
-      toast({
-        title: "Error",
-        description: "Failed to load deals",
-        variant: "destructive",
-      })
-    } finally {
-      setDealsLoading(false)
     }
   }
 
@@ -464,6 +441,31 @@ export default function MasterAdminPanel() {
     }
   }
   
+  // Check authentication and load data on mount
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') {
+      return
+    }
+    
+    const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
+    if (!isAdminLoggedIn) {
+      router.push("/admin")
+      return
+    }
+    
+    setIsLoggedIn(true)
+    
+    // Load all data
+    loadDeals()
+    loadProjects()
+    loadProposals()
+    loadInvoices()
+    loadSpeakers()
+    loadAnalytics()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  
   // Auto-sync every 5 minutes
   useEffect(() => {
     const interval = setInterval(() => {
@@ -476,20 +478,25 @@ export default function MasterAdminPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSyncing])
   
+  
   // Compute stats - matching CRM tab logic
+  // Check for active deals (lead, qualified, proposal, negotiation)
+  const activeDeals = deals.filter(d => ["lead", "qualified", "proposal", "negotiation"].includes(d.status))
+  
   const dealStats = {
     total: deals.length,
-    active: deals.filter(d => ["proposal", "negotiation"].includes(d.status)).length, // Only count actual active statuses
+    active: activeDeals.length, // Count lead, qualified, proposal, negotiation as active
     won: deals.filter(d => d.status === "won").length,
     lost: deals.filter(d => d.status === "lost").length,
-    totalValue: deals.reduce((sum, d) => sum + (typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : d.deal_value), 0),
-    wonValue: deals.filter(d => d.status === "won").reduce((sum, d) => sum + (typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : d.deal_value), 0),
-    pipelineValue: deals.filter(d => ["proposal", "negotiation"].includes(d.status)).reduce((sum, d) => sum + (typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : d.deal_value), 0),
+    totalValue: deals.reduce((sum, d) => sum + (typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : Number(d.deal_value) || 0), 0),
+    wonValue: deals.filter(d => d.status === "won").reduce((sum, d) => sum + (typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : Number(d.deal_value) || 0), 0),
+    pipelineValue: activeDeals.reduce((sum, d) => sum + (typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : Number(d.deal_value) || 0), 0),
     conversionRate: (() => {
       const wonCount = deals.filter(d => d.status === "won").length
       const closedCount = deals.filter(d => ["won", "lost"].includes(d.status)).length
       return closedCount > 0 ? ((wonCount / closedCount) * 100).toFixed(1) : "0"
     })()
+  }
 
   const projectStats = {
     total: projects.length,
