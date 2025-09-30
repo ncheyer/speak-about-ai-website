@@ -291,7 +291,15 @@ export default function MasterAdminPanel() {
       
       if (response.ok) {
         const data = await response.json()
-        setDeals(data.deals || [])
+        const dealsArray = data.deals || []
+        console.log(`Loaded ${dealsArray.length} deals from API:`, {
+          total: dealsArray.length,
+          won: dealsArray.filter(d => d.status === "won").length,
+          proposal: dealsArray.filter(d => d.status === "proposal").length,
+          negotiation: dealsArray.filter(d => d.status === "negotiation").length,
+          lost: dealsArray.filter(d => d.status === "lost").length
+        })
+        setDeals(dealsArray)
       }
     } catch (error) {
       console.error("Error loading deals:", error)
@@ -468,17 +476,20 @@ export default function MasterAdminPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSyncing])
   
-  // Compute stats
+  // Compute stats - matching CRM tab logic
   const dealStats = {
     total: deals.length,
-    active: deals.filter(d => ["lead", "qualified", "proposal", "negotiation"].includes(d.status)).length,
+    active: deals.filter(d => ["proposal", "negotiation"].includes(d.status)).length, // Only count actual active statuses
     won: deals.filter(d => d.status === "won").length,
     lost: deals.filter(d => d.status === "lost").length,
-    totalValue: deals.reduce((sum, d) => sum + d.deal_value, 0),
-    wonValue: deals.filter(d => d.status === "won").reduce((sum, d) => sum + d.deal_value, 0),
-    pipelineValue: deals.filter(d => ["qualified", "proposal", "negotiation"].includes(d.status)).reduce((sum, d) => sum + d.deal_value, 0),
-    conversionRate: deals.length > 0 ? ((deals.filter(d => d.status === "won").length / deals.length) * 100).toFixed(1) : "0"
-  }
+    totalValue: deals.reduce((sum, d) => sum + (typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : d.deal_value), 0),
+    wonValue: deals.filter(d => d.status === "won").reduce((sum, d) => sum + (typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : d.deal_value), 0),
+    pipelineValue: deals.filter(d => ["proposal", "negotiation"].includes(d.status)).reduce((sum, d) => sum + (typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : d.deal_value), 0),
+    conversionRate: (() => {
+      const wonCount = deals.filter(d => d.status === "won").length
+      const closedCount = deals.filter(d => ["won", "lost"].includes(d.status)).length
+      return closedCount > 0 ? ((wonCount / closedCount) * 100).toFixed(1) : "0"
+    })()
 
   const projectStats = {
     total: projects.length,
@@ -497,15 +508,22 @@ export default function MasterAdminPanel() {
   }
 
   const financialStats = {
-    totalRevenue: deals.filter(d => d.status === "won").reduce((sum, d) => sum + d.deal_value, 0),
+    totalRevenue: deals.filter(d => d.status === "won").reduce((sum, d) => {
+      const value = typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : d.deal_value
+      return sum + value
+    }, 0),
     totalCommission: deals.filter(d => d.status === "won").reduce((sum, d) => {
+      const value = typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : d.deal_value
       const percentage = d.commission_percentage || 20
-      return sum + (d.commission_amount || (d.deal_value * percentage / 100))
+      const commissionAmount = typeof d.commission_amount === 'string' ? parseFloat(d.commission_amount) || 0 : d.commission_amount || 0
+      return sum + (commissionAmount || (value * percentage / 100))
     }, 0),
     pendingPayments: deals.filter(d => d.status === "won" && d.payment_status !== "paid")
       .reduce((sum, d) => {
+        const value = typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : d.deal_value
         const percentage = d.commission_percentage || 20
-        return sum + (d.commission_amount || (d.deal_value * percentage / 100))
+        const commissionAmount = typeof d.commission_amount === 'string' ? parseFloat(d.commission_amount) || 0 : d.commission_amount || 0
+        return sum + (commissionAmount || (value * percentage / 100))
       }, 0),
     averageCommissionRate: 20, // Default or calculated
     monthlyRevenue: deals.filter(d => {
@@ -513,7 +531,10 @@ export default function MasterAdminPanel() {
       const wonDate = new Date(d.updated_at)
       const now = new Date()
       return wonDate.getMonth() === now.getMonth() && wonDate.getFullYear() === now.getFullYear()
-    }).reduce((sum, d) => sum + d.deal_value, 0)
+    }).reduce((sum, d) => {
+      const value = typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : d.deal_value
+      return sum + value
+    }, 0)
   }
 
   // Get upcoming events
