@@ -208,6 +208,8 @@ export default function MasterAdminPanel() {
   const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("overview")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [lastSync, setLastSync] = useState<Date | null>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
   
   // Data states
   const [speakers, setSpeakers] = useState<Speaker[]>([])
@@ -401,6 +403,71 @@ export default function MasterAdminPanel() {
     }
   }
 
+  // Sync all data and refresh
+  const syncAllData = async () => {
+    if (isSyncing) return
+    
+    setIsSyncing(true)
+    toast({
+      title: "Syncing...",
+      description: "Refreshing all data from the server",
+    })
+    
+    try {
+      // First sync finance-project data
+      const token = localStorage.getItem("adminSessionToken")
+      const syncResponse = await fetch("/api/admin/sync-finance", {
+        method: "POST",
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'x-dev-admin-bypass': 'dev-admin-access'
+        }
+      })
+      
+      if (syncResponse.ok) {
+        const syncResult = await syncResponse.json()
+        console.log("Sync result:", syncResult)
+      }
+      
+      // Then reload all data in parallel
+      await Promise.all([
+        loadDeals(),
+        loadProjects(),
+        loadProposals(),
+        loadInvoices(),
+        loadSpeakers(),
+        loadAnalytics()
+      ])
+      
+      setLastSync(new Date())
+      toast({
+        title: "Sync Complete",
+        description: "All data has been refreshed",
+      })
+    } catch (error) {
+      console.error("Error syncing data:", error)
+      toast({
+        title: "Sync Failed",
+        description: "Failed to sync some data. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+  
+  // Auto-sync every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!document.hidden && !isSyncing) {
+        syncAllData()
+      }
+    }, 5 * 60 * 1000) // 5 minutes
+    
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSyncing])
+  
   // Compute stats
   const dealStats = {
     total: deals.length,
@@ -493,6 +560,16 @@ export default function MasterAdminPanel() {
                 <p className="text-sm text-gray-500 mt-1">All times displayed in {getPSTTimezoneLabel()}</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
+                <Button 
+                  onClick={syncAllData}
+                  disabled={isSyncing}
+                  variant="outline"
+                  className="border-gray-300"
+                  title={lastSync ? `Last synced: ${lastSync.toLocaleTimeString()}` : 'Never synced'}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                  {isSyncing ? 'Syncing...' : 'Sync All'}
+                </Button>
                 <Button 
                   onClick={() => router.push("/admin/crm")} 
                   className="bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md"
