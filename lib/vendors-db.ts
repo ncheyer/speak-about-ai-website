@@ -255,6 +255,19 @@ export async function getVendorBySlug(slug: string): Promise<Vendor | null> {
 export async function createVendor(vendor: Partial<Vendor>): Promise<Vendor> {
   const db = getSQL()
   try {
+    // Ensure JSONB fields are properly formatted
+    const socialMedia = vendor.social_media ? 
+      (typeof vendor.social_media === 'string' ? vendor.social_media : JSON.stringify(vendor.social_media)) : 
+      '{}'
+    
+    const portfolioItems = vendor.portfolio_items ? 
+      (typeof vendor.portfolio_items === 'string' ? vendor.portfolio_items : JSON.stringify(vendor.portfolio_items)) : 
+      '[]'
+    
+    const clientReferences = vendor.client_references ? 
+      (typeof vendor.client_references === 'string' ? vendor.client_references : JSON.stringify(vendor.client_references)) : 
+      '{}'
+    
     const result = await db`
       INSERT INTO vendors (
         company_name, slug, category_id, contact_name, contact_email,
@@ -272,8 +285,8 @@ export async function createVendor(vendor: Partial<Vendor>): Promise<Vendor> {
         ${vendor.years_in_business}, ${vendor.team_size},
         ${vendor.certifications || []}, ${vendor.featured || false},
         ${vendor.verified || false}, ${vendor.status || 'pending'},
-        ${vendor.tags || []}, ${vendor.social_media || {}},
-        ${vendor.portfolio_items || []}, ${vendor.client_references || []}
+        ${vendor.tags || []}, ${socialMedia}::jsonb,
+        ${portfolioItems}::jsonb, ${clientReferences}::jsonb
       )
       RETURNING *
     `

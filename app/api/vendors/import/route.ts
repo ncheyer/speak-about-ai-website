@@ -166,29 +166,31 @@ export async function POST(request: NextRequest) {
           tags.push(...row["Languages Spoken by Your Team"].split(/[,;]/).map((s: string) => s.trim()).filter(Boolean))
         }
         
-        // Build social media object
+        // Build social media object - ensure it's valid JSON
         const socialMedia: any = {}
-        if (row["Primary Contact LinkedIn Profile"]) {
-          socialMedia.linkedin = row["Primary Contact LinkedIn Profile"]
+        if (row["Primary Contact LinkedIn Profile"] && row["Primary Contact LinkedIn Profile"].trim()) {
+          socialMedia.linkedin = row["Primary Contact LinkedIn Profile"].trim()
         }
         
-        // Build portfolio items
+        // Build portfolio items - ensure valid JSON array
         const portfolioItems: any[] = []
-        if (row["Link to Portfolio or Case Studies"]) {
+        if (row["Link to Portfolio or Case Studies"] && row["Link to Portfolio or Case Studies"].trim()) {
           portfolioItems.push({
             title: "Portfolio",
-            link: row["Link to Portfolio or Case Studies"]
+            link: row["Link to Portfolio or Case Studies"].trim()
           })
         }
-        if (row["Links to Google Reviews or other platform ratings (e.g., Yelp, WeddingWire)"]) {
+        if (row["Links to Google Reviews or other platform ratings (e.g., Yelp, WeddingWire)"] && 
+            row["Links to Google Reviews or other platform ratings (e.g., Yelp, WeddingWire)"].trim()) {
           portfolioItems.push({
             title: "Reviews",
-            link: row["Links to Google Reviews or other platform ratings (e.g., Yelp, WeddingWire)"]
+            link: row["Links to Google Reviews or other platform ratings (e.g., Yelp, WeddingWire)"].trim()
           })
         }
         
-        // Build additional info for JSONB fields
-        const additionalInfo = {
+        // Build additional info for JSONB fields - filter out undefined/null values
+        const additionalInfo: any = {}
+        const fields = {
           contactRole: row["Primary Contact Role"],
           eventSize: row["Average Event Size You Handle (number of attendees)"],
           serviceAreas: row["Service Areas"],
@@ -206,40 +208,50 @@ export async function POST(request: NextRequest) {
           accessibility: row["Accessibility Accommodations Offered (e.g., accessible venues, sign language interpreters, sensory-friendly options)"]
         }
         
+        // Only add non-empty values to avoid JSON parsing issues
+        for (const [key, value] of Object.entries(fields)) {
+          if (value && value.toString().trim()) {
+            additionalInfo[key] = value.toString().trim()
+          }
+        }
+        
         // Generate slug from company name
         const slug = row["Company Name"]
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-+|-+$/g, '')
         
-        // Create vendor object
+        // Add timestamp to make slug unique if needed
+        const uniqueSlug = `${slug}-${Date.now()}-${i}`
+        
+        // Create vendor object with proper JSON serialization
         const vendorData = {
           company_name: row["Company Name"],
-          slug: slug,
+          slug: uniqueSlug,
           category_id: mapCategoryName(row["Primary Vendor Category"], categories),
-          contact_name: row["Primary Contact Name"],
+          contact_name: row["Primary Contact Name"] || null,
           contact_email: row["Business Email (must be a company domain)"],
-          contact_phone: row["Business Phone Number"],
-          website: row["Company Website URL"],
-          description: row["Describe your business in 1-2 sentences."],
-          services: services,
-          specialties: specialties,
+          contact_phone: row["Business Phone Number"] || null,
+          website: row["Company Website URL"] || null,
+          description: row["Describe your business in 1-2 sentences."] || null,
+          services: services.length > 0 ? services : [],
+          specialties: specialties.length > 0 ? specialties : [],
           pricing_range: determinePricingRange(
             row["Typical Project Budget Range (Minimum)"],
             row["Typical Project Budget Range (Maximum)"]
           ),
           minimum_budget: parseInt(row["Typical Project Budget Range (Minimum)"]?.replace(/[^0-9]/g, '') || '0') || null,
-          location: row["Headquarters Location (City, State/Province, Country)"],
+          location: row["Headquarters Location (City, State/Province, Country)"] || null,
           years_in_business: parseInt(row["Years in Business"] || '0') || null,
           team_size: determineTeamSize(row["Years in Business"]),
-          certifications: specialties, // Using specialties as certifications
+          certifications: specialties.length > 0 ? specialties : [],
           featured: false,
           verified: false,
           status: autoApprove ? "approved" : "pending",
-          tags: tags,
-          social_media: socialMedia,
-          portfolio_items: portfolioItems,
-          client_references: additionalInfo // Storing additional data in client_references for now
+          tags: tags.length > 0 ? tags : [],
+          social_media: Object.keys(socialMedia).length > 0 ? socialMedia : {},
+          portfolio_items: portfolioItems.length > 0 ? portfolioItems : [],
+          client_references: Object.keys(additionalInfo).length > 0 ? additionalInfo : {}
         }
         
         // Create vendor
@@ -248,11 +260,25 @@ export async function POST(request: NextRequest) {
         
       } catch (error) {
         console.error(`Error processing row ${i + 1}:`, error)
+        console.error(`Vendor data:`, JSON.stringify(vendorData, null, 2))
         results.failed++
+        
+        // Provide more specific error messages
+        let errorMessage = "Unknown error"
+        if (error instanceof Error) {
+          if (error.message.includes('invalid input syntax for type json')) {
+            errorMessage = "Invalid JSON data in one of the fields. Check special characters."
+          } else if (error.message.includes('duplicate key')) {
+            errorMessage = "A vendor with similar details already exists"
+          } else {
+            errorMessage = error.message
+          }
+        }
+        
         results.errors.push({
           row: i + 1,
           company: row["Company Name"],
-          error: error instanceof Error ? error.message : "Unknown error"
+          error: errorMessage
         })
       }
     }
