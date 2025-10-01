@@ -69,14 +69,6 @@ export default function DirectoryLandingPage() {
     }
   }
 
-  const features = [
-    "Access to verified event vendors",
-    "Filter by category, location, and budget",
-    "Direct contact with vendor representatives",
-    "Save favorites and build your vendor list",
-    "Transparent pricing from all vendors"
-  ]
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div className="container mx-auto px-4 py-12">
@@ -100,20 +92,7 @@ export default function DirectoryLandingPage() {
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Features Section */}
             <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-                Why Join Our Directory?
-              </h2>
-              
-              <div className="space-y-4">
-                {features.map((feature, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <CheckCircle className="h-6 w-6 text-green-500 mt-0.5" />
-                    <span className="text-gray-700">{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Card className="mt-8 border-blue-200 bg-blue-50">
+              <Card className="border-blue-200 bg-blue-50">
                 <CardContent className="p-6">
                   <h3 className="font-semibold text-blue-900 mb-2">
                     For Vendors
