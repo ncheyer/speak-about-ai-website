@@ -4,7 +4,7 @@ import { requireAdminAuth } from "@/lib/auth-middleware"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check for dev bypass header first
@@ -17,7 +17,8 @@ export async function GET(
       if (authError) return authError
     }
     
-    const id = parseInt(params.id)
+    const { id: idString } = await params
+    const id = parseInt(idString)
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid project ID" }, { status: 400 })
     }
@@ -39,7 +40,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check for dev bypass header first
@@ -52,7 +53,8 @@ export async function PUT(
       if (authError) return authError
     }
     
-    const id = parseInt(params.id)
+    const { id: idString } = await params
+    const id = parseInt(idString)
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid project ID" }, { status: 400 })
     }
@@ -76,7 +78,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check for dev bypass header first
@@ -89,7 +91,8 @@ export async function DELETE(
       if (authError) return authError
     }
     
-    const id = parseInt(params.id)
+    const { id: idString } = await params
+    const id = parseInt(idString)
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid project ID" }, { status: 400 })
     }
