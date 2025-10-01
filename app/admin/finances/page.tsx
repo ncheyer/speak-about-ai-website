@@ -829,7 +829,619 @@ export default function FinancesPage() {
               </Card>
             </TabsContent>
 
-            {/* Other tabs content would go here */}
+            {/* Deals & Commissions Tab */}
+            <TabsContent value="deals" className="space-y-6">
+              {/* Commission Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Average Deal Size</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(stats.dealsCount > 0 ? stats.totalRevenue / stats.dealsCount : 0)}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Total Commission</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{formatCurrency(stats.totalCommission)}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Avg Commission Rate</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.averageCommission.toFixed(1)}%</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Collection Rate</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {stats.totalRevenue > 0 ? 
+                        ((stats.collectedRevenue / stats.totalRevenue) * 100).toFixed(1) : 0}%
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>All Deals & Commission Details</CardTitle>
+                  <CardDescription>Complete breakdown of deals, commissions, and payment tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Deal Details</TableHead>
+                        <TableHead>Event Info</TableHead>
+                        <TableHead className="text-right">Deal Value</TableHead>
+                        <TableHead className="text-right">Commission</TableHead>
+                        <TableHead>Collection Status</TableHead>
+                        <TableHead>Invoice Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDeals.map((deal) => {
+                        const commissionPercentage = deal.commission_percentage || 20
+                        const commissionAmount = deal.commission_amount || (deal.deal_value * commissionPercentage / 100)
+                        
+                        return (
+                          <TableRow key={deal.id}>
+                            <TableCell>
+                              <div className="space-y-1">
+                                <p className="font-medium">{deal.client_name}</p>
+                                <p className="text-sm text-gray-500">{deal.company}</p>
+                                <p className="text-xs text-gray-400">Won: {formatDate(deal.won_date)}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-1">
+                                <p className="font-medium text-sm">{deal.event_title}</p>
+                                <p className="text-xs text-gray-500">Date: {formatDate(deal.event_date)}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <p className="font-bold">{formatCurrency(deal.deal_value)}</p>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div>
+                                <p className="font-medium">{formatCurrency(commissionAmount)}</p>
+                                <p className="text-xs text-gray-500">({commissionPercentage}%)</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-2">
+                                {deal.payment_status === 'paid' ? (
+                                  <Badge className="bg-green-100 text-green-800">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Collected
+                                  </Badge>
+                                ) : deal.payment_status === 'partial' ? (
+                                  <Badge className="bg-yellow-100 text-yellow-800">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    Partial
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary">
+                                    <AlertCircle className="h-3 w-3 mr-1" />
+                                    Pending
+                                  </Badge>
+                                )}
+                                {deal.payment_date && (
+                                  <p className="text-xs text-gray-500">
+                                    Paid: {formatDate(deal.payment_date)}
+                                  </p>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col gap-1">
+                                {deal.invoice_link_1 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Invoice 1 (50%)
+                                  </Badge>
+                                )}
+                                {deal.invoice_link_2 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Invoice 2 (50%)
+                                  </Badge>
+                                )}
+                                {deal.invoice_number && (
+                                  <span className="text-xs text-gray-500">
+                                    #{deal.invoice_number}
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditDeal(deal)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Project Finances Tab */}
+            <TabsContent value="projects" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Project Financial Overview</CardTitle>
+                  <CardDescription>Detailed financial breakdown by project including expenses and profitability</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Project Name</TableHead>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Budget</TableHead>
+                        <TableHead className="text-right">Speaker Fee</TableHead>
+                        <TableHead className="text-right">Our Fee</TableHead>
+                        <TableHead className="text-right">Net Profit</TableHead>
+                        <TableHead className="text-right">Margin %</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDeals
+                        .filter(deal => deal.project)
+                        .map((deal) => {
+                          const speakerFee = Number(deal.project?.speaker_fee) || 0
+                          const budget = Number(deal.project?.budget) || deal.deal_value
+                          const ourFee = deal.commission_amount || (deal.deal_value * (deal.commission_percentage || 20) / 100)
+                          const netProfit = deal.deal_value - speakerFee
+                          const margin = deal.deal_value > 0 ? (netProfit / deal.deal_value) * 100 : 0
+                          
+                          return (
+                            <TableRow key={deal.id}>
+                              <TableCell className="font-medium">
+                                {deal.project?.project_name || deal.event_title}
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{deal.client_name}</p>
+                                  <p className="text-sm text-gray-500">{deal.company}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={
+                                  deal.project?.status === 'completed' ? 'default' :
+                                  deal.project?.status === 'invoicing' ? 'secondary' : 
+                                  'outline'
+                                }>
+                                  {deal.project?.status || 'pending'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                {formatCurrency(budget)}
+                              </TableCell>
+                              <TableCell className="text-right text-orange-600">
+                                {formatCurrency(speakerFee)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatCurrency(ourFee)}
+                              </TableCell>
+                              <TableCell className="text-right font-bold text-green-600">
+                                {formatCurrency(netProfit)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <span className={margin > 20 ? 'text-green-600 font-medium' : 'text-gray-600'}>
+                                  {margin.toFixed(1)}%
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                    </TableBody>
+                  </Table>
+
+                  {/* Project Summary */}
+                  <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-blue-900">Total Project Value</span>
+                        <span className="text-xl font-bold text-blue-600">
+                          {formatCurrency(
+                            filteredDeals
+                              .filter(d => d.project)
+                              .reduce((sum, d) => sum + (Number(d.project?.budget) || d.deal_value), 0)
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-orange-900">Total Speaker Costs</span>
+                        <span className="text-xl font-bold text-orange-600">
+                          {formatCurrency(
+                            filteredDeals
+                              .filter(d => d.project)
+                              .reduce((sum, d) => sum + (Number(d.project?.speaker_fee) || 0), 0)
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-green-900">Project Net Profit</span>
+                        <span className="text-xl font-bold text-green-600">
+                          {formatCurrency(
+                            filteredDeals
+                              .filter(d => d.project)
+                              .reduce((sum, d) => {
+                                const speakerFee = Number(d.project?.speaker_fee) || 0
+                                return sum + (d.deal_value - speakerFee)
+                              }, 0)
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Cash Flow Projection */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Cash Flow Projection</CardTitle>
+                  <CardDescription>Expected incoming and outgoing payments based on project timelines</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {filteredDeals
+                      .filter(deal => deal.project && deal.payment_status !== 'paid')
+                      .sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
+                      .map((deal) => {
+                        const speakerFee = Number(deal.project?.speaker_fee) || 0
+                        
+                        return (
+                          <div key={deal.id} className="border rounded-lg p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="font-medium">{deal.project?.project_name}</h4>
+                                <p className="text-sm text-gray-500">Event: {formatDate(deal.event_date)}</p>
+                              </div>
+                              <div className="text-right space-y-2">
+                                <div>
+                                  <p className="text-sm text-gray-500">Expected In</p>
+                                  <p className="font-bold text-green-600">+{formatCurrency(deal.deal_value)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-gray-500">Expected Out</p>
+                                  <p className="font-bold text-orange-600">-{formatCurrency(speakerFee)}</p>
+                                </div>
+                                <div className="pt-2 border-t">
+                                  <p className="text-sm text-gray-500">Net Cash Flow</p>
+                                  <p className="font-bold">{formatCurrency(deal.deal_value - speakerFee)}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Analytics Tab */}
+            <TabsContent value="analytics" className="space-y-6">
+              {/* Performance Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Revenue Performance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm">Collection Progress</span>
+                          <span className="text-sm font-medium">
+                            {stats.totalRevenue > 0 ? 
+                              ((stats.collectedRevenue / stats.totalRevenue) * 100).toFixed(0) : 0}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-green-600 h-2 rounded-full"
+                            style={{ 
+                              width: `${stats.totalRevenue > 0 ? 
+                                (stats.collectedRevenue / stats.totalRevenue) * 100 : 0}%` 
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="pt-3 border-t">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-500">Total Pipeline</span>
+                          <span className="font-medium">{formatCurrency(stats.totalRevenue)}</span>
+                        </div>
+                        <div className="flex justify-between mt-2">
+                          <span className="text-sm text-gray-500">Collected</span>
+                          <span className="font-medium text-green-600">
+                            {formatCurrency(stats.collectedRevenue)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between mt-2">
+                          <span className="text-sm text-gray-500">Outstanding</span>
+                          <span className="font-medium text-yellow-600">
+                            {formatCurrency(stats.totalPendingRevenue)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Commission Analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-3xl font-bold">{stats.averageCommission.toFixed(1)}%</p>
+                        <p className="text-sm text-gray-500">Average Commission Rate</p>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm">20% Rate</span>
+                          <span className="text-sm font-medium">
+                            {deals.filter(d => d.commission_percentage === 20).length} deals
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">25% Rate</span>
+                          <span className="text-sm font-medium">
+                            {deals.filter(d => d.commission_percentage === 25).length} deals
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">30% Rate</span>
+                          <span className="text-sm font-medium">
+                            {deals.filter(d => d.commission_percentage === 30).length} deals
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Other Rates</span>
+                          <span className="text-sm font-medium">
+                            {deals.filter(d => 
+                              d.commission_percentage !== 20 && 
+                              d.commission_percentage !== 25 && 
+                              d.commission_percentage !== 30
+                            ).length} deals
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Deal Pipeline Health</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-2xl font-bold">{stats.dealsCount}</p>
+                          <p className="text-sm text-gray-500">Total Deals</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{stats.projectsCount}</p>
+                          <p className="text-sm text-gray-500">Active Projects</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2 pt-3 border-t">
+                        <div className="flex justify-between">
+                          <span className="text-sm">Avg Deal Size</span>
+                          <span className="font-medium">
+                            {formatCurrency(stats.dealsCount > 0 ? stats.totalRevenue / stats.dealsCount : 0)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Avg Commission</span>
+                          <span className="font-medium">
+                            {formatCurrency(stats.dealsCount > 0 ? stats.totalCommission / stats.dealsCount : 0)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Payment Success Rate</span>
+                          <span className="font-medium text-green-600">
+                            {deals.length > 0 ? 
+                              ((deals.filter(d => d.payment_status === 'paid').length / deals.length) * 100).toFixed(0) : 0}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Monthly Breakdown */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Monthly Revenue Breakdown</CardTitle>
+                  <CardDescription>Revenue and commission trends by month</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {(() => {
+                      // Group deals by month
+                      const monthlyData = deals.reduce((acc, deal) => {
+                        const date = new Date(deal.won_date)
+                        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+                        
+                        if (!acc[monthKey]) {
+                          acc[monthKey] = {
+                            revenue: 0,
+                            commission: 0,
+                            deals: 0,
+                            collected: 0,
+                            pending: 0
+                          }
+                        }
+                        
+                        acc[monthKey].revenue += deal.deal_value
+                        acc[monthKey].commission += deal.commission_amount || (deal.deal_value * (deal.commission_percentage || 20) / 100)
+                        acc[monthKey].deals += 1
+                        
+                        if (deal.payment_status === 'paid') {
+                          acc[monthKey].collected += deal.deal_value
+                        } else {
+                          acc[monthKey].pending += deal.deal_value
+                        }
+                        
+                        return acc
+                      }, {} as Record<string, any>)
+                      
+                      // Sort by month and show last 6 months
+                      const sortedMonths = Object.entries(monthlyData)
+                        .sort(([a], [b]) => b.localeCompare(a))
+                        .slice(0, 6)
+                      
+                      return sortedMonths.map(([month, data]) => {
+                        const [year, monthNum] = month.split('-')
+                        const monthName = new Date(Number(year), Number(monthNum) - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                        
+                        return (
+                          <div key={month} className="border rounded-lg p-4">
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="font-medium text-lg">{monthName}</h4>
+                              <Badge variant="outline">{data.deals} deals</Badge>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div>
+                                <p className="text-sm text-gray-500">Revenue</p>
+                                <p className="font-bold">{formatCurrency(data.revenue)}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Commission</p>
+                                <p className="font-bold">{formatCurrency(data.commission)}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Collected</p>
+                                <p className="font-bold text-green-600">{formatCurrency(data.collected)}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Pending</p>
+                                <p className="font-bold text-yellow-600">{formatCurrency(data.pending)}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })
+                    })()}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Top Performers */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Clients by Revenue</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {(() => {
+                        const clientRevenue = deals.reduce((acc, deal) => {
+                          if (!acc[deal.company]) {
+                            acc[deal.company] = { revenue: 0, deals: 0 }
+                          }
+                          acc[deal.company].revenue += deal.deal_value
+                          acc[deal.company].deals += 1
+                          return acc
+                        }, {} as Record<string, any>)
+                        
+                        return Object.entries(clientRevenue)
+                          .sort(([,a], [,b]) => b.revenue - a.revenue)
+                          .slice(0, 5)
+                          .map(([company, data], index) => (
+                            <div key={company} className="flex justify-between items-center">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg font-bold text-gray-400">#{index + 1}</span>
+                                <div>
+                                  <p className="font-medium">{company}</p>
+                                  <p className="text-xs text-gray-500">{data.deals} deals</p>
+                                </div>
+                              </div>
+                              <span className="font-bold">{formatCurrency(data.revenue)}</span>
+                            </div>
+                          ))
+                      })()}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Revenue by Event Type</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {(() => {
+                        const eventTypes = deals.reduce((acc, deal) => {
+                          // Simple categorization based on event title
+                          let type = 'Other'
+                          if (deal.event_title.toLowerCase().includes('keynote')) type = 'Keynote'
+                          else if (deal.event_title.toLowerCase().includes('workshop')) type = 'Workshop'
+                          else if (deal.event_title.toLowerCase().includes('panel')) type = 'Panel'
+                          else if (deal.event_title.toLowerCase().includes('recording')) type = 'Recording'
+                          else if (deal.event_title.toLowerCase().includes('course')) type = 'Course'
+                          
+                          if (!acc[type]) {
+                            acc[type] = { revenue: 0, count: 0 }
+                          }
+                          acc[type].revenue += deal.deal_value
+                          acc[type].count += 1
+                          return acc
+                        }, {} as Record<string, any>)
+                        
+                        return Object.entries(eventTypes)
+                          .sort(([,a], [,b]) => b.revenue - a.revenue)
+                          .map(([type, data]) => (
+                            <div key={type} className="flex justify-between items-center">
+                              <div>
+                                <p className="font-medium">{type}</p>
+                                <p className="text-xs text-gray-500">{data.count} events</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold">{formatCurrency(data.revenue)}</p>
+                                <p className="text-xs text-gray-500">
+                                  Avg: {formatCurrency(data.revenue / data.count)}
+                                </p>
+                              </div>
+                            </div>
+                          ))
+                      })()}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
       </div>
