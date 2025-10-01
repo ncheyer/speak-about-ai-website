@@ -50,44 +50,32 @@ export async function GET(request: Request) {
       FROM directory_subscribers
     `
 
-    // Since we don't have a dedicated events table, we'll return mock data for now
-    // In production, this would query actual event tracking data from Umami or a custom events table
-    const mockEventData = {
-      totalSearches: Math.floor(Math.random() * 500) + 100,
-      topSearchTerms: [
-        { term: "catering", count: 45 },
-        { term: "photography", count: 38 },
-        { term: "venue", count: 32 },
-        { term: "wedding", count: 28 },
-        { term: "corporate", count: 25 }
-      ],
+    // Real data - will show zeros until events are tracked
+    // These will populate as users interact with the directory
+    const realEventData = {
+      totalSearches: 0,
+      topSearchTerms: [],
       categoryFilters: categoryStats.map(cat => ({
         category: cat.category || 'Uncategorized',
-        count: Math.floor(Math.random() * 50) + 10
+        count: 0
       })),
-      vendorViews: [
-        { vendorName: "Elite Catering Services", views: 89 },
-        { vendorName: "Sunset Photography", views: 76 },
-        { vendorName: "Grand Ballroom Venue", views: 65 },
-        { vendorName: "DJ Entertainment Pro", views: 58 },
-        { vendorName: "Floral Designs Studio", views: 52 }
-      ],
+      vendorViews: [],
       contactMethods: {
-        email: Math.floor(Math.random() * 100) + 50,
-        phone: Math.floor(Math.random() * 50) + 20,
-        website: Math.floor(Math.random() * 80) + 30,
-        quote: Math.floor(Math.random() * 60) + 25
+        email: 0,
+        phone: 0,
+        website: 0,
+        quote: 0
       },
       conversionFunnel: {
-        directoryVisits: Math.floor(Math.random() * 1000) + 500,
-        vendorPageViews: Math.floor(Math.random() * 500) + 200,
-        contactInitiated: Math.floor(Math.random() * 100) + 50,
-        quoteRequested: Math.floor(Math.random() * 50) + 20
+        directoryVisits: 0,
+        vendorPageViews: 0,
+        contactInitiated: 0,
+        quoteRequested: 0
       }
     }
 
     return NextResponse.json({
-      ...mockEventData,
+      ...realEventData,
       totalVendors: vendorStats[0]?.total_vendors || 0,
       approvedVendors: vendorStats[0]?.approved_vendors || 0,
       featuredVendors: vendorStats[0]?.featured_vendors || 0,

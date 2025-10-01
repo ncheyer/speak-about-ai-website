@@ -815,6 +815,18 @@ export default function AdminAnalyticsPage() {
           {/* Directory Analytics Tab Content */}
           {activeTab === "directory" && (
             <div className="space-y-6">
+              {/* Show message if no activity yet */}
+              {directoryAnalytics?.totalSearches === 0 && directoryAnalytics?.vendorViews?.length === 0 && (
+                <Alert className="border-blue-200 bg-blue-50">
+                  <AlertTriangle className="h-4 w-4 text-blue-600" />
+                  <AlertTitle className="text-blue-800">Directory Analytics Starting Fresh</AlertTitle>
+                  <AlertDescription className="text-blue-700">
+                    Your vendor directory analytics will begin tracking when users start searching and viewing vendors. 
+                    All interactions are tracked automatically including searches, filters, vendor views, and contact actions.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               {/* Directory Stats Overview */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card>
@@ -878,12 +890,16 @@ export default function AdminAnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {directoryAnalytics?.topSearchTerms?.slice(0, 10).map((term, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <span className="font-medium">{term.term}</span>
-                        <Badge>{term.count} searches</Badge>
-                      </div>
-                    )) || <p className="text-gray-500">No search data available yet</p>}
+                    {directoryAnalytics?.topSearchTerms && directoryAnalytics.topSearchTerms.length > 0 ? (
+                      directoryAnalytics.topSearchTerms.slice(0, 10).map((term, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="font-medium">{term.term}</span>
+                          <Badge>{term.count} searches</Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">No search data available yet. Analytics will appear once users start searching.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -897,12 +913,16 @@ export default function AdminAnalyticsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {directoryAnalytics?.vendorViews?.slice(0, 10).map((vendor, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <span className="font-medium">{vendor.vendor}</span>
-                          <Badge variant="outline">{vendor.views} views</Badge>
-                        </div>
-                      )) || <p className="text-gray-500">No vendor view data available yet</p>}
+                      {directoryAnalytics?.vendorViews && directoryAnalytics.vendorViews.length > 0 ? (
+                        directoryAnalytics.vendorViews.slice(0, 10).map((vendor, index) => (
+                          <div key={index} className="flex items-center justify-between">
+                            <span className="font-medium">{vendor.vendorName}</span>
+                            <Badge variant="outline">{vendor.views} views</Badge>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 text-center py-4">No vendor views yet. Data will appear when users start viewing vendor profiles.</p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
