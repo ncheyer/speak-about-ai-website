@@ -28,7 +28,9 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  Edit
+  Edit,
+  MapPin,
+  Banknote
 } from "lucide-react"
 
 export default function SpeakerDashboard() {
@@ -48,6 +50,8 @@ export default function SpeakerDashboard() {
   const [profile, setProfile] = useState<any>(null)
   const [selectedPeriod, setSelectedPeriod] = useState("30days")
   const [analyticsData, setAnalyticsData] = useState<any>(null)
+  const [assignedDeals, setAssignedDeals] = useState<any[]>([])
+  const [assignedProjects, setAssignedProjects] = useState<any[]>([])
 
   // Generate engagement metrics data based on selected period and analytics data
   const getEngagementData = () => {
@@ -164,6 +168,38 @@ export default function SpeakerDashboard() {
           const inquiriesData = await inquiriesResponse.json()
           if (inquiriesData.inquiries) {
             setInquiries(inquiriesData.inquiries)
+          }
+        }
+
+        // Fetch assigned deals and projects (beta feature)
+        const speakerId = localStorage.getItem("speakerId")
+        if (speakerId) {
+          try {
+            const assignmentsResponse = await fetch(`/api/admin/assign-speaker?speaker_id=${speakerId}`)
+            if (assignmentsResponse.ok) {
+              const assignmentsData = await assignmentsResponse.json()
+              setAssignedDeals(assignmentsData.deals || [])
+              setAssignedProjects(assignmentsData.projects || [])
+              
+              // Update stats with real deal/project data
+              const activeDeals = (assignmentsData.deals || []).filter((d: any) => 
+                d.status !== 'lost' && d.status !== 'cancelled'
+              )
+              const completedProjects = (assignmentsData.projects || []).filter((p: any) => 
+                p.status === 'completed'
+              )
+              
+              setStats(prev => ({
+                ...prev,
+                requests: prev.requests + activeDeals.length,
+                completedEvents: completedProjects.length,
+                earnings: activeDeals.reduce((sum: number, deal: any) => 
+                  sum + (deal.payment_status === 'paid' ? Number(deal.deal_value || 0) : 0), 0
+                )
+              }))
+            }
+          } catch (error) {
+            console.error("Error fetching speaker assignments:", error)
           }
         }
       } catch (error) {
@@ -642,6 +678,151 @@ export default function SpeakerDashboard() {
             </Card>
           </div>
         </div>
+
+        {/* Assigned Deals and Projects (Beta) */}
+        {(assignedDeals.length > 0 || assignedProjects.length > 0) && (
+          <div className="mt-6 space-y-6">
+            {/* Assigned Deals */}
+            {assignedDeals.length > 0 && (
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-lg font-semibold">Your Opportunities</CardTitle>
+                      <CardDescription>Active deals and negotiations</CardDescription>
+                    </div>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                      Beta
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {assignedDeals.slice(0, 5).map((deal) => (
+                      <div key={deal.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">{deal.event_title}</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {deal.client_name} • {deal.company}
+                            </p>
+                            <div className="flex items-center gap-4 mt-2">
+                              <span className="text-sm text-gray-500">
+                                <Calendar className="h-3 w-3 inline mr-1" />
+                                {new Date(deal.event_date).toLocaleDateString()}
+                              </span>
+                              <span className="text-sm font-medium text-green-600">
+                                <DollarSign className="h-3 w-3 inline" />
+                                {Number(deal.deal_value).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge variant={
+                              deal.status === 'won' ? 'default' :
+                              deal.status === 'negotiation' ? 'secondary' :
+                              'outline'
+                            }>
+                              {deal.status}
+                            </Badge>
+                            {deal.payment_status && (
+                              <Badge variant={
+                                deal.payment_status === 'paid' ? 'default' :
+                                deal.payment_status === 'pending' ? 'secondary' :
+                                'outline'
+                              } className="text-xs">
+                                {deal.payment_status}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {assignedDeals.length > 5 && (
+                    <div className="mt-4 text-center">
+                      <Link href="/speakers/dashboard/events">
+                        <Button variant="ghost" size="sm">
+                          View All {assignedDeals.length} Deals
+                          <ArrowUpRight className="h-3 w-3 ml-1" />
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Assigned Projects */}
+            {assignedProjects.length > 0 && (
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-lg font-semibold">Your Projects</CardTitle>
+                      <CardDescription>Active speaking engagements</CardDescription>
+                    </div>
+                    <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                      Beta
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {assignedProjects.slice(0, 5).map((project) => (
+                      <div key={project.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">{project.project_name}</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {project.client_name} • {project.company}
+                            </p>
+                            <div className="flex items-center gap-4 mt-2">
+                              <span className="text-sm text-gray-500">
+                                <Calendar className="h-3 w-3 inline mr-1" />
+                                {new Date(project.event_date).toLocaleDateString()}
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                <MapPin className="h-3 w-3 inline mr-1" />
+                                {project.event_location}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge variant={
+                              project.status === 'completed' ? 'default' :
+                              project.status === 'pre_event' ? 'secondary' :
+                              project.status === 'event_week' ? 'destructive' :
+                              'outline'
+                            }>
+                              {project.status.replace('_', ' ')}
+                            </Badge>
+                            {project.speaker_fee && (
+                              <span className="text-sm font-medium text-green-600">
+                                <DollarSign className="h-3 w-3 inline" />
+                                {Number(project.speaker_fee).toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {assignedProjects.length > 5 && (
+                    <div className="mt-4 text-center">
+                      <Link href="/speakers/dashboard/events">
+                        <Button variant="ghost" size="sm">
+                          View All {assignedProjects.length} Projects
+                          <ArrowUpRight className="h-3 w-3 ml-1" />
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
     </SpeakerDashboardLayout>
   )
