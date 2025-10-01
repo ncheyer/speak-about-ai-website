@@ -81,11 +81,11 @@ export default function DirectoryLandingPage() {
               </div>
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Event Vendor Directory
+              Free Event Vendor Directory
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Connect with trusted vendors for your next event. 
-              Find the perfect partners from our curated network of event professionals.
+              Find the perfect partners from our curated network of event professionals - completely free.
             </p>
           </div>
 

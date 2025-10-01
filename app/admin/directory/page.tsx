@@ -376,13 +376,21 @@ export default function AdminDirectoryPage() {
 
   const handleQuickStatusChange = async (vendorId: number, newStatus: string) => {
     try {
+      const vendor = vendors.find(v => v.id === vendorId)
+      if (!vendor) {
+        throw new Error("Vendor not found")
+      }
+
       const response = await fetch(`/api/vendors/${vendorId}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "x-admin-request": "true"
         },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({
+          ...vendor,
+          status: newStatus
+        })
       })
 
       if (response.ok) {
@@ -390,15 +398,23 @@ export default function AdminDirectoryPage() {
           title: "Success",
           description: `Vendor status updated to ${newStatus}`
         })
-        loadData()
+        // Update local state immediately for better UX
+        setVendors(prevVendors => 
+          prevVendors.map(v => 
+            v.id === vendorId 
+              ? { ...v, status: newStatus }
+              : v
+          )
+        )
       } else {
-        throw new Error("Failed to update status")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to update status")
       }
     } catch (error) {
-      console.error("Error updating vendor:", error)
+      console.error("Error updating vendor status:", error)
       toast({
         title: "Error",
-        description: "Failed to update vendor status",
+        description: error instanceof Error ? error.message : "Failed to update vendor status",
         variant: "destructive"
       })
     }
