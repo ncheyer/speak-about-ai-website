@@ -35,7 +35,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
-import { Skeleton } from "@/components/ui/skeleton"
 
 interface Vendor {
   id: number
@@ -396,10 +395,11 @@ export default function VendorManagementPage() {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-8 space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
+            <div className="p-8 flex justify-center items-center">
+              <div className="text-center">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-500">Loading vendors...</p>
+              </div>
             </div>
           ) : (
             <Table>
