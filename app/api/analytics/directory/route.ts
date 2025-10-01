@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server"
-import { sql } from "@/lib/db"
+import { neon } from "@neondatabase/serverless"
+
+const sql = neon(process.env.DATABASE_URL!)
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const startDate = searchParams.get('startDate')
-    const endDate = searchParams.get('endDate')
-    
-    // Build date filter
-    let dateFilter = ''
-    if (startDate && endDate) {
-      dateFilter = sql`AND created_at >= ${new Date(startDate)} AND created_at <= ${new Date(endDate)}`
-    }
+    const days = searchParams.get('days') || '7'
 
     // Get vendor statistics
     const vendorStats = await sql`

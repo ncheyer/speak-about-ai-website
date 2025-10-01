@@ -6,7 +6,8 @@ import { trackDirectorySignup, trackDirectoryLogin } from "@/lib/analytics"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Mail, User, Building, Phone, ArrowRight, CheckCircle } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Building2, Mail, User, Building, Phone, ArrowRight, CheckCircle, Users, Award, Calendar } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast, useToast } from "@/components/ui/use-toast"
 
@@ -149,6 +150,75 @@ export default function VendorDirectoryPage() {
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Features Section */}
             <div className="space-y-6">
+              {/* What You Get Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    What You Get
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="h-2 w-2 bg-green-600 rounded-full mt-1.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-gray-900">Instant Access</p>
+                      <p className="text-sm text-gray-600">Browse our full vendor directory immediately after signup</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-2 w-2 bg-green-600 rounded-full mt-1.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-gray-900">Verified Vendors</p>
+                      <p className="text-sm text-gray-600">All vendors are vetted for quality and reliability</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-2 w-2 bg-green-600 rounded-full mt-1.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-gray-900">Direct Contact</p>
+                      <p className="text-sm text-gray-600">Connect directly with vendors - no middleman fees</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-2 w-2 bg-green-600 rounded-full mt-1.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-gray-900">Transparent Pricing</p>
+                      <p className="text-sm text-gray-600">See pricing ranges upfront before reaching out</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Vendor Categories Preview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Popular Categories</CardTitle>
+                  <CardDescription>Browse vendors by specialty</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Badge variant="outline" className="justify-start py-2">
+                      <Building2 className="h-3 w-3 mr-2" />
+                      Event Venues
+                    </Badge>
+                    <Badge variant="outline" className="justify-start py-2">
+                      <Users className="h-3 w-3 mr-2" />
+                      Catering Services
+                    </Badge>
+                    <Badge variant="outline" className="justify-start py-2">
+                      <Award className="h-3 w-3 mr-2" />
+                      Entertainment
+                    </Badge>
+                    <Badge variant="outline" className="justify-start py-2">
+                      <Calendar className="h-3 w-3 mr-2" />
+                      Event Planning
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* For Vendors CTA */}
               <Card className="border-blue-200 bg-blue-50">
                 <CardContent className="p-6">
                   <h3 className="font-semibold text-blue-900 mb-2">

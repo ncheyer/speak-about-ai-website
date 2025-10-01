@@ -503,3 +503,27 @@ export async function updateDirectorySubscriber(
     throw error
   }
 }
+
+// Alias functions for compatibility with subscribe route
+export const subscribeToDirectory = createDirectorySubscriber
+export const getSubscriberByEmail = getDirectorySubscriberByEmail
+
+export async function updateSubscriberLogin(email: string): Promise<DirectorySubscriber | null> {
+  const db = getSQL()
+  try {
+    const result = await db`
+      UPDATE directory_subscribers 
+      SET 
+        last_login = CURRENT_TIMESTAMP,
+        login_count = login_count + 1,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE email = ${email}
+      RETURNING *
+    `
+    
+    return result[0] as DirectorySubscriber || null
+  } catch (error) {
+    console.error("Error updating subscriber login:", error)
+    throw error
+  }
+}
