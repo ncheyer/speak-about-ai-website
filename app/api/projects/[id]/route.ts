@@ -81,6 +81,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    console.log("DELETE request received for project")
+    
     // Check for dev bypass header first
     const devBypass = request.headers.get('x-dev-admin-bypass')
     if (devBypass === 'dev-admin-access') {
@@ -88,26 +90,45 @@ export async function DELETE(
     } else {
       // Require admin authentication
       const authError = requireAdminAuth(request)
-      if (authError) return authError
+      if (authError) {
+        console.log('Auth failed for DELETE request')
+        return authError
+      }
     }
     
-    const { id: idString } = await params
+    // Await params properly
+    const resolvedParams = await params
+    const idString = resolvedParams.id
+    console.log("Attempting to delete project with ID string:", idString)
+    
     const id = parseInt(idString)
     if (isNaN(id)) {
+      console.error("Invalid project ID provided:", idString)
       return NextResponse.json({ error: "Invalid project ID" }, { status: 400 })
     }
     
+    console.log("Parsed project ID:", id)
     const success = await deleteProject(id)
     
     if (!success) {
+      console.log("Project not found or could not be deleted:", id)
       return NextResponse.json({ error: "Project not found or could not be deleted" }, { status: 404 })
     }
     
-    return NextResponse.json({ message: "Project deleted successfully" })
+    console.log("Project deleted successfully:", id)
+    return NextResponse.json({ message: "Project deleted successfully", id })
   } catch (error) {
-    console.error("Error deleting project:", error)
+    console.error("Error in DELETE /api/projects/[id]:", {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      params: await params
+    })
     return NextResponse.json(
-      { error: "Failed to delete project", details: error instanceof Error ? error.message : "Unknown error" },
+      { 
+        error: "Failed to delete project", 
+        details: error instanceof Error ? error.message : "Unknown error",
+        type: error instanceof Error ? error.constructor.name : typeof error
+      },
       { status: 500 }
     )
   }

@@ -302,17 +302,67 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
 export async function deleteProject(id: number): Promise<boolean> {
   try {
     const sql = getSQL()
-    console.log("Deleting project ID:", id)
+    console.log("Starting deletion of project ID:", id)
     
+    // First check if project exists
+    const existingProject = await sql`
+      SELECT id FROM projects 
+      WHERE id = ${id}
+    `
+    
+    if (!existingProject || existingProject.length === 0) {
+      console.log(`Project with ID ${id} not found`)
+      return false
+    }
+    
+    // Handle foreign key dependencies that don't have CASCADE
+    // Update deals to remove project reference
+    console.log(`Updating deals to remove project ${id} reference`)
+    await sql`
+      UPDATE deals 
+      SET project_id = NULL 
+      WHERE project_id = ${id}
+    `
+    
+    // Update contracts_v2 to remove project reference
+    console.log(`Updating contracts_v2 to remove project ${id} reference`)
+    await sql`
+      UPDATE contracts_v2 
+      SET project_id = NULL 
+      WHERE project_id = ${id}
+    `
+    
+    // Delete client_portal_audit_log entries
+    console.log(`Deleting client_portal_audit_log entries for project ${id}`)
+    await sql`
+      DELETE FROM client_portal_audit_log 
+      WHERE project_id = ${id}
+    `
+    
+    // Note: These tables have CASCADE delete, so they'll be handled automatically:
+    // - invoices
+    // - client_portal_invitations
+    // - project_client_accounts
+    // - project_speaker_accounts
+    // - project_tasks
+    // - admin_events (has SET NULL)
+    
+    // Delete the project
+    console.log(`Deleting project ${id}`)
     const result = await sql`
       DELETE FROM projects 
       WHERE id = ${id}
       RETURNING id
     `
     
+    console.log(`Project ${id} deleted successfully:`, result.length > 0)
     return result.length > 0
   } catch (error) {
-    console.error("Error deleting project:", error)
+    console.error("Error in deleteProject function:", {
+      projectId: id,
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined
+    })
     throw error
   }
 }
