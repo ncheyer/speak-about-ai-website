@@ -70,9 +70,8 @@ export default function DirectoryLandingPage() {
   }
 
   const features = [
-    "Access to 500+ verified event vendors",
+    "Access to verified event vendors",
     "Filter by category, location, and budget",
-    "Read authentic reviews from event professionals",
     "Direct contact with vendor representatives",
     "Save favorites and build your vendor list",
     "Exclusive deals and discounts"
