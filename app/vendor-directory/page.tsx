@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { trackDirectorySignup, trackDirectoryLogin } from "@/lib/analytics"
 import { Input } from "@/components/ui/input"
@@ -11,17 +11,42 @@ import { Building2, Mail, User, Building, Phone, ArrowRight, CheckCircle, Users,
 import { useRouter } from "next/navigation"
 import { toast, useToast } from "@/components/ui/use-toast"
 
+interface Category {
+  id: number
+  name: string
+  slug: string
+  icon?: string
+  vendor_count: number
+}
+
 export default function VendorDirectoryPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSignup, setIsSignup] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [topCategories, setTopCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState({
     email: "",
     name: "",
     company: "",
     phone: ""
   })
+
+  useEffect(() => {
+    fetchTopCategories()
+  }, [])
+
+  const fetchTopCategories = async () => {
+    try {
+      const response = await fetch("/api/vendors/top-categories")
+      if (response.ok) {
+        const data = await response.json()
+        setTopCategories(data.categories)
+      }
+    } catch (error) {
+      console.error("Error fetching top categories:", error)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -197,24 +222,44 @@ export default function VendorDirectoryPage() {
                   <CardDescription>Browse vendors by specialty</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Badge variant="outline" className="justify-start py-2">
-                      <Building2 className="h-3 w-3 mr-2" />
-                      Event Venues
-                    </Badge>
-                    <Badge variant="outline" className="justify-start py-2">
-                      <Users className="h-3 w-3 mr-2" />
-                      Catering Services
-                    </Badge>
-                    <Badge variant="outline" className="justify-start py-2">
-                      <Award className="h-3 w-3 mr-2" />
-                      Entertainment
-                    </Badge>
-                    <Badge variant="outline" className="justify-start py-2">
-                      <Calendar className="h-3 w-3 mr-2" />
-                      Event Planning
-                    </Badge>
-                  </div>
+                  {topCategories.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {topCategories.map((category) => (
+                        <Badge 
+                          key={category.id} 
+                          variant="outline" 
+                          className="justify-start py-2"
+                        >
+                          <Building2 className="h-3 w-3 mr-2" />
+                          <span>{category.name}</span>
+                          {category.vendor_count > 0 && (
+                            <span className="ml-auto text-xs text-gray-500">
+                              ({category.vendor_count})
+                            </span>
+                          )}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      <Badge variant="outline" className="justify-start py-2">
+                        <Building2 className="h-3 w-3 mr-2" />
+                        Event Technology
+                      </Badge>
+                      <Badge variant="outline" className="justify-start py-2">
+                        <Users className="h-3 w-3 mr-2" />
+                        Event Production
+                      </Badge>
+                      <Badge variant="outline" className="justify-start py-2">
+                        <Award className="h-3 w-3 mr-2" />
+                        Venues & Spaces
+                      </Badge>
+                      <Badge variant="outline" className="justify-start py-2">
+                        <Calendar className="h-3 w-3 mr-2" />
+                        Catering & F&B
+                      </Badge>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
               
