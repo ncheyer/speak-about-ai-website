@@ -286,10 +286,23 @@ export default function AdminDirectoryPage() {
       const vendor = vendors.find(v => v.id === inlineEditingVendor)
       if (!vendor) return
 
-      let processedValue = inlineEditValue
+      // Don't save if value hasn't changed
+      const currentValue = vendor[inlineEditingField as keyof Vendor]
+      const normalizedCurrentValue = Array.isArray(currentValue) ? currentValue.join(", ") : (currentValue || "")
+      
+      if (inlineEditValue.trim() === normalizedCurrentValue.trim()) {
+        cancelInlineEdit()
+        return
+      }
+
+      let processedValue = inlineEditValue.trim()
       if (inlineEditingField === "services") {
         processedValue = inlineEditValue.split(",").map(s => s.trim()).filter(Boolean)
       }
+
+      // Show loading state
+      const originalValue = inlineEditValue
+      setInlineEditValue("Saving...")
 
       const response = await fetch(`/api/vendors/${inlineEditingVendor}`, {
         method: "PUT",
@@ -305,24 +318,32 @@ export default function AdminDirectoryPage() {
 
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Vendor updated successfully"
+          title: "✓ Saved",
+          description: `${inlineEditingField.replace('_', ' ')} updated successfully`,
+          duration: 2000
         })
-        loadData()
+        
+        // Update local state immediately for better UX
+        setVendors(prevVendors => 
+          prevVendors.map(v => 
+            v.id === inlineEditingVendor 
+              ? { ...v, [inlineEditingField]: processedValue }
+              : v
+          )
+        )
+        
+        cancelInlineEdit()
       } else {
         throw new Error("Failed to update vendor")
       }
     } catch (error) {
       console.error("Error updating vendor:", error)
+      setInlineEditValue(vendors.find(v => v.id === inlineEditingVendor)?.[inlineEditingField as keyof Vendor] as string || "")
       toast({
-        title: "Error",
-        description: "Failed to update vendor",
+        title: "Save failed",
+        description: "Please try again or check your connection",
         variant: "destructive"
       })
-    } finally {
-      setInlineEditingVendor(null)
-      setInlineEditingField(null)
-      setInlineEditValue("")
     }
   }
 
@@ -333,11 +354,24 @@ export default function AdminDirectoryPage() {
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
       saveInlineEdit()
     } else if (e.key === "Escape") {
+      e.preventDefault()
       cancelInlineEdit()
+    } else if (e.key === "Tab") {
+      e.preventDefault()
+      saveInlineEdit()
     }
+  }
+
+  // Add double-click handler for better UX
+  const handleDoubleClick = (vendorId: number, field: string, currentValue: any) => {
+    if (inlineEditingVendor === vendorId && inlineEditingField === field) {
+      return // Already editing
+    }
+    startInlineEdit(vendorId, field, currentValue)
   }
 
   const handleQuickStatusChange = async (vendorId: number, newStatus: string) => {
@@ -610,27 +644,57 @@ export default function AdminDirectoryPage() {
                             </Avatar>
                             <div className="flex-1">
                               {inlineEditingVendor === vendor.id && inlineEditingField === "company_name" ? (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 w-full">
                                   <Input
                                     value={inlineEditValue}
                                     onChange={(e) => setInlineEditValue(e.target.value)}
                                     onKeyDown={handleKeyPress}
-                                    className="h-8 text-sm"
+                                    onBlur={() => {
+                                      // Save on blur if value changed
+                                      if (inlineEditValue !== vendor.company_name) {
+                                        saveInlineEdit()
+                                      } else {
+                                        cancelInlineEdit()
+                                      }
+                                    }}
+                                    className="h-8 text-sm font-medium flex-1 min-w-0"
                                     autoFocus
+                                    placeholder="Enter company name"
                                   />
-                                  <Button size="sm" variant="ghost" onClick={saveInlineEdit}>
-                                    <Save className="h-3 w-3" />
-                                  </Button>
-                                  <Button size="sm" variant="ghost" onClick={cancelInlineEdit}>
-                                    <X className="h-3 w-3" />
-                                  </Button>
+                                  <div className="flex items-center gap-1">
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      onClick={saveInlineEdit}
+                                      className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                      title="Save (Enter)"
+                                    >
+                                      <Save className="h-3 w-3" />
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      onClick={cancelInlineEdit}
+                                      className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                      title="Cancel (Esc)"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
                                 </div>
                               ) : (
                                 <div 
-                                  className="font-medium text-gray-900 cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -mx-2"
-                                  onClick={() => startInlineEdit(vendor.id, "company_name", vendor.company_name)}
+                                  className="group font-medium text-gray-900 cursor-pointer hover:bg-blue-50 hover:border-blue-200 rounded px-2 py-1 -mx-2 transition-all duration-150 flex items-center justify-between border border-transparent"
+                                  onDoubleClick={() => handleDoubleClick(vendor.id, "company_name", vendor.company_name)}
+                                  title="Double-click to edit company name"
                                 >
-                                  {vendor.company_name}
+                                  <span>{vendor.company_name}</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                      Double-click
+                                    </span>
+                                    <Edit className="h-3 w-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+                                  </div>
                                 </div>
                               )}
                               <div className="text-sm text-gray-500">
@@ -652,38 +716,72 @@ export default function AdminDirectoryPage() {
                         <TableCell>
                           <div className="text-sm">
                             {inlineEditingVendor === vendor.id && inlineEditingField === "contact_name" ? (
-                              <div className="flex items-center gap-2 mb-1">
+                              <div className="flex items-center gap-2 mb-2">
                                 <Input
                                   value={inlineEditValue}
                                   onChange={(e) => setInlineEditValue(e.target.value)}
                                   onKeyDown={handleKeyPress}
-                                  className="h-7 text-sm"
+                                  onBlur={() => {
+                                    // Save on blur if value changed
+                                    if (inlineEditValue !== (vendor.contact_name || "")) {
+                                      saveInlineEdit()
+                                    } else {
+                                      cancelInlineEdit()
+                                    }
+                                  }}
+                                  className="h-7 text-sm flex-1"
                                   autoFocus
+                                  placeholder="Enter contact name"
                                 />
-                                <Button size="sm" variant="ghost" onClick={saveInlineEdit}>
-                                  <Save className="h-3 w-3" />
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={cancelInlineEdit}>
-                                  <X className="h-3 w-3" />
-                                </Button>
+                                <div className="flex items-center gap-1">
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    onClick={saveInlineEdit}
+                                    className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    title="Save (Enter)"
+                                  >
+                                    <Save className="h-3 w-3" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    onClick={cancelInlineEdit}
+                                    className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                    title="Cancel (Esc)"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
                               </div>
                             ) : (
                               <div 
-                                className="text-gray-900 cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -mx-2"
-                                onClick={() => startInlineEdit(vendor.id, "contact_name", vendor.contact_name)}
+                                className="group text-gray-900 cursor-pointer hover:bg-blue-50 hover:border-blue-200 rounded px-2 py-1 -mx-2 mb-1 transition-all duration-150 flex items-center justify-between border border-transparent"
+                                onDoubleClick={() => handleDoubleClick(vendor.id, "contact_name", vendor.contact_name)}
+                                title={vendor.contact_name ? "Double-click to edit contact name" : "Double-click to add contact name"}
                               >
-                                {vendor.contact_name || "Click to add"}
+                                <span className={vendor.contact_name ? "" : "text-gray-400 italic"}>
+                                  {vendor.contact_name || "Double-click to add contact"}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                    Double-click
+                                  </span>
+                                  <Edit className="h-3 w-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+                                </div>
                               </div>
                             )}
-                            <div className="flex items-center gap-1">
-                              <span className="text-gray-500">{vendor.contact_email}</span>
+                            <div className="flex items-center gap-1 px-2">
+                              <Mail className="h-3 w-3 text-gray-400" />
+                              <span className="text-gray-500 text-xs">{vendor.contact_email}</span>
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => copyToClipboard(vendor.contact_email)}
-                                className="h-5 w-5 p-0"
+                                className="h-4 w-4 p-0 text-gray-400 hover:text-gray-600"
+                                title="Copy email"
                               >
-                                <Copy className="h-3 w-3" />
+                                <Copy className="h-2.5 w-2.5" />
                               </Button>
                             </div>
                           </div>
@@ -691,28 +789,62 @@ export default function AdminDirectoryPage() {
                         <TableCell>
                           {inlineEditingVendor === vendor.id && inlineEditingField === "location" ? (
                             <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-gray-400" />
                               <Input
                                 value={inlineEditValue}
                                 onChange={(e) => setInlineEditValue(e.target.value)}
                                 onKeyDown={handleKeyPress}
-                                className="h-8 text-sm"
+                                onBlur={() => {
+                                  // Save on blur if value changed
+                                  if (inlineEditValue !== (vendor.location || "")) {
+                                    saveInlineEdit()
+                                  } else {
+                                    cancelInlineEdit()
+                                  }
+                                }}
+                                className="h-8 text-sm flex-1"
                                 autoFocus
                                 placeholder="Enter location"
                               />
-                              <Button size="sm" variant="ghost" onClick={saveInlineEdit}>
-                                <Save className="h-3 w-3" />
-                              </Button>
-                              <Button size="sm" variant="ghost" onClick={cancelInlineEdit}>
-                                <X className="h-3 w-3" />
-                              </Button>
+                              <div className="flex items-center gap-1">
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={saveInlineEdit}
+                                  className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  title="Save (Enter)"
+                                >
+                                  <Save className="h-3 w-3" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={cancelInlineEdit}
+                                  className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                  title="Cancel (Esc)"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
                           ) : (
                             <div 
-                              className="flex items-center text-sm text-gray-600 cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -mx-2"
-                              onClick={() => startInlineEdit(vendor.id, "location", vendor.location)}
+                              className="group flex items-center text-sm text-gray-600 cursor-pointer hover:bg-blue-50 hover:border-blue-200 rounded px-2 py-1 -mx-2 transition-all duration-150 justify-between border border-transparent"
+                              onDoubleClick={() => handleDoubleClick(vendor.id, "location", vendor.location)}
+                              title={vendor.location ? "Double-click to edit location" : "Double-click to add location"}
                             >
-                              <MapPin className="h-4 w-4 mr-1" />
-                              {vendor.location || "Click to add"}
+                              <div className="flex items-center">
+                                <MapPin className="h-4 w-4 mr-1" />
+                                <span className={vendor.location ? "" : "text-gray-400 italic"}>
+                                  {vendor.location || "Double-click to add location"}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                  Double-click
+                                </span>
+                                <Edit className="h-3 w-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+                              </div>
                             </div>
                           )}
                         </TableCell>
