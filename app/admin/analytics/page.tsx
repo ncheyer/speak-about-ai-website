@@ -160,6 +160,13 @@ export default function AdminAnalyticsPage() {
       } else {
         console.error('Failed to load search analytics')
       }
+      
+      if (directoryResponse.ok) {
+        const directoryData = await directoryResponse.json()
+        setDirectoryAnalytics(directoryData)
+      } else {
+        console.error('Failed to load directory analytics')
+      }
     } catch (error) {
       console.error("Error loading analytics:", error)
       toast({
