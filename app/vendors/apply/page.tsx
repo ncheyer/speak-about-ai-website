@@ -202,7 +202,7 @@ export default function VendorApplicationPage() {
         const formData = new FormData()
         formData.append("file", logoFile)
         
-        const uploadRes = await fetch("/api/upload", {
+        const uploadRes = await fetch("/api/vendors/upload", {
           method: "POST",
           body: formData
         })

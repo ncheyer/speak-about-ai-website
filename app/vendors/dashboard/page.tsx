@@ -17,6 +17,7 @@ import {
   CheckCircle, AlertCircle, Clock, Edit, Save, X, Loader2,
   Upload, Download, Eye, Activity, Award, DollarSign
 } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/components/ui/use-toast"
 import { format } from "date-fns"
 
@@ -32,6 +33,7 @@ interface VendorProfile {
   services?: string[]
   pricing_range?: string
   status: string
+  logo_url?: string
   compliance_score?: number
   average_rating?: number
   total_reviews?: number
@@ -317,7 +319,7 @@ export default function VendorDashboard() {
           <TabsList className="mb-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="photos">Photos & Portfolio</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
             <TabsTrigger value="changelog">Changelog</TabsTrigger>
           </TabsList>
@@ -470,18 +472,124 @@ export default function VendorDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="documents">
+          <TabsContent value="photos">
             <Card>
               <CardHeader>
-                <CardTitle>Documents</CardTitle>
+                <CardTitle>Photos & Portfolio</CardTitle>
                 <CardDescription>
-                  Upload and manage your business documents
+                  Upload and manage your logo, portfolio images, and showcase your work
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Document management coming soon</p>
+                <div className="space-y-6">
+                  {/* Logo Upload Section */}
+                  <div>
+                    <Label className="text-base font-semibold mb-3 block">Company Logo</Label>
+                    <div className="flex items-start gap-6">
+                      <Avatar className="h-24 w-24 border-2 border-gray-200">
+                        <AvatarImage src={profile.logo_url} />
+                        <AvatarFallback className="text-2xl">
+                          {profile.company_name?.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            
+                            const formData = new FormData()
+                            formData.append("file", file)
+                            
+                            try {
+                              const response = await fetch("/api/vendors/upload", {
+                                method: "POST",
+                                body: formData
+                              })
+                              
+                              if (response.ok) {
+                                const data = await response.json()
+                                setEditedProfile({ ...editedProfile, logo_url: data.url })
+                                toast({
+                                  title: "Logo uploaded",
+                                  description: "Click 'Save Changes' to update your profile"
+                                })
+                              } else {
+                                throw new Error("Upload failed")
+                              }
+                            } catch (error) {
+                              toast({
+                                title: "Upload failed",
+                                description: "Please try again",
+                                variant: "destructive"
+                              })
+                            }
+                          }}
+                          className="mb-2"
+                        />
+                        <p className="text-sm text-gray-500">
+                          Recommended: Square image, at least 400x400px, PNG or JPG
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Portfolio Gallery Section */}
+                  <div className="border-t pt-6">
+                    <Label className="text-base font-semibold mb-3 block">Portfolio Gallery</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                      {/* Placeholder for portfolio images */}
+                      <div className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 cursor-pointer transition-colors">
+                        <label htmlFor="portfolio-upload" className="cursor-pointer text-center p-4">
+                          <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                          <span className="text-sm text-gray-500">Add Photo</span>
+                          <input
+                            id="portfolio-upload"
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={async (e) => {
+                              const files = Array.from(e.target.files || [])
+                              if (files.length === 0) return
+                              
+                              toast({
+                                title: "Portfolio upload",
+                                description: "Portfolio gallery feature coming soon!"
+                              })
+                            }}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      Upload photos of your work, events, and services. These will be displayed on your public vendor profile.
+                    </p>
+                  </div>
+                  
+                  {/* Additional Documents */}
+                  <div className="border-t pt-6">
+                    <Label className="text-base font-semibold mb-3 block">Business Documents</Label>
+                    <div className="space-y-3">
+                      <Button variant="outline" className="w-full justify-start">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Upload Insurance Certificate
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start">
+                        <Shield className="h-4 w-4 mr-2" />
+                        Upload Business License
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start">
+                        <Award className="h-4 w-4 mr-2" />
+                        Upload Certifications
+                      </Button>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-3">
+                      These documents help verify your business and build trust with potential clients.
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
