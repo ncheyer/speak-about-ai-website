@@ -698,17 +698,94 @@ export default function AdminDirectoryPage() {
                                 </div>
                               )}
                               <div className="text-sm text-gray-500">
-                                {vendor.pricing_range && (
-                                  <span className="font-semibold">{vendor.pricing_range}</span>
-                                )}
-                                {vendor.services && vendor.services.length > 0 && (
-                                  <span className="ml-2">{vendor.services[0]}</span>
-                                )}
-                                {vendor.featured && (
-                                  <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
-                                    Featured
-                                  </span>
-                                )}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {inlineEditingVendor === vendor.id && inlineEditingField === "website" ? (
+                                    <div className="flex items-center gap-2">
+                                      <Input
+                                        value={inlineEditValue}
+                                        onChange={(e) => setInlineEditValue(e.target.value)}
+                                        onKeyDown={handleKeyPress}
+                                        onBlur={() => {
+                                          if (inlineEditValue !== (vendor.website || "")) {
+                                            saveInlineEdit()
+                                          } else {
+                                            cancelInlineEdit()
+                                          }
+                                        }}
+                                        className="h-6 text-xs flex-1"
+                                        autoFocus
+                                        placeholder="Enter website URL"
+                                      />
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost" 
+                                        onClick={saveInlineEdit}
+                                        className="h-5 w-5 p-0 text-green-600"
+                                        title="Save"
+                                      >
+                                        <Save className="h-3 w-3" />
+                                      </Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost" 
+                                        onClick={cancelInlineEdit}
+                                        className="h-5 w-5 p-0 text-gray-500"
+                                        title="Cancel"
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  ) : vendor.website ? (
+                                    <div className="flex items-center gap-1">
+                                      <a 
+                                        href={vendor.website.startsWith('http') ? vendor.website : `https://${vendor.website}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline"
+                                        onClick={(e) => e.stopPropagation()}
+                                        title={vendor.website}
+                                      >
+                                        <Globe className="h-3 w-3" />
+                                        <span className="text-xs">Website</span>
+                                      </a>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          startInlineEdit(vendor.id, "website", vendor.website)
+                                        }}
+                                        className="h-4 w-4 p-0 opacity-0 hover:opacity-100"
+                                        title="Edit website"
+                                      >
+                                        <Edit className="h-2.5 w-2.5 text-gray-400" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        startInlineEdit(vendor.id, "website", "")
+                                      }}
+                                      className="flex items-center gap-1 text-gray-400 hover:text-blue-600 text-xs"
+                                      title="Add website"
+                                    >
+                                      <Plus className="h-3 w-3" />
+                                      <span>Add website</span>
+                                    </button>
+                                  )}
+                                  {vendor.pricing_range && (
+                                    <span className="font-semibold">{vendor.pricing_range}</span>
+                                  )}
+                                  {vendor.services && vendor.services.length > 0 && (
+                                    <span>{vendor.services[0]}</span>
+                                  )}
+                                  {vendor.featured && (
+                                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                                      Featured
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                               {inlineEditingVendor === vendor.id && inlineEditingField === "description" ? (
                                 <div className="mt-2">
