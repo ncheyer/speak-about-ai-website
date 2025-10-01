@@ -74,7 +74,7 @@ export default function DirectoryLandingPage() {
     "Filter by category, location, and budget",
     "Direct contact with vendor representatives",
     "Save favorites and build your vendor list",
-    "Exclusive deals and discounts"
+    "Transparent pricing from all vendors"
   ]
 
   return (
