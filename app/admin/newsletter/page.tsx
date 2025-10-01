@@ -17,7 +17,11 @@ import {
   UserCheck,
   UserX,
   Clock,
-  Building
+  Building,
+  Plus,
+  Edit,
+  Send,
+  FileText
 } from 'lucide-react'
 import { formatDateTimePST, getPSTTimezoneLabel } from '@/lib/date-utils'
 
@@ -41,14 +45,27 @@ interface NewsletterStats {
   month_count: number
 }
 
+interface Newsletter {
+  id: number
+  title: string
+  subject: string
+  status: string
+  sent_at: string | null
+  recipient_count: number
+  open_count: number
+  created_at: string
+}
+
 export default function AdminNewsletterPage() {
   const router = useRouter()
   const [signups, setSignups] = useState<NewsletterSignup[]>([])
+  const [newsletters, setNewsletters] = useState<Newsletter[]>([])
   const [stats, setStats] = useState<NewsletterStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [exporting, setExporting] = useState(false)
+  const [activeTab, setActiveTab] = useState('subscribers')
 
   useEffect(() => {
     // Check if logged in
@@ -61,7 +78,25 @@ export default function AdminNewsletterPage() {
     }
     
     fetchSignups()
+    fetchNewsletters()
   }, [statusFilter, router])
+
+  const fetchNewsletters = async () => {
+    try {
+      const response = await fetch('/api/admin/newsletters', {
+        headers: {
+          'x-admin-request': 'true'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setNewsletters(data)
+      }
+    } catch (error) {
+      console.error('Error fetching newsletters:', error)
+    }
+  }
 
   const fetchSignups = async () => {
     try {
@@ -138,23 +173,180 @@ export default function AdminNewsletterPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="p-8">
           <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Newsletter Subscribers</h1>
-            <p className="text-gray-600 mt-2">Manage and track newsletter signups</p>
+        {/* Header with tabs */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Newsletter Management</h1>
+              <p className="text-gray-600 mt-2">Create newsletters and manage subscribers</p>
+            </div>
+            <div className="flex gap-2">
+              {activeTab === 'subscribers' ? (
+                <Button
+                  onClick={exportToCSV}
+                  disabled={exporting}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  {exporting ? 'Exporting...' : 'Export CSV'}
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => router.push('/admin/newsletter/editor')}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Newsletter
+                </Button>
+              )}
+            </div>
           </div>
-          <Button
-            onClick={exportToCSV}
-            disabled={exporting}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            {exporting ? 'Exporting...' : 'Export CSV'}
-          </Button>
+
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('newsletters')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'newsletters'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Newsletters
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('subscribers')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'subscribers'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Subscribers
+                </div>
+              </button>
+            </nav>
+          </div>
         </div>
 
-        {/* Statistics Cards */}
-        {stats && (
+        {/* Tab Content */}
+        {activeTab === 'newsletters' ? (
+          <>
+            {/* Newsletters List */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Newsletter Editions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {newsletters.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FileText className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                    <p className="text-gray-500 mb-4">No newsletters created yet</p>
+                    <Button
+                      onClick={() => router.push('/admin/newsletter/editor')}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Your First Newsletter
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Title</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Subject</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Recipients</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Sent At</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {newsletters.map((newsletter) => (
+                          <tr key={newsletter.id} className="border-b hover:bg-gray-50">
+                            <td className="py-3 px-4">
+                              <span className="font-medium">{newsletter.title}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-sm">{newsletter.subject}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <Badge
+                                variant={newsletter.status === 'sent' ? 'default' : 'secondary'}
+                                className={
+                                  newsletter.status === 'sent'
+                                    ? 'bg-green-100 text-green-800'
+                                    : newsletter.status === 'sending'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }
+                              >
+                                {newsletter.status}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-1">
+                                <Users className="h-3 w-3 text-gray-400" />
+                                <span className="text-sm">
+                                  {newsletter.recipient_count || 0}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              {newsletter.sent_at ? (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3 text-gray-400" />
+                                  <span className="text-sm text-gray-600">
+                                    {formatDate(newsletter.sent_at)}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">—</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex gap-2">
+                                {newsletter.status === 'draft' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => router.push(`/admin/newsletter/editor?id=${newsletter.id}`)}
+                                    >
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      className="bg-blue-600 hover:bg-blue-700"
+                                      onClick={() => router.push(`/admin/newsletter/editor?id=${newsletter.id}&send=true`)}
+                                    >
+                                      <Send className="h-3 w-3" />
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <>
+            {/* Statistics Cards */}
+            {stats && (
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <Card>
               <CardContent className="p-6">
@@ -331,6 +523,8 @@ export default function AdminNewsletterPage() {
             )}
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
         </div>
       </div>
