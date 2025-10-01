@@ -309,6 +309,7 @@ export async function updateVendor(id: number, updates: Partial<Vendor>): Promis
     }
 
     // Merge updates with current data, preserving undefined as null
+    // Note: JSONB fields are excluded from updates
     const merged = {
       company_name: cleanedUpdates.company_name !== undefined ? cleanedUpdates.company_name : current.company_name,
       slug: cleanedUpdates.slug !== undefined ? cleanedUpdates.slug : current.slug,
@@ -330,11 +331,7 @@ export async function updateVendor(id: number, updates: Partial<Vendor>): Promis
       featured: cleanedUpdates.featured !== undefined ? cleanedUpdates.featured : current.featured,
       verified: cleanedUpdates.verified !== undefined ? cleanedUpdates.verified : current.verified,
       status: cleanedUpdates.status !== undefined ? cleanedUpdates.status : current.status,
-      tags: cleanedUpdates.tags !== undefined ? cleanedUpdates.tags : current.tags,
-      // For JSONB fields, always use current values since we're not updating them
-      social_media: current.social_media,
-      portfolio_items: current.portfolio_items,
-      client_references: current.client_references
+      tags: cleanedUpdates.tags !== undefined ? cleanedUpdates.tags : current.tags
     }
 
     // Convert arrays to PostgreSQL array format if they exist
@@ -347,10 +344,8 @@ export async function updateVendor(id: number, updates: Partial<Vendor>): Promis
     const tagsArray = merged.tags ? 
       (Array.isArray(merged.tags) ? merged.tags : [merged.tags]) : []
     
-    // For JSONB fields, we're keeping current values so they should already be valid
-    const socialMedia = merged.social_media || null
-    const portfolioItems = merged.portfolio_items || null
-    const clientReferences = merged.client_references || null
+    // Note: JSONB fields (social_media, portfolio_items, client_references) are not updated
+    // to avoid JSON parsing errors. They retain their existing values.
 
     const result = await db`
       UPDATE vendors
@@ -376,9 +371,6 @@ export async function updateVendor(id: number, updates: Partial<Vendor>): Promis
         verified = ${merged.verified},
         status = ${merged.status},
         tags = ${tagsArray},
-        social_media = ${socialMedia},
-        portfolio_items = ${portfolioItems},
-        client_references = ${clientReferences},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${id}
       RETURNING *
