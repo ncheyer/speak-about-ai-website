@@ -232,11 +232,6 @@ export default function VendorDirectoryPage() {
                         >
                           <Building2 className="h-3 w-3 mr-2" />
                           <span>{category.name}</span>
-                          {category.vendor_count > 0 && (
-                            <span className="ml-auto text-xs text-gray-500">
-                              ({category.vendor_count})
-                            </span>
-                          )}
                         </Badge>
                       ))}
                     </div>
