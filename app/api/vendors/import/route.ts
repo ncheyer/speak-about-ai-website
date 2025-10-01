@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createVendor, getVendorCategories } from "@/lib/vendors-db"
+import { neon } from "@neondatabase/serverless"
 
 interface VendorSpreadsheetRow {
   "Email Address": string
@@ -107,6 +108,9 @@ export async function POST(request: NextRequest) {
   try {
     console.log("Vendor import API called")
     
+    // Get database connection
+    const sql = neon(process.env.DATABASE_URL!)
+    
     // Check for admin authentication
     const isAdmin = request.headers.get("x-admin-request") === "true"
     if (!isAdmin) {
@@ -146,7 +150,9 @@ export async function POST(request: NextRequest) {
     const results = {
       success: 0,
       failed: 0,
-      errors: [] as any[]
+      skipped: 0,
+      errors: [] as any[],
+      skippedRows: [] as any[]
     }
     
     for (let i = 0; i < data.length; i++) {
@@ -163,10 +169,34 @@ export async function POST(request: NextRequest) {
         
         if (!companyName || !businessEmail) {
           console.log(`Skipping row ${i + 1}: Missing company name (${companyName}) or email (${businessEmail})`)
+          results.skipped++
+          results.skippedRows.push({
+            row: i + 1,
+            reason: !companyName ? "Missing company name" : "Missing business email",
+            data: { companyName, businessEmail }
+          })
           continue
         }
         
         console.log(`Processing row ${i + 1}: ${companyName}`)
+        
+        // Check if vendor already exists
+        const existingCheck = await sql`
+          SELECT id FROM vendors 
+          WHERE LOWER(company_name) = LOWER(${companyName})
+          LIMIT 1
+        `
+        
+        if (existingCheck.length > 0) {
+          console.log(`Skipping row ${i + 1}: ${companyName} already exists`)
+          results.skipped++
+          results.skippedRows.push({
+            row: i + 1,
+            reason: "Company already exists in database",
+            data: { companyName, existingId: existingCheck[0].id }
+          })
+          continue
+        }
         
         // Parse services from secondary services field
         const services: string[] = []
@@ -242,13 +272,22 @@ export async function POST(request: NextRequest) {
         }
         
         // Generate slug from company name
-        const slug = companyName
+        const baseSlug = companyName
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-+|-+$/g, '')
         
-        // Add timestamp to make slug unique if needed
-        const uniqueSlug = `${slug}-${Date.now()}-${i}`
+        // Check if slug exists and make it unique
+        let uniqueSlug = baseSlug
+        let slugCounter = 1
+        while (true) {
+          const slugCheck = await sql`
+            SELECT id FROM vendors WHERE slug = ${uniqueSlug} LIMIT 1
+          `
+          if (slugCheck.length === 0) break
+          uniqueSlug = `${baseSlug}-${slugCounter}`
+          slugCounter++
+        }
         
         // Create vendor object with proper JSON serialization
         vendorData = {
@@ -309,8 +348,15 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    console.log("Import summary:", {
+      total: data.length,
+      success: results.success,
+      failed: results.failed,
+      skipped: results.skipped
+    })
+    
     return NextResponse.json({
-      message: `Import completed. Success: ${results.success}, Failed: ${results.failed}`,
+      message: `Import completed. Success: ${results.success}, Failed: ${results.failed}, Skipped: ${results.skipped}`,
       results
     })
     

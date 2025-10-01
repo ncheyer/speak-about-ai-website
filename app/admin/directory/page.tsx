@@ -119,6 +119,7 @@ export default function AdminDirectoryPage() {
         headers: { "x-admin-request": "true" }
       })
       const vendorsData = await vendorsRes.json()
+      console.log("Loaded vendors:", vendorsData.vendors?.length, "total:", vendorsData.total)
       setVendors(vendorsData.vendors || [])
 
       // Load categories
@@ -414,6 +415,9 @@ export default function AdminDirectoryPage() {
               </div>
 
               {/* Vendors Table */}
+              <div className="mb-4 text-sm text-gray-600">
+                Showing {filteredVendors.length} of {vendors.length} vendors
+              </div>
               {loading ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500">Loading vendors...</p>

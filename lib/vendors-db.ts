@@ -164,6 +164,7 @@ export async function getAllVendors(): Promise<Vendor[]> {
       GROUP BY v.id, vc.id
       ORDER BY v.created_at DESC
     `
+    console.log("Database returned", vendors.length, "vendors")
     return vendors.map(v => ({
       ...v,
       category: v.category_name ? {
