@@ -710,6 +710,74 @@ export default function AdminDirectoryPage() {
                                   </span>
                                 )}
                               </div>
+                              {inlineEditingVendor === vendor.id && inlineEditingField === "description" ? (
+                                <div className="mt-2">
+                                  <Textarea
+                                    value={inlineEditValue}
+                                    onChange={(e) => setInlineEditValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" && e.ctrlKey) {
+                                        e.preventDefault()
+                                        saveInlineEdit()
+                                      } else if (e.key === "Escape") {
+                                        e.preventDefault()
+                                        cancelInlineEdit()
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      // Save on blur if value changed
+                                      if (inlineEditValue !== (vendor.description || "")) {
+                                        saveInlineEdit()
+                                      } else {
+                                        cancelInlineEdit()
+                                      }
+                                    }}
+                                    className="text-xs resize-none"
+                                    rows={3}
+                                    autoFocus
+                                    placeholder="Enter vendor description"
+                                  />
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      onClick={saveInlineEdit}
+                                      className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                      title="Save (Ctrl+Enter)"
+                                    >
+                                      <Save className="h-3 w-3" />
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      onClick={cancelInlineEdit}
+                                      className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                      title="Cancel (Esc)"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                    <span className="text-xs text-gray-400 ml-2">Ctrl+Enter to save</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div 
+                                  className="group text-xs text-gray-400 mt-1 cursor-pointer hover:bg-blue-50 hover:border-blue-200 rounded px-2 py-1 -mx-2 transition-all duration-150 border border-transparent"
+                                  onDoubleClick={() => handleDoubleClick(vendor.id, "description", vendor.description)}
+                                  title={vendor.description ? "Double-click to edit description" : "Double-click to add description"}
+                                >
+                                  <div className="line-clamp-2 group-hover:line-clamp-none">
+                                    {vendor.description ? (
+                                      <span>{vendor.description}</span>
+                                    ) : (
+                                      <span className="italic text-gray-300">Double-click to add description</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                    <span className="text-xs text-gray-400">Double-click</span>
+                                    <Edit className="h-3 w-3 text-blue-500" />
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </TableCell>
