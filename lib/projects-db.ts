@@ -488,18 +488,6 @@ export async function updateProject(id: number, projectData: Partial<Project>): 
   }
 }
 
-export async function deleteProject(id: number): Promise<boolean> {
-  try {
-    const sql = getSQL()
-    console.log("Deleting project ID:", id)
-    await sql`DELETE FROM projects WHERE id = ${id}`
-    console.log("Successfully deleted project ID:", id)
-    return true
-  } catch (error) {
-    console.error("Error deleting project:", error)
-    return false
-  }
-}
 
 export async function getProjectsByStatus(status: string): Promise<Project[]> {
   try {
