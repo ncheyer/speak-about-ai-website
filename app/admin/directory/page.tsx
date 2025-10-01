@@ -192,13 +192,14 @@ export default function AdminDirectoryPage() {
         resetVendorForm()
         loadData()
       } else {
-        throw new Error("Failed to save vendor")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to save vendor")
       }
     } catch (error) {
       console.error("Error saving vendor:", error)
       toast({
         title: "Error",
-        description: "Failed to save vendor",
+        description: error instanceof Error ? error.message : "Failed to save vendor",
         variant: "destructive"
       })
     }

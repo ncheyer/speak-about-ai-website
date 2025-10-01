@@ -324,6 +324,16 @@ export async function updateVendor(id: number, updates: Partial<Vendor>): Promis
       client_references: updates.client_references !== undefined ? updates.client_references : current.client_references
     }
 
+    // Convert arrays to PostgreSQL array format if they exist
+    const servicesArray = merged.services ? 
+      (Array.isArray(merged.services) ? merged.services : [merged.services]) : []
+    const specialtiesArray = merged.specialties ? 
+      (Array.isArray(merged.specialties) ? merged.specialties : [merged.specialties]) : []
+    const certificationsArray = merged.certifications ? 
+      (Array.isArray(merged.certifications) ? merged.certifications : [merged.certifications]) : []
+    const tagsArray = merged.tags ? 
+      (Array.isArray(merged.tags) ? merged.tags : [merged.tags]) : []
+
     const result = await db`
       UPDATE vendors
       SET
@@ -336,18 +346,18 @@ export async function updateVendor(id: number, updates: Partial<Vendor>): Promis
         website = ${merged.website},
         logo_url = ${merged.logo_url},
         description = ${merged.description},
-        services = ${merged.services},
-        specialties = ${merged.specialties},
+        services = ${servicesArray},
+        specialties = ${specialtiesArray},
         pricing_range = ${merged.pricing_range},
         minimum_budget = ${merged.minimum_budget},
         location = ${merged.location},
         years_in_business = ${merged.years_in_business},
         team_size = ${merged.team_size},
-        certifications = ${merged.certifications},
+        certifications = ${certificationsArray},
         featured = ${merged.featured},
         verified = ${merged.verified},
         status = ${merged.status},
-        tags = ${merged.tags},
+        tags = ${tagsArray},
         social_media = ${merged.social_media},
         portfolio_items = ${merged.portfolio_items},
         client_references = ${merged.client_references},

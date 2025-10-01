@@ -37,6 +37,7 @@ export async function PUT(
     // Check for admin authentication
     const isAdmin = request.headers.get("x-admin-request") === "true"
     if (!isAdmin) {
+      console.error("Unauthorized PUT request to vendor:", params.id)
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -44,6 +45,7 @@ export async function PUT(
     }
     
     const body = await request.json()
+    console.log("Updating vendor", params.id, "with data:", JSON.stringify(body, null, 2))
     
     // Generate slug if company name changed
     if (body.company_name && !body.slug) {
@@ -54,12 +56,15 @@ export async function PUT(
     }
     
     const vendor = await updateVendor(parseInt(params.id), body)
+    console.log("Vendor updated successfully:", vendor.id)
     
     return NextResponse.json({ vendor })
   } catch (error) {
-    console.error("Error updating vendor:", error)
+    console.error("Error updating vendor:", params.id, error)
+    console.error("Error details:", error instanceof Error ? error.message : error)
+    console.error("Stack trace:", error instanceof Error ? error.stack : "No stack trace")
     return NextResponse.json(
-      { error: "Failed to update vendor" },
+      { error: error instanceof Error ? error.message : "Failed to update vendor" },
       { status: 500 }
     )
   }
