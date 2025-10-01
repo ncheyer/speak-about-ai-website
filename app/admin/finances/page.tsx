@@ -241,8 +241,9 @@ export default function FinancesPage() {
       }
     })
 
-    // Calculate net profit (commission after speaker payouts)
-    stats.netProfit = stats.totalCommission - stats.totalSpeakerPayouts
+    // Calculate net profit - for commission-based model, our commission IS our profit
+    // since speaker fees are typically pass-through costs
+    stats.netProfit = stats.totalCommission
 
     if (dealsData.length > 0 && stats.totalRevenue > 0) {
       stats.averageCommission = (stats.totalCommission / stats.totalRevenue) * 100
@@ -479,14 +480,14 @@ export default function FinancesPage() {
 
             <Card className="border-purple-200 bg-purple-50/50">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
+                <CardTitle className="text-sm font-medium">Net Commission</CardTitle>
                 <TrendingUp className="h-4 w-4 text-purple-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-purple-600">
-                  {formatCurrency(stats.totalCommission - stats.totalSpeakerPayouts)}
+                  {formatCurrency(stats.totalCommission)}
                 </div>
-                <p className="text-xs text-muted-foreground">After speaker payouts</p>
+                <p className="text-xs text-muted-foreground">Our revenue</p>
               </CardContent>
             </Card>
 
@@ -997,9 +998,9 @@ export default function FinancesPage() {
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Budget</TableHead>
                         <TableHead className="text-right">Speaker Fee</TableHead>
-                        <TableHead className="text-right">Our Fee</TableHead>
-                        <TableHead className="text-right">Net Profit</TableHead>
-                        <TableHead className="text-right">Margin %</TableHead>
+                        <TableHead className="text-right">Our Commission</TableHead>
+                        <TableHead className="text-right">Gross Margin</TableHead>
+                        <TableHead className="text-right">Commission %</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1008,9 +1009,9 @@ export default function FinancesPage() {
                         .map((deal) => {
                           const speakerFee = Number(deal.project?.speaker_fee) || 0
                           const budget = Number(deal.project?.budget) || deal.deal_value
-                          const ourFee = deal.commission_amount || (deal.deal_value * (deal.commission_percentage || 20) / 100)
-                          const netProfit = deal.deal_value - speakerFee
-                          const margin = deal.deal_value > 0 ? (netProfit / deal.deal_value) * 100 : 0
+                          const ourCommission = deal.commission_amount || (deal.deal_value * (deal.commission_percentage || 20) / 100)
+                          const grossMargin = deal.deal_value - speakerFee
+                          const commissionRate = deal.commission_percentage || 20
                           
                           return (
                             <TableRow key={deal.id}>
@@ -1038,15 +1039,15 @@ export default function FinancesPage() {
                               <TableCell className="text-right text-orange-600">
                                 {formatCurrency(speakerFee)}
                               </TableCell>
-                              <TableCell className="text-right">
-                                {formatCurrency(ourFee)}
-                              </TableCell>
                               <TableCell className="text-right font-bold text-green-600">
-                                {formatCurrency(netProfit)}
+                                {formatCurrency(ourCommission)}
                               </TableCell>
                               <TableCell className="text-right">
-                                <span className={margin > 20 ? 'text-green-600 font-medium' : 'text-gray-600'}>
-                                  {margin.toFixed(1)}%
+                                {formatCurrency(grossMargin)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <span className={commissionRate >= 25 ? 'text-green-600 font-medium' : 'text-gray-600'}>
+                                  {commissionRate}%
                                 </span>
                               </TableCell>
                             </TableRow>
@@ -1083,14 +1084,14 @@ export default function FinancesPage() {
                     </div>
                     <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-green-900">Project Net Profit</span>
+                        <span className="text-sm font-medium text-green-900">Total Commission</span>
                         <span className="text-xl font-bold text-green-600">
                           {formatCurrency(
                             filteredDeals
                               .filter(d => d.project)
                               .reduce((sum, d) => {
-                                const speakerFee = Number(d.project?.speaker_fee) || 0
-                                return sum + (d.deal_value - speakerFee)
+                                const commission = d.commission_amount || (d.deal_value * (d.commission_percentage || 20) / 100)
+                                return sum + commission
                               }, 0)
                           )}
                         </span>
@@ -1131,8 +1132,10 @@ export default function FinancesPage() {
                                   <p className="font-bold text-orange-600">-{formatCurrency(speakerFee)}</p>
                                 </div>
                                 <div className="pt-2 border-t">
-                                  <p className="text-sm text-gray-500">Net Cash Flow</p>
-                                  <p className="font-bold">{formatCurrency(deal.deal_value - speakerFee)}</p>
+                                  <p className="text-sm text-gray-500">Our Commission</p>
+                                  <p className="font-bold text-green-600">
+                                    {formatCurrency(deal.commission_amount || (deal.deal_value * (deal.commission_percentage || 20) / 100))}
+                                  </p>
                                 </div>
                               </div>
                             </div>
