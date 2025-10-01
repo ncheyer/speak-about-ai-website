@@ -375,160 +375,48 @@ export default function AdminDirectoryPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Manage Vendors</CardTitle>
-                  <CardDescription>Add, edit, and manage vendor listings</CardDescription>
+                  <CardDescription>Add, edit, and manage vendor listings with enhanced features</CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Import
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                  <Button onClick={() => {
-                    resetVendorForm()
-                    setShowVendorDialog(true)
-                  }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Vendor
+                  <Button 
+                    onClick={() => router.push('/admin/vendors/manage')}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Open Enhanced Vendor Manager
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              {/* Search and Filter */}
-              <div className="flex gap-4 mb-6">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search vendors..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
+              <div className="text-center py-12">
+                <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Enhanced Vendor Management Available</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  We've built a more powerful vendor management interface with inline editing, 
+                  quick actions, and better user experience.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <CheckCircle className="h-6 w-6 text-green-600 mb-2" />
+                    <h4 className="font-medium text-green-900">Inline Editing</h4>
+                    <p className="text-sm text-green-700">Edit vendor details directly in the table</p>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <Star className="h-6 w-6 text-blue-600 mb-2" />
+                    <h4 className="font-medium text-blue-900">Quick Actions</h4>
+                    <p className="text-sm text-blue-700">Status changes, featuring, and more</p>
+                  </div>
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Button 
+                  onClick={() => router.push('/admin/vendors/manage')}
+                  size="lg"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Building2 className="h-5 w-5 mr-2" />
+                  Go to Enhanced Vendor Manager
+                </Button>
               </div>
-
-              {/* Vendors Table */}
-              <div className="mb-4 text-sm text-gray-600">
-                Showing {filteredVendors.length} of {vendors.length} vendors
-              </div>
-              {loading ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Loading vendors...</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Company</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Featured</TableHead>
-                      <TableHead>Verified</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredVendors.map((vendor) => (
-                      <TableRow key={vendor.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            {vendor.logo_url ? (
-                              <img 
-                                src={vendor.logo_url} 
-                                alt={vendor.company_name}
-                                className="h-10 w-10 rounded-lg object-cover border"
-                              />
-                            ) : (
-                              <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
-                                <Building2 className="h-5 w-5 text-gray-400" />
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-medium">{vendor.company_name}</p>
-                              <p className="text-sm text-gray-500">{vendor.website}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="text-sm">{vendor.contact_name}</p>
-                            <p className="text-sm text-gray-500">{vendor.contact_email}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {categories.find(c => c.id === vendor.category_id)?.name || "-"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            vendor.status === "approved" ? "success" :
-                            vendor.status === "pending" ? "warning" :
-                            vendor.status === "rejected" ? "destructive" :
-                            "secondary"
-                          }>
-                            {vendor.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Switch
-                            checked={vendor.featured}
-                            onCheckedChange={async (checked) => {
-                              await handleEditVendor({ ...vendor, featured: checked })
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {vendor.verified ? (
-                            <CheckCircle className="h-5 w-5 text-blue-500" />
-                          ) : (
-                            <XCircle className="h-5 w-5 text-gray-300" />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => window.open(`/directory/vendors/${vendor.slug}`, '_blank')}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditVendor(vendor)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteVendor(vendor.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
