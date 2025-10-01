@@ -436,8 +436,8 @@ export default function VendorDirectoryPage() {
                   Start Planning Your Perfect Event Today
                 </h4>
                 <p className="text-blue-800">
-                  Join thousands of event planners who trust our event vendor directory to connect them with the right 
-                  professionals. From wedding planning to corporate gatherings, birthday parties to fundraising galas, 
+                  Join our growing event vendor directory to connect with the right 
+                  professionals for your next event. From wedding planning to corporate gatherings, birthday parties to fundraising galas, 
                   we have the vendors you need to create memorable experiences.
                 </p>
               </div>
