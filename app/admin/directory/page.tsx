@@ -22,7 +22,8 @@ import {
 import { 
   Building2, Users, Plus, Edit, Trash2, Eye, 
   CheckCircle, XCircle, Clock, Search, Filter,
-  Mail, Download, Upload, Star, TrendingUp, FileSpreadsheet
+  Mail, Download, Upload, Star, TrendingUp, FileSpreadsheet,
+  Save, X, Copy, ChevronRight, MoreHorizontal, MapPin, Globe
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { VendorCSVImport } from "@/components/vendor-csv-import"
@@ -34,6 +35,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface Vendor {
   id: number
@@ -85,6 +95,9 @@ export default function AdminDirectoryPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [showVendorDialog, setShowVendorDialog] = useState(false)
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null)
+  const [inlineEditingVendor, setInlineEditingVendor] = useState<number | null>(null)
+  const [inlineEditingField, setInlineEditingField] = useState<string | null>(null)
+  const [inlineEditValue, setInlineEditValue] = useState("")
   const [vendorForm, setVendorForm] = useState({
     company_name: "",
     contact_name: "",
@@ -259,6 +272,148 @@ export default function AdminDirectoryPage() {
     })
   }
 
+  // Inline editing functions
+  const startInlineEdit = (vendorId: number, field: string, currentValue: any) => {
+    setInlineEditingVendor(vendorId)
+    setInlineEditingField(field)
+    setInlineEditValue(Array.isArray(currentValue) ? currentValue.join(", ") : (currentValue || ""))
+  }
+
+  const saveInlineEdit = async () => {
+    if (!inlineEditingVendor || !inlineEditingField) return
+
+    try {
+      const vendor = vendors.find(v => v.id === inlineEditingVendor)
+      if (!vendor) return
+
+      let processedValue = inlineEditValue
+      if (inlineEditingField === "services") {
+        processedValue = inlineEditValue.split(",").map(s => s.trim()).filter(Boolean)
+      }
+
+      const response = await fetch(`/api/vendors/${inlineEditingVendor}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-request": "true"
+        },
+        body: JSON.stringify({
+          ...vendor,
+          [inlineEditingField]: processedValue
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Vendor updated successfully"
+        })
+        loadData()
+      } else {
+        throw new Error("Failed to update vendor")
+      }
+    } catch (error) {
+      console.error("Error updating vendor:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update vendor",
+        variant: "destructive"
+      })
+    } finally {
+      setInlineEditingVendor(null)
+      setInlineEditingField(null)
+      setInlineEditValue("")
+    }
+  }
+
+  const cancelInlineEdit = () => {
+    setInlineEditingVendor(null)
+    setInlineEditingField(null)
+    setInlineEditValue("")
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      saveInlineEdit()
+    } else if (e.key === "Escape") {
+      cancelInlineEdit()
+    }
+  }
+
+  const handleQuickStatusChange = async (vendorId: number, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/vendors/${vendorId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-request": "true"
+        },
+        body: JSON.stringify({ status: newStatus })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: `Vendor status updated to ${newStatus}`
+        })
+        loadData()
+      } else {
+        throw new Error("Failed to update status")
+      }
+    } catch (error) {
+      console.error("Error updating vendor:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update vendor status",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleFeatureToggle = async (vendorId: number, featured: boolean) => {
+    try {
+      const vendor = vendors.find(v => v.id === vendorId)
+      if (!vendor) return
+
+      const response = await fetch(`/api/vendors/${vendorId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-request": "true"
+        },
+        body: JSON.stringify({
+          ...vendor,
+          featured
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: `Vendor ${featured ? "featured" : "unfeatured"} successfully`
+        })
+        loadData()
+      } else {
+        throw new Error("Failed to update vendor")
+      }
+    } catch (error) {
+      console.error("Error updating vendor:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update vendor",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    toast({
+      title: "Copied",
+      description: "Text copied to clipboard"
+    })
+  }
+
   const filteredVendors = vendors.filter(vendor => {
     const matchesSearch = vendor.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           vendor.contact_email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -375,48 +530,309 @@ export default function AdminDirectoryPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Manage Vendors</CardTitle>
-                  <CardDescription>Add, edit, and manage vendor listings with enhanced features</CardDescription>
+                  <CardDescription>Add, edit, and manage vendor listings with enhanced inline editing</CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button 
-                    onClick={() => router.push('/admin/vendors/manage')}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Building2 className="h-4 w-4 mr-2" />
-                    Open Enhanced Vendor Manager
+                  <Button variant="outline" size="sm">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                  <Button onClick={() => {
+                    resetVendorForm()
+                    setShowVendorDialog(true)
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Vendor
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12">
-                <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Enhanced Vendor Management Available</h3>
-                <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  We've built a more powerful vendor management interface with inline editing, 
-                  quick actions, and better user experience.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <CheckCircle className="h-6 w-6 text-green-600 mb-2" />
-                    <h4 className="font-medium text-green-900">Inline Editing</h4>
-                    <p className="text-sm text-green-700">Edit vendor details directly in the table</p>
-                  </div>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <Star className="h-6 w-6 text-blue-600 mb-2" />
-                    <h4 className="font-medium text-blue-900">Quick Actions</h4>
-                    <p className="text-sm text-blue-700">Status changes, featuring, and more</p>
-                  </div>
+              {/* Search and Filter */}
+              <div className="flex gap-4 mb-6">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search vendors..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
-                <Button 
-                  onClick={() => router.push('/admin/vendors/manage')}
-                  size="lg"
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <Building2 className="h-5 w-5 mr-2" />
-                  Go to Enhanced Vendor Manager
-                </Button>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              {/* Enhanced Vendors Table */}
+              <div className="mb-4 text-sm text-gray-600">
+                Showing {filteredVendors.length} of {vendors.length} vendors
+              </div>
+              {loading ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Loading vendors...</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Vendor</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Featured</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredVendors.map((vendor) => (
+                      <TableRow key={vendor.id} className="hover:bg-gray-50">
+                        <TableCell>
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={vendor.logo_url} />
+                              <AvatarFallback>
+                                {vendor.company_name.substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              {inlineEditingVendor === vendor.id && inlineEditingField === "company_name" ? (
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    value={inlineEditValue}
+                                    onChange={(e) => setInlineEditValue(e.target.value)}
+                                    onKeyDown={handleKeyPress}
+                                    className="h-8 text-sm"
+                                    autoFocus
+                                  />
+                                  <Button size="sm" variant="ghost" onClick={saveInlineEdit}>
+                                    <Save className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="sm" variant="ghost" onClick={cancelInlineEdit}>
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div 
+                                  className="font-medium text-gray-900 cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -mx-2"
+                                  onClick={() => startInlineEdit(vendor.id, "company_name", vendor.company_name)}
+                                >
+                                  {vendor.company_name}
+                                </div>
+                              )}
+                              <div className="text-sm text-gray-500">
+                                {vendor.pricing_range && (
+                                  <span className="font-semibold">{vendor.pricing_range}</span>
+                                )}
+                                {vendor.services && vendor.services.length > 0 && (
+                                  <span className="ml-2">{vendor.services[0]}</span>
+                                )}
+                                {vendor.featured && (
+                                  <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                                    Featured
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {inlineEditingVendor === vendor.id && inlineEditingField === "contact_name" ? (
+                              <div className="flex items-center gap-2 mb-1">
+                                <Input
+                                  value={inlineEditValue}
+                                  onChange={(e) => setInlineEditValue(e.target.value)}
+                                  onKeyDown={handleKeyPress}
+                                  className="h-7 text-sm"
+                                  autoFocus
+                                />
+                                <Button size="sm" variant="ghost" onClick={saveInlineEdit}>
+                                  <Save className="h-3 w-3" />
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={cancelInlineEdit}>
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div 
+                                className="text-gray-900 cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -mx-2"
+                                onClick={() => startInlineEdit(vendor.id, "contact_name", vendor.contact_name)}
+                              >
+                                {vendor.contact_name || "Click to add"}
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1">
+                              <span className="text-gray-500">{vendor.contact_email}</span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => copyToClipboard(vendor.contact_email)}
+                                className="h-5 w-5 p-0"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {inlineEditingVendor === vendor.id && inlineEditingField === "location" ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={inlineEditValue}
+                                onChange={(e) => setInlineEditValue(e.target.value)}
+                                onKeyDown={handleKeyPress}
+                                className="h-8 text-sm"
+                                autoFocus
+                                placeholder="Enter location"
+                              />
+                              <Button size="sm" variant="ghost" onClick={saveInlineEdit}>
+                                <Save className="h-3 w-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={cancelInlineEdit}>
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div 
+                              className="flex items-center text-sm text-gray-600 cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -mx-2"
+                              onClick={() => startInlineEdit(vendor.id, "location", vendor.location)}
+                            >
+                              <MapPin className="h-4 w-4 mr-1" />
+                              {vendor.location || "Click to add"}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={
+                              vendor.status === "approved" ? "success" :
+                              vendor.status === "pending" ? "warning" :
+                              vendor.status === "rejected" ? "destructive" :
+                              "secondary"
+                            }>
+                              {vendor.status}
+                            </Badge>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                  <ChevronRight className="h-3 w-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start">
+                                <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+                                <DropdownMenuItem 
+                                  onClick={() => handleQuickStatusChange(vendor.id, "approved")}
+                                  disabled={vendor.status === "approved"}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                                  Approved
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleQuickStatusChange(vendor.id, "pending")}
+                                  disabled={vendor.status === "pending"}
+                                >
+                                  <Clock className="h-4 w-4 mr-2 text-yellow-500" />
+                                  Pending
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleQuickStatusChange(vendor.id, "rejected")}
+                                  disabled={vendor.status === "rejected"}
+                                >
+                                  <XCircle className="h-4 w-4 mr-2 text-red-500" />
+                                  Rejected
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={vendor.featured}
+                              onCheckedChange={(checked) => handleFeatureToggle(vendor.id, checked)}
+                            />
+                            {vendor.featured && (
+                              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => window.open(`/directory/vendors/${vendor.slug || vendor.id}`, '_blank')}
+                              title="Preview vendor page"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditVendor(vendor)}
+                              title="Edit vendor details"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" title="More actions">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => copyToClipboard(vendor.contact_email)}>
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  Copy Email
+                                </DropdownMenuItem>
+                                {vendor.website && (
+                                  <DropdownMenuItem onClick={() => window.open(vendor.website, '_blank')}>
+                                    <Globe className="h-4 w-4 mr-2" />
+                                    Visit Website
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteVendor(vendor.id)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete Vendor
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredVendors.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-12">
+                          <div className="text-gray-500">
+                            <Building2 className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                            <p>No vendors found</p>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
