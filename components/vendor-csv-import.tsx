@@ -67,7 +67,11 @@ export function VendorCSVImport() {
     // Parse entire CSV
     Papa.parse(file, {
       header: true,
+      skipEmptyLines: true,
       complete: async (results) => {
+        console.log("Parsed CSV data:", results.data.length, "rows")
+        console.log("First row sample:", results.data[0])
+        
         try {
           const response = await fetch("/api/vendors/import", {
             method: "POST",

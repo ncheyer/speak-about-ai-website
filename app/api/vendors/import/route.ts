@@ -105,9 +105,12 @@ function mapCategoryName(categoryName: string, categories: any[]): number | null
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("Vendor import API called")
+    
     // Check for admin authentication
     const isAdmin = request.headers.get("x-admin-request") === "true"
     if (!isAdmin) {
+      console.log("Unauthorized import attempt")
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -117,6 +120,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { data, autoApprove = false } = body
     
+    console.log(`Processing import with ${data?.length || 0} rows, autoApprove: ${autoApprove}`)
+    
     if (!data || !Array.isArray(data)) {
       return NextResponse.json(
         { error: "Invalid data format. Expected array of vendor records." },
@@ -125,7 +130,18 @@ export async function POST(request: NextRequest) {
     }
     
     // Get categories for mapping
-    const categories = await getVendorCategories()
+    console.log("Fetching vendor categories...")
+    let categories = []
+    try {
+      categories = await getVendorCategories()
+      console.log(`Found ${categories.length} categories`)
+    } catch (catError) {
+      console.error("Error fetching categories:", catError)
+      return NextResponse.json(
+        { error: "Failed to fetch vendor categories. Please ensure database tables are created." },
+        { status: 500 }
+      )
+    }
     
     const results = {
       success: 0,
@@ -135,12 +151,22 @@ export async function POST(request: NextRequest) {
     
     for (let i = 0; i < data.length; i++) {
       const row = data[i]
+      let vendorData: any = null // Define vendorData in outer scope
       
       try {
-        // Skip empty rows
-        if (!row["Company Name"] || !row["Business Email (must be a company domain)"]) {
+        // Skip empty rows - check both possible email field names (form might have different format)
+        const businessEmail = row["Business Email (must be a company domain)"] || 
+                            row["Business Email"] || 
+                            row["Email"] || 
+                            row["Email Address"]
+        const companyName = row["Company Name"] || row["Company"]
+        
+        if (!companyName || !businessEmail) {
+          console.log(`Skipping row ${i + 1}: Missing company name (${companyName}) or email (${businessEmail})`)
           continue
         }
+        
+        console.log(`Processing row ${i + 1}: ${companyName}`)
         
         // Parse services from secondary services field
         const services: string[] = []
@@ -216,7 +242,7 @@ export async function POST(request: NextRequest) {
         }
         
         // Generate slug from company name
-        const slug = row["Company Name"]
+        const slug = companyName
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-+|-+$/g, '')
@@ -225,12 +251,12 @@ export async function POST(request: NextRequest) {
         const uniqueSlug = `${slug}-${Date.now()}-${i}`
         
         // Create vendor object with proper JSON serialization
-        const vendorData = {
-          company_name: row["Company Name"],
+        vendorData = {
+          company_name: companyName,
           slug: uniqueSlug,
           category_id: mapCategoryName(row["Primary Vendor Category"], categories),
           contact_name: row["Primary Contact Name"] || null,
-          contact_email: row["Business Email (must be a company domain)"],
+          contact_email: businessEmail,
           contact_phone: row["Business Phone Number"] || null,
           website: row["Company Website URL"] || null,
           description: row["Describe your business in 1-2 sentences."] || null,
@@ -277,7 +303,7 @@ export async function POST(request: NextRequest) {
         
         results.errors.push({
           row: i + 1,
-          company: row["Company Name"],
+          company: row["Company Name"] || row["Company"] || `Row ${i + 1}`,
           error: errorMessage
         })
       }
@@ -290,8 +316,14 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error("Error importing vendors:", error)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+    console.error("Full error details:", errorMessage)
+    
     return NextResponse.json(
-      { error: "Failed to import vendors" },
+      { 
+        error: "Failed to import vendors",
+        details: errorMessage
+      },
       { status: 500 }
     )
   }
