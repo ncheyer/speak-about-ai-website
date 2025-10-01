@@ -316,11 +316,10 @@ export async function deleteProject(id: number): Promise<boolean> {
     }
     
     // Handle foreign key dependencies that don't have CASCADE
-    // Update deals to remove project reference
-    console.log(`Updating deals to remove project ${id} reference`)
+    // Delete associated deals (financial records tied to this project)
+    console.log(`Deleting deals associated with project ${id}`)
     await sql`
-      UPDATE deals 
-      SET project_id = NULL 
+      DELETE FROM deals 
       WHERE project_id = ${id}
     `
     
