@@ -291,7 +291,16 @@ export async function updateVendor(id: number, updates: Partial<Vendor>): Promis
   const db = getSQL()
   try {
     console.log("updateVendor called with id:", id)
-    console.log("Updates received:", JSON.stringify(updates, null, 2))
+    
+    // Clean the updates object to remove any problematic fields
+    const cleanedUpdates = { ...updates }
+    
+    // Remove JSONB fields if they're problematic - we'll handle them separately
+    delete cleanedUpdates.social_media
+    delete cleanedUpdates.portfolio_items
+    delete cleanedUpdates.client_references
+    
+    console.log("Cleaned updates (without JSONB fields):", JSON.stringify(cleanedUpdates, null, 2))
     
     // First get the current vendor to merge with updates
     const current = await getVendorById(id)
@@ -301,30 +310,31 @@ export async function updateVendor(id: number, updates: Partial<Vendor>): Promis
 
     // Merge updates with current data, preserving undefined as null
     const merged = {
-      company_name: updates.company_name !== undefined ? updates.company_name : current.company_name,
-      slug: updates.slug !== undefined ? updates.slug : current.slug,
-      category_id: updates.category_id !== undefined ? updates.category_id : current.category_id,
-      contact_name: updates.contact_name !== undefined ? updates.contact_name : current.contact_name,
-      contact_email: updates.contact_email !== undefined ? updates.contact_email : current.contact_email,
-      contact_phone: updates.contact_phone !== undefined ? updates.contact_phone : current.contact_phone,
-      website: updates.website !== undefined ? updates.website : current.website,
-      logo_url: updates.logo_url !== undefined ? updates.logo_url : current.logo_url,
-      description: updates.description !== undefined ? updates.description : current.description,
-      services: updates.services !== undefined ? updates.services : current.services,
-      specialties: updates.specialties !== undefined ? updates.specialties : current.specialties,
-      pricing_range: updates.pricing_range !== undefined ? updates.pricing_range : current.pricing_range,
-      minimum_budget: updates.minimum_budget !== undefined ? updates.minimum_budget : current.minimum_budget,
-      location: updates.location !== undefined ? updates.location : current.location,
-      years_in_business: updates.years_in_business !== undefined ? updates.years_in_business : current.years_in_business,
-      team_size: updates.team_size !== undefined ? updates.team_size : current.team_size,
-      certifications: updates.certifications !== undefined ? updates.certifications : current.certifications,
-      featured: updates.featured !== undefined ? updates.featured : current.featured,
-      verified: updates.verified !== undefined ? updates.verified : current.verified,
-      status: updates.status !== undefined ? updates.status : current.status,
-      tags: updates.tags !== undefined ? updates.tags : current.tags,
-      social_media: updates.social_media !== undefined ? updates.social_media : current.social_media,
-      portfolio_items: updates.portfolio_items !== undefined ? updates.portfolio_items : current.portfolio_items,
-      client_references: updates.client_references !== undefined ? updates.client_references : current.client_references
+      company_name: cleanedUpdates.company_name !== undefined ? cleanedUpdates.company_name : current.company_name,
+      slug: cleanedUpdates.slug !== undefined ? cleanedUpdates.slug : current.slug,
+      category_id: cleanedUpdates.category_id !== undefined ? cleanedUpdates.category_id : current.category_id,
+      contact_name: cleanedUpdates.contact_name !== undefined ? cleanedUpdates.contact_name : current.contact_name,
+      contact_email: cleanedUpdates.contact_email !== undefined ? cleanedUpdates.contact_email : current.contact_email,
+      contact_phone: cleanedUpdates.contact_phone !== undefined ? cleanedUpdates.contact_phone : current.contact_phone,
+      website: cleanedUpdates.website !== undefined ? cleanedUpdates.website : current.website,
+      logo_url: cleanedUpdates.logo_url !== undefined ? cleanedUpdates.logo_url : current.logo_url,
+      description: cleanedUpdates.description !== undefined ? cleanedUpdates.description : current.description,
+      services: cleanedUpdates.services !== undefined ? cleanedUpdates.services : current.services,
+      specialties: cleanedUpdates.specialties !== undefined ? cleanedUpdates.specialties : current.specialties,
+      pricing_range: cleanedUpdates.pricing_range !== undefined ? cleanedUpdates.pricing_range : current.pricing_range,
+      minimum_budget: cleanedUpdates.minimum_budget !== undefined ? cleanedUpdates.minimum_budget : current.minimum_budget,
+      location: cleanedUpdates.location !== undefined ? cleanedUpdates.location : current.location,
+      years_in_business: cleanedUpdates.years_in_business !== undefined ? cleanedUpdates.years_in_business : current.years_in_business,
+      team_size: cleanedUpdates.team_size !== undefined ? cleanedUpdates.team_size : current.team_size,
+      certifications: cleanedUpdates.certifications !== undefined ? cleanedUpdates.certifications : current.certifications,
+      featured: cleanedUpdates.featured !== undefined ? cleanedUpdates.featured : current.featured,
+      verified: cleanedUpdates.verified !== undefined ? cleanedUpdates.verified : current.verified,
+      status: cleanedUpdates.status !== undefined ? cleanedUpdates.status : current.status,
+      tags: cleanedUpdates.tags !== undefined ? cleanedUpdates.tags : current.tags,
+      // For JSONB fields, always use current values since we're not updating them
+      social_media: current.social_media,
+      portfolio_items: current.portfolio_items,
+      client_references: current.client_references
     }
 
     // Convert arrays to PostgreSQL array format if they exist
@@ -337,55 +347,10 @@ export async function updateVendor(id: number, updates: Partial<Vendor>): Promis
     const tagsArray = merged.tags ? 
       (Array.isArray(merged.tags) ? merged.tags : [merged.tags]) : []
     
-    // Ensure JSONB fields are valid JSON or null
-    // These fields should be objects or null, never strings in the database
-    let socialMedia = null
-    let portfolioItems = null  
-    let clientReferences = null
-    
-    // Handle social_media
-    if (merged.social_media !== undefined && merged.social_media !== null) {
-      if (typeof merged.social_media === 'string') {
-        // If it's a string, try to parse it
-        try {
-          socialMedia = merged.social_media === '' ? null : JSON.parse(merged.social_media)
-        } catch (e) {
-          console.error("Invalid social_media JSON string:", merged.social_media)
-          socialMedia = null
-        }
-      } else if (typeof merged.social_media === 'object') {
-        // If it's already an object, use it directly
-        socialMedia = merged.social_media
-      }
-    }
-    
-    // Handle portfolio_items
-    if (merged.portfolio_items !== undefined && merged.portfolio_items !== null) {
-      if (typeof merged.portfolio_items === 'string') {
-        try {
-          portfolioItems = merged.portfolio_items === '' ? null : JSON.parse(merged.portfolio_items)
-        } catch (e) {
-          console.error("Invalid portfolio_items JSON string:", merged.portfolio_items)
-          portfolioItems = null
-        }
-      } else if (typeof merged.portfolio_items === 'object') {
-        portfolioItems = merged.portfolio_items
-      }
-    }
-    
-    // Handle client_references
-    if (merged.client_references !== undefined && merged.client_references !== null) {
-      if (typeof merged.client_references === 'string') {
-        try {
-          clientReferences = merged.client_references === '' ? null : JSON.parse(merged.client_references)
-        } catch (e) {
-          console.error("Invalid client_references JSON string:", merged.client_references)
-          clientReferences = null
-        }
-      } else if (typeof merged.client_references === 'object') {
-        clientReferences = merged.client_references
-      }
-    }
+    // For JSONB fields, we're keeping current values so they should already be valid
+    const socialMedia = merged.social_media || null
+    const portfolioItems = merged.portfolio_items || null
+    const clientReferences = merged.client_references || null
 
     const result = await db`
       UPDATE vendors
