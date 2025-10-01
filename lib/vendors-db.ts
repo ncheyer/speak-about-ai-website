@@ -290,6 +290,9 @@ export async function createVendor(vendor: Partial<Vendor>): Promise<Vendor> {
 export async function updateVendor(id: number, updates: Partial<Vendor>): Promise<Vendor> {
   const db = getSQL()
   try {
+    console.log("updateVendor called with id:", id)
+    console.log("Updates received:", JSON.stringify(updates, null, 2))
+    
     // First get the current vendor to merge with updates
     const current = await getVendorById(id)
     if (!current) {
@@ -333,6 +336,56 @@ export async function updateVendor(id: number, updates: Partial<Vendor>): Promis
       (Array.isArray(merged.certifications) ? merged.certifications : [merged.certifications]) : []
     const tagsArray = merged.tags ? 
       (Array.isArray(merged.tags) ? merged.tags : [merged.tags]) : []
+    
+    // Ensure JSONB fields are valid JSON or null
+    // These fields should be objects or null, never strings in the database
+    let socialMedia = null
+    let portfolioItems = null  
+    let clientReferences = null
+    
+    // Handle social_media
+    if (merged.social_media !== undefined && merged.social_media !== null) {
+      if (typeof merged.social_media === 'string') {
+        // If it's a string, try to parse it
+        try {
+          socialMedia = merged.social_media === '' ? null : JSON.parse(merged.social_media)
+        } catch (e) {
+          console.error("Invalid social_media JSON string:", merged.social_media)
+          socialMedia = null
+        }
+      } else if (typeof merged.social_media === 'object') {
+        // If it's already an object, use it directly
+        socialMedia = merged.social_media
+      }
+    }
+    
+    // Handle portfolio_items
+    if (merged.portfolio_items !== undefined && merged.portfolio_items !== null) {
+      if (typeof merged.portfolio_items === 'string') {
+        try {
+          portfolioItems = merged.portfolio_items === '' ? null : JSON.parse(merged.portfolio_items)
+        } catch (e) {
+          console.error("Invalid portfolio_items JSON string:", merged.portfolio_items)
+          portfolioItems = null
+        }
+      } else if (typeof merged.portfolio_items === 'object') {
+        portfolioItems = merged.portfolio_items
+      }
+    }
+    
+    // Handle client_references
+    if (merged.client_references !== undefined && merged.client_references !== null) {
+      if (typeof merged.client_references === 'string') {
+        try {
+          clientReferences = merged.client_references === '' ? null : JSON.parse(merged.client_references)
+        } catch (e) {
+          console.error("Invalid client_references JSON string:", merged.client_references)
+          clientReferences = null
+        }
+      } else if (typeof merged.client_references === 'object') {
+        clientReferences = merged.client_references
+      }
+    }
 
     const result = await db`
       UPDATE vendors
@@ -358,9 +411,9 @@ export async function updateVendor(id: number, updates: Partial<Vendor>): Promis
         verified = ${merged.verified},
         status = ${merged.status},
         tags = ${tagsArray},
-        social_media = ${merged.social_media},
-        portfolio_items = ${merged.portfolio_items},
-        client_references = ${merged.client_references},
+        social_media = ${socialMedia},
+        portfolio_items = ${portfolioItems},
+        client_references = ${clientReferences},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${id}
       RETURNING *
