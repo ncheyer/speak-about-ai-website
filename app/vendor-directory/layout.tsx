@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Free Event Vendor Directory | Find Trusted Event Vendors & Suppliers",
+  title: "Event Vendor Directory - Find Trusted Vendors Free",
   description: "Browse our free event vendor directory to find trusted caterers, photographers, venues, entertainment, and more for your next event. Connect with verified event professionals and get transparent pricing.",
   keywords: "event vendor directory, event vendors, event suppliers, wedding vendors, corporate event vendors, party vendors, event planning directory, vendor listings, free vendor directory",
   openGraph: {

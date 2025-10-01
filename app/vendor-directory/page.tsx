@@ -126,11 +126,15 @@ export default function VendorDirectoryPage() {
               </div>
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Free Event Vendor Directory
+              Event Vendor Directory
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
               Connect with trusted vendors for your next event. 
               Find the perfect partners from our curated network of event professionals - completely free.
+            </p>
+            <p className="text-lg text-gray-500 max-w-3xl mx-auto">
+              Whether you're planning a wedding, corporate event, or private party, our event vendor directory 
+              connects you with verified caterers, photographers, venues, and entertainment providers.
             </p>
           </div>
 
@@ -266,19 +270,79 @@ export default function VendorDirectoryPage() {
             </Card>
           </div>
 
+          {/* SEO Content Section */}
+          <div className="mt-16 max-w-4xl mx-auto">
+            <h2 className="text-3xl font-semibold text-gray-900 mb-6 text-center">
+              Your Complete Event Vendor Directory Solution
+            </h2>
+            
+            <div className="prose prose-lg text-gray-600 mb-12">
+              <p className="mb-4">
+                Finding the right vendors for your event shouldn't be complicated. Our comprehensive event vendor directory 
+                simplifies the process by connecting you directly with verified professionals who match your vision and budget. 
+                From intimate gatherings to large-scale corporate events, we've curated a network of trusted vendors ready to 
+                bring your ideas to life.
+              </p>
+              
+              <h3 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">
+                Wedding Planning Made Simple
+              </h3>
+              <p className="mb-4">
+                Wedding planning can feel overwhelming, but with our event vendor directory at your fingertips, you'll find 
+                everything you need in one place. Browse through photographers who capture every precious moment, caterers 
+                who create unforgettable dining experiences, and venues that provide the perfect backdrop for your special day. 
+                Each vendor in our directory has been verified to ensure quality and reliability.
+              </p>
+              
+              <h3 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">
+                Corporate Events & Beyond
+              </h3>
+              <p className="mb-4">
+                Whether you're organizing a product launch, conference, or team building event, our event vendor directory 
+                features specialists in corporate entertainment, audio-visual equipment, and professional event coordination. 
+                Get transparent pricing, read real reviews, and connect directly with vendors who understand your business needs.
+              </p>
+              
+              <h3 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">
+                Why Choose Our Event Vendor Directory?
+              </h3>
+              <p className="mb-4">
+                Unlike other platforms, we believe in complete transparency. No hidden fees, no premium listings that push 
+                quality vendors to the bottom. Every vendor in our event vendor directory gets equal visibility, ensuring 
+                you find the best match for your event based on merit, not marketing budgets. Plus, it's completely free 
+                for event planners to browse and connect with vendors.
+              </p>
+              
+              <div className="bg-blue-50 p-6 rounded-lg mt-8">
+                <h4 className="text-xl font-semibold text-blue-900 mb-3">
+                  Start Planning Your Perfect Event Today
+                </h4>
+                <p className="text-blue-800">
+                  Join thousands of event planners who trust our event vendor directory to connect them with the right 
+                  professionals. From wedding planning to corporate gatherings, birthday parties to fundraising galas, 
+                  we have the vendors you need to create memorable experiences.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Statistics */}
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-4 gap-8 text-center max-w-4xl mx-auto">
             <div>
-              <p className="text-3xl font-bold text-blue-600">500+</p>
+              <p className="text-3xl font-bold text-blue-600">87+</p>
               <p className="text-gray-600">Verified Vendors</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-blue-600">15+</p>
-              <p className="text-gray-600">Categories</p>
+              <p className="text-3xl font-bold text-blue-600">10+</p>
+              <p className="text-gray-600">Event Categories</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-blue-600">1000+</p>
-              <p className="text-gray-600">Events Powered</p>
+              <p className="text-3xl font-bold text-blue-600">100%</p>
+              <p className="text-gray-600">Free Access</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-blue-600">24/7</p>
+              <p className="text-gray-600">Available Online</p>
             </div>
           </div>
         </div>

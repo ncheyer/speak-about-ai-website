@@ -164,7 +164,6 @@ export async function getAllVendors(): Promise<Vendor[]> {
       GROUP BY v.id, vc.id
       ORDER BY v.created_at DESC
     `
-    console.log("Database returned", vendors.length, "vendors")
     return vendors.map(v => ({
       ...v,
       category: v.category_name ? {
@@ -252,23 +251,10 @@ export async function getVendorBySlug(slug: string): Promise<Vendor | null> {
   }
 }
 
-// Create new vendor
+// Create vendor
 export async function createVendor(vendor: Partial<Vendor>): Promise<Vendor> {
   const db = getSQL()
   try {
-    // Ensure JSONB fields are properly formatted
-    const socialMedia = vendor.social_media ? 
-      (typeof vendor.social_media === 'string' ? vendor.social_media : JSON.stringify(vendor.social_media)) : 
-      '{}'
-    
-    const portfolioItems = vendor.portfolio_items ? 
-      (typeof vendor.portfolio_items === 'string' ? vendor.portfolio_items : JSON.stringify(vendor.portfolio_items)) : 
-      '[]'
-    
-    const clientReferences = vendor.client_references ? 
-      (typeof vendor.client_references === 'string' ? vendor.client_references : JSON.stringify(vendor.client_references)) : 
-      '{}'
-    
     const result = await db`
       INSERT INTO vendors (
         company_name, slug, category_id, contact_name, contact_email,
@@ -278,16 +264,18 @@ export async function createVendor(vendor: Partial<Vendor>): Promise<Vendor> {
         verified, status, tags, social_media, portfolio_items,
         client_references
       ) VALUES (
-        ${vendor.company_name}, ${vendor.slug}, ${vendor.category_id},
-        ${vendor.contact_name}, ${vendor.contact_email}, ${vendor.contact_phone},
-        ${vendor.website}, ${vendor.logo_url}, ${vendor.description},
-        ${vendor.services || []}, ${vendor.specialties || []},
-        ${vendor.pricing_range}, ${vendor.minimum_budget}, ${vendor.location},
-        ${vendor.years_in_business}, ${vendor.team_size},
-        ${vendor.certifications || []}, ${vendor.featured || false},
-        ${vendor.verified || false}, ${vendor.status || 'pending'},
-        ${vendor.tags || []}, ${socialMedia}::jsonb,
-        ${portfolioItems}::jsonb, ${clientReferences}::jsonb
+        ${vendor.company_name}, ${vendor.slug}, ${vendor.category_id}, 
+        ${vendor.contact_name || null}, ${vendor.contact_email},
+        ${vendor.contact_phone || null}, ${vendor.website || null}, 
+        ${vendor.logo_url || null}, ${vendor.description || null},
+        ${vendor.services || null}, ${vendor.specialties || null},
+        ${vendor.pricing_range || null}, ${vendor.minimum_budget || null},
+        ${vendor.location || null}, ${vendor.years_in_business || null},
+        ${vendor.team_size || null}, ${vendor.certifications || null},
+        ${vendor.featured || false}, ${vendor.verified || false},
+        ${vendor.status || 'pending'}, ${vendor.tags || null},
+        ${vendor.social_media || null}, ${vendor.portfolio_items || null},
+        ${vendor.client_references || null}
       )
       RETURNING *
     `
@@ -298,44 +286,84 @@ export async function createVendor(vendor: Partial<Vendor>): Promise<Vendor> {
   }
 }
 
-// Update vendor
+// Update vendor - handles partial updates properly
 export async function updateVendor(id: number, updates: Partial<Vendor>): Promise<Vendor> {
   const db = getSQL()
   try {
+    // First get the current vendor to merge with updates
+    const current = await getVendorById(id)
+    if (!current) {
+      throw new Error(`Vendor with id ${id} not found`)
+    }
+
+    // Merge updates with current data, preserving undefined as null
+    const merged = {
+      company_name: updates.company_name !== undefined ? updates.company_name : current.company_name,
+      slug: updates.slug !== undefined ? updates.slug : current.slug,
+      category_id: updates.category_id !== undefined ? updates.category_id : current.category_id,
+      contact_name: updates.contact_name !== undefined ? updates.contact_name : current.contact_name,
+      contact_email: updates.contact_email !== undefined ? updates.contact_email : current.contact_email,
+      contact_phone: updates.contact_phone !== undefined ? updates.contact_phone : current.contact_phone,
+      website: updates.website !== undefined ? updates.website : current.website,
+      logo_url: updates.logo_url !== undefined ? updates.logo_url : current.logo_url,
+      description: updates.description !== undefined ? updates.description : current.description,
+      services: updates.services !== undefined ? updates.services : current.services,
+      specialties: updates.specialties !== undefined ? updates.specialties : current.specialties,
+      pricing_range: updates.pricing_range !== undefined ? updates.pricing_range : current.pricing_range,
+      minimum_budget: updates.minimum_budget !== undefined ? updates.minimum_budget : current.minimum_budget,
+      location: updates.location !== undefined ? updates.location : current.location,
+      years_in_business: updates.years_in_business !== undefined ? updates.years_in_business : current.years_in_business,
+      team_size: updates.team_size !== undefined ? updates.team_size : current.team_size,
+      certifications: updates.certifications !== undefined ? updates.certifications : current.certifications,
+      featured: updates.featured !== undefined ? updates.featured : current.featured,
+      verified: updates.verified !== undefined ? updates.verified : current.verified,
+      status: updates.status !== undefined ? updates.status : current.status,
+      tags: updates.tags !== undefined ? updates.tags : current.tags,
+      social_media: updates.social_media !== undefined ? updates.social_media : current.social_media,
+      portfolio_items: updates.portfolio_items !== undefined ? updates.portfolio_items : current.portfolio_items,
+      client_references: updates.client_references !== undefined ? updates.client_references : current.client_references
+    }
+
     const result = await db`
       UPDATE vendors
       SET
-        company_name = COALESCE(${updates.company_name}, company_name),
-        slug = COALESCE(${updates.slug}, slug),
-        category_id = COALESCE(${updates.category_id}, category_id),
-        contact_name = COALESCE(${updates.contact_name}, contact_name),
-        contact_email = COALESCE(${updates.contact_email}, contact_email),
-        contact_phone = COALESCE(${updates.contact_phone}, contact_phone),
-        website = COALESCE(${updates.website}, website),
-        logo_url = COALESCE(${updates.logo_url}, logo_url),
-        description = COALESCE(${updates.description}, description),
-        services = COALESCE(${updates.services}, services),
-        specialties = COALESCE(${updates.specialties}, specialties),
-        pricing_range = COALESCE(${updates.pricing_range}, pricing_range),
-        minimum_budget = COALESCE(${updates.minimum_budget}, minimum_budget),
-        location = COALESCE(${updates.location}, location),
-        years_in_business = COALESCE(${updates.years_in_business}, years_in_business),
-        team_size = COALESCE(${updates.team_size}, team_size),
-        certifications = COALESCE(${updates.certifications}, certifications),
-        featured = COALESCE(${updates.featured}, featured),
-        verified = COALESCE(${updates.verified}, verified),
-        status = COALESCE(${updates.status}, status),
-        tags = COALESCE(${updates.tags}, tags),
-        social_media = COALESCE(${updates.social_media}, social_media),
-        portfolio_items = COALESCE(${updates.portfolio_items}, portfolio_items),
-        client_references = COALESCE(${updates.client_references}, client_references),
+        company_name = ${merged.company_name},
+        slug = ${merged.slug},
+        category_id = ${merged.category_id},
+        contact_name = ${merged.contact_name},
+        contact_email = ${merged.contact_email},
+        contact_phone = ${merged.contact_phone},
+        website = ${merged.website},
+        logo_url = ${merged.logo_url},
+        description = ${merged.description},
+        services = ${merged.services},
+        specialties = ${merged.specialties},
+        pricing_range = ${merged.pricing_range},
+        minimum_budget = ${merged.minimum_budget},
+        location = ${merged.location},
+        years_in_business = ${merged.years_in_business},
+        team_size = ${merged.team_size},
+        certifications = ${merged.certifications},
+        featured = ${merged.featured},
+        verified = ${merged.verified},
+        status = ${merged.status},
+        tags = ${merged.tags},
+        social_media = ${merged.social_media},
+        portfolio_items = ${merged.portfolio_items},
+        client_references = ${merged.client_references},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${id}
       RETURNING *
     `
+    
+    if (!result || result.length === 0) {
+      throw new Error(`Failed to update vendor with id ${id}`)
+    }
+    
     return result[0] as Vendor
   } catch (error) {
-    console.error("Error updating vendor:", error)
+    console.error("Error updating vendor with id", id, ":", error)
+    console.error("Updates attempted:", updates)
     throw error
   }
 }
@@ -348,66 +376,6 @@ export async function deleteVendor(id: number): Promise<boolean> {
     return true
   } catch (error) {
     console.error("Error deleting vendor:", error)
-    throw error
-  }
-}
-
-// Subscribe to directory
-export async function subscribeToDirectory(subscriber: Partial<DirectorySubscriber>): Promise<DirectorySubscriber> {
-  const db = getSQL()
-  try {
-    const result = await db`
-      INSERT INTO directory_subscribers (
-        email, name, company, phone, access_level,
-        subscription_status, preferences
-      ) VALUES (
-        ${subscriber.email}, ${subscriber.name}, ${subscriber.company},
-        ${subscriber.phone}, ${subscriber.access_level || 'basic'},
-        ${subscriber.subscription_status || 'active'}, ${subscriber.preferences || {}}
-      )
-      ON CONFLICT (email) DO UPDATE
-      SET
-        name = COALESCE(${subscriber.name}, directory_subscribers.name),
-        company = COALESCE(${subscriber.company}, directory_subscribers.company),
-        phone = COALESCE(${subscriber.phone}, directory_subscribers.phone),
-        updated_at = CURRENT_TIMESTAMP
-      RETURNING *
-    `
-    return result[0] as DirectorySubscriber
-  } catch (error) {
-    console.error("Error subscribing to directory:", error)
-    throw error
-  }
-}
-
-// Get subscriber by email
-export async function getSubscriberByEmail(email: string): Promise<DirectorySubscriber | null> {
-  const db = getSQL()
-  try {
-    const subscribers = await db`
-      SELECT * FROM directory_subscribers
-      WHERE email = ${email}
-    `
-    return subscribers.length > 0 ? subscribers[0] as DirectorySubscriber : null
-  } catch (error) {
-    console.error("Error fetching subscriber:", error)
-    throw error
-  }
-}
-
-// Update subscriber login
-export async function updateSubscriberLogin(email: string): Promise<void> {
-  const db = getSQL()
-  try {
-    await db`
-      UPDATE directory_subscribers
-      SET 
-        last_login = CURRENT_TIMESTAMP,
-        login_count = login_count + 1
-      WHERE email = ${email}
-    `
-  } catch (error) {
-    console.error("Error updating subscriber login:", error)
     throw error
   }
 }
@@ -428,8 +396,8 @@ export async function getVendorReviews(vendorId: number): Promise<VendorReview[]
   }
 }
 
-// Add vendor review
-export async function addVendorReview(review: Partial<VendorReview>): Promise<VendorReview> {
+// Create vendor review
+export async function createVendorReview(review: Partial<VendorReview>): Promise<VendorReview> {
   const db = getSQL()
   try {
     const result = await db`
@@ -438,14 +406,100 @@ export async function addVendorReview(review: Partial<VendorReview>): Promise<Ve
         rating, review_text, verified_purchase, status
       ) VALUES (
         ${review.vendor_id}, ${review.reviewer_name}, ${review.reviewer_email},
-        ${review.reviewer_company}, ${review.rating}, ${review.review_text},
-        ${review.verified_purchase || false}, ${review.status || 'pending'}
+        ${review.reviewer_company || null}, ${review.rating}, 
+        ${review.review_text || null}, ${review.verified_purchase || false},
+        ${review.status || 'pending'}
       )
       RETURNING *
     `
     return result[0] as VendorReview
   } catch (error) {
-    console.error("Error adding vendor review:", error)
+    console.error("Error creating vendor review:", error)
+    throw error
+  }
+}
+
+// Directory Subscriber functions
+export async function getDirectorySubscribers(): Promise<DirectorySubscriber[]> {
+  const db = getSQL()
+  try {
+    const subscribers = await db`
+      SELECT * FROM directory_subscribers
+      ORDER BY created_at DESC
+    `
+    return subscribers as DirectorySubscriber[]
+  } catch (error) {
+    console.error("Error fetching directory subscribers:", error)
+    throw error
+  }
+}
+
+export async function createDirectorySubscriber(subscriber: Partial<DirectorySubscriber>): Promise<DirectorySubscriber> {
+  const db = getSQL()
+  try {
+    const result = await db`
+      INSERT INTO directory_subscribers (
+        email, name, company, phone, access_level, subscription_status
+      ) VALUES (
+        ${subscriber.email}, ${subscriber.name || null}, 
+        ${subscriber.company || null}, ${subscriber.phone || null},
+        ${subscriber.access_level || 'basic'}, 
+        ${subscriber.subscription_status || 'active'}
+      )
+      ON CONFLICT (email) 
+      DO UPDATE SET 
+        name = COALESCE(${subscriber.name}, directory_subscribers.name),
+        company = COALESCE(${subscriber.company}, directory_subscribers.company),
+        phone = COALESCE(${subscriber.phone}, directory_subscribers.phone),
+        last_login = CURRENT_TIMESTAMP,
+        login_count = directory_subscribers.login_count + 1
+      RETURNING *
+    `
+    return result[0] as DirectorySubscriber
+  } catch (error) {
+    console.error("Error creating/updating directory subscriber:", error)
+    throw error
+  }
+}
+
+export async function getDirectorySubscriberByEmail(email: string): Promise<DirectorySubscriber | null> {
+  const db = getSQL()
+  try {
+    const result = await db`
+      SELECT * FROM directory_subscribers
+      WHERE email = ${email}
+    `
+    return result.length > 0 ? result[0] as DirectorySubscriber : null
+  } catch (error) {
+    console.error("Error fetching subscriber by email:", error)
+    throw error
+  }
+}
+
+export async function updateDirectorySubscriber(
+  id: number, 
+  updates: Partial<DirectorySubscriber>
+): Promise<DirectorySubscriber> {
+  const db = getSQL()
+  try {
+    const result = await db`
+      UPDATE directory_subscribers
+      SET
+        name = COALESCE(${updates.name}, name),
+        company = COALESCE(${updates.company}, company),
+        phone = COALESCE(${updates.phone}, phone),
+        access_level = COALESCE(${updates.access_level}, access_level),
+        subscription_status = COALESCE(${updates.subscription_status}, subscription_status),
+        last_login = COALESCE(${updates.last_login}, last_login),
+        login_count = COALESCE(${updates.login_count}, login_count),
+        preferences = COALESCE(${updates.preferences}, preferences),
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${id}
+      RETURNING *
+    `
+    return result[0] as DirectorySubscriber
+  } catch (error) {
+    console.error("Error updating directory subscriber:", error)
     throw error
   }
 }

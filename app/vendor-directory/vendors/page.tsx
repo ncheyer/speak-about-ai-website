@@ -157,7 +157,7 @@ export default function VendorDirectoryPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => router.push("/directory")}
+                onClick={() => router.push("/vendor-directory")}
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Back
@@ -258,7 +258,7 @@ export default function VendorDirectoryPage() {
               <Card 
                 key={vendor.id}
                 className="hover:shadow-lg transition-shadow cursor-pointer relative overflow-hidden"
-                onClick={() => router.push(`/directory/vendors/${vendor.slug}`)}
+                onClick={() => router.push(`/vendor-directory/vendors/${vendor.slug || vendor.id}`)}
               >
                 {vendor.featured && (
                   <div className="absolute top-2 right-2 z-10">
@@ -269,11 +269,13 @@ export default function VendorDirectoryPage() {
                 <CardHeader>
                   <div className="flex items-start space-x-4">
                     {vendor.logo_url ? (
-                      <img
-                        src={vendor.logo_url}
-                        alt={vendor.company_name}
-                        className="w-16 h-16 rounded-lg object-cover"
-                      />
+                      <div className="w-16 h-16 rounded-lg bg-white border border-gray-200 p-1 flex items-center justify-center">
+                        <img
+                          src={vendor.logo_url}
+                          alt={vendor.company_name}
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
                     ) : (
                       <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
                         <Building2 className="h-8 w-8 text-gray-400" />

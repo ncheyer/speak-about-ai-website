@@ -325,7 +325,7 @@ export default function VendorEditPage() {
             )}
             <Button
               variant="outline"
-              onClick={() => window.open(`/directory/vendors/${vendor.slug || vendor.id}`, '_blank')}
+              onClick={() => window.open(`/vendor-directory/vendors/${vendor.slug || vendor.id}`, '_blank')}
             >
               <Eye className="h-4 w-4 mr-2" />
               Preview
@@ -467,7 +467,7 @@ export default function VendorEditPage() {
                     placeholder="company-name"
                   />
                   <p className="text-xs text-gray-500">
-                    /directory/vendors/{formData.slug || "company-name"}
+                    /vendor-directory/vendors/{formData.slug || "company-name"}
                   </p>
                 </div>
                 

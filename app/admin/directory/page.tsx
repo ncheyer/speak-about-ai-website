@@ -376,11 +376,6 @@ export default function AdminDirectoryPage() {
 
   const handleQuickStatusChange = async (vendorId: number, newStatus: string) => {
     try {
-      const vendor = vendors.find(v => v.id === vendorId)
-      if (!vendor) {
-        throw new Error("Vendor not found")
-      }
-
       const response = await fetch(`/api/vendors/${vendorId}`, {
         method: "PUT",
         headers: {
@@ -388,7 +383,6 @@ export default function AdminDirectoryPage() {
           "x-admin-request": "true"
         },
         body: JSON.stringify({
-          ...vendor,
           status: newStatus
         })
       })
@@ -402,7 +396,7 @@ export default function AdminDirectoryPage() {
         setVendors(prevVendors => 
           prevVendors.map(v => 
             v.id === vendorId 
-              ? { ...v, status: newStatus }
+              ? { ...v, status: newStatus as "pending" | "approved" | "rejected" | "suspended" }
               : v
           )
         )
@@ -1068,7 +1062,7 @@ export default function AdminDirectoryPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => window.open(`/directory/vendors/${vendor.slug || vendor.id}`, '_blank')}
+                              onClick={() => window.open(`/vendor-directory/vendors/${vendor.slug || vendor.id}`, '_blank')}
                               title="Preview vendor page"
                             >
                               <Eye className="h-4 w-4" />

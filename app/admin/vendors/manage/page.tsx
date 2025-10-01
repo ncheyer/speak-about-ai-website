@@ -778,7 +778,7 @@ export default function VendorManagementPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => window.open(`/directory/vendors/${vendor.slug || vendor.id}`, '_blank')}
+                          onClick={() => window.open(`/vendor-directory/vendors/${vendor.slug || vendor.id}`, '_blank')}
                           title="Preview vendor page"
                         >
                           <Eye className="h-4 w-4" />
