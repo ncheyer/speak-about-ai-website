@@ -101,6 +101,11 @@ interface FinancialStats {
   pendingAmount: number
   dealsCount: number
   projectsCount: number
+  // New fields for full revenue tracking
+  totalPendingRevenue: number  // Full deal values pending collection
+  totalSpeakerPayouts: number  // Amount owed to speakers
+  netProfit: number            // Commission after speaker payouts
+  collectedRevenue: number     // Total revenue actually collected
 }
 
 export default function FinancesPage() {
@@ -115,7 +120,11 @@ export default function FinancesPage() {
     paidAmount: 0,
     pendingAmount: 0,
     dealsCount: 0,
-    projectsCount: 0
+    projectsCount: 0,
+    totalPendingRevenue: 0,
+    totalSpeakerPayouts: 0,
+    netProfit: 0,
+    collectedRevenue: 0
   })
   
   // Filter states
