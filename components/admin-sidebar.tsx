@@ -33,7 +33,8 @@ import {
   ShoppingCart,
   Briefcase,
   Globe,
-  Megaphone
+  Megaphone,
+  Building2
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -177,6 +178,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Subscriber Management",
           color: "text-pink-600",
           bgColor: "bg-pink-50"
+        },
+        {
+          title: "Vendor Directory",
+          href: "/admin/directory",
+          icon: Building2,
+          description: "Vendor Management",
+          color: "text-blue-600",
+          bgColor: "bg-blue-50"
         },
         {
           title: "Landing Resources",

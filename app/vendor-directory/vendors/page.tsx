@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { trackVendorSearch, trackVendorFilter, trackVendorView } from "@/lib/analytics"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -126,12 +127,10 @@ export default function VendorDirectoryPage() {
     switch (sortBy) {
       case "featured":
         return (b.featured ? 1 : 0) - (a.featured ? 1 : 0)
-      case "rating":
-        return (b.average_rating || 0) - (a.average_rating || 0)
       case "name":
         return a.company_name.localeCompare(b.company_name)
-      case "reviews":
-        return (b.review_count || 0) - (a.review_count || 0)
+      case "newest":
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       default:
         return 0
     }
@@ -186,12 +185,20 @@ export default function VendorDirectoryPage() {
                 type="text"
                 placeholder="Search vendors by name, service, or keyword..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value)
+                  if (e.target.value.length > 2) {
+                    trackVendorSearch(e.target.value, vendors.length)
+                  }
+                }}
                 className="pl-10"
               />
             </div>
             
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select value={selectedCategory} onValueChange={(value) => {
+              setSelectedCategory(value)
+              trackVendorFilter('category', value)
+            }}>
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
@@ -205,15 +212,17 @@ export default function VendorDirectoryPage() {
               </SelectContent>
             </Select>
 
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select value={sortBy} onValueChange={(value) => {
+              setSortBy(value)
+              trackVendorFilter('sort', value)
+            }}>
               <SelectTrigger className="w-full md:w-[150px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="featured">Featured</SelectItem>
-                <SelectItem value="rating">Top Rated</SelectItem>
-                <SelectItem value="reviews">Most Reviews</SelectItem>
                 <SelectItem value="name">Name A-Z</SelectItem>
+                <SelectItem value="newest">Newest First</SelectItem>
               </SelectContent>
             </Select>
 
@@ -258,7 +267,10 @@ export default function VendorDirectoryPage() {
               <Card 
                 key={vendor.id}
                 className="hover:shadow-lg transition-shadow cursor-pointer relative overflow-hidden"
-                onClick={() => router.push(`/vendor-directory/vendors/${vendor.slug || vendor.id}`)}
+                onClick={() => {
+                  trackVendorView(vendor.id, vendor.company_name, vendor.slug || vendor.id.toString())
+                  router.push(`/vendor-directory/vendors/${vendor.slug || vendor.id}`)
+                }}
               >
                 {vendor.featured && (
                   <div className="absolute top-2 right-2 z-10">
@@ -301,29 +313,6 @@ export default function VendorDirectoryPage() {
                   <p className="text-sm text-gray-600 line-clamp-2">
                     {vendor.description || "Professional event services provider"}
                   </p>
-                  
-                  {/* Rating */}
-                  {vendor.average_rating ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < Math.round(vendor.average_rating || 0)
-                                ? "text-yellow-400 fill-yellow-400"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm text-gray-600">
-                        ({vendor.review_count || 0})
-                      </span>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-400">No reviews yet</p>
-                  )}
                   
                   {/* Services */}
                   {vendor.services && vendor.services.length > 0 && (

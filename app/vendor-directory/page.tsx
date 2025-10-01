@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { trackDirectorySignup, trackDirectoryLogin } from "@/lib/analytics"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -42,6 +43,13 @@ export default function VendorDirectoryPage() {
       if (response.ok) {
         // Store subscriber info in session
         sessionStorage.setItem("directorySubscriber", JSON.stringify(data.subscriber))
+        
+        // Track analytics
+        if (isSignup) {
+          trackDirectorySignup(formData.email, 'basic')
+        } else {
+          trackDirectoryLogin(formData.email)
+        }
         
         toast({
           title: "Success!",

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { notFound } from "next/navigation"
+import { trackVendorContact, trackVendorWebsiteClick } from "@/lib/analytics"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -46,8 +47,6 @@ interface Vendor {
   created_at: string
   updated_at: string
   approved_at?: string
-  average_rating?: number
-  review_count?: number
 }
 
 export default function VendorDetailPage() {
@@ -100,9 +99,6 @@ export default function VendorDetailPage() {
       </div>
     )
   }
-
-  const averageRating = vendor.average_rating || 0
-  const reviewCount = vendor.review_count || 0
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -180,38 +176,27 @@ export default function VendorDetailPage() {
                     )}
                   </div>
                   
-                  {/* Rating */}
-                  {reviewCount > 0 && (
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-5 w-5 ${
-                              i < Math.floor(averageRating)
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="font-semibold">{averageRating.toFixed(1)}</span>
-                      <span className="text-gray-500">({reviewCount} reviews)</span>
-                    </div>
-                  )}
                 </div>
                 
                 <div className="flex flex-col gap-2">
-                  <Button size="lg" onClick={() => window.location.href = `mailto:${vendor.contact_email}`}>
+                  <Button size="lg" onClick={() => {
+                    trackVendorContact(vendor.id, vendor.company_name, 'email')
+                    window.location.href = `mailto:${vendor.contact_email}`
+                  }}>
                     <Mail className="h-4 w-4 mr-2" />
                     Contact Vendor
                   </Button>
                   {vendor.website && (
-                    <Button variant="outline" size="lg" asChild>
-                      <a href={vendor.website} target="_blank" rel="noopener noreferrer">
-                        <Globe className="h-4 w-4 mr-2" />
-                        Visit Website
-                      </a>
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      onClick={() => {
+                        trackVendorWebsiteClick(vendor.id, vendor.company_name, vendor.website!)
+                        window.open(vendor.website, '_blank')
+                      }}
+                    >
+                      <Globe className="h-4 w-4 mr-2" />
+                      Visit Website
                     </Button>
                   )}
                 </div>
@@ -406,7 +391,10 @@ export default function VendorDetailPage() {
                 </p>
                 <Button 
                   className="w-full bg-blue-600 hover:bg-blue-700"
-                  onClick={() => window.location.href = `mailto:${vendor.contact_email}`}
+                  onClick={() => {
+                    trackVendorContact(vendor.id, vendor.company_name, 'quote_request')
+                    window.location.href = `mailto:${vendor.contact_email}`
+                  }}
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Request Quote
