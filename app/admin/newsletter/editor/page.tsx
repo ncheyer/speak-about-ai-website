@@ -69,6 +69,15 @@ interface NewsletterSubscriber {
   status: string
 }
 
+interface NewsletterTemplate {
+  id: number
+  name: string
+  description: string | null
+  html_template: string
+  text_template: string | null
+  variables: string[]
+}
+
 function NewsletterEditorContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -79,10 +88,12 @@ function NewsletterEditorContent() {
   const [saving, setSaving] = useState(false)
   const [sending, setSending] = useState(false)
   const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([])
+  const [templates, setTemplates] = useState<NewsletterTemplate[]>([])
   const [selectedTab, setSelectedTab] = useState('editor')
   const [showPreview, setShowPreview] = useState(false)
   const [showScheduleDialog, setShowScheduleDialog] = useState(false)
   const [showSendDialog, setShowSendDialog] = useState(false)
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false)
   const [testEmail, setTestEmail] = useState('')
   
   const [newsletter, setNewsletter] = useState<Newsletter>({
@@ -109,6 +120,7 @@ function NewsletterEditorContent() {
     }
 
     fetchSubscribers()
+    fetchTemplates()
     
     if (newsletterId && newsletterId !== 'new') {
       fetchNewsletter(newsletterId).then(() => {
@@ -156,6 +168,34 @@ function NewsletterEditorContent() {
     } catch (error) {
       console.error('Error fetching subscribers:', error)
     }
+  }
+
+  const fetchTemplates = async () => {
+    try {
+      const response = await fetch('/api/admin/newsletter-templates', {
+        headers: { 'x-admin-request': 'true' }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setTemplates(data)
+      }
+    } catch (error) {
+      console.error('Error fetching templates:', error)
+    }
+  }
+
+  const loadTemplate = (template: NewsletterTemplate) => {
+    setNewsletter(prev => ({
+      ...prev,
+      html_content: template.html_template,
+      content: template.text_template || '',
+      template: template.name
+    }))
+    setShowTemplateSelector(false)
+    toast({
+      title: 'Template Loaded',
+      description: `${template.name} template has been applied`
+    })
   }
 
   const generateDefaultContent = () => {
@@ -409,19 +449,23 @@ function NewsletterEditorContent() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex h-screen bg-gray-50">
+        <AdminSidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
       <AdminSidebar />
       
-      <div className="ml-64 p-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-8 max-w-full">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -450,8 +494,8 @@ function NewsletterEditorContent() {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-3 gap-6">
+          {/* Main Content */}
+          <div className="grid grid-cols-3 gap-6">
           {/* Editor Section */}
           <div className="col-span-2 space-y-6">
             <Card>
@@ -647,6 +691,63 @@ function NewsletterEditorContent() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Templates */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Templates</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowTemplateSelector(!showTemplateSelector)}
+                  className="w-full"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Choose Template
+                </Button>
+                
+                {showTemplateSelector && (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {templates.map((template) => (
+                      <div
+                        key={template.id}
+                        className="p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                        onClick={() => loadTemplate(template)}
+                      >
+                        <h4 className="font-medium text-sm">{template.name}</h4>
+                        {template.description && (
+                          <p className="text-xs text-gray-600 mt-1">{template.description}</p>
+                        )}
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {template.variables.slice(0, 3).map((variable) => (
+                            <Badge key={variable} variant="secondary" className="text-xs">
+                              {variable}
+                            </Badge>
+                          ))}
+                          {template.variables.length > 3 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{template.variables.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {templates.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        No templates available.{' '}
+                        <button
+                          onClick={() => router.push('/admin/newsletter/templates/editor')}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Create one
+                        </button>
+                      </p>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Actions */}
             <Card>
               <CardHeader>
@@ -851,6 +952,7 @@ function NewsletterEditorContent() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
     </div>
   )
@@ -858,6 +960,7 @@ function NewsletterEditorContent() {
 
 // Force dynamic rendering to avoid SSG issues with useSearchParams
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export default function NewsletterEditor() {
   return (

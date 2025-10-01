@@ -181,6 +181,13 @@ export default function AdminNewsletterPage() {
               <p className="text-gray-600 mt-2">Create newsletters and manage subscribers</p>
             </div>
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push('/admin/newsletter/templates')}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Templates
+              </Button>
               {activeTab === 'subscribers' ? (
                 <Button
                   onClick={exportToCSV}
