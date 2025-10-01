@@ -841,6 +841,42 @@ export default function EnhancedProjectManagementPage() {
     }
   }
 
+  const handleDeleteProject = async (projectId: number) => {
+    if (!confirm("Are you sure you want to delete this project? This action cannot be undone.")) return
+    
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "DELETE",
+        headers: { 
+          'x-dev-admin-bypass': 'dev-admin-access'
+        },
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Project deleted successfully"
+        })
+        loadData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to delete project",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete project",
+        variant: "destructive"
+      })
+    }
+  }
+
   // Filter projects based on search and status
   const filteredProjects = projects.filter(project => {
     const matchesSearch = 

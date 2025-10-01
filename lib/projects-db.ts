@@ -299,6 +299,24 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
   }
 }
 
+export async function deleteProject(id: number): Promise<boolean> {
+  try {
+    const sql = getSQL()
+    console.log("Deleting project ID:", id)
+    
+    const result = await sql`
+      DELETE FROM projects 
+      WHERE id = ${id}
+      RETURNING id
+    `
+    
+    return result.length > 0
+  } catch (error) {
+    console.error("Error deleting project:", error)
+    throw error
+  }
+}
+
 export async function updateProject(id: number, projectData: Partial<Project>): Promise<Project | null> {
   try {
     const sql = getSQL()
