@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,7 +17,8 @@ import {
   CheckCircle, XCircle, Clock, AlertCircle, TrendingUp, 
   Users, Building2, DollarSign, Star, MapPin, Globe,
   Mail, Phone, Calendar, FileText, Shield, Activity,
-  ChevronRight, MoreHorizontal, ExternalLink, RefreshCw
+  ChevronRight, MoreHorizontal, ExternalLink, RefreshCw,
+  Save, X, Check, Copy
 } from "lucide-react"
 import {
   Table,
@@ -84,6 +87,10 @@ export default function VendorManagementPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedVendors, setSelectedVendors] = useState<number[]>([])
   const [activeTab, setActiveTab] = useState("all")
+  const [editingVendor, setEditingVendor] = useState<number | null>(null)
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState("")
+  const [showQuickActions, setShowQuickActions] = useState<number | null>(null)
 
   useEffect(() => {
     loadVendors()
@@ -218,6 +225,149 @@ export default function VendorManagementPage() {
         variant: "destructive"
       })
     }
+  }
+
+  const startInlineEdit = (vendorId: number, field: string, currentValue: any) => {
+    setEditingVendor(vendorId)
+    setEditingField(field)
+    setEditValue(Array.isArray(currentValue) ? currentValue.join(", ") : (currentValue || ""))
+  }
+
+  const saveInlineEdit = async () => {
+    if (!editingVendor || !editingField) return
+
+    try {
+      const vendor = vendors.find(v => v.id === editingVendor)
+      if (!vendor) return
+
+      let processedValue = editValue
+      if (editingField === "services") {
+        processedValue = editValue.split(",").map(s => s.trim()).filter(Boolean)
+      } else if (editingField === "minimum_budget") {
+        processedValue = parseFloat(editValue) || 0
+      }
+
+      const response = await fetch(`/api/vendors/${editingVendor}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-request": "true"
+        },
+        body: JSON.stringify({
+          ...vendor,
+          [editingField]: processedValue
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Vendor updated successfully"
+        })
+        loadVendors()
+      } else {
+        throw new Error("Failed to update vendor")
+      }
+    } catch (error) {
+      console.error("Error updating vendor:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update vendor",
+        variant: "destructive"
+      })
+    } finally {
+      setEditingVendor(null)
+      setEditingField(null)
+      setEditValue("")
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      saveInlineEdit()
+    } else if (e.key === "Escape") {
+      cancelInlineEdit()
+    }
+  }
+
+  const cancelInlineEdit = () => {
+    setEditingVendor(null)
+    setEditingField(null)
+    setEditValue("")
+  }
+
+  const handleQuickStatusChange = async (vendorId: number, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/vendors/${vendorId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-request": "true"
+        },
+        body: JSON.stringify({ status: newStatus })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: `Vendor status updated to ${newStatus}`
+        })
+        loadVendors()
+      } else {
+        throw new Error("Failed to update status")
+      }
+    } catch (error) {
+      console.error("Error updating vendor:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update vendor status",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleFeatureToggle = async (vendorId: number, featured: boolean) => {
+    try {
+      const vendor = vendors.find(v => v.id === vendorId)
+      if (!vendor) return
+
+      const response = await fetch(`/api/vendors/${vendorId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-request": "true"
+        },
+        body: JSON.stringify({
+          ...vendor,
+          featured
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: `Vendor ${featured ? "featured" : "unfeatured"} successfully`
+        })
+        loadVendors()
+      } else {
+        throw new Error("Failed to update vendor")
+      }
+    } catch (error) {
+      console.error("Error updating vendor:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update vendor",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    toast({
+      title: "Copied",
+      description: "Text copied to clipboard"
+    })
   }
 
   const getStatusIcon = (status: string) => {
@@ -453,8 +603,31 @@ export default function VendorManagementPage() {
                             {vendor.company_name.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <div className="font-medium text-gray-900">{vendor.company_name}</div>
+                        <div className="flex-1">
+                          {editingVendor === vendor.id && editingField === "company_name" ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={handleKeyPress}
+                                className="h-8 text-sm"
+                                autoFocus
+                              />
+                              <Button size="sm" variant="ghost" onClick={saveInlineEdit}>
+                                <Save className="h-3 w-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={cancelInlineEdit}>
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div 
+                              className="font-medium text-gray-900 cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -mx-2"
+                              onClick={() => startInlineEdit(vendor.id, "company_name", vendor.company_name)}
+                            >
+                              {vendor.company_name}
+                            </div>
+                          )}
                           <div className="text-sm text-gray-500">
                             {vendor.pricing_range && (
                               <span className="font-semibold">{vendor.pricing_range}</span>
@@ -462,29 +635,127 @@ export default function VendorManagementPage() {
                             {vendor.services && vendor.services.length > 0 && (
                               <span className="ml-2">{vendor.services[0]}</span>
                             )}
+                            {vendor.featured && (
+                              <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                                Featured
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        <div className="text-gray-900">{vendor.contact_name}</div>
-                        <div className="text-gray-500">{vendor.contact_email}</div>
+                        {editingVendor === vendor.id && editingField === "contact_name" ? (
+                          <div className="flex items-center gap-2 mb-1">
+                            <Input
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onKeyDown={handleKeyPress}
+                              className="h-7 text-sm"
+                              autoFocus
+                            />
+                            <Button size="sm" variant="ghost" onClick={saveInlineEdit}>
+                              <Save className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={cancelInlineEdit}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div 
+                            className="text-gray-900 cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -mx-2"
+                            onClick={() => startInlineEdit(vendor.id, "contact_name", vendor.contact_name)}
+                          >
+                            {vendor.contact_name}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-500">{vendor.contact_email}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => copyToClipboard(vendor.contact_email)}
+                            className="h-5 w-5 p-0"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        {vendor.location || "Not specified"}
-                      </div>
+                      {editingVendor === vendor.id && editingField === "location" ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={handleKeyPress}
+                            className="h-8 text-sm"
+                            autoFocus
+                            placeholder="Enter location"
+                          />
+                          <Button size="sm" variant="ghost" onClick={saveInlineEdit}>
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={cancelInlineEdit}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div 
+                          className="flex items-center text-sm text-gray-600 cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -mx-2"
+                          onClick={() => startInlineEdit(vendor.id, "location", vendor.location)}
+                        >
+                          <MapPin className="h-4 w-4 mr-1" />
+                          {vendor.location || "Not specified"}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusColor(vendor.status) as any}>
-                        <span className="flex items-center gap-1">
-                          {getStatusIcon(vendor.status)}
-                          {vendor.status}
-                        </span>
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={getStatusColor(vendor.status) as any}>
+                          <span className="flex items-center gap-1">
+                            {getStatusIcon(vendor.status)}
+                            {vendor.status}
+                          </span>
+                        </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                              <ChevronRight className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+                            <DropdownMenuItem 
+                              onClick={() => handleQuickStatusChange(vendor.id, "approved")}
+                              disabled={vendor.status === "approved"}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                              Approved
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleQuickStatusChange(vendor.id, "pending")}
+                              disabled={vendor.status === "pending"}
+                            >
+                              <Clock className="h-4 w-4 mr-2 text-yellow-500" />
+                              Pending
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleQuickStatusChange(vendor.id, "rejected")}
+                              disabled={vendor.status === "rejected"}
+                            >
+                              <XCircle className="h-4 w-4 mr-2 text-red-500" />
+                              Rejected
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleFeatureToggle(vendor.id, !vendor.featured)}>
+                              <Star className={`h-4 w-4 mr-2 ${vendor.featured ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'}`} />
+                              {vendor.featured ? 'Unfeature' : 'Feature'}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </TableCell>
                     <TableCell>
                       {vendor.average_rating ? (
@@ -507,55 +778,47 @@ export default function VendorManagementPage() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() => window.open(`/directory/vendors/${vendor.slug || vendor.id}`, '_blank')}
+                          title="Preview vendor page"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => window.location.href = `/admin/vendors/${vendor.id}/edit`}
+                          title="Edit vendor details"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" title="More actions">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem 
-                            onClick={() => window.open(`/directory/vendors/${vendor.slug || vendor.id}`, '_blank')}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            Preview
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => window.location.href = `/admin/vendors/${vendor.id}/edit`}
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleStatusChange(vendor.id, "approved")}
-                            disabled={vendor.status === "approved"}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Approve
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleStatusChange(vendor.id, "rejected")}
-                            disabled={vendor.status === "rejected"}
-                          >
-                            <XCircle className="h-4 w-4 mr-2" />
-                            Reject
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteVendor(vendor.id)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => copyToClipboard(vendor.contact_email)}>
+                              <Mail className="h-4 w-4 mr-2" />
+                              Copy Email
+                            </DropdownMenuItem>
+                            {vendor.website && (
+                              <DropdownMenuItem onClick={() => window.open(vendor.website, '_blank')}>
+                                <Globe className="h-4 w-4 mr-2" />
+                                Visit Website
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteVendor(vendor.id)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Vendor
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>
