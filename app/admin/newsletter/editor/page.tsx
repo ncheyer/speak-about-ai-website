@@ -185,9 +185,23 @@ function NewsletterEditorContent() {
   }
 
   const loadTemplate = (template: NewsletterTemplate) => {
+    // Check if template is from visual editor (stored as JSON)
+    let htmlContent = template.html_template
+    
+    try {
+      const parsedTemplate = JSON.parse(template.html_template)
+      if (parsedTemplate.blocks && parsedTemplate.globalStyles) {
+        // Generate HTML from visual editor template
+        htmlContent = generateHtmlFromVisualTemplate(parsedTemplate)
+      }
+    } catch {
+      // Use raw HTML if not JSON
+      htmlContent = template.html_template
+    }
+    
     setNewsletter(prev => ({
       ...prev,
-      html_content: template.html_template,
+      html_content: htmlContent,
       content: template.text_template || '',
       template: template.name
     }))
@@ -196,6 +210,51 @@ function NewsletterEditorContent() {
       title: 'Template Loaded',
       description: `${template.name} template has been applied`
     })
+  }
+  
+  const generateHtmlFromVisualTemplate = (template: any) => {
+    let html = `<div style="font-family: ${template.globalStyles.fontFamily}; color: ${template.globalStyles.textColor}; max-width: 600px; margin: 0 auto;">`
+    
+    template.blocks.forEach((block: any) => {
+      switch (block.type) {
+        case 'header':
+          html += `<div style="background-color: ${block.styles.backgroundColor}; padding: ${block.styles.padding}; text-align: ${block.styles.textAlign};">
+            <h1 style="margin: 0; font-size: ${block.styles.logoSize}; color: ${template.globalStyles.textColor};">${block.content.logo}</h1>
+            <p style="margin: 5px 0 0 0; font-size: ${block.styles.taglineSize}; color: ${template.globalStyles.textColor}; opacity: 0.8;">${block.content.tagline}</p>
+          </div>`
+          break
+        case 'text':
+          html += `<div style="padding: ${block.styles.padding}; text-align: ${block.styles.textAlign};">
+            <p style="font-size: ${block.styles.fontSize}; line-height: ${block.styles.lineHeight}; margin: 0;">${block.content.text}</p>
+          </div>`
+          break
+        case 'button':
+          html += `<div style="text-align: ${block.styles.textAlign}; padding: 20px;">
+            <a href="${block.content.url}" style="display: inline-block; background-color: ${block.styles.backgroundColor}; color: ${block.styles.color}; padding: ${block.styles.padding}; border-radius: ${block.styles.borderRadius}; text-decoration: none; font-size: ${block.styles.fontSize};">${block.content.text}</a>
+          </div>`
+          break
+        case 'image':
+          html += `<div style="text-align: ${block.styles.alignment}; padding: ${block.styles.padding};">
+            <img src="${block.content.url}" alt="${block.content.alt}" style="max-width: ${block.styles.width}; height: auto;">
+          </div>`
+          break
+        case 'divider':
+          html += `<hr style="border: none; border-top: ${block.styles.borderWidth} solid ${block.styles.borderColor}; margin: ${block.styles.margin};">`
+          break
+        case 'footer':
+          html += `<div style="background-color: ${block.styles.backgroundColor}; padding: ${block.styles.padding}; text-align: ${block.styles.textAlign};">
+            <p style="margin: 0; font-size: ${block.styles.fontSize}; color: ${block.styles.color};">
+              ${block.content.company}<br>
+              ${block.content.address}
+              ${block.content.unsubscribe ? '<br><a href="{{unsubscribe_url}}" style="color: ' + block.styles.color + ';">Unsubscribe</a>' : ''}
+            </p>
+          </div>`
+          break
+      }
+    })
+    
+    html += '</div>'
+    return html
   }
 
   const generateDefaultContent = () => {
@@ -736,7 +795,7 @@ function NewsletterEditorContent() {
                       <p className="text-sm text-gray-500 text-center py-4">
                         No templates available.{' '}
                         <button
-                          onClick={() => router.push('/admin/newsletter/templates/editor')}
+                          onClick={() => router.push('/admin/newsletter/templates/visual-editor')}
                           className="text-blue-600 hover:underline"
                         >
                           Create one

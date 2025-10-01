@@ -147,7 +147,7 @@ export default function NewsletterTemplatesPage() {
               </div>
             </div>
             <Button
-              onClick={() => router.push('/admin/newsletter/templates/editor')}
+              onClick={() => router.push('/admin/newsletter/templates/visual-editor')}
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -180,7 +180,7 @@ export default function NewsletterTemplatesPage() {
                   {searchTerm ? 'No templates match your search.' : 'Get started by creating your first template.'}
                 </p>
                 <Button
-                  onClick={() => router.push('/admin/newsletter/templates/editor')}
+                  onClick={() => router.push('/admin/newsletter/templates/visual-editor')}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -252,7 +252,7 @@ export default function NewsletterTemplatesPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => router.push(`/admin/newsletter/templates/editor?id=${template.id}`)}
+                        onClick={() => router.push(`/admin/newsletter/templates/visual-editor?id=${template.id}`)}
                         className="flex-1"
                       >
                         <Edit className="h-3 w-3 mr-1" />
