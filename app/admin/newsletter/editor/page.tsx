@@ -463,24 +463,24 @@ function NewsletterEditorContent() {
       <AdminSidebar />
       
       <div className="flex-1 overflow-y-auto">
-        <div className="p-8 max-w-full">
+        <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/admin/newsletter')}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Newsletter Editor</h1>
-              <p className="text-gray-600 mt-1">
-                Create and send newsletters to your subscribers
-              </p>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                onClick={() => router.push('/admin/newsletter')}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold">Newsletter Editor</h1>
+                <p className="text-gray-600 mt-1">
+                  Create and send newsletters to your subscribers
+                </p>
+              </div>
             </div>
-          </div>
           
           <div className="flex items-center gap-3">
             <Badge variant={newsletter.status === 'sent' ? 'default' : 'secondary'}>
@@ -492,12 +492,12 @@ function NewsletterEditorContent() {
               </span>
             )}
           </div>
-        </div>
+          </div>
 
           {/* Main Content */}
           <div className="grid grid-cols-3 gap-6">
-          {/* Editor Section */}
-          <div className="col-span-2 space-y-6">
+            {/* Editor Section */}
+            <div className="col-span-2 space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Newsletter Details</CardTitle>
@@ -689,8 +689,8 @@ function NewsletterEditorContent() {
             </Card>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
+            {/* Sidebar */}
+            <div className="space-y-6">
             {/* Templates */}
             <Card>
               <CardHeader>
