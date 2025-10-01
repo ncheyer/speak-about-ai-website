@@ -48,6 +48,7 @@ interface Vendor {
   services?: string[]
   pricing_range?: string
   location?: string
+  logo_url?: string
   featured: boolean
   verified: boolean
   status: string
@@ -95,6 +96,7 @@ export default function AdminDirectoryPage() {
     services: "",
     pricing_range: "",
     location: "",
+    logo_url: "",
     featured: false,
     verified: false,
     status: "pending"
@@ -229,6 +231,7 @@ export default function AdminDirectoryPage() {
       services: vendor.services?.join(", ") || "",
       pricing_range: vendor.pricing_range || "",
       location: vendor.location || "",
+      logo_url: vendor.logo_url || "",
       featured: vendor.featured,
       verified: vendor.verified,
       status: vendor.status
@@ -249,6 +252,7 @@ export default function AdminDirectoryPage() {
       services: "",
       pricing_range: "",
       location: "",
+      logo_url: "",
       featured: false,
       verified: false,
       status: "pending"
@@ -443,9 +447,22 @@ export default function AdminDirectoryPage() {
                     {filteredVendors.map((vendor) => (
                       <TableRow key={vendor.id}>
                         <TableCell>
-                          <div>
-                            <p className="font-medium">{vendor.company_name}</p>
-                            <p className="text-sm text-gray-500">{vendor.website}</p>
+                          <div className="flex items-center gap-3">
+                            {vendor.logo_url ? (
+                              <img 
+                                src={vendor.logo_url} 
+                                alt={vendor.company_name}
+                                className="h-10 w-10 rounded-lg object-cover border"
+                              />
+                            ) : (
+                              <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
+                                <Building2 className="h-5 w-5 text-gray-400" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-medium">{vendor.company_name}</p>
+                              <p className="text-sm text-gray-500">{vendor.website}</p>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -803,6 +820,68 @@ export default function AdminDirectoryPage() {
                 onChange={(e) => setVendorForm({ ...vendorForm, services: e.target.value })}
                 placeholder="e.g., Event Planning, AV Equipment, Catering"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="logo">Company Logo</Label>
+              <div className="flex items-center gap-4">
+                {vendorForm.logo_url && (
+                  <img 
+                    src={vendorForm.logo_url} 
+                    alt="Logo preview" 
+                    className="h-16 w-16 object-cover rounded-lg border"
+                  />
+                )}
+                <div className="flex-1">
+                  <Input
+                    id="logo"
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      
+                      const formData = new FormData()
+                      formData.append("file", file)
+                      
+                      try {
+                        const response = await fetch("/api/vendors/upload", {
+                          method: "POST",
+                          body: formData
+                        })
+                        
+                        if (response.ok) {
+                          const data = await response.json()
+                          setVendorForm({ ...vendorForm, logo_url: data.url })
+                          toast({
+                            title: "Logo uploaded",
+                            description: "Logo has been uploaded successfully"
+                          })
+                        } else {
+                          throw new Error("Upload failed")
+                        }
+                      } catch (error) {
+                        toast({
+                          title: "Upload failed",
+                          description: "Please try again",
+                          variant: "destructive"
+                        })
+                      }
+                    }}
+                  />
+                  <p className="text-sm text-gray-500 mt-1">PNG, JPG up to 5MB</p>
+                </div>
+                {vendorForm.logo_url && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setVendorForm({ ...vendorForm, logo_url: "" })}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
