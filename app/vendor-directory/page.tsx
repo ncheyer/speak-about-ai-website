@@ -9,7 +9,7 @@ import { Building2, Mail, User, Building, Phone, ArrowRight, CheckCircle } from 
 import { useRouter } from "next/navigation"
 import { toast, useToast } from "@/components/ui/use-toast"
 
-export default function DirectoryLandingPage() {
+export default function VendorDirectoryPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSignup, setIsSignup] = useState(true)
@@ -49,7 +49,7 @@ export default function DirectoryLandingPage() {
         })
 
         // Redirect to vendor listings
-        router.push("/directory/vendors")
+        router.push("/vendor-directory/vendors")
       } else {
         toast({
           title: "Error",
@@ -70,7 +70,52 @@ export default function DirectoryLandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "Free Event Vendor Directory",
+            "description": "Browse verified event vendors for catering, photography, venues, entertainment and more. Free access with transparent pricing.",
+            "url": "https://speakabout.ai/vendor-directory",
+            "breadcrumb": {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://speakabout.ai"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Event Vendor Directory",
+                  "item": "https://speakabout.ai/vendor-directory"
+                }
+              ]
+            },
+            "mainEntity": {
+              "@type": "ItemList",
+              "name": "Event Vendor Categories",
+              "description": "Browse vendors by category",
+              "itemListElement": [
+                { "@type": "Thing", "name": "Catering Services" },
+                { "@type": "Thing", "name": "Photography & Videography" },
+                { "@type": "Thing", "name": "Event Venues" },
+                { "@type": "Thing", "name": "Entertainment & Music" },
+                { "@type": "Thing", "name": "Event Planning" },
+                { "@type": "Thing", "name": "Audio Visual Equipment" },
+                { "@type": "Thing", "name": "Decor & Design" },
+                { "@type": "Thing", "name": "Transportation" }
+              ]
+            }
+          })
+        }}
+      />
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
@@ -238,6 +283,7 @@ export default function DirectoryLandingPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
