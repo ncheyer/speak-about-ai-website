@@ -127,9 +127,13 @@ export default function AdminDirectoryPage() {
       const categoriesData = await categoriesRes.json()
       setCategories(categoriesData.categories || [])
 
-      // Load subscribers (would need separate API endpoint)
-      // For now, using mock data
-      setSubscribers([])
+      // Load subscribers
+      const subscribersRes = await fetch("/api/vendors/subscribers", {
+        headers: { "x-admin-request": "true" }
+      })
+      const subscribersData = await subscribersRes.json()
+      console.log("Loaded subscribers:", subscribersData.subscribers?.length)
+      setSubscribers(subscribersData.subscribers || [])
     } catch (error) {
       console.error("Error loading data:", error)
       toast({
@@ -519,13 +523,135 @@ export default function AdminDirectoryPage() {
         <TabsContent value="subscribers">
           <Card>
             <CardHeader>
-              <CardTitle>Directory Subscribers</CardTitle>
-              <CardDescription>Manage users who have access to the vendor directory</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Directory Subscribers</CardTitle>
+                  <CardDescription>Manage users who have access to the vendor directory</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-500 py-8 text-center">
-                Subscriber management coming soon...
-              </p>
+              {subscribers.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Company</TableHead>
+                      <TableHead>Access Level</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Logins</TableHead>
+                      <TableHead>Joined</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {subscribers.map((subscriber) => (
+                      <TableRow key={subscriber.id}>
+                        <TableCell className="font-medium">
+                          {subscriber.name || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-3 w-3 text-gray-400" />
+                            {subscriber.email}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {subscriber.company || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {subscriber.access_level}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={
+                            subscriber.subscription_status === "active" ? "success" :
+                            subscriber.subscription_status === "inactive" ? "secondary" :
+                            "destructive"
+                          }>
+                            {subscriber.subscription_status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <p>{subscriber.login_count || 0} logins</p>
+                            {subscriber.last_login && (
+                              <p className="text-xs text-gray-500">
+                                Last: {new Date(subscriber.last_login).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-500">
+                          {new Date(subscriber.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                // Edit subscriber functionality
+                                toast({
+                                  title: "Edit subscriber",
+                                  description: `Editing ${subscriber.email}`
+                                })
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={async () => {
+                                if (confirm(`Remove ${subscriber.email} from directory subscribers?`)) {
+                                  try {
+                                    const response = await fetch(`/api/vendors/subscribers?id=${subscriber.id}`, {
+                                      method: "DELETE",
+                                      headers: { "x-admin-request": "true" }
+                                    })
+                                    if (response.ok) {
+                                      toast({
+                                        title: "Success",
+                                        description: "Subscriber removed"
+                                      })
+                                      loadData()
+                                    }
+                                  } catch (error) {
+                                    toast({
+                                      title: "Error",
+                                      description: "Failed to remove subscriber",
+                                      variant: "destructive"
+                                    })
+                                  }
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No subscribers yet</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Subscribers will appear here when they sign up for directory access
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
