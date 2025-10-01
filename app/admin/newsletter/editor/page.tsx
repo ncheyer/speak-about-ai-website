@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AdminSidebar } from '@/components/admin-sidebar'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -68,11 +69,12 @@ interface NewsletterSubscriber {
   status: string
 }
 
-export default function NewsletterEditor() {
+function NewsletterEditorContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const newsletterId = searchParams.get('id')
+  const shouldSend = searchParams.get('send') === 'true'
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [sending, setSending] = useState(false)
@@ -80,6 +82,7 @@ export default function NewsletterEditor() {
   const [selectedTab, setSelectedTab] = useState('editor')
   const [showPreview, setShowPreview] = useState(false)
   const [showScheduleDialog, setShowScheduleDialog] = useState(false)
+  const [showSendDialog, setShowSendDialog] = useState(false)
   const [testEmail, setTestEmail] = useState('')
   
   const [newsletter, setNewsletter] = useState<Newsletter>({
@@ -108,7 +111,11 @@ export default function NewsletterEditor() {
     fetchSubscribers()
     
     if (newsletterId && newsletterId !== 'new') {
-      fetchNewsletter(newsletterId)
+      fetchNewsletter(newsletterId).then(() => {
+        if (shouldSend) {
+          setShowSendDialog(true)
+        }
+      })
     } else {
       // Generate default content for new newsletter
       generateDefaultContent()
@@ -795,7 +802,67 @@ export default function NewsletterEditor() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Send Dialog */}
+        <Dialog open={showSendDialog} onOpenChange={setShowSendDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Send Newsletter</DialogTitle>
+              <DialogDescription>
+                This will send the newsletter to all {subscribers.length} active subscribers immediately.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Mail className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium text-blue-800">Newsletter Details</span>
+                </div>
+                <div className="text-sm text-blue-700 space-y-1">
+                  <p><strong>Subject:</strong> {newsletter.subject}</p>
+                  <p><strong>Recipients:</strong> {subscribers.length} active subscribers</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowSendDialog(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    handleSendNewsletter()
+                    setShowSendDialog(false)
+                  }}
+                  disabled={sending || !newsletter.subject || !newsletter.html_content}
+                >
+                  {sending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 mr-2" />
+                  )}
+                  Send Now
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
+  )
+}
+
+// Force dynamic rendering to avoid SSG issues with useSearchParams
+export const dynamic = 'force-dynamic'
+
+export default function NewsletterEditor() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewsletterEditorContent />
+    </Suspense>
   )
 }
