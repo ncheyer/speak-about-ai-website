@@ -9,13 +9,15 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { ArrowLeft, Building2, CheckCircle, Mail, Phone, User, Globe, MapPin, DollarSign } from "lucide-react"
+import { ArrowLeft, Building2, CheckCircle, Mail, Phone, User, Globe, MapPin, DollarSign, Upload, Image } from "lucide-react"
 
 export default function VendorApplicationPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string>("")
   
   const [formData, setFormData] = useState({
     company_name: "",
@@ -30,20 +32,79 @@ export default function VendorApplicationPage() {
     description: "",
     years_in_business: "",
     team_size: "",
-    why_join: ""
+    minimum_budget: "",
+    specialties: "",
+    certifications: "",
+    testimonials: "",
+    why_join: "",
+    logo_url: ""
   })
+
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Logo must be less than 5MB",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image file",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setLogoFile(file)
+    
+    // Create preview
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setLogoPreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
+      // Upload logo first if present
+      let logoUrl = ""
+      if (logoFile) {
+        const formData = new FormData()
+        formData.append("file", logoFile)
+        
+        const uploadResponse = await fetch("/api/vendors/upload", {
+          method: "POST",
+          body: formData
+        })
+        
+        if (uploadResponse.ok) {
+          const data = await uploadResponse.json()
+          logoUrl = data.url
+        }
+      }
+
       const response = await fetch("/api/vendors/apply", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          logo_url: logoUrl
+        })
       })
 
       if (response.ok) {
@@ -241,6 +302,34 @@ export default function VendorApplicationPage() {
                       </Select>
                     </div>
                   </div>
+
+                  {/* Logo Upload */}
+                  <div className="space-y-2">
+                    <Label htmlFor="logo">Company Logo</Label>
+                    <div className="flex items-center gap-4">
+                      {logoPreview && (
+                        <div className="w-20 h-20 border rounded-lg overflow-hidden">
+                          <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <Label htmlFor="logo-upload" className="cursor-pointer">
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-500 transition-colors">
+                            <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-sm text-gray-600">Click to upload logo</p>
+                            <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                          </div>
+                        </Label>
+                        <input
+                          id="logo-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleLogoChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Contact Information */}
@@ -363,6 +452,41 @@ export default function VendorApplicationPage() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="specialties">Specialties</Label>
+                    <Textarea
+                      id="specialties"
+                      value={formData.specialties}
+                      onChange={(e) => setFormData({ ...formData, specialties: e.target.value })}
+                      placeholder="What makes your services unique? Any special expertise or focus areas?"
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="minimum_budget">Minimum Budget</Label>
+                      <Input
+                        id="minimum_budget"
+                        type="number"
+                        min="0"
+                        value={formData.minimum_budget}
+                        onChange={(e) => setFormData({ ...formData, minimum_budget: e.target.value })}
+                        placeholder="e.g., 5000"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="certifications">Certifications & Awards</Label>
+                      <Input
+                        id="certifications"
+                        value={formData.certifications}
+                        onChange={(e) => setFormData({ ...formData, certifications: e.target.value })}
+                        placeholder="e.g., CMP, CSEP, Industry Awards"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="description">Company Description *</Label>
                     <Textarea
                       id="description"
@@ -372,6 +496,18 @@ export default function VendorApplicationPage() {
                       placeholder="Tell us about your company, your experience, and what makes you unique..."
                       rows={4}
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="testimonials">Client Testimonials</Label>
+                    <Textarea
+                      id="testimonials"
+                      value={formData.testimonials}
+                      onChange={(e) => setFormData({ ...formData, testimonials: e.target.value })}
+                      placeholder="Share 1-2 client testimonials that showcase your work (optional but highly recommended)"
+                      rows={4}
+                    />
+                    <p className="text-xs text-gray-500">Including testimonials helps build trust with potential clients</p>
                   </div>
 
                   <div className="space-y-2">
