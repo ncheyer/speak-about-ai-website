@@ -33,6 +33,9 @@ export default function VendorApplicationPage() {
     years_in_business: "",
     team_size: "",
     minimum_budget: "",
+    maximum_budget: "",
+    event_types: "",
+    portfolio_link: "",
     specialties: "",
     certifications: "",
     testimonials: "",
@@ -115,9 +118,10 @@ export default function VendorApplicationPage() {
           headquarters_location: formData.location,
           specific_regions: formData.location,
           budget_minimum: formData.minimum_budget || "1000",
-          budget_maximum: "100000", // Default max budget
-          portfolio_link: formData.website,
+          budget_maximum: formData.maximum_budget || "100000",
+          portfolio_link: formData.portfolio_link || formData.website,
           secondary_services: formData.services.split(',').map(s => s.trim()).filter(Boolean),
+          event_types: formData.event_types.split(',').map(s => s.trim()).filter(Boolean),
           specialty_capabilities: formData.specialties,
           testimonials: formData.testimonials,
           certifications: formData.certifications,
@@ -494,14 +498,49 @@ export default function VendorApplicationPage() {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="certifications">Certifications & Awards</Label>
+                      <Label htmlFor="maximum_budget">Maximum Budget</Label>
                       <Input
-                        id="certifications"
-                        value={formData.certifications}
-                        onChange={(e) => setFormData({ ...formData, certifications: e.target.value })}
-                        placeholder="e.g., CMP, CSEP, Industry Awards"
+                        id="maximum_budget"
+                        type="number"
+                        min="0"
+                        value={formData.maximum_budget}
+                        onChange={(e) => setFormData({ ...formData, maximum_budget: e.target.value })}
+                        placeholder="e.g., 100000"
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="event_types">Event Types You Specialize In</Label>
+                    <Input
+                      id="event_types"
+                      value={formData.event_types}
+                      onChange={(e) => setFormData({ ...formData, event_types: e.target.value })}
+                      placeholder="e.g., Corporate Events, Weddings, Conferences, Trade Shows"
+                    />
+                    <p className="text-xs text-gray-500">Separate multiple event types with commas</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="portfolio_link">Portfolio/Work Samples Link</Label>
+                    <Input
+                      id="portfolio_link"
+                      type="url"
+                      value={formData.portfolio_link}
+                      onChange={(e) => setFormData({ ...formData, portfolio_link: e.target.value })}
+                      placeholder="https://your-portfolio.com"
+                    />
+                    <p className="text-xs text-gray-500">Link to your portfolio, case studies, or work samples</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="certifications">Certifications & Awards</Label>
+                    <Input
+                      id="certifications"
+                      value={formData.certifications}
+                      onChange={(e) => setFormData({ ...formData, certifications: e.target.value })}
+                      placeholder="e.g., CMP, CSEP, Industry Awards"
+                    />
                   </div>
 
                   <div className="space-y-2">
