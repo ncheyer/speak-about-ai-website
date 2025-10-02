@@ -90,6 +90,7 @@ export default function AdminDirectoryPage() {
   const [activeTab, setActiveTab] = useState("vendors")
   const [vendors, setVendors] = useState<Vendor[]>([])
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
+  const [applications, setApplications] = useState<any[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -150,6 +151,16 @@ export default function AdminDirectoryPage() {
       const subscribersData = await subscribersRes.json()
       console.log("Loaded subscribers:", subscribersData.subscribers?.length)
       setSubscribers(subscribersData.subscribers || [])
+      
+      // Load applications
+      const applicationsRes = await fetch("/api/vendors/applications", {
+        headers: { "x-admin-request": "true" }
+      })
+      if (applicationsRes.ok) {
+        const applicationsData = await applicationsRes.json()
+        console.log("Loaded applications:", applicationsData.applications?.length)
+        setApplications(applicationsData.applications || [])
+      }
     } catch (error) {
       console.error("Error loading data:", error)
       toast({
@@ -562,7 +573,16 @@ export default function AdminDirectoryPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="vendors">Vendors</TabsTrigger>
+          <TabsTrigger value="vendors">
+            Vendors {vendors.length > 0 && `(${vendors.length})`}
+          </TabsTrigger>
+          <TabsTrigger value="applications">
+            Applications {applications.filter(a => a.application_status === 'pending').length > 0 && 
+              <Badge className="ml-1" variant="destructive">
+                {applications.filter(a => a.application_status === 'pending').length}
+              </Badge>
+            }
+          </TabsTrigger>
           <TabsTrigger value="import">
             <FileSpreadsheet className="h-4 w-4 mr-2" />
             Import
@@ -1295,6 +1315,305 @@ export default function AdminDirectoryPage() {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="applications">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Vendor Applications</CardTitle>
+                  <CardDescription>Review and manage vendor applications</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {applications.length > 0 ? (
+                <div className="space-y-4">
+                  {/* Application Stats */}
+                  <div className="grid grid-cols-4 gap-4 mb-6">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-sm text-gray-600">Pending</div>
+                        <div className="text-2xl font-bold text-yellow-600">
+                          {applications.filter(a => a.application_status === 'pending').length}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-sm text-gray-600">Under Review</div>
+                        <div className="text-2xl font-bold text-blue-600">
+                          {applications.filter(a => a.application_status === 'under_review').length}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-sm text-gray-600">Approved</div>
+                        <div className="text-2xl font-bold text-green-600">
+                          {applications.filter(a => a.application_status === 'approved').length}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-sm text-gray-600">Rejected</div>
+                        <div className="text-2xl font-bold text-red-600">
+                          {applications.filter(a => a.application_status === 'rejected').length}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Applications Table */}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Company</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Budget Range</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Applied</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {applications.map((app) => (
+                        <TableRow key={app.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              {app.logo_url ? (
+                                <img 
+                                  src={app.logo_url} 
+                                  alt={app.company_name}
+                                  className="h-10 w-10 rounded-lg object-contain border"
+                                />
+                              ) : (
+                                <div className="h-10 w-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                                  <Building2 className="h-5 w-5 text-gray-400" />
+                                </div>
+                              )}
+                              <div>
+                                <div className="font-medium">{app.company_name}</div>
+                                <div className="text-sm text-gray-500">{app.company_website}</div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <div>{app.primary_contact_name}</div>
+                              <div className="text-gray-500">{app.primary_contact_role}</div>
+                              <div className="flex items-center gap-1 text-gray-500">
+                                <Mail className="h-3 w-3" />
+                                {app.business_email}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {app.primary_category}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            <div className="flex items-center">
+                              <MapPin className="h-3 w-3 mr-1 text-gray-400" />
+                              {app.headquarters_location}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            ${app.budget_minimum?.toLocaleString()} - ${app.budget_maximum?.toLocaleString()}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={
+                              app.application_status === 'approved' ? 'success' :
+                              app.application_status === 'pending' ? 'warning' :
+                              app.application_status === 'under_review' ? 'secondary' :
+                              app.application_status === 'rejected' ? 'destructive' :
+                              'outline'
+                            }>
+                              {app.application_status.replace('_', ' ')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-gray-500">
+                            {new Date(app.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem 
+                                  onClick={() => {
+                                    // View full application details
+                                    window.open(`/admin/vendors/applications/${app.id}`, '_blank')
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    if (confirm(`Approve ${app.company_name}'s application?`)) {
+                                      try {
+                                        const response = await fetch('/api/vendors/applications', {
+                                          method: 'PUT',
+                                          headers: {
+                                            'Content-Type': 'application/json',
+                                            'x-admin-request': 'true'
+                                          },
+                                          body: JSON.stringify({
+                                            id: app.id,
+                                            status: 'approved',
+                                            reviewerEmail: 'admin@speakaboutai.com'
+                                          })
+                                        })
+                                        if (response.ok) {
+                                          toast({
+                                            title: 'Application Approved',
+                                            description: `${app.company_name} has been approved and converted to a vendor.`
+                                          })
+                                          loadData()
+                                        }
+                                      } catch (error) {
+                                        toast({
+                                          title: 'Error',
+                                          description: 'Failed to approve application',
+                                          variant: 'destructive'
+                                        })
+                                      }
+                                    }
+                                  }}
+                                  disabled={app.application_status === 'approved'}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                                  Approve
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    const reason = prompt(`Reason for rejecting ${app.company_name}'s application?`)
+                                    if (reason) {
+                                      try {
+                                        const response = await fetch('/api/vendors/applications', {
+                                          method: 'PUT',
+                                          headers: {
+                                            'Content-Type': 'application/json',
+                                            'x-admin-request': 'true'
+                                          },
+                                          body: JSON.stringify({
+                                            id: app.id,
+                                            status: 'rejected',
+                                            notes: reason,
+                                            reviewerEmail: 'admin@speakaboutai.com'
+                                          })
+                                        })
+                                        if (response.ok) {
+                                          toast({
+                                            title: 'Application Rejected',
+                                            description: `${app.company_name}'s application has been rejected.`
+                                          })
+                                          loadData()
+                                        }
+                                      } catch (error) {
+                                        toast({
+                                          title: 'Error',
+                                          description: 'Failed to reject application',
+                                          variant: 'destructive'
+                                        })
+                                      }
+                                    }
+                                  }}
+                                  disabled={app.application_status === 'rejected'}
+                                >
+                                  <XCircle className="h-4 w-4 mr-2 text-red-500" />
+                                  Reject
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    const info = prompt(`What additional information do you need from ${app.company_name}?`)
+                                    if (info) {
+                                      try {
+                                        const response = await fetch('/api/vendors/applications', {
+                                          method: 'PUT',
+                                          headers: {
+                                            'Content-Type': 'application/json',
+                                            'x-admin-request': 'true'
+                                          },
+                                          body: JSON.stringify({
+                                            id: app.id,
+                                            status: 'needs_info',
+                                            notes: info,
+                                            reviewerEmail: 'admin@speakaboutai.com'
+                                          })
+                                        })
+                                        if (response.ok) {
+                                          toast({
+                                            title: 'Request Sent',
+                                            description: `Additional information request sent to ${app.company_name}.`
+                                          })
+                                          loadData()
+                                        }
+                                      } catch (error) {
+                                        toast({
+                                          title: 'Error',
+                                          description: 'Failed to request information',
+                                          variant: 'destructive'
+                                        })
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <Clock className="h-4 w-4 mr-2 text-yellow-500" />
+                                  Request Info
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    if (app.portfolio_link) {
+                                      window.open(app.portfolio_link, '_blank')
+                                    }
+                                  }}
+                                  disabled={!app.portfolio_link}
+                                >
+                                  <Globe className="h-4 w-4 mr-2" />
+                                  View Portfolio
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => copyToClipboard(app.business_email)}
+                                >
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  Copy Email
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No vendor applications yet</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Applications will appear here when vendors apply through the directory
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
