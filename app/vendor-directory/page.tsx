@@ -447,8 +447,8 @@ export default function VendorDirectoryPage() {
           {/* Statistics */}
           <div className="mt-12 grid grid-cols-1 md:grid-cols-4 gap-8 text-center max-w-4xl mx-auto">
             <div>
-              <p className="text-3xl font-bold text-blue-600">87+</p>
-              <p className="text-gray-600">Verified Vendors</p>
+              <p className="text-3xl font-bold text-blue-600">50+</p>
+              <p className="text-gray-600">Verified Vendors and Growing!</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-blue-600">10+</p>
