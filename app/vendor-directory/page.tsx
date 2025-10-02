@@ -270,7 +270,7 @@ export default function VendorDirectoryPage() {
                   <Button 
                     variant="outline" 
                     className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
-                    onClick={() => router.push("/admin")}
+                    onClick={() => router.push("/vendor-directory/apply")}
                   >
                     Apply to Join <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>

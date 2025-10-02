@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     // Apply filters if provided
     const category = searchParams.get("category")
     const search = searchParams.get("search")
+    const location = searchParams.get("location")
     const featured = searchParams.get("featured")
     const verified = searchParams.get("verified")
     
@@ -42,6 +43,13 @@ export async function GET(request: NextRequest) {
         v.description?.toLowerCase().includes(searchLower) ||
         v.services?.some(s => s.toLowerCase().includes(searchLower)) ||
         v.tags?.some(t => t.toLowerCase().includes(searchLower))
+      )
+    }
+    
+    if (location) {
+      const locationLower = location.toLowerCase()
+      filteredVendors = filteredVendors.filter(v => 
+        v.location?.toLowerCase().includes(locationLower)
       )
     }
     

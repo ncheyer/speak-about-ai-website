@@ -55,6 +55,7 @@ export default function VendorDirectoryPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [locationSearch, setLocationSearch] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [sortBy, setSortBy] = useState("featured")
   const [showFilters, setShowFilters] = useState(false)
@@ -78,6 +79,7 @@ export default function VendorDirectoryPage() {
       const params = new URLSearchParams()
       if (selectedCategory !== "all") params.append("category", selectedCategory)
       if (searchTerm) params.append("search", searchTerm)
+      if (locationSearch) params.append("location", locationSearch)
       
       const response = await fetch(`/api/vendors?${params}`)
       const data = await response.json()
@@ -121,7 +123,7 @@ export default function VendorDirectoryPage() {
       loadVendors()
     }, 300)
     return () => clearTimeout(debounce)
-  }, [searchTerm, selectedCategory])
+  }, [searchTerm, locationSearch, selectedCategory])
 
   const sortedVendors = [...vendors].sort((a, b) => {
     switch (sortBy) {
@@ -189,6 +191,22 @@ export default function VendorDirectoryPage() {
                   setSearchTerm(e.target.value)
                   if (e.target.value.length > 2) {
                     trackVendorSearch(e.target.value, vendors.length)
+                  }
+                }}
+                className="pl-10"
+              />
+            </div>
+            
+            <div className="relative md:w-[200px]">
+              <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Location..."
+                value={locationSearch}
+                onChange={(e) => {
+                  setLocationSearch(e.target.value)
+                  if (e.target.value.length > 2) {
+                    trackVendorFilter('location', e.target.value)
                   }
                 }}
                 className="pl-10"
