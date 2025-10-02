@@ -96,13 +96,31 @@ export default function VendorApplicationPage() {
         }
       }
 
-      const response = await fetch("/api/vendors/apply", {
+      const response = await fetch("/api/vendors/applications", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          ...formData,
+          email: formData.contact_email,
+          company_name: formData.company_name,
+          primary_contact_name: formData.contact_name,
+          primary_contact_role: "Owner/Manager", // Default role
+          business_email: formData.contact_email,
+          business_phone: formData.contact_phone,
+          company_website: formData.website,
+          years_in_business: formData.years_in_business || "1",
+          business_description: formData.description,
+          primary_category: formData.category || "Event Planning",
+          headquarters_location: formData.location,
+          specific_regions: formData.location,
+          budget_minimum: formData.minimum_budget || "1000",
+          budget_maximum: "100000", // Default max budget
+          portfolio_link: formData.website,
+          secondary_services: formData.services.split(',').map(s => s.trim()).filter(Boolean),
+          specialty_capabilities: formData.specialties,
+          testimonials: formData.testimonials,
+          certifications: formData.certifications,
           logo_url: logoUrl
         })
       })
