@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster"
 import TrackingScripts from "@/components/tracking-scripts"
 import { ScrollToTopProvider } from "@/components/scroll-to-top-provider"
 import { CookieConsent } from "@/components/cookie-consent"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -116,6 +117,7 @@ export default function RootLayout({
               </div>
               <Toaster />
               <CookieConsent />
+              <SpeedInsights />
             </ScrollToTopProvider>
         </ThemeProvider>
       </body>

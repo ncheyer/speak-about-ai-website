@@ -51,6 +51,7 @@
     "@types/papaparse": "^5.3.16",
     "@types/react-signature-canvas": "^1.0.7",
     "@vercel/blob": "latest",
+    "@vercel/speed-insights": "^1.2.0",
     "ajv": "latest",
     "bcryptjs": "^3.0.2",
     "cheerio": "latest",
