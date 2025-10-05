@@ -236,13 +236,10 @@ export async function POST(request: NextRequest) {
             },
             publishedDate: {
               'en-US': article.created_at
-            },
-            featured: {
-              'en-US': false
-            },
-            outrank_id: {
-              'en-US': article.id
             }
+            // Note: Add these fields to your Contentful blogPost content type if needed:
+            // featured: { 'en-US': false }
+            // outrank_id: { 'en-US': article.id }
           }
         }
         
