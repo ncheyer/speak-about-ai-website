@@ -268,7 +268,8 @@ export async function POST(request: NextRequest) {
               'en-US': article.meta_description || article.content_markdown?.substring(0, 160) || ''
             },
             publishedDate: {
-              'en-US': article.created_at
+              // Convert to ISO 8601 format without microseconds for Contentful
+              'en-US': new Date(article.created_at).toISOString()
             }
             // Note: Add these fields to your Contentful blogPost content type if needed:
             // featured: { 'en-US': false }
