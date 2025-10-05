@@ -113,15 +113,14 @@ export default function AdminBlogPage() {
   const [activeTab, setActiveTab] = useState('posts')
   
   // Outrank configuration state
-  const [outrank OutrankConfig = {
+  const [outrank, setOutrank] = useState<OutrankConfig>({
     webhook_url: '',
     webhook_secret: '',
     last_sync: null,
     auto_publish: true,
     sync_status: 'disconnected',
     total_synced: 0
-  }
-  const [outrank, setOutrank] = useState<OutrankConfig>(defaultOutrankConfig)
+  })
   const [testingWebhook, setTestingWebhook] = useState(false)
   const [savingConfig, setSavingConfig] = useState(false)
 
