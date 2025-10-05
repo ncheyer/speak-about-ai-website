@@ -218,6 +218,25 @@ export async function POST(request: NextRequest) {
     const space = await client.getSpace(process.env.CONTENTFUL_SPACE_ID!)
     const environment = await space.getEnvironment('master')
     
+    // Find Noah Cheyer's author entry
+    let noahAuthorId: string | null = null
+    try {
+      const authorEntries = await environment.getEntries({
+        content_type: 'author',
+        'fields.name': 'Noah Cheyer',
+        limit: 1
+      })
+      
+      if (authorEntries.items.length > 0) {
+        noahAuthorId = authorEntries.items[0].sys.id
+        console.log(`Found Noah Cheyer author entry: ${noahAuthorId}`)
+      } else {
+        console.log('Noah Cheyer author entry not found, will create articles without author')
+      }
+    } catch (error) {
+      console.error('Error finding Noah Cheyer author:', error)
+    }
+    
     const results = {
       processed: 0,
       created: 0,
@@ -274,6 +293,19 @@ export async function POST(request: NextRequest) {
             // Note: Add these fields to your Contentful blogPost content type if needed:
             // featured: { 'en-US': false }
             // outrank_id: { 'en-US': article.id }
+          }
+        }
+        
+        // Add Noah Cheyer as author if found
+        if (noahAuthorId) {
+          entryData.fields.author = {
+            'en-US': {
+              sys: {
+                type: 'Link',
+                linkType: 'Entry',
+                id: noahAuthorId
+              }
+            }
           }
         }
         
