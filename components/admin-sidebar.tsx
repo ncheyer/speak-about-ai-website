@@ -180,6 +180,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           bgColor: "bg-pink-50"
         },
         {
+          title: "Blog",
+          href: "/admin/blog",
+          icon: FileText,
+          description: "Content & Outrank",
+          color: "text-purple-600",
+          bgColor: "bg-purple-50"
+        },
+        {
           title: "Vendor Directory",
           href: "/admin/directory",
           icon: Building2,
