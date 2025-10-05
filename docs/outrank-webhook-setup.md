@@ -11,7 +11,7 @@ First, run the migration to create the `blog_posts` table:
 
 ```bash
 # Connect to your Neon database
-psql 'postgresql://neondb_owner:npg_2KsQRpzJ8yji@ep-icy-bonus-afhpjby9-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+psql $DATABASE_URL
 
 # Run the migration
 \i migrations/001_create_blog_posts_table.sql
@@ -19,7 +19,7 @@ psql 'postgresql://neondb_owner:npg_2KsQRpzJ8yji@ep-icy-bonus-afhpjby9-pooler.c-
 
 Or run directly:
 ```bash
-psql 'your-database-url' < migrations/001_create_blog_posts_table.sql
+psql $DATABASE_URL < migrations/001_create_blog_posts_table.sql
 ```
 
 ### 2. Environment Variables
@@ -32,7 +32,7 @@ cp .env.local.example .env.local
 2. Update `.env.local` with your values:
 ```env
 # Your Neon database URL
-DATABASE_URL=postgresql://neondb_owner:npg_2KsQRpzJ8yji@ep-icy-bonus-afhpjby9-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DATABASE_URL=postgresql://[username]:[password]@[host]/[database]?sslmode=require
 
 # Generate a secure token
 OUTRANK_WEBHOOK_SECRET=your-secure-token-here
