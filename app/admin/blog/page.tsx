@@ -509,8 +509,8 @@ export default function AdminBlogPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="posts">
-                <FileText className="h-4 w-4 mr-2" />
-                Blog Posts
+                <Globe className="h-4 w-4 mr-2" />
+                Contentful Posts
               </TabsTrigger>
               <TabsTrigger value="outrank">
                 <Webhook className="h-4 w-4 mr-2" />
@@ -528,8 +528,8 @@ export default function AdminBlogPage() {
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <div>
-                      <CardTitle>Blog Posts</CardTitle>
-                      <CardDescription>Manage your blog content</CardDescription>
+                      <CardTitle>Contentful Blog Posts</CardTitle>
+                      <CardDescription>Blog content is managed in Contentful CMS</CardDescription>
                     </div>
                     <div className="flex gap-2">
                       <div className="relative">
@@ -583,16 +583,32 @@ export default function AdminBlogPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <Loader2 className="h-8 w-8 animate-spin" />
-                    </div>
-                  ) : filteredPosts.length === 0 ? (
-                    <div className="text-center py-12">
-                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No blog posts found</p>
-                    </div>
-                  ) : (
+                  {/* Contentful Notice */}
+                  <Alert className="mb-6 border-blue-200 bg-blue-50">
+                    <Globe className="h-4 w-4 text-blue-600" />
+                    <AlertTitle className="text-blue-900">Content Managed in Contentful</AlertTitle>
+                    <AlertDescription className="text-blue-700">
+                      Blog posts are stored and managed in Contentful CMS. Click the button below to open Contentful and manage your content.
+                      Use the Outrank Integration tab to sync articles from Outrank to Contentful.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                    <Globe className="h-16 w-16 text-blue-400" />
+                    <h3 className="text-lg font-semibold">Manage Posts in Contentful</h3>
+                    <p className="text-gray-500 text-center max-w-md">
+                      Your blog posts are managed in Contentful CMS for better content management, versioning, and collaboration.
+                    </p>
+                    <Button
+                      onClick={() => window.open('https://app.contentful.com', '_blank')}
+                      className="mt-4"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Open Contentful Dashboard
+                    </Button>
+                  </div>
+                  
+                  {false && ( (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -719,7 +735,7 @@ export default function AdminBlogPage() {
                         ))}
                       </TableBody>
                     </Table>
-                  )}
+                  ))}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -853,6 +869,16 @@ export default function AdminBlogPage() {
                           <AlertDescription>
                             Keep your webhook secret secure. It authenticates requests from Outrank.
                             Configure it as: <code className="bg-gray-100 px-1 rounded">Authorization: Bearer [your-secret]</code>
+                          </AlertDescription>
+                        </Alert>
+                        
+                        <Alert className="border-blue-200 bg-blue-50">
+                          <Globe className="h-4 w-4 text-blue-600" />
+                          <AlertTitle className="text-blue-900">Contentful Integration</AlertTitle>
+                          <AlertDescription className="text-blue-700">
+                            Articles from Outrank will be automatically synced to your Contentful CMS.
+                            Make sure your blogPost content type has an <code className="bg-blue-100 px-1 rounded">outrank_id</code> field (Text, unique) to track articles.
+                            The CONTENTFUL_MANAGEMENT_TOKEN environment variable must be configured.
                           </AlertDescription>
                         </Alert>
                         

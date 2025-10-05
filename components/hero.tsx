@@ -22,7 +22,7 @@ export default function Hero() {
             </h1>
 
             <p className="text-xl text-black mb-8 font-montserrat font-semibold">
-              70+ AI experts in every industry, including Siri Co-Founders, OpenAI Technical Staff, Stanford Researchers, and Amazon Executives
+              <span className="text-[#1E68C6]">70+ AI experts in every industry</span>, including Siri Co-Founders, OpenAI Technical Staff, Stanford Researchers, and Amazon Executives
             </p>
 
             {/* CTA Buttons */}

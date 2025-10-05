@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { neon } from '@neondatabase/serverless'
+import { createClient } from 'contentful-management'
+import { documentToHtmlString } from '@contentful/rich-text-html-renderer'
+import { Document, BLOCKS, MARKS, INLINES } from '@contentful/rich-text-types'
 
 // Type definitions for the webhook payload
 interface OutrankArticle {
@@ -12,6 +14,7 @@ interface OutrankArticle {
   image_url?: string
   slug: string
   tags?: string[]
+  author?: string
 }
 
 interface OutrankWebhookPayload {
@@ -42,254 +45,264 @@ function validateArticle(article: any): { valid: boolean; errors: string[] } {
   return { valid: errors.length === 0, errors }
 }
 
-// Helper function to sanitize and prepare article data
-function prepareArticleData(article: OutrankArticle) {
+// Convert HTML to Contentful Rich Text format
+function htmlToRichText(html: string): Document {
+  // This is a simplified conversion - you may want to use a proper HTML to Rich Text converter
+  // For now, we'll create a basic rich text document with the HTML as a paragraph
   return {
-    title: article.title.trim(),
-    slug: article.slug.toLowerCase().trim(),
-    content: article.content_html || article.content_markdown,
-    meta_description: article.meta_description || null,
-    featured_image_url: article.image_url || null,
-    published_date: article.created_at,
-    tags: JSON.stringify(article.tags || []),
-    status: 'published',
-    outrank_id: article.id
+    nodeType: BLOCKS.DOCUMENT,
+    data: {},
+    content: [
+      {
+        nodeType: BLOCKS.PARAGRAPH,
+        data: {},
+        content: [
+          {
+            nodeType: 'text',
+            value: html.replace(/<[^>]*>/g, ''), // Strip HTML tags for now
+            marks: [],
+            data: {}
+          }
+        ]
+      }
+    ]
+  }
+}
+
+// Convert markdown to Contentful Rich Text format
+function markdownToRichText(markdown: string): Document {
+  // This is a simplified conversion
+  // For production, consider using a proper markdown to rich text converter
+  const lines = markdown.split('\n')
+  const content: any[] = []
+  
+  for (const line of lines) {
+    if (line.trim()) {
+      if (line.startsWith('# ')) {
+        content.push({
+          nodeType: BLOCKS.HEADING_1,
+          data: {},
+          content: [{
+            nodeType: 'text',
+            value: line.substring(2),
+            marks: [],
+            data: {}
+          }]
+        })
+      } else if (line.startsWith('## ')) {
+        content.push({
+          nodeType: BLOCKS.HEADING_2,
+          data: {},
+          content: [{
+            nodeType: 'text',
+            value: line.substring(3),
+            marks: [],
+            data: {}
+          }]
+        })
+      } else {
+        content.push({
+          nodeType: BLOCKS.PARAGRAPH,
+          data: {},
+          content: [{
+            nodeType: 'text',
+            value: line,
+            marks: [],
+            data: {}
+          }]
+        })
+      }
+    }
+  }
+  
+  return {
+    nodeType: BLOCKS.DOCUMENT,
+    data: {},
+    content: content.length > 0 ? content : [{
+      nodeType: BLOCKS.PARAGRAPH,
+      data: {},
+      content: [{
+        nodeType: 'text',
+        value: markdown,
+        marks: [],
+        data: {}
+      }]
+    }]
   }
 }
 
 export async function POST(request: NextRequest) {
-  console.log('[Outrank Webhook] Received POST request')
+  console.log('=== Outrank Webhook Received ===')
   
   try {
-    // 1. Verify authorization
+    // Verify authentication
     const authHeader = request.headers.get('authorization')
-    const expectedToken = process.env.OUTRANK_WEBHOOK_SECRET
+    const expectedSecret = process.env.OUTRANK_WEBHOOK_SECRET
     
-    if (!expectedToken) {
-      console.error('[Outrank Webhook] OUTRANK_WEBHOOK_SECRET not configured')
+    if (!expectedSecret) {
+      console.error('OUTRANK_WEBHOOK_SECRET not configured')
       return NextResponse.json(
-        { error: 'Webhook not configured properly' },
+        { error: 'Webhook secret not configured' },
         { status: 500 }
       )
     }
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.warn('[Outrank Webhook] Missing or invalid authorization header')
+    if (!authHeader || authHeader !== `Bearer ${expectedSecret}`) {
+      console.error('Invalid authorization header')
       return NextResponse.json(
-        { error: 'Unauthorized - Missing authorization header' },
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
     
-    const providedToken = authHeader.substring(7) // Remove "Bearer " prefix
-    if (providedToken !== expectedToken) {
-      console.warn('[Outrank Webhook] Invalid authorization token')
-      return NextResponse.json(
-        { error: 'Unauthorized - Invalid token' },
-        { status: 401 }
-      )
-    }
+    // Parse the webhook payload
+    const payload: OutrankWebhookPayload = await request.json()
+    console.log(`Event Type: ${payload.event_type}`)
+    console.log(`Timestamp: ${payload.timestamp}`)
     
-    // 2. Parse and validate JSON payload
-    let payload: OutrankWebhookPayload
-    try {
-      payload = await request.json()
-    } catch (error) {
-      console.error('[Outrank Webhook] Failed to parse JSON:', error)
+    if (!payload.data?.articles || !Array.isArray(payload.data.articles)) {
+      console.error('Invalid payload structure')
       return NextResponse.json(
-        { error: 'Invalid JSON payload' },
+        { error: 'Invalid payload structure' },
         { status: 400 }
       )
     }
     
-    // 3. Validate webhook structure
-    if (!payload.event_type || payload.event_type !== 'publish_articles') {
-      console.warn('[Outrank Webhook] Invalid event type:', payload.event_type)
+    // Initialize Contentful Management Client
+    const managementToken = process.env.CONTENTFUL_MANAGEMENT_TOKEN
+    if (!managementToken) {
+      console.error('CONTENTFUL_MANAGEMENT_TOKEN not configured')
       return NextResponse.json(
-        { error: `Unsupported event type: ${payload.event_type}` },
-        { status: 400 }
-      )
-    }
-    
-    if (!payload.data || !payload.data.articles || !Array.isArray(payload.data.articles)) {
-      console.error('[Outrank Webhook] Invalid payload structure')
-      return NextResponse.json(
-        { error: 'Invalid payload structure - missing articles array' },
-        { status: 400 }
-      )
-    }
-    
-    if (payload.data.articles.length === 0) {
-      console.warn('[Outrank Webhook] Empty articles array')
-      return NextResponse.json(
-        { message: 'No articles to process' },
-        { status: 200 }
-      )
-    }
-    
-    // 4. Connect to database
-    const databaseUrl = process.env.DATABASE_URL
-    if (!databaseUrl) {
-      console.error('[Outrank Webhook] DATABASE_URL not configured')
-      return NextResponse.json(
-        { error: 'Database connection not configured' },
+        { error: 'Contentful management token not configured' },
         { status: 500 }
       )
     }
     
-    const sql = neon(databaseUrl)
+    const client = createClient({
+      accessToken: managementToken
+    })
     
-    // 5. Process articles
+    const space = await client.getSpace(process.env.CONTENTFUL_SPACE_ID!)
+    const environment = await space.getEnvironment('master')
+    
     const results = {
-      successful: [] as string[],
-      failed: [] as { slug: string; error: string }[],
-      duplicates: [] as string[]
+      processed: 0,
+      created: 0,
+      updated: 0,
+      failed: 0,
+      errors: [] as any[]
     }
     
+    // Process each article
     for (const article of payload.data.articles) {
+      console.log(`Processing article: ${article.title} (${article.slug})`)
+      
+      // Validate article
+      const validation = validateArticle(article)
+      if (!validation.valid) {
+        console.error(`Validation failed for article ${article.id}:`, validation.errors)
+        results.errors.push({ article_id: article.id, errors: validation.errors })
+        results.failed++
+        continue
+      }
+      
       try {
-        // Validate article data
-        const validation = validateArticle(article)
-        if (!validation.valid) {
-          console.error(`[Outrank Webhook] Invalid article ${article.slug}:`, validation.errors)
-          results.failed.push({
-            slug: article.slug || 'unknown',
-            error: validation.errors.join(', ')
+        // Check if blog post already exists by slug
+        const existingEntries = await environment.getEntries({
+          content_type: 'blogPost',
+          'fields.slug': article.slug,
+          limit: 1
+        })
+        
+        // Convert content to Rich Text format
+        const richTextContent = article.content_markdown 
+          ? markdownToRichText(article.content_markdown)
+          : htmlToRichText(article.content_html)
+        
+        // Prepare the entry data
+        const entryData = {
+          fields: {
+            title: {
+              'en-US': article.title
+            },
+            slug: {
+              'en-US': article.slug
+            },
+            content: {
+              'en-US': richTextContent
+            },
+            excerpt: {
+              'en-US': article.meta_description || article.content_markdown?.substring(0, 160) || ''
+            },
+            publishedDate: {
+              'en-US': article.created_at
+            },
+            featured: {
+              'en-US': false
+            },
+            outrank_id: {
+              'en-US': article.id
+            }
+          }
+        }
+        
+        let entry
+        
+        if (existingEntries.items.length > 0) {
+          // Update existing entry
+          console.log(`Updating existing entry for slug: ${article.slug}`)
+          entry = existingEntries.items[0]
+          
+          // Update fields
+          Object.keys(entryData.fields).forEach(key => {
+            entry.fields[key] = entryData.fields[key]
           })
-          continue
-        }
-        
-        // Prepare article data
-        const articleData = prepareArticleData(article)
-        
-        // Check for duplicate slug or outrank_id
-        const existingCheck = await sql`
-          SELECT id, slug, outrank_id 
-          FROM blog_posts 
-          WHERE slug = ${articleData.slug} OR outrank_id = ${articleData.outrank_id}
-          LIMIT 1
-        `
-        
-        if (existingCheck.length > 0) {
-          console.log(`[Outrank Webhook] Duplicate article detected: ${articleData.slug}`)
           
-          // Update existing article instead of creating duplicate
-          await sql`
-            UPDATE blog_posts 
-            SET 
-              title = ${articleData.title},
-              content = ${articleData.content},
-              meta_description = ${articleData.meta_description},
-              featured_image_url = ${articleData.featured_image_url},
-              published_date = ${articleData.published_date},
-              tags = ${articleData.tags}::jsonb,
-              status = ${articleData.status},
-              updated_at = NOW()
-            WHERE slug = ${articleData.slug} OR outrank_id = ${articleData.outrank_id}
-          `
-          
-          results.duplicates.push(articleData.slug)
-          console.log(`[Outrank Webhook] Updated existing article: ${articleData.slug}`)
+          entry = await entry.update()
+          results.updated++
         } else {
-          // Insert new article
-          await sql`
-            INSERT INTO blog_posts (
-              title,
-              slug,
-              content,
-              meta_description,
-              featured_image_url,
-              published_date,
-              tags,
-              status,
-              outrank_id,
-              source
-            ) VALUES (
-              ${articleData.title},
-              ${articleData.slug},
-              ${articleData.content},
-              ${articleData.meta_description},
-              ${articleData.featured_image_url},
-              ${articleData.published_date},
-              ${articleData.tags}::jsonb,
-              ${articleData.status},
-              ${articleData.outrank_id},
-              'outrank'
-            )
-          `
-          
-          results.successful.push(articleData.slug)
-          console.log(`[Outrank Webhook] Successfully inserted article: ${articleData.slug}`)
+          // Create new entry
+          console.log(`Creating new entry for slug: ${article.slug}`)
+          entry = await environment.createEntry('blogPost', entryData)
+          results.created++
         }
+        
+        // Publish the entry
+        await entry.publish()
+        console.log(`Successfully published: ${article.title}`)
+        
+        results.processed++
+        
       } catch (error) {
-        console.error(`[Outrank Webhook] Error processing article ${article.slug}:`, error)
-        results.failed.push({
-          slug: article.slug || 'unknown',
+        console.error(`Failed to process article ${article.id}:`, error)
+        results.errors.push({
+          article_id: article.id,
           error: error instanceof Error ? error.message : 'Unknown error'
         })
+        results.failed++
       }
     }
     
-    // 6. Return results
-    const totalProcessed = results.successful.length + results.duplicates.length
-    const hasErrors = results.failed.length > 0
-    
-    console.log(`[Outrank Webhook] Completed: ${results.successful.length} inserted, ${results.duplicates.length} updated, ${results.failed.length} failed`)
+    console.log('=== Webhook Processing Complete ===')
+    console.log(`Processed: ${results.processed}`)
+    console.log(`Created: ${results.created}`)
+    console.log(`Updated: ${results.updated}`)
+    console.log(`Failed: ${results.failed}`)
     
     return NextResponse.json({
-      message: `Processed ${totalProcessed} of ${payload.data.articles.length} articles`,
-      results: {
-        inserted: results.successful.length,
-        updated: results.duplicates.length,
-        failed: results.failed.length,
-        details: {
-          successful: results.successful,
-          duplicates: results.duplicates,
-          failed: results.failed
-        }
-      }
-    }, { 
-      status: hasErrors ? 207 : 200 // 207 Multi-Status if some failed
+      success: true,
+      message: `Processed ${results.processed} articles successfully`,
+      details: results
     })
     
   } catch (error) {
-    console.error('[Outrank Webhook] Unexpected error:', error)
-    
-    // Don't expose internal error details in production
-    const isDevelopment = process.env.NODE_ENV === 'development'
-    
-    return NextResponse.json({
-      error: 'Internal server error',
-      ...(isDevelopment && { 
-        details: error instanceof Error ? error.message : 'Unknown error' 
-      })
-    }, { status: 500 })
+    console.error('Webhook processing error:', error)
+    return NextResponse.json(
+      { 
+        error: 'Failed to process webhook',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    )
   }
-}
-
-// Optional: Handle other HTTP methods
-export async function GET() {
-  return NextResponse.json(
-    { 
-      message: 'Outrank webhook endpoint', 
-      status: 'healthy',
-      accepts: 'POST',
-      documentation: {
-        authorization: 'Bearer token required',
-        contentType: 'application/json',
-        eventTypes: ['publish_articles']
-      }
-    },
-    { status: 200 }
-  )
-}
-
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Allow': 'POST, GET, OPTIONS',
-      'Content-Type': 'application/json'
-    }
-  })
 }
