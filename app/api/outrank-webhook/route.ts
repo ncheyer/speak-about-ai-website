@@ -173,10 +173,17 @@ export async function POST(request: NextRequest) {
       throw new Error(errorMessage)
     }
     
-    if (!authHeader || authHeader !== `Bearer ${expectedSecret}`) {
+    // Handle both "Bearer TOKEN" and "Bearer Bearer TOKEN" formats
+    // (Outrank might be adding "Bearer" when we already include it)
+    const validAuth1 = `Bearer ${expectedSecret}`
+    const validAuth2 = `Bearer Bearer ${expectedSecret}` // Handle double Bearer prefix
+    
+    if (!authHeader || (authHeader !== validAuth1 && authHeader !== validAuth2)) {
       console.error('Invalid authorization header')
+      console.error('Expected:', validAuth1, 'or', validAuth2)
+      console.error('Received:', authHeader?.substring(0, 30) + '...')
       responseStatus = 401
-      errorMessage = 'Unauthorized'
+      errorMessage = 'Unauthorized - Invalid token or format'
       responseBody = { error: errorMessage }
       throw new Error(errorMessage)
     }
