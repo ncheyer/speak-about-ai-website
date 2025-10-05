@@ -253,7 +253,7 @@ export async function POST(request: NextRequest) {
           : htmlToRichText(article.content_html)
         
         // Prepare the entry data
-        const entryData = {
+        const entryData: any = {
           fields: {
             title: {
               'en-US': article.title
@@ -274,6 +274,62 @@ export async function POST(request: NextRequest) {
             // Note: Add these fields to your Contentful blogPost content type if needed:
             // featured: { 'en-US': false }
             // outrank_id: { 'en-US': article.id }
+          }
+        }
+        
+        // Add featured image if provided by Outrank
+        if (article.image_url) {
+          // First, we need to create an asset in Contentful for the image
+          console.log(`Creating image asset for: ${article.image_url}`)
+          try {
+            const asset = await environment.createAsset({
+              fields: {
+                title: {
+                  'en-US': article.title
+                },
+                description: {
+                  'en-US': article.meta_description || article.title
+                },
+                file: {
+                  'en-US': {
+                    contentType: 'image/jpeg', // Default to JPEG, could parse from URL
+                    fileName: article.slug + '.jpg',
+                    upload: article.image_url
+                  }
+                }
+              }
+            })
+            
+            // Process the asset
+            await asset.processForAllLocales()
+            
+            // Wait for processing to complete
+            let processedAsset = await environment.getAsset(asset.sys.id)
+            let attempts = 0
+            while (processedAsset.fields.file['en-US'].url === undefined && attempts < 10) {
+              await new Promise(resolve => setTimeout(resolve, 1000))
+              processedAsset = await environment.getAsset(asset.sys.id)
+              attempts++
+            }
+            
+            // Publish the asset
+            await processedAsset.publish()
+            
+            // Add reference to the asset in the blog post
+            entryData.fields.featuredImage = {
+              'en-US': {
+                sys: {
+                  type: 'Link',
+                  linkType: 'Asset',
+                  id: asset.sys.id
+                }
+              }
+            }
+            
+            console.log(`Image asset created and linked: ${asset.sys.id}`)
+          } catch (imageError) {
+            console.error(`Failed to create image asset for ${article.image_url}:`, imageError)
+            // Continue without image if it fails
           }
         }
         
