@@ -70,50 +70,294 @@ function htmlToRichText(html: string): Document {
   }
 }
 
+// Helper function to parse inline markdown (bold, italic, links)
+function parseInlineMarkdown(text: string): any[] {
+  const nodes: any[] = []
+  let remaining = text
+  
+  while (remaining.length > 0) {
+    // Check for bold text
+    const boldMatch = remaining.match(/\*\*([^*]+)\*\*/)
+    const italicMatch = remaining.match(/\*([^*]+)\*/)
+    const linkMatch = remaining.match(/\[([^\]]+)\]\(([^)]+)\)/)
+    
+    // Find the earliest match
+    let earliestMatch: any = null
+    let earliestIndex = remaining.length
+    
+    if (boldMatch && boldMatch.index !== undefined && boldMatch.index < earliestIndex) {
+      earliestMatch = { type: 'bold', match: boldMatch }
+      earliestIndex = boldMatch.index
+    }
+    if (italicMatch && italicMatch.index !== undefined && italicMatch.index < earliestIndex) {
+      earliestMatch = { type: 'italic', match: italicMatch }
+      earliestIndex = italicMatch.index
+    }
+    if (linkMatch && linkMatch.index !== undefined && linkMatch.index < earliestIndex) {
+      earliestMatch = { type: 'link', match: linkMatch }
+      earliestIndex = linkMatch.index
+    }
+    
+    if (earliestMatch) {
+      // Add text before the match
+      if (earliestIndex > 0) {
+        nodes.push({
+          nodeType: 'text',
+          value: remaining.substring(0, earliestIndex),
+          marks: [],
+          data: {}
+        })
+      }
+      
+      // Add the matched element
+      if (earliestMatch.type === 'bold') {
+        nodes.push({
+          nodeType: 'text',
+          value: earliestMatch.match[1],
+          marks: [{ type: MARKS.BOLD }],
+          data: {}
+        })
+        remaining = remaining.substring(earliestIndex + earliestMatch.match[0].length)
+      } else if (earliestMatch.type === 'italic') {
+        nodes.push({
+          nodeType: 'text',
+          value: earliestMatch.match[1],
+          marks: [{ type: MARKS.ITALIC }],
+          data: {}
+        })
+        remaining = remaining.substring(earliestIndex + earliestMatch.match[0].length)
+      } else if (earliestMatch.type === 'link') {
+        nodes.push({
+          nodeType: INLINES.HYPERLINK,
+          data: { uri: earliestMatch.match[2] },
+          content: [{
+            nodeType: 'text',
+            value: earliestMatch.match[1],
+            marks: [],
+            data: {}
+          }]
+        })
+        remaining = remaining.substring(earliestIndex + earliestMatch.match[0].length)
+      }
+    } else {
+      // No more matches, add the remaining text
+      nodes.push({
+        nodeType: 'text',
+        value: remaining,
+        marks: [],
+        data: {}
+      })
+      break
+    }
+  }
+  
+  return nodes.length > 0 ? nodes : [{
+    nodeType: 'text',
+    value: text,
+    marks: [],
+    data: {}
+  }]
+}
+
 // Convert markdown to Contentful Rich Text format
 function markdownToRichText(markdown: string): Document {
-  // This is a simplified conversion
-  // For production, consider using a proper markdown to rich text converter
   const lines = markdown.split('\n')
   const content: any[] = []
+  let inTable = false
+  let tableRows: string[][] = []
+  let inList = false
+  let listItems: string[] = []
+  let inCodeBlock = false
+  let codeLines: string[] = []
   
-  for (const line of lines) {
-    if (line.trim()) {
-      if (line.startsWith('# ')) {
-        content.push({
-          nodeType: BLOCKS.HEADING_1,
-          data: {},
-          content: [{
-            nodeType: 'text',
-            value: line.substring(2),
-            marks: [],
-            data: {}
-          }]
-        })
-      } else if (line.startsWith('## ')) {
-        content.push({
-          nodeType: BLOCKS.HEADING_2,
-          data: {},
-          content: [{
-            nodeType: 'text',
-            value: line.substring(3),
-            marks: [],
-            data: {}
-          }]
-        })
-      } else {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    
+    // Handle code blocks
+    if (line.startsWith('```')) {
+      if (inCodeBlock) {
+        // End code block
         content.push({
           nodeType: BLOCKS.PARAGRAPH,
           data: {},
           content: [{
             nodeType: 'text',
-            value: line,
+            value: codeLines.join('\n'),
+            marks: [{ type: MARKS.CODE }],
+            data: {}
+          }]
+        })
+        codeLines = []
+        inCodeBlock = false
+      } else {
+        // Start code block
+        inCodeBlock = true
+      }
+      continue
+    }
+    
+    if (inCodeBlock) {
+      codeLines.push(line)
+      continue
+    }
+    
+    // Handle tables (skip table separator lines)
+    if (line.includes('|')) {
+      if (line.trim().match(/^\|[\s-:|]+\|$/)) {
+        // This is a table separator line, skip it
+        continue
+      }
+      // Parse table row
+      const cells = line.split('|').filter((cell, index, arr) => 
+        index > 0 && index < arr.length - 1
+      ).map(cell => cell.trim())
+      
+      if (cells.length > 0) {
+        inTable = true
+        tableRows.push(cells)
+      }
+    } else if (inTable && tableRows.length > 0) {
+      // End of table, convert to a formatted text block
+      content.push({
+        nodeType: BLOCKS.PARAGRAPH,
+        data: {},
+        content: [{
+          nodeType: 'text',
+          value: '(Table content - please view in formatted view)',
+          marks: [{ type: MARKS.ITALIC }],
+          data: {}
+        }]
+      })
+      
+      // Add table rows as list items for now
+      tableRows.forEach(row => {
+        content.push({
+          nodeType: BLOCKS.PARAGRAPH,
+          data: {},
+          content: [{
+            nodeType: 'text',
+            value: row.join(' | '),
             marks: [],
             data: {}
           }]
         })
-      }
+      })
+      
+      inTable = false
+      tableRows = []
     }
+    
+    // Handle list items
+    if (line.match(/^[-*]\s+/)) {
+      const listText = line.replace(/^[-*]\s+/, '')
+      listItems.push(listText)
+      inList = true
+      continue
+    } else if (inList && listItems.length > 0 && !line.match(/^[-*]\s+/)) {
+      // End of list
+      content.push({
+        nodeType: BLOCKS.UL_LIST,
+        data: {},
+        content: listItems.map(item => ({
+          nodeType: BLOCKS.LIST_ITEM,
+          data: {},
+          content: [{
+            nodeType: BLOCKS.PARAGRAPH,
+            data: {},
+            content: parseInlineMarkdown(item)
+          }]
+        }))
+      })
+      inList = false
+      listItems = []
+    }
+    
+    // Handle numbered lists
+    if (line.match(/^\d+\.\s+/)) {
+      const listText = line.replace(/^\d+\.\s+/, '')
+      listItems.push(listText)
+      inList = true
+      continue
+    }
+    
+    // Handle headings
+    if (line.startsWith('######')) {
+      content.push({
+        nodeType: BLOCKS.HEADING_6,
+        data: {},
+        content: parseInlineMarkdown(line.substring(6).trim())
+      })
+    } else if (line.startsWith('#####')) {
+      content.push({
+        nodeType: BLOCKS.HEADING_5,
+        data: {},
+        content: parseInlineMarkdown(line.substring(5).trim())
+      })
+    } else if (line.startsWith('####')) {
+      content.push({
+        nodeType: BLOCKS.HEADING_4,
+        data: {},
+        content: parseInlineMarkdown(line.substring(4).trim())
+      })
+    } else if (line.startsWith('###')) {
+      content.push({
+        nodeType: BLOCKS.HEADING_3,
+        data: {},
+        content: parseInlineMarkdown(line.substring(3).trim())
+      })
+    } else if (line.startsWith('##')) {
+      content.push({
+        nodeType: BLOCKS.HEADING_2,
+        data: {},
+        content: parseInlineMarkdown(line.substring(2).trim())
+      })
+    } else if (line.startsWith('#')) {
+      content.push({
+        nodeType: BLOCKS.HEADING_1,
+        data: {},
+        content: parseInlineMarkdown(line.substring(1).trim())
+      })
+    } else if (line.trim()) {
+      // Regular paragraph with inline markdown parsing
+      content.push({
+        nodeType: BLOCKS.PARAGRAPH,
+        data: {},
+        content: parseInlineMarkdown(line)
+      })
+    }
+  }
+  
+  // Handle any remaining list items
+  if (inList && listItems.length > 0) {
+    content.push({
+      nodeType: BLOCKS.UL_LIST,
+      data: {},
+      content: listItems.map(item => ({
+        nodeType: BLOCKS.LIST_ITEM,
+        data: {},
+        content: [{
+          nodeType: BLOCKS.PARAGRAPH,
+          data: {},
+          content: parseInlineMarkdown(item)
+        }]
+      }))
+    })
+  }
+  
+  // Handle any remaining table rows
+  if (inTable && tableRows.length > 0) {
+    tableRows.forEach(row => {
+      content.push({
+        nodeType: BLOCKS.PARAGRAPH,
+        data: {},
+        content: [{
+          nodeType: 'text',
+          value: row.join(' | '),
+          marks: [],
+          data: {}
+        }]
+      })
+    })
   }
   
   return {
