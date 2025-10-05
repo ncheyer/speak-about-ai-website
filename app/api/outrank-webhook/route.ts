@@ -76,10 +76,14 @@ function parseInlineMarkdown(text: string): any[] {
   let remaining = text
   
   while (remaining.length > 0) {
-    // Check for bold text
-    const boldMatch = remaining.match(/\*\*([^*]+)\*\*/)
-    const italicMatch = remaining.match(/\*([^*]+)\*/)
+    // Check for bold text (improved to handle nested content)
+    const boldMatch = remaining.match(/\*\*((?:[^*]|\*(?!\*))+)\*\*/)
+    // Check for italic (single asterisk, but not part of bold)
+    const italicMatch = remaining.match(/(?<!\*)\*(?!\*)([^*]+)\*(?!\*)/)
+    // Check for links
     const linkMatch = remaining.match(/\[([^\]]+)\]\(([^)]+)\)/)
+    // Check for inline code
+    const codeMatch = remaining.match(/`([^`]+)`/)
     
     // Find the earliest match
     let earliestMatch: any = null
@@ -96,6 +100,10 @@ function parseInlineMarkdown(text: string): any[] {
     if (linkMatch && linkMatch.index !== undefined && linkMatch.index < earliestIndex) {
       earliestMatch = { type: 'link', match: linkMatch }
       earliestIndex = linkMatch.index
+    }
+    if (codeMatch && codeMatch.index !== undefined && codeMatch.index < earliestIndex) {
+      earliestMatch = { type: 'code', match: codeMatch }
+      earliestIndex = codeMatch.index
     }
     
     if (earliestMatch) {
@@ -123,6 +131,14 @@ function parseInlineMarkdown(text: string): any[] {
           nodeType: 'text',
           value: earliestMatch.match[1],
           marks: [{ type: MARKS.ITALIC }],
+          data: {}
+        })
+        remaining = remaining.substring(earliestIndex + earliestMatch.match[0].length)
+      } else if (earliestMatch.type === 'code') {
+        nodes.push({
+          nodeType: 'text',
+          value: earliestMatch.match[1],
+          marks: [{ type: MARKS.CODE }],
           data: {}
         })
         remaining = remaining.substring(earliestIndex + earliestMatch.match[0].length)
@@ -165,6 +181,7 @@ function markdownToRichText(markdown: string): Document {
   const content: any[] = []
   let inTable = false
   let tableRows: string[][] = []
+  let tableHeader = false
   let inList = false
   let listItems: string[] = []
   let inCodeBlock = false
@@ -172,6 +189,16 @@ function markdownToRichText(markdown: string): Document {
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
+    
+    // Handle horizontal rules (*** or ---)
+    if (line.trim() === '***' || line.trim() === '---' || line.trim() === '___') {
+      content.push({
+        nodeType: BLOCKS.HR,
+        data: {},
+        content: []
+      })
+      continue
+    }
     
     // Handle code blocks
     if (line.startsWith('```')) {
@@ -201,50 +228,79 @@ function markdownToRichText(markdown: string): Document {
       continue
     }
     
-    // Handle tables (skip table separator lines)
+    // Handle tables - improved detection
     if (line.includes('|')) {
-      if (line.trim().match(/^\|[\s-:|]+\|$/)) {
-        // This is a table separator line, skip it
+      // Check if it's a separator line
+      if (line.trim().match(/^\|?[\s-:|]+\|?$/)) {
+        // This is a table separator, indicates header row above
+        if (inTable && tableRows.length > 0) {
+          tableHeader = true
+        }
         continue
       }
+      
       // Parse table row
-      const cells = line.split('|').filter((cell, index, arr) => 
-        index > 0 && index < arr.length - 1
-      ).map(cell => cell.trim())
+      const cells = line.split('|').map(cell => cell.trim())
+      
+      // Remove empty first/last elements if line starts/ends with |
+      if (cells[0] === '') cells.shift()
+      if (cells[cells.length - 1] === '') cells.pop()
       
       if (cells.length > 0) {
-        inTable = true
+        if (!inTable) {
+          inTable = true
+          tableHeader = false
+        }
         tableRows.push(cells)
       }
     } else if (inTable && tableRows.length > 0) {
-      // End of table, convert to a formatted text block
-      content.push({
-        nodeType: BLOCKS.PARAGRAPH,
-        data: {},
-        content: [{
-          nodeType: 'text',
-          value: '(Table content - please view in formatted view)',
-          marks: [{ type: MARKS.ITALIC }],
-          data: {}
-        }]
-      })
-      
-      // Add table rows as list items for now
-      tableRows.forEach(row => {
+      // End of table, convert to a formatted structure
+      if (tableHeader && tableRows.length > 1) {
+        // First row is header
+        const headers = tableRows[0]
+        const dataRows = tableRows.slice(1)
+        
+        // Add table header
         content.push({
           nodeType: BLOCKS.PARAGRAPH,
           data: {},
           content: [{
             nodeType: 'text',
-            value: row.join(' | '),
-            marks: [],
+            value: headers.join(' | '),
+            marks: [{ type: MARKS.BOLD }],
             data: {}
           }]
         })
-      })
+        
+        // Add data rows
+        dataRows.forEach(row => {
+          content.push({
+            nodeType: BLOCKS.PARAGRAPH,
+            data: {},
+            content: parseInlineMarkdown(row.join(' | '))
+          })
+        })
+      } else {
+        // No header distinction, treat all as regular rows
+        tableRows.forEach((row, index) => {
+          content.push({
+            nodeType: BLOCKS.PARAGRAPH,
+            data: {},
+            content: index === 0 
+              ? [{
+                  nodeType: 'text',
+                  value: row.join(' | '),
+                  marks: [{ type: MARKS.BOLD }],
+                  data: {}
+                }]
+              : parseInlineMarkdown(row.join(' | '))
+          })
+        })
+      }
       
       inTable = false
       tableRows = []
+      tableHeader = false
     }
     
     // Handle list items
