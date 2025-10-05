@@ -808,7 +808,7 @@ export default function AdminBlogPage() {
                           <div className="flex gap-2 mt-2">
                             <Input
                               id="webhook-url"
-                              value={`${window.location.origin}/api/outrank-webhook`}
+                              value={typeof window !== 'undefined' ? `${window.location.origin}/api/outrank-webhook` : '/api/outrank-webhook'}
                               readOnly
                               className="flex-1 bg-gray-50"
                             />
@@ -816,11 +816,13 @@ export default function AdminBlogPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                navigator.clipboard.writeText(`${window.location.origin}/api/outrank-webhook`)
-                                toast({
-                                  title: 'Copied',
-                                  description: 'Webhook URL copied to clipboard'
-                                })
+                                if (typeof window !== 'undefined') {
+                                  navigator.clipboard.writeText(`${window.location.origin}/api/outrank-webhook`)
+                                  toast({
+                                    title: 'Copied',
+                                    description: 'Webhook URL copied to clipboard'
+                                  })
+                                }
                               }}
                             >
                               <Copy className="h-4 w-4" />
