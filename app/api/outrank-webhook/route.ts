@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from 'contentful-management'
 import { documentToHtmlString } from '@contentful/rich-text-html-renderer'
 import { Document, BLOCKS, MARKS, INLINES } from '@contentful/rich-text-types'
+import { neon } from '@neondatabase/serverless'
 
 // Type definitions for the webhook payload
 interface OutrankArticle {
@@ -133,49 +134,74 @@ function markdownToRichText(markdown: string): Document {
 
 export async function POST(request: NextRequest) {
   console.log('=== Outrank Webhook Received ===')
+  const startTime = Date.now()
+  let responseStatus = 200
+  let responseBody: any = {}
+  let errorMessage: string | null = null
+  
+  // Collect request data for logging
+  const requestHeaders: any = {}
+  request.headers.forEach((value, key) => {
+    // Don't log sensitive auth tokens in full
+    if (key.toLowerCase() === 'authorization') {
+      requestHeaders[key] = value.substring(0, 20) + '...'
+    } else {
+      requestHeaders[key] = value
+    }
+  })
+  
+  const ipAddress = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     'unknown'
+  const userAgent = request.headers.get('user-agent') || 'unknown'
+  
+  let requestBody: any = {}
   
   try {
+    // Clone request to read body for logging
+    const clonedRequest = request.clone()
+    requestBody = await clonedRequest.json()
     // Verify authentication
     const authHeader = request.headers.get('authorization')
     const expectedSecret = process.env.OUTRANK_WEBHOOK_SECRET
     
     if (!expectedSecret) {
       console.error('OUTRANK_WEBHOOK_SECRET not configured')
-      return NextResponse.json(
-        { error: 'Webhook secret not configured' },
-        { status: 500 }
-      )
+      responseStatus = 500
+      errorMessage = 'Webhook secret not configured'
+      responseBody = { error: errorMessage }
+      throw new Error(errorMessage)
     }
     
     if (!authHeader || authHeader !== `Bearer ${expectedSecret}`) {
       console.error('Invalid authorization header')
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      responseStatus = 401
+      errorMessage = 'Unauthorized'
+      responseBody = { error: errorMessage }
+      throw new Error(errorMessage)
     }
     
-    // Parse the webhook payload
-    const payload: OutrankWebhookPayload = await request.json()
+    // Use the already parsed payload
+    const payload: OutrankWebhookPayload = requestBody
     console.log(`Event Type: ${payload.event_type}`)
     console.log(`Timestamp: ${payload.timestamp}`)
     
     if (!payload.data?.articles || !Array.isArray(payload.data.articles)) {
       console.error('Invalid payload structure')
-      return NextResponse.json(
-        { error: 'Invalid payload structure' },
-        { status: 400 }
-      )
+      responseStatus = 400
+      errorMessage = 'Invalid payload structure'
+      responseBody = { error: errorMessage }
+      throw new Error(errorMessage)
     }
     
     // Initialize Contentful Management Client
     const managementToken = process.env.CONTENTFUL_MANAGEMENT_TOKEN
     if (!managementToken) {
       console.error('CONTENTFUL_MANAGEMENT_TOKEN not configured')
-      return NextResponse.json(
-        { error: 'Contentful management token not configured' },
-        { status: 500 }
-      )
+      responseStatus = 500
+      errorMessage = 'Contentful management token not configured'
+      responseBody = { error: errorMessage }
+      throw new Error(errorMessage)
     }
     
     const client = createClient({
@@ -286,20 +312,57 @@ export async function POST(request: NextRequest) {
     console.log(`Updated: ${results.updated}`)
     console.log(`Failed: ${results.failed}`)
     
-    return NextResponse.json({
+    responseBody = {
       success: true,
       message: `Processed ${results.processed} articles successfully`,
       details: results
-    })
+    }
+    
+    return NextResponse.json(responseBody)
     
   } catch (error) {
     console.error('Webhook processing error:', error)
-    return NextResponse.json(
-      { 
-        error: 'Failed to process webhook',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    )
+    responseStatus = 500
+    errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    responseBody = { 
+      error: 'Failed to process webhook',
+      details: errorMessage
+    }
+    
+    return NextResponse.json(responseBody, { status: responseStatus })
+  } finally {
+    // Log the webhook call
+    const processingTime = Date.now() - startTime
+    
+    try {
+      const sql = neon(process.env.DATABASE_URL!)
+      await sql`
+        INSERT INTO webhook_logs (
+          webhook_type,
+          request_method,
+          request_headers,
+          request_body,
+          response_status,
+          response_body,
+          error_message,
+          ip_address,
+          user_agent,
+          processing_time_ms
+        ) VALUES (
+          'outrank',
+          'POST',
+          ${JSON.stringify(requestHeaders)},
+          ${JSON.stringify(requestBody)},
+          ${responseStatus},
+          ${JSON.stringify(responseBody)},
+          ${errorMessage},
+          ${ipAddress},
+          ${userAgent},
+          ${processingTime}
+        )
+      `
+    } catch (logError) {
+      console.error('Failed to log webhook call:', logError)
+    }
   }
 }

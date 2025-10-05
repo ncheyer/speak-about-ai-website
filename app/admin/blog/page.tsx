@@ -123,6 +123,12 @@ export default function AdminBlogPage() {
   })
   const [testingWebhook, setTestingWebhook] = useState(false)
   const [savingConfig, setSavingConfig] = useState(false)
+  
+  // Webhook logs state
+  const [webhookLogs, setWebhookLogs] = useState<any[]>([])
+  const [logsLoading, setLogsLoading] = useState(false)
+  const [logsStatusFilter, setLogsStatusFilter] = useState('all')
+  const [selectedLog, setSelectedLog] = useState<any>(null)
 
   // Stats
   const [stats, setStats] = useState({
@@ -347,6 +353,57 @@ export default function AdminBlogPage() {
     }
   }
 
+  const fetchWebhookLogs = async () => {
+    try {
+      setLogsLoading(true)
+      const params = logsStatusFilter !== 'all' ? `?status=${logsStatusFilter}` : ''
+      const response = await fetch(`/api/admin/webhook-logs${params}`, {
+        headers: {
+          'x-admin-request': 'true'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setWebhookLogs(data.logs)
+      }
+    } catch (error) {
+      console.error('Failed to fetch webhook logs:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch webhook logs',
+        variant: 'destructive'
+      })
+    } finally {
+      setLogsLoading(false)
+    }
+  }
+  
+  const createWebhookLogsTable = async () => {
+    try {
+      const response = await fetch('/api/admin/webhook-logs/migrate', {
+        headers: {
+          'x-admin-request': 'true'
+        }
+      })
+      
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Webhook logs table created successfully'
+        })
+        fetchWebhookLogs()
+      }
+    } catch (error) {
+      console.error('Failed to create webhook logs table:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to create webhook logs table',
+        variant: 'destructive'
+      })
+    }
+  }
+
   const testWebhook = async () => {
     try {
       setTestingWebhook(true)
@@ -506,7 +563,7 @@ export default function AdminBlogPage() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="posts">
                 <Globe className="h-4 w-4 mr-2" />
                 Contentful Posts
@@ -514,6 +571,10 @@ export default function AdminBlogPage() {
               <TabsTrigger value="outrank">
                 <Webhook className="h-4 w-4 mr-2" />
                 Outrank Integration
+              </TabsTrigger>
+              <TabsTrigger value="monitoring">
+                <Activity className="h-4 w-4 mr-2" />
+                Webhook Monitor
               </TabsTrigger>
               <TabsTrigger value="analytics">
                 <BarChart3 className="h-4 w-4 mr-2" />
@@ -981,6 +1042,209 @@ export default function AdminBlogPage() {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            {/* Webhook Monitoring Tab */}
+            <TabsContent value="monitoring" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Webhook Call Monitoring</CardTitle>
+                      <CardDescription>Monitor incoming webhook calls from Outrank</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={createWebhookLogsTable}
+                        size="sm"
+                      >
+                        <Database className="h-4 w-4 mr-2" />
+                        Initialize Logs
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={fetchWebhookLogs}
+                        disabled={logsLoading}
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${logsLoading ? 'animate-spin' : ''}`} />
+                        Refresh
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {/* Status Filter */}
+                  <div className="flex gap-2 mb-4">
+                    <Button
+                      variant={logsStatusFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setLogsStatusFilter('all')
+                        fetchWebhookLogs()
+                      }}
+                    >
+                      All Calls
+                    </Button>
+                    <Button
+                      variant={logsStatusFilter === '200' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setLogsStatusFilter('200')
+                        fetchWebhookLogs()
+                      }}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
+                      Success (200)
+                    </Button>
+                    <Button
+                      variant={logsStatusFilter === '401' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setLogsStatusFilter('401')
+                        fetchWebhookLogs()
+                      }}
+                    >
+                      <Shield className="h-4 w-4 mr-1 text-yellow-500" />
+                      Unauthorized (401)
+                    </Button>
+                    <Button
+                      variant={logsStatusFilter === '500' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setLogsStatusFilter('500')
+                        fetchWebhookLogs()
+                      }}
+                    >
+                      <XCircle className="h-4 w-4 mr-1 text-red-500" />
+                      Error (500)
+                    </Button>
+                  </div>
+
+                  {/* Webhook Logs Table */}
+                  {logsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                  ) : webhookLogs.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No webhook calls logged yet</p>
+                      <p className="text-sm text-gray-400 mt-2">
+                        Webhook calls from Outrank will appear here
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {webhookLogs.map((log) => (
+                        <div 
+                          key={log.id}
+                          className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                          onClick={() => setSelectedLog(log)}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge variant={
+                                  log.response_status === 200 ? 'default' :
+                                  log.response_status === 401 ? 'secondary' :
+                                  'destructive'
+                                }>
+                                  {log.response_status}
+                                </Badge>
+                                <span className="text-sm text-gray-500">
+                                  {new Date(log.created_at).toLocaleString()}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  {log.processing_time_ms}ms
+                                </span>
+                              </div>
+                              
+                              <div className="text-sm">
+                                <p className="font-medium">
+                                  {log.request_body?.event_type || 'Unknown Event'}
+                                </p>
+                                {log.request_body?.data?.articles && (
+                                  <p className="text-gray-500">
+                                    Articles: {log.request_body.data.articles.length}
+                                  </p>
+                                )}
+                                {log.error_message && (
+                                  <p className="text-red-500 text-xs mt-1">
+                                    Error: {log.error_message}
+                                  </p>
+                                )}
+                              </div>
+                              
+                              <div className="flex gap-4 mt-2 text-xs text-gray-400">
+                                <span>IP: {log.ip_address}</span>
+                                <span>User Agent: {log.user_agent?.substring(0, 50)}...</span>
+                              </div>
+                            </div>
+                            
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedLog(log)
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Log Details Dialog */}
+              {selectedLog && (
+                <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
+                  <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Webhook Call Details</DialogTitle>
+                      <DialogDescription>
+                        {new Date(selectedLog.created_at).toLocaleString()} - Status: {selectedLog.response_status}
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">Request Headers</h4>
+                        <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto">
+                          {JSON.stringify(selectedLog.request_headers, null, 2)}
+                        </pre>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold mb-2">Request Body</h4>
+                        <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto">
+                          {JSON.stringify(selectedLog.request_body, null, 2)}
+                        </pre>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold mb-2">Response</h4>
+                        <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto">
+                          {JSON.stringify(selectedLog.response_body, null, 2)}
+                        </pre>
+                      </div>
+                      
+                      {selectedLog.error_message && (
+                        <div>
+                          <h4 className="font-semibold mb-2 text-red-600">Error</h4>
+                          <pre className="bg-red-50 p-2 rounded text-xs text-red-600">
+                            {selectedLog.error_message}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
             </TabsContent>
 
             {/* Analytics Tab */}
