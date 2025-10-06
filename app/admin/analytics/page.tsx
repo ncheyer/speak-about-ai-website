@@ -32,7 +32,6 @@ import {
   Loader2,
   Search,
   XCircle,
-  Building2,
   Filter,
   Mail
 } from "lucide-react"
@@ -52,18 +51,6 @@ const IntegratedAnalyticsDashboard = dynamic(
   { ssr: false }
 )
 
-interface DirectoryAnalytics {
-  totalSearches: number
-  topSearchTerms: Array<{ term: string; count: number }>
-  categoryFilters: Array<{ category: string; count: number }>
-  sortFilters: Array<{ sort: string; count: number }>
-  vendorViews: Array<{ vendor: string; views: number }>
-  contactActions: Array<{ vendor: string; method: string; count: number }>
-  websiteClicks: Array<{ vendor: string; clicks: number }>
-  signups: number
-  logins: number
-  conversionRate: number
-}
 
 interface AnalyticsData {
   totalPageViews: number
@@ -114,7 +101,6 @@ export default function AdminAnalyticsPage() {
   const { toast } = useToast()
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [searchAnalytics, setSearchAnalytics] = useState<SearchAnalytics | null>(null)
-  const [directoryAnalytics, setDirectoryAnalytics] = useState<DirectoryAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState("7")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -134,15 +120,12 @@ export default function AdminAnalyticsPage() {
     try {
       setLoading(true)
       
-      // Load website analytics, search analytics, and directory analytics in parallel
-      const [websiteResponse, searchResponse, directoryResponse] = await Promise.all([
+      // Load website analytics and search analytics in parallel
+      const [websiteResponse, searchResponse] = await Promise.all([
         fetch(`/api/analytics/umami?days=${timeRange}`, {
           headers: { 'x-admin-request': 'true' }
         }),
         fetch(`/api/analytics/search?days=${timeRange}`, {
-          headers: { 'x-admin-request': 'true' }
-        }),
-        fetch(`/api/analytics/directory?days=${timeRange}`, {
           headers: { 'x-admin-request': 'true' }
         })
       ])
@@ -171,13 +154,6 @@ export default function AdminAnalyticsPage() {
         setSearchAnalytics(searchData.analytics)
       } else {
         console.error('Failed to load search analytics')
-      }
-      
-      if (directoryResponse.ok) {
-        const directoryData = await directoryResponse.json()
-        setDirectoryAnalytics(directoryData)
-      } else {
-        console.error('Failed to load directory analytics')
       }
     } catch (error) {
       console.error("Error loading analytics:", error)
@@ -844,219 +820,14 @@ export default function AdminAnalyticsPage() {
             </div>
           ) : null}
 
-          {/* Directory Analytics Tab Content */}
-          {activeTab === "directory" && (
-            <div className="space-y-6">
-              {/* Show message if no activity yet */}
-              {directoryAnalytics?.totalSearches === 0 && directoryAnalytics?.vendorViews?.length === 0 && (
-                <Alert className="border-blue-200 bg-blue-50">
-                  <AlertTriangle className="h-4 w-4 text-blue-600" />
-                  <AlertTitle className="text-blue-800">Directory Analytics Starting Fresh</AlertTitle>
-                  <AlertDescription className="text-blue-700">
-                    Your vendor directory analytics will begin tracking when users start searching and viewing vendors. 
-                    All interactions are tracked automatically including searches, filters, vendor views, and contact actions.
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              {/* Directory Stats Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Searches</CardTitle>
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {directoryAnalytics?.totalSearches || 0}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Vendor searches performed</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Vendor Views</CardTitle>
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {directoryAnalytics?.vendorViews?.reduce((sum, v) => sum + v.views, 0) || 0}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Profile views</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Contact Actions</CardTitle>
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {directoryAnalytics?.contactActions?.reduce((sum, c) => sum + c.count, 0) || 0}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Vendor contacts initiated</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {directoryAnalytics?.conversionRate || 0}%
-                    </div>
-                    <p className="text-xs text-muted-foreground">View to contact ratio</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Top Search Terms */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top Search Terms</CardTitle>
-                  <CardDescription>Most searched vendor keywords</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {directoryAnalytics?.topSearchTerms && directoryAnalytics.topSearchTerms.length > 0 ? (
-                      directoryAnalytics.topSearchTerms.slice(0, 10).map((term, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <span className="font-medium">{term.term}</span>
-                          <Badge>{term.count} searches</Badge>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 text-center py-4">No search data available yet. Analytics will appear once users start searching.</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Most Viewed Vendors */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Most Viewed Vendors</CardTitle>
-                    <CardDescription>Top performing vendor profiles</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {directoryAnalytics?.vendorViews && directoryAnalytics.vendorViews.length > 0 ? (
-                        directoryAnalytics.vendorViews.slice(0, 10).map((vendor, index) => (
-                          <div key={index} className="flex items-center justify-between">
-                            <span className="font-medium">{vendor.vendorName}</span>
-                            <Badge variant="outline">{vendor.views} views</Badge>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-gray-500 text-center py-4">No vendor views yet. Data will appear when users start viewing vendor profiles.</p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Contact Methods */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Contact Methods</CardTitle>
-                    <CardDescription>How users are reaching out to vendors</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {directoryAnalytics?.contactActions?.slice(0, 10).map((action, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <div>
-                            <span className="font-medium">{action.vendor}</span>
-                            <Badge variant="secondary" className="ml-2">{action.method}</Badge>
-                          </div>
-                          <Badge>{action.count}</Badge>
-                        </div>
-                      )) || <p className="text-gray-500">No contact data available yet</p>}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Filter Usage */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Category Filter Usage</CardTitle>
-                    <CardDescription>Most popular vendor categories</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {directoryAnalytics?.categoryFilters?.slice(0, 8).map((filter, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <span className="font-medium">{filter.category}</span>
-                          <Badge variant="outline">{filter.count} uses</Badge>
-                        </div>
-                      )) || <p className="text-gray-500">No filter data available yet</p>}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Website Clicks</CardTitle>
-                    <CardDescription>Vendors driving external traffic</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {directoryAnalytics?.websiteClicks?.slice(0, 8).map((click, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <span className="font-medium">{click.vendor}</span>
-                          <Badge variant="outline">{click.clicks} clicks</Badge>
-                        </div>
-                      )) || <p className="text-gray-500">No website click data available yet</p>}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Access Stats */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Directory Access</CardTitle>
-                  <CardDescription>User registration and login activity</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">New Signups</p>
-                      <p className="text-3xl font-bold">{directoryAnalytics?.signups || 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Returning Users</p>
-                      <p className="text-3xl font-bold">{directoryAnalytics?.logins || 0}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Alert className="border-blue-200 bg-blue-50">
-                <Building2 className="h-4 w-4 text-blue-600" />
-                <AlertTitle className="text-blue-800">Directory Analytics</AlertTitle>
-                <AlertDescription className="text-blue-700">
-                  Analytics data will populate as users interact with the vendor directory. 
-                  All events are tracked via Umami Analytics and respect user privacy settings.
-                </AlertDescription>
-              </Alert>
-            </div>
+          {/* Integrated Analytics Tab Content */}
+          {activeTab === "integrated" && (
+            <IntegratedAnalyticsDashboard timeRange={timeRange} />
           )}
 
           {/* Search Console Tab Content */}
           {activeTab === "searchConsole" && (
             <SearchConsoleDashboard timeRange={timeRange} />
-          )}
-
-          {/* Integrated Analytics Tab Content */}
-          {activeTab === "integrated" && (
-            <IntegratedAnalyticsDashboard timeRange={timeRange} />
           )}
         </div>
       </div>

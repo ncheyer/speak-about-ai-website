@@ -154,42 +154,92 @@ async function fetchUmamiAnalytics(startDate: string, endDate: string) {
     const UMAMI_WEBSITE_ID = process.env.UMAMI_WEBSITE_ID
     
     if (!UMAMI_API_KEY || !UMAMI_WEBSITE_ID) {
+      console.log('Umami credentials not configured')
       return { pageViews: 0, visitors: 0, bounceRate: 0, avgDuration: 0, pages: [] }
     }
 
-    const umamiResponse = await fetch(
-      `https://cloud.umami.is/api/websites/${UMAMI_WEBSITE_ID}/stats?startAt=${new Date(startDate).getTime()}&endAt=${new Date(endDate).getTime()}`,
-      {
-        headers: {
-          'x-umami-api-key': UMAMI_API_KEY,
-        }
+    // Use the correct Umami Cloud API endpoint structure
+    const startTimestamp = new Date(startDate).getTime()
+    const endTimestamp = new Date(endDate).getTime()
+    
+    // Try the stats endpoint with proper authentication
+    const statsUrl = `https://api.umami.is/v1/websites/${UMAMI_WEBSITE_ID}/stats`
+    const statsParams = new URLSearchParams({
+      startAt: startTimestamp.toString(),
+      endAt: endTimestamp.toString()
+    })
+    
+    const umamiResponse = await fetch(`${statsUrl}?${statsParams}`, {
+      headers: {
+        'Authorization': `Bearer ${UMAMI_API_KEY}`,
+        'Accept': 'application/json'
       }
-    )
+    })
 
     if (!umamiResponse.ok) {
-      throw new Error('Umami API error')
+      // If the new API doesn't work, try the legacy format
+      const legacyResponse = await fetch(
+        `https://cloud.umami.is/api/websites/${UMAMI_WEBSITE_ID}/stats?startAt=${startTimestamp}&endAt=${endTimestamp}`,
+        {
+          headers: {
+            'x-umami-api-key': UMAMI_API_KEY,
+          }
+        }
+      )
+      
+      if (!legacyResponse.ok) {
+        console.log('Umami API returned error:', legacyResponse.status)
+        return { pageViews: 0, visitors: 0, bounceRate: 0, avgDuration: 0, pages: [] }
+      }
+      
+      const stats = await legacyResponse.json()
+      
+      // Try to get page metrics with legacy API
+      const pagesResponse = await fetch(
+        `https://cloud.umami.is/api/websites/${UMAMI_WEBSITE_ID}/metrics?type=url&startAt=${startTimestamp}&endAt=${endTimestamp}`,
+        {
+          headers: {
+            'x-umami-api-key': UMAMI_API_KEY,
+          }
+        }
+      )
+
+      const pages = pagesResponse.ok ? await pagesResponse.json() : []
+      
+      return {
+        pageViews: stats.pageviews?.value || stats.pageviews || 0,
+        visitors: stats.visitors?.value || stats.visitors || 0,
+        bounceRate: stats.bounces?.value || stats.bounceRate || 0,
+        avgDuration: stats.totaltime?.value || stats.avgSessionDuration || 0,
+        pages: Array.isArray(pages) ? pages.slice(0, 20) : []
+      }
     }
 
     const stats = await umamiResponse.json()
 
-    // Get page metrics
-    const pagesResponse = await fetch(
-      `https://cloud.umami.is/api/websites/${UMAMI_WEBSITE_ID}/metrics?type=url&startAt=${new Date(startDate).getTime()}&endAt=${new Date(endDate).getTime()}`,
-      {
-        headers: {
-          'x-umami-api-key': UMAMI_API_KEY,
-        }
+    // Get page metrics with new API format
+    const pagesUrl = `https://api.umami.is/v1/websites/${UMAMI_WEBSITE_ID}/metrics`
+    const pagesParams = new URLSearchParams({
+      type: 'url',
+      startAt: startTimestamp.toString(),
+      endAt: endTimestamp.toString()
+    })
+    
+    const pagesResponse = await fetch(`${pagesUrl}?${pagesParams}`, {
+      headers: {
+        'Authorization': `Bearer ${UMAMI_API_KEY}`,
+        'Accept': 'application/json'
       }
-    )
+    })
 
     const pages = pagesResponse.ok ? await pagesResponse.json() : []
 
     return {
-      pageViews: stats.pageviews?.value || 0,
-      visitors: stats.visitors?.value || 0,
-      bounceRate: stats.bounces?.value || 0,
-      avgDuration: stats.totaltime?.value || 0,
-      pages: pages.slice(0, 20) // Top 20 pages
+      pageViews: stats.pageviews?.value || stats.pageviews || 0,
+      visitors: stats.visitors?.value || stats.visitors || 0,
+      bounceRate: stats.bounces?.value || stats.bounceRate || 0,
+      avgDuration: stats.totaltime?.value || stats.avgSessionDuration || 0,
+      pages: Array.isArray(pages) ? pages.slice(0, 20) : []
     }
   } catch (error) {
     console.error('Umami error:', error)
@@ -207,18 +257,41 @@ function correlateData(searchData: any, umamiData: any) {
   // Match search console pages with Umami pages
   if (searchData.pages && umamiData.pages) {
     searchData.pages.forEach((searchPage: any) => {
-      const url = searchPage.keys?.[0]?.replace('https://speakabout.ai', '') || ''
-      const umamiPage = umamiData.pages.find((p: any) => p.x === url || p.x === url + '/')
+      const fullUrl = searchPage.keys?.[0] || ''
+      const url = fullUrl.replace('https://speakabout.ai', '') || '/'
+      
+      // Try to find matching Umami page
+      // Umami might return pages as {x: url, y: count} or {url: url, pageviews: count}
+      const umamiPage = umamiData.pages.find((p: any) => {
+        const pageUrl = p.x || p.url || p.page
+        const normalizedPageUrl = pageUrl === '/' ? '/' : pageUrl.replace(/\/$/, '')
+        const normalizedSearchUrl = url === '/' ? '/' : url.replace(/\/$/, '')
+        return normalizedPageUrl === normalizedSearchUrl || 
+               normalizedPageUrl === normalizedSearchUrl + '/' ||
+               normalizedPageUrl + '/' === normalizedSearchUrl
+      })
       
       if (umamiPage) {
+        const actualVisits = umamiPage.y || umamiPage.pageviews || umamiPage.value || 0
         correlations.searchToVisit.push({
           url,
           searchClicks: searchPage.clicks || 0,
           searchImpressions: searchPage.impressions || 0,
           searchCTR: searchPage.ctr || 0,
           searchPosition: searchPage.position || 0,
-          actualVisits: umamiPage.y || 0,
-          conversionRate: calculateConversionRate(searchPage.clicks, umamiPage.y)
+          actualVisits,
+          conversionRate: calculateConversionRate(searchPage.clicks, actualVisits)
+        })
+      } else if (searchPage.clicks > 0) {
+        // Include pages with search clicks even if no Umami data
+        correlations.searchToVisit.push({
+          url,
+          searchClicks: searchPage.clicks || 0,
+          searchImpressions: searchPage.impressions || 0,
+          searchCTR: searchPage.ctr || 0,
+          searchPosition: searchPage.position || 0,
+          actualVisits: 0,
+          conversionRate: 0
         })
       }
     })

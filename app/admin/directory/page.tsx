@@ -24,7 +24,8 @@ import {
   Building2, Users, Plus, Edit, Trash2, Eye, 
   CheckCircle, XCircle, Clock, Search, Filter,
   Mail, Download, Upload, Star, TrendingUp, FileSpreadsheet,
-  Save, X, Copy, ChevronRight, MoreHorizontal, MapPin, Globe
+  Save, X, Copy, ChevronRight, MoreHorizontal, MapPin, Globe,
+  BarChart3, MousePointer, Target
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { VendorCSVImport } from "@/components/vendor-csv-import"
@@ -84,6 +85,19 @@ interface Category {
   slug: string
 }
 
+interface DirectoryAnalytics {
+  totalSearches: number
+  topSearchTerms: Array<{ term: string; count: number }>
+  categoryFilters: Array<{ category: string; count: number }>
+  sortFilters: Array<{ sort: string; count: number }>
+  vendorViews: Array<{ vendor: string; views: number }>
+  contactActions: Array<{ vendor: string; method: string; count: number }>
+  websiteClicks: Array<{ vendor: string; clicks: number }>
+  signups: number
+  logins: number
+  conversionRate: number
+}
+
 export default function AdminDirectoryPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -92,6 +106,8 @@ export default function AdminDirectoryPage() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
   const [applications, setApplications] = useState<any[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [directoryAnalytics, setDirectoryAnalytics] = useState<DirectoryAnalytics | null>(null)
+  const [analyticsTimeRange, setAnalyticsTimeRange] = useState("7")
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -161,6 +177,9 @@ export default function AdminDirectoryPage() {
         console.log("Loaded applications:", applicationsData.applications?.length)
         setApplications(applicationsData.applications || [])
       }
+      
+      // Load analytics
+      loadAnalytics()
     } catch (error) {
       console.error("Error loading data:", error)
       toast({
@@ -170,6 +189,21 @@ export default function AdminDirectoryPage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+  
+  const loadAnalytics = async (timeRange?: string) => {
+    try {
+      const days = timeRange || analyticsTimeRange
+      const analyticsRes = await fetch(`/api/analytics/directory?days=${days}`, {
+        headers: { "x-admin-request": "true" }
+      })
+      if (analyticsRes.ok) {
+        const data = await analyticsRes.json()
+        setDirectoryAnalytics(data)
+      }
+    } catch (error) {
+      console.error("Error loading directory analytics:", error)
     }
   }
 
@@ -589,6 +623,10 @@ export default function AdminDirectoryPage() {
           </TabsTrigger>
           <TabsTrigger value="subscribers">Subscribers</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Analytics
+          </TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -1616,6 +1654,228 @@ export default function AdminDirectoryPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <div className="space-y-6">
+            {/* Analytics Time Range Selector */}
+            <div className="flex justify-end">
+              <Select 
+                value={analyticsTimeRange} 
+                onValueChange={(value) => {
+                  setAnalyticsTimeRange(value)
+                  loadAnalytics(value)
+                }}
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Select time range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Last 24 hours</SelectItem>
+                  <SelectItem value="7">Last 7 days</SelectItem>
+                  <SelectItem value="30">Last 30 days</SelectItem>
+                  <SelectItem value="90">Last 90 days</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Analytics Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Searches</CardTitle>
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {directoryAnalytics?.totalSearches || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Vendor searches performed</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Vendor Views</CardTitle>
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {directoryAnalytics?.vendorViews?.reduce((sum, v) => sum + v.views, 0) || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Profile views</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Contact Actions</CardTitle>
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {directoryAnalytics?.contactActions?.reduce((sum, c) => sum + c.count, 0) || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Vendor contacts initiated</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {directoryAnalytics?.conversionRate || 0}%
+                  </div>
+                  <p className="text-xs text-muted-foreground">View to contact ratio</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Top Search Terms */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Search Terms</CardTitle>
+                <CardDescription>Most searched vendor keywords</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {directoryAnalytics?.topSearchTerms && directoryAnalytics.topSearchTerms.length > 0 ? (
+                    directoryAnalytics.topSearchTerms.slice(0, 10).map((term, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <span className="font-medium">{term.term}</span>
+                        <Badge>{term.count} searches</Badge>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No search data available yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Most Viewed Vendors */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Most Viewed Vendors</CardTitle>
+                  <CardDescription>Top performing vendor profiles</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {directoryAnalytics?.vendorViews && directoryAnalytics.vendorViews.length > 0 ? (
+                      directoryAnalytics.vendorViews.slice(0, 10).map((vendor, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="font-medium">{vendor.vendor}</span>
+                          <Badge variant="outline">{vendor.views} views</Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">No vendor view data yet</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Contact Methods */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Contact Actions</CardTitle>
+                  <CardDescription>How users are reaching out to vendors</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {directoryAnalytics?.contactActions && directoryAnalytics.contactActions.length > 0 ? (
+                      directoryAnalytics.contactActions.slice(0, 10).map((action, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <div>
+                            <span className="font-medium">{action.vendor}</span>
+                            <Badge variant="secondary" className="ml-2">{action.method}</Badge>
+                          </div>
+                          <Badge>{action.count}</Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">No contact data available yet</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Category Filter Usage */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Category Filter Usage</CardTitle>
+                <CardDescription>Most popular vendor categories searched</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {directoryAnalytics?.categoryFilters?.map((filter, index) => (
+                    <div key={index} className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
+                      <span className="text-2xl font-bold">{filter.count}</span>
+                      <span className="text-sm text-gray-600 text-center">{filter.category}</span>
+                    </div>
+                  )) || <p className="text-gray-500 col-span-4 text-center">No filter data available yet</p>}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Website Clicks */}
+            <Card>
+              <CardHeader>
+                <CardTitle>External Traffic</CardTitle>
+                <CardDescription>Vendors driving clicks to their websites</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {directoryAnalytics?.websiteClicks && directoryAnalytics.websiteClicks.length > 0 ? (
+                    directoryAnalytics.websiteClicks.slice(0, 10).map((click, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-gray-400" />
+                          <span className="font-medium">{click.vendor}</span>
+                        </div>
+                        <Badge variant="outline">
+                          <MousePointer className="h-3 w-3 mr-1" />
+                          {click.clicks} clicks
+                        </Badge>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No website click data available yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* User Activity */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>New Signups</CardTitle>
+                  <CardDescription>Users who registered for directory access</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{directoryAnalytics?.signups || 0}</div>
+                  <p className="text-sm text-gray-500 mt-2">New users in selected period</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Returning Users</CardTitle>
+                  <CardDescription>Users who logged in during the period</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{directoryAnalytics?.logins || 0}</div>
+                  <p className="text-sm text-gray-500 mt-2">Login events recorded</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="settings">
