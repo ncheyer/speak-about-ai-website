@@ -41,9 +41,14 @@ import { useToast } from "@/hooks/use-toast"
 import { formatDateTimePST, getPSTTimezoneLabel } from "@/lib/date-utils"
 import dynamic from 'next/dynamic'
 
-// Dynamically import the Search Console Dashboard to avoid SSR issues with recharts
+// Dynamically import the dashboards to avoid SSR issues with recharts
 const SearchConsoleDashboard = dynamic(
   () => import('@/components/search-console-dashboard'),
+  { ssr: false }
+)
+
+const IntegratedAnalyticsDashboard = dynamic(
+  () => import('@/components/integrated-analytics-dashboard'),
   { ssr: false }
 )
 
@@ -278,6 +283,16 @@ export default function AdminAnalyticsPage() {
               }`}
             >
               Search Console
+            </button>
+            <button
+              onClick={() => setActiveTab("integrated")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === "integrated"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Integrated Insights
             </button>
           </div>
 
@@ -1037,6 +1052,11 @@ export default function AdminAnalyticsPage() {
           {/* Search Console Tab Content */}
           {activeTab === "searchConsole" && (
             <SearchConsoleDashboard timeRange={timeRange} />
+          )}
+
+          {/* Integrated Analytics Tab Content */}
+          {activeTab === "integrated" && (
+            <IntegratedAnalyticsDashboard timeRange={timeRange} />
           )}
         </div>
       </div>
