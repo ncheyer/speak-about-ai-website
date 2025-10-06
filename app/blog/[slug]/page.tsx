@@ -165,9 +165,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           [BLOCKS.PARAGRAPH]: (node, next) => `<p class="mb-4 leading-relaxed">${next(node.content)}</p>`,
           [BLOCKS.HEADING_2]: (node, next) => `<h2 class="text-2xl font-semibold mt-8 mb-3">${next(node.content)}</h2>`,
           [BLOCKS.HEADING_3]: (node, next) => `<h3 class="text-xl font-semibold mt-6 mb-2">${next(node.content)}</h3>`,
-          [BLOCKS.UL_LIST]: (node, next) => `<ul class="list-disc list-inside mb-4 pl-4">${next(node.content)}</ul>`,
-          [BLOCKS.OL_LIST]: (node, next) => `<ol class="list-decimal list-inside mb-4 pl-4">${next(node.content)}</ol>`,
-          [BLOCKS.LIST_ITEM]: (node, next) => `<li class="mb-1">${next(node.content)}</li>`,
+          [BLOCKS.UL_LIST]: (node, next) => `<ul class="list-disc mb-4 pl-6 space-y-2">${next(node.content)}</ul>`,
+          [BLOCKS.OL_LIST]: (node, next) => `<ol class="list-decimal mb-4 pl-6 space-y-2">${next(node.content)}</ol>`,
+          [BLOCKS.LIST_ITEM]: (node, next) => {
+            // Extract text content without wrapping paragraph tags
+            const content = next(node.content)
+            // Remove paragraph tags if they exist
+            const cleanContent = content.replace(/<p[^>]*>(.*?)<\/p>/g, '$1')
+            return `<li class="mb-1">${cleanContent}</li>`
+          },
           [BLOCKS.QUOTE]: (node, next) =>
             `<blockquote class="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic my-4">${next(node.content)}</blockquote>`,
           [INLINES.HYPERLINK]: (node, next) => {
