@@ -4,7 +4,36 @@ import { extractAnalyticsFromRequest, extractUTMParams, generateVisitorId, gener
 import { recordPageView, updateSession } from './lib/analytics-db'
 
 export async function middleware(request: NextRequest) {
+  const url = request.nextUrl.clone()
+  const pathname = url.pathname
+  
+  // URL normalization for SEO (before creating response)
+  let shouldRedirect = false
+  
+  // Convert speaker and blog slugs to lowercase
+  if (pathname.startsWith('/speakers/') || pathname.startsWith('/blog/')) {
+    const lowerPathname = pathname.toLowerCase()
+    if (pathname !== lowerPathname) {
+      url.pathname = lowerPathname
+      shouldRedirect = true
+    }
+  }
+  
+  // Remove trailing slash except for homepage
+  if (pathname !== '/' && pathname.endsWith('/')) {
+    url.pathname = pathname.slice(0, -1)
+    shouldRedirect = true
+  }
+  
+  // Redirect if URL needs normalization
+  if (shouldRedirect) {
+    return NextResponse.redirect(url, 301)
+  }
+  
   const response = NextResponse.next()
+  
+  // Add canonical header to help search engines
+  response.headers.set('Link', `<https://speakabout.ai${pathname}>; rel="canonical"`)
   
   // Check if this is an API route
   const isApiRoute = request.nextUrl.pathname.startsWith('/api/')

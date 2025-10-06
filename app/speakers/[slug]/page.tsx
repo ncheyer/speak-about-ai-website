@@ -2,6 +2,8 @@ import { notFound } from "next/navigation"
 import { getSpeakerBySlug, getAllSpeakers } from "@/lib/speakers-data"
 import SpeakerProfile from "@/components/speaker-profile"
 import ScrollToTop from "./scroll-to-top"
+import { generateSpeakerStructuredData } from "./structured-data"
+import Script from "next/script"
 
 interface SpeakerPageProps {
   params: Promise<{ slug: string }>
