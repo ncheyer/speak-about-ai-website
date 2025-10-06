@@ -869,14 +869,6 @@ export default function MasterAdminPanel() {
                         <FileText className="h-4 w-4 mr-2" />
                         Blog Management
                       </Button>
-                      <Button 
-                        className="w-full justify-start" 
-                        variant="outline"
-                        onClick={() => router.push("/admin/search-console")}
-                      >
-                        <Search className="h-4 w-4 mr-2" />
-                        Search Console
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
