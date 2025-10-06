@@ -39,6 +39,13 @@ import {
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
 import { formatDateTimePST, getPSTTimezoneLabel } from "@/lib/date-utils"
+import dynamic from 'next/dynamic'
+
+// Dynamically import the Search Console Dashboard to avoid SSR issues with recharts
+const SearchConsoleDashboard = dynamic(
+  () => import('@/components/search-console-dashboard'),
+  { ssr: false }
+)
 
 interface DirectoryAnalytics {
   totalSearches: number
@@ -103,9 +110,6 @@ export default function AdminAnalyticsPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [searchAnalytics, setSearchAnalytics] = useState<SearchAnalytics | null>(null)
   const [directoryAnalytics, setDirectoryAnalytics] = useState<DirectoryAnalytics | null>(null)
-  const [searchConsoleData, setSearchConsoleData] = useState<any>(null)
-  const [searchConsoleLoading, setSearchConsoleLoading] = useState(false)
-  const [searchConsoleDimension, setSearchConsoleDimension] = useState('query')
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState("7")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -120,40 +124,6 @@ export default function AdminAnalyticsPage() {
     setIsLoggedIn(true)
     loadAnalytics()
   }, [router, timeRange])
-
-  const fetchSearchConsoleData = async (startDate?: string, endDate?: string, dimension?: string) => {
-    setSearchConsoleLoading(true)
-    
-    try {
-      const start = startDate || new Date(Date.now() - parseInt(timeRange) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      const end = endDate || new Date().toISOString().split('T')[0]
-      const dim = dimension || searchConsoleDimension
-      
-      const params = new URLSearchParams({
-        startDate: start,
-        endDate: end,
-        dimensions: dim
-      })
-      
-      const response = await fetch(`/api/admin/search-console?${params}`, {
-        headers: {
-          'x-admin-request': 'true'
-        }
-      })
-      
-      const result = await response.json()
-      
-      if (response.ok) {
-        setSearchConsoleData(result)
-      } else {
-        console.error('Search Console error:', result)
-      }
-    } catch (err) {
-      console.error('Failed to fetch Search Console data:', err)
-    } finally {
-      setSearchConsoleLoading(false)
-    }
-  }
 
   const loadAnalytics = async () => {
     try {
@@ -300,12 +270,7 @@ export default function AdminAnalyticsPage() {
               Directory Analytics
             </button>
             <button
-              onClick={() => {
-                setActiveTab("searchConsole")
-                if (!searchConsoleData) {
-                  fetchSearchConsoleData()
-                }
-              }}
+              onClick={() => setActiveTab("searchConsole")}
               className={`px-4 py-2 font-medium transition-colors ${
                 activeTab === "searchConsole"
                   ? "text-blue-600 border-b-2 border-blue-600"
@@ -1071,136 +1036,7 @@ export default function AdminAnalyticsPage() {
 
           {/* Search Console Tab Content */}
           {activeTab === "searchConsole" && (
-            <div className="space-y-6">
-              {searchConsoleLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : searchConsoleData ? (
-                <>
-                  {/* Search Console Metrics */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Clicks</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between">
-                          <span className="text-2xl font-bold">{searchConsoleData.totals?.clicks?.toLocaleString() || 0}</span>
-                          <MousePointer className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Impressions</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between">
-                          <span className="text-2xl font-bold">{searchConsoleData.totals?.impressions?.toLocaleString() || 0}</span>
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Average CTR</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between">
-                          <span className="text-2xl font-bold">{((searchConsoleData.totals?.ctr || 0) * 100).toFixed(2)}%</span>
-                          <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Average Position</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between">
-                          <span className="text-2xl font-bold">{searchConsoleData.totals?.position?.toFixed(1) || 0}</span>
-                          <Globe className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Dimension Selector */}
-                  <Card>
-                    <CardHeader>
-                      <div className="flex justify-between items-center">
-                        <CardTitle>Performance Data</CardTitle>
-                        <Select value={searchConsoleDimension} onValueChange={(value) => {
-                          setSearchConsoleDimension(value)
-                          fetchSearchConsoleData(undefined, undefined, value)
-                        }}>
-                          <SelectTrigger className="w-48">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="query">Search Queries</SelectItem>
-                            <SelectItem value="page">Pages</SelectItem>
-                            <SelectItem value="country">Countries</SelectItem>
-                            <SelectItem value="device">Devices</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <CardDescription>
-                        Top {searchConsoleDimension === 'query' ? 'search queries' : searchConsoleDimension === 'page' ? 'pages' : searchConsoleDimension === 'country' ? 'countries' : 'devices'} by performance
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>
-                              {searchConsoleDimension === 'query' ? 'Query' : searchConsoleDimension === 'page' ? 'Page' : searchConsoleDimension === 'country' ? 'Country' : 'Device'}
-                            </TableHead>
-                            <TableHead className="text-right">Clicks</TableHead>
-                            <TableHead className="text-right">Impressions</TableHead>
-                            <TableHead className="text-right">CTR</TableHead>
-                            <TableHead className="text-right">Position</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {searchConsoleData.data && searchConsoleData.data.length > 0 ? (
-                            searchConsoleData.data.map((row: any, index: number) => (
-                              <TableRow key={index}>
-                                <TableCell className="font-medium">
-                                  {row.keys?.[0] || 'N/A'}
-                                </TableCell>
-                                <TableCell className="text-right">{(row.clicks || 0).toLocaleString()}</TableCell>
-                                <TableCell className="text-right">{(row.impressions || 0).toLocaleString()}</TableCell>
-                                <TableCell className="text-right">{((row.ctr || 0) * 100).toFixed(2)}%</TableCell>
-                                <TableCell className="text-right">{(row.position || 0).toFixed(1)}</TableCell>
-                              </TableRow>
-                            ))
-                          ) : (
-                            <TableRow>
-                              <TableCell colSpan={5} className="text-center text-muted-foreground">
-                                No data available for the selected period
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
-                </>
-              ) : (
-                <Alert className="border-orange-200 bg-orange-50">
-                  <AlertTriangle className="h-4 w-4 text-orange-600" />
-                  <AlertTitle className="text-orange-800">Search Console Not Connected</AlertTitle>
-                  <AlertDescription className="text-orange-700">
-                    Click the Search Console tab to load your Google Search performance data.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
+            <SearchConsoleDashboard timeRange={timeRange} />
           )}
         </div>
       </div>
