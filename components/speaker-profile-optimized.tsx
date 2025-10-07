@@ -133,6 +133,20 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         )}
                       </div>
 
+                      {/* Industries */}
+                      {speaker.industries && speaker.industries.length > 0 && (
+                        <div className="mt-6">
+                          <h3 className="text-sm font-semibold text-gray-900 mb-2">Industries:</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {speaker.industries.map((industry, index) => (
+                              <Badge key={index} className="bg-[#1E68C6] text-white text-xs">
+                                {industry}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Social Links */}
                       <div className="flex justify-center space-x-4 mt-6 pt-6 border-t">
                         {speaker.linkedin && (
@@ -166,16 +180,6 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   {speaker.expertise?.slice(0, 3).join(', ') || 'artificial intelligence and innovation'}
                 </p>
 
-                {/* Industry Badges - Only show if data exists */}
-                {speaker.industries && speaker.industries.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {speaker.industries.map((industry, index) => (
-                      <Badge key={index} className="bg-[#1E68C6] text-white">
-                        {industry}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
 
                 {/* H2: About Section - Only show if bio exists */}
                 {speaker.bio && (
@@ -245,16 +249,40 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">
                       Available Speaking Programs
                     </h2>
-                    <ul className="space-y-4">
-                      {speaker.programs.map((program, index) => (
-                        <li key={index} className="flex items-start">
-                          <Calendar className="w-5 h-5 mr-3 mt-1 text-[#1E68C6] flex-shrink-0" />
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">{program}</h3>
+                    <div className="space-y-6">
+                      {speaker.programs.map((program, index) => {
+                        const isString = typeof program === 'string'
+                        const title = isString ? program : program.title
+                        const description = isString ? null : program.description
+                        const duration = isString ? null : program.duration
+                        const format = isString ? null : program.format
+                        
+                        return (
+                          <div key={index} className="border-l-4 border-[#1E68C6] pl-6">
+                            <div className="flex items-start">
+                              <Calendar className="w-5 h-5 mr-3 mt-1 text-[#1E68C6] flex-shrink-0" />
+                              <div className="flex-1">
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                  {title}
+                                  {format && (
+                                    <Badge className="ml-3 bg-gray-100 text-gray-700">{format}</Badge>
+                                  )}
+                                </h3>
+                                {description && (
+                                  <p className="text-gray-600 mb-2">{description}</p>
+                                )}
+                                {duration && (
+                                  <p className="text-sm text-gray-500">
+                                    <Clock className="w-4 h-4 inline mr-1" />
+                                    Duration: {duration}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </li>
-                      ))}
-                    </ul>
+                        )
+                      })}
+                    </div>
                   </section>
                 )}
 
@@ -266,16 +294,68 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                       Speaker Videos & Media
                     </h2>
                     <div className="grid md:grid-cols-2 gap-6">
-                      {speaker.videos.map((video, index) => (
-                        <div key={index} className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                          <iframe
-                            src={video.url}
-                            title={video.title}
-                            className="w-full h-full"
-                            allowFullScreen
-                          />
-                        </div>
-                      ))}
+                      {speaker.videos.map((video, index) => {
+                        // Function to extract YouTube video ID
+                        const getYouTubeId = (url: string) => {
+                          const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+                          const match = url?.match(regExp)
+                          return (match && match[2].length === 11) ? match[2] : null
+                        }
+                        
+                        const getYouTubeThumbnail = (url: string) => {
+                          const videoId = getYouTubeId(url)
+                          if (videoId) {
+                            return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+                          }
+                          return null
+                        }
+                        
+                        const thumbnail = video.thumbnail || getYouTubeThumbnail(video.url) || "/placeholder.svg"
+                        
+                        return (
+                          <a
+                            key={index}
+                            href={video.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group block"
+                          >
+                            <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
+                              <div className="aspect-video bg-gray-100 relative">
+                                <img
+                                  src={thumbnail}
+                                  alt={video.title}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement
+                                    if (thumbnail.includes('maxresdefault')) {
+                                      target.src = thumbnail.replace('maxresdefault', 'hqdefault')
+                                    }
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
+                                  <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                    <Play className="w-8 h-8 text-[#1E68C6] ml-1" />
+                                  </div>
+                                </div>
+                                {video.duration && (
+                                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                                    {video.duration}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="p-4 bg-white">
+                                <h3 className="font-semibold text-gray-900 group-hover:text-[#1E68C6] transition-colors duration-300">
+                                  {video.title}
+                                </h3>
+                                {video.source && (
+                                  <p className="text-sm text-gray-500 mt-1">{video.source}</p>
+                                )}
+                              </div>
+                            </div>
+                          </a>
+                        )
+                      })}
                     </div>
                   </section>
                 )}

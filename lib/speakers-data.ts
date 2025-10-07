@@ -6,7 +6,12 @@ export interface Speaker {
   image?: string
   imagePosition?: string
   imageOffsetY?: string
-  programs?: string[]
+  programs?: string[] | {
+    title: string
+    description?: string
+    duration?: string
+    format?: string // "Keynote", "Workshop", "Panel", etc.
+  }[]
   industries?: string[]
   fee?: string
   feeRange?: string
