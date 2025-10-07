@@ -1,13 +1,12 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, Building, Award, Calendar, CheckCircle, BookOpen, Trophy, Download, Mic, Users, Clock, Briefcase, Star } from "lucide-react"
+import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, Building, Award, Calendar, CheckCircle, BookOpen, Trophy, Download, Mic, Users, Clock, Briefcase, Star, MessageSquare } from "lucide-react"
 import type { Speaker } from "@/lib/speakers-data"
 
 interface OptimizedSpeakerProfileProps {
@@ -16,7 +15,7 @@ interface OptimizedSpeakerProfileProps {
 
 const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speaker }) => {
   const imageUrl = speaker.image || "/placeholder.svg"
-  
+
   // Format bio with proper paragraphs
   const formatBio = (bio: string) => {
     if (!bio) return null
@@ -27,6 +26,8 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
       </p>
     ))
   }
+
+  // We'll always show 2 tabs: About and Speaking
 
   // Generate breadcrumb schema
   const breadcrumbSchema = {
@@ -81,7 +82,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left: Image and Quick Info */}
               <div className="lg:col-span-1">
-                <div className="lg:sticky lg:top-24">
+                <div className="lg:sticky lg:top-24" suppressHydrationWarning>
                   <Card className="shadow-lg border border-gray-200">
                     <div className="relative aspect-[3/4] overflow-hidden rounded-t-lg">
                       <img
@@ -181,7 +182,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
 
                 {/* Tabs for Content Organization */}
                 <Tabs defaultValue="about" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4 mb-8 bg-gray-100">
+                  <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100">
                     <TabsTrigger
                       value="about"
                       className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
@@ -189,22 +190,10 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                       About
                     </TabsTrigger>
                     <TabsTrigger
-                      value="programs"
+                      value="speaking"
                       className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
                     >
-                      Programs
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="experience"
-                      className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
-                    >
-                      Experience
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="media"
-                      className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
-                    >
-                      Media
+                      Speaking & Experience
                     </TabsTrigger>
                   </TabsList>
 
@@ -255,8 +244,8 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                     )}
                   </TabsContent>
 
-                  {/* Programs Tab */}
-                  <TabsContent value="programs" className="space-y-8">
+                  {/* Speaking & Experience Tab - Combines Programs, Experience, and Media */}
+                  <TabsContent value="speaking" className="space-y-8">
 
                     {/* Speaking Programs - MOVED TO TOP */}
                     {speaker.programs && speaker.programs.length > 0 && (
@@ -377,10 +366,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         </div>
                       </section>
                     )}
-                  </TabsContent>
 
-                  {/* Experience Tab */}
-                  <TabsContent value="experience" className="space-y-8">
                     {/* Past Speaking Engagements */}
                     {speaker.pastEvents && speaker.pastEvents.length > 0 && (
                       <section>
@@ -487,10 +473,53 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         </div>
                       </section>
                     )}
-                  </TabsContent>
 
-                  {/* Media Tab */}
-                  <TabsContent value="media" className="space-y-8">
+                    {/* Testimonials */}
+                    {speaker.testimonials && speaker.testimonials.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                          <MessageSquare className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                          Testimonials
+                        </h2>
+                        <div className="space-y-6">
+                          {speaker.testimonials.map((testimonial, index) => (
+                            <div key={index} className="bg-gray-50 p-6 rounded-lg border-l-4 border-[#1E68C6] relative">
+                              <Quote className="absolute top-4 right-4 w-8 h-8 text-gray-200" />
+                              <p className="text-gray-700 italic mb-4 relative z-10">
+                                "{testimonial.quote}"
+                              </p>
+                              <div className="space-y-1">
+                                <p className="font-semibold text-gray-900">{testimonial.author}</p>
+                                {(testimonial.position || testimonial.company) && (
+                                  <p className="text-sm text-gray-600">
+                                    {testimonial.position}
+                                    {testimonial.position && testimonial.company ? ", " : ""}
+                                    {testimonial.company}
+                                  </p>
+                                )}
+                                {testimonial.event && (
+                                  <p className="text-xs text-gray-500 flex items-center">
+                                    <Building className="w-3 h-3 mr-1.5 text-gray-400" />
+                                    {testimonial.event}
+                                  </p>
+                                )}
+                                {testimonial.date && (
+                                  <p className="text-xs text-gray-500 flex items-center">
+                                    <Calendar className="w-3 h-3 mr-1.5 text-gray-400" />
+                                    {new Date(testimonial.date).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                    })}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
                     {/* Videos */}
                 {speaker.videos && speaker.videos.length > 0 && (
                   <section className="mb-12">
@@ -591,49 +620,6 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                               {media.embedCode && (
                                 <div className="mt-4" dangerouslySetInnerHTML={{ __html: media.embedCode }} />
                               )}
-                            </div>
-                          ))}
-                        </div>
-                      </section>
-                    )}
-
-                    {/* Testimonials */}
-                    {speaker.testimonials && speaker.testimonials.length > 0 && (
-                      <section>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-6">Testimonials</h2>
-                        <div className="space-y-6">
-                          {speaker.testimonials.map((testimonial, index) => (
-                            <div key={index} className="bg-gray-50 p-6 rounded-lg border-l-4 border-[#1E68C6] relative">
-                              <Quote className="absolute top-4 right-4 w-8 h-8 text-gray-200" />
-                              <p className="text-gray-700 italic mb-4 relative z-10">
-                                "{testimonial.quote}"
-                              </p>
-                              <div className="space-y-1">
-                                <p className="font-semibold text-gray-900">{testimonial.author}</p>
-                                {(testimonial.position || testimonial.company) && (
-                                  <p className="text-sm text-gray-600">
-                                    {testimonial.position}
-                                    {testimonial.position && testimonial.company ? ", " : ""}
-                                    {testimonial.company}
-                                  </p>
-                                )}
-                                {testimonial.event && (
-                                  <p className="text-xs text-gray-500 flex items-center">
-                                    <Building className="w-3 h-3 mr-1.5 text-gray-400" />
-                                    {testimonial.event}
-                                  </p>
-                                )}
-                                {testimonial.date && (
-                                  <p className="text-xs text-gray-500 flex items-center">
-                                    <Calendar className="w-3 h-3 mr-1.5 text-gray-400" />
-                                    {new Date(testimonial.date).toLocaleDateString("en-US", {
-                                      year: "numeric",
-                                      month: "long",
-                                      day: "numeric",
-                                    })}
-                                  </p>
-                                )}
-                              </div>
                             </div>
                           ))}
                         </div>

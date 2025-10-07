@@ -100,6 +100,7 @@ export default function SpeakerProfilePageRestructured() {
   const [editMode, setEditMode] = useState({
     profile: false,
     expertise: false,
+    experience: false,
     media: false,
     contact: false,
     logistics: false,
@@ -388,6 +389,10 @@ export default function SpeakerProfilePageRestructured() {
                     <TabsTrigger value="expertise" className="rounded-none border-b-2 border-transparent data-[state=active]:border-green-600">
                       <Target className="h-4 w-4 mr-2" />
                       Expertise
+                    </TabsTrigger>
+                    <TabsTrigger value="experience" className="rounded-none border-b-2 border-transparent data-[state=active]:border-green-600">
+                      <Briefcase className="h-4 w-4 mr-2" />
+                      Experience
                     </TabsTrigger>
                     <TabsTrigger value="media" className="rounded-none border-b-2 border-transparent data-[state=active]:border-green-600">
                       <Video className="h-4 w-4 mr-2" />
@@ -720,6 +725,524 @@ export default function SpeakerProfilePageRestructured() {
                           >
                             <Edit className="h-4 w-4 mr-2" />
                             Edit Expertise
+                          </Button>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    {/* Experience Section */}
+                    <TabsContent value="experience" className="mt-0 space-y-6">
+                      {/* Past Events */}
+                      <div>
+                        <Label>Past Speaking Engagements</Label>
+                        <div className="mt-2 space-y-3">
+                          {editMode.experience ? (
+                            <>
+                              {(profile.past_events || []).map((event: any, index: number) => (
+                                <div key={index} className="border rounded p-3 bg-gray-50">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div className="flex-1 space-y-2">
+                                      <Input
+                                        value={event.eventName || ''}
+                                        onChange={(e) => {
+                                          const updated = [...(profile.past_events || [])]
+                                          updated[index] = { ...event, eventName: e.target.value }
+                                          setProfile({ ...profile, past_events: updated })
+                                        }}
+                                        placeholder="Event name"
+                                      />
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <Input
+                                          value={event.eventType || ''}
+                                          onChange={(e) => {
+                                            const updated = [...(profile.past_events || [])]
+                                            updated[index] = { ...event, eventType: e.target.value }
+                                            setProfile({ ...profile, past_events: updated })
+                                          }}
+                                          placeholder="Event type"
+                                        />
+                                        <Input
+                                          value={event.location || ''}
+                                          onChange={(e) => {
+                                            const updated = [...(profile.past_events || [])]
+                                            updated[index] = { ...event, location: e.target.value }
+                                            setProfile({ ...profile, past_events: updated })
+                                          }}
+                                          placeholder="Location"
+                                        />
+                                      </div>
+                                      <Input
+                                        value={event.date || ''}
+                                        onChange={(e) => {
+                                          const updated = [...(profile.past_events || [])]
+                                          updated[index] = { ...event, date: e.target.value }
+                                          setProfile({ ...profile, past_events: updated })
+                                        }}
+                                        placeholder="Date"
+                                      />
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        const updated = (profile.past_events || []).filter((_: any, i: number) => i !== index)
+                                        setProfile({ ...profile, past_events: updated })
+                                      }}
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setProfile({
+                                    ...profile,
+                                    past_events: [...(profile.past_events || []), { eventName: '', eventType: '', location: '', date: '' }]
+                                  })
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Past Event
+                              </Button>
+                            </>
+                          ) : (
+                            <div className="space-y-2">
+                              {(profile.past_events || []).length > 0 ? (
+                                (profile.past_events || []).map((event: any, index: number) => (
+                                  <div key={index} className="border-l-4 border-green-600 pl-4 py-2">
+                                    <h4 className="font-medium">{event.eventName}</h4>
+                                    <p className="text-sm text-gray-600">
+                                      {event.eventType && <span>{event.eventType}</span>}
+                                      {event.location && <span> • {event.location}</span>}
+                                      {event.date && <span> • {event.date}</span>}
+                                    </p>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500">No past events added yet</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Awards */}
+                      <div>
+                        <Label>Awards & Recognition</Label>
+                        <div className="mt-2 space-y-3">
+                          {editMode.experience ? (
+                            <>
+                              {(profile.awards || []).map((award: any, index: number) => (
+                                <div key={index} className="border rounded p-3 bg-gray-50">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div className="flex-1 space-y-2">
+                                      <Input
+                                        value={award.title || ''}
+                                        onChange={(e) => {
+                                          const updated = [...(profile.awards || [])]
+                                          updated[index] = { ...award, title: e.target.value }
+                                          setProfile({ ...profile, awards: updated })
+                                        }}
+                                        placeholder="Award title"
+                                      />
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <Input
+                                          value={award.organization || ''}
+                                          onChange={(e) => {
+                                            const updated = [...(profile.awards || [])]
+                                            updated[index] = { ...award, organization: e.target.value }
+                                            setProfile({ ...profile, awards: updated })
+                                          }}
+                                          placeholder="Organization"
+                                        />
+                                        <Input
+                                          value={award.year || ''}
+                                          onChange={(e) => {
+                                            const updated = [...(profile.awards || [])]
+                                            updated[index] = { ...award, year: e.target.value }
+                                            setProfile({ ...profile, awards: updated })
+                                          }}
+                                          placeholder="Year"
+                                        />
+                                      </div>
+                                      <Textarea
+                                        value={award.description || ''}
+                                        onChange={(e) => {
+                                          const updated = [...(profile.awards || [])]
+                                          updated[index] = { ...award, description: e.target.value }
+                                          setProfile({ ...profile, awards: updated })
+                                        }}
+                                        placeholder="Description (optional)"
+                                        rows={2}
+                                      />
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        const updated = (profile.awards || []).filter((_: any, i: number) => i !== index)
+                                        setProfile({ ...profile, awards: updated })
+                                      }}
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setProfile({
+                                    ...profile,
+                                    awards: [...(profile.awards || []), { title: '', organization: '', year: '', description: '' }]
+                                  })
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Award
+                              </Button>
+                            </>
+                          ) : (
+                            <div className="space-y-2">
+                              {(profile.awards || []).length > 0 ? (
+                                (profile.awards || []).map((award: any, index: number) => (
+                                  <div key={index} className="border-l-4 border-yellow-600 pl-4 py-2">
+                                    <h4 className="font-medium">{award.title}</h4>
+                                    <p className="text-sm text-gray-600">
+                                      {award.organization && <span>{award.organization}</span>}
+                                      {award.year && <span> • {award.year}</span>}
+                                    </p>
+                                    {award.description && <p className="text-sm text-gray-500 mt-1">{award.description}</p>}
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500">No awards added yet</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Publications */}
+                      <div>
+                        <Label>Publications</Label>
+                        <div className="mt-2 space-y-3">
+                          {editMode.experience ? (
+                            <>
+                              {(profile.publications || []).map((pub: any, index: number) => (
+                                <div key={index} className="border rounded p-3 bg-gray-50">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div className="flex-1 space-y-2">
+                                      <Input
+                                        value={pub.title || ''}
+                                        onChange={(e) => {
+                                          const updated = [...(profile.publications || [])]
+                                          updated[index] = { ...pub, title: e.target.value }
+                                          setProfile({ ...profile, publications: updated })
+                                        }}
+                                        placeholder="Publication title"
+                                      />
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <select
+                                          value={pub.type || 'article'}
+                                          onChange={(e) => {
+                                            const updated = [...(profile.publications || [])]
+                                            updated[index] = { ...pub, type: e.target.value }
+                                            setProfile({ ...profile, publications: updated })
+                                          }}
+                                          className="w-full p-2 border rounded"
+                                        >
+                                          <option value="book">Book</option>
+                                          <option value="article">Article</option>
+                                          <option value="research">Research</option>
+                                          <option value="whitepaper">Whitepaper</option>
+                                        </select>
+                                        <Input
+                                          value={pub.publisher || ''}
+                                          onChange={(e) => {
+                                            const updated = [...(profile.publications || [])]
+                                            updated[index] = { ...pub, publisher: e.target.value }
+                                            setProfile({ ...profile, publications: updated })
+                                          }}
+                                          placeholder="Publisher"
+                                        />
+                                      </div>
+                                      <Input
+                                        value={pub.link || ''}
+                                        onChange={(e) => {
+                                          const updated = [...(profile.publications || [])]
+                                          updated[index] = { ...pub, link: e.target.value }
+                                          setProfile({ ...profile, publications: updated })
+                                        }}
+                                        placeholder="Link URL"
+                                      />
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        const updated = (profile.publications || []).filter((_: any, i: number) => i !== index)
+                                        setProfile({ ...profile, publications: updated })
+                                      }}
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setProfile({
+                                    ...profile,
+                                    publications: [...(profile.publications || []), { title: '', type: 'article', publisher: '', link: '' }]
+                                  })
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Publication
+                              </Button>
+                            </>
+                          ) : (
+                            <div className="space-y-2">
+                              {(profile.publications || []).length > 0 ? (
+                                (profile.publications || []).map((pub: any, index: number) => (
+                                  <div key={index} className="border-l-4 border-blue-600 pl-4 py-2">
+                                    <h4 className="font-medium">{pub.title}</h4>
+                                    <p className="text-sm text-gray-600">
+                                      <Badge variant="outline" className="mr-2">{pub.type}</Badge>
+                                      {pub.publisher}
+                                    </p>
+                                    {pub.link && (
+                                      <a href={pub.link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline flex items-center gap-1 mt-1">
+                                        View publication <ExternalLink className="h-3 w-3" />
+                                      </a>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500">No publications added yet</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Client Logos */}
+                      <div>
+                        <Label>Client Organizations</Label>
+                        <div className="mt-2 space-y-3">
+                          {editMode.experience ? (
+                            <>
+                              {(profile.client_logos || []).map((client: any, index: number) => (
+                                <div key={index} className="border rounded p-3 bg-gray-50">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div className="flex-1 space-y-2">
+                                      <Input
+                                        value={client.name || ''}
+                                        onChange={(e) => {
+                                          const updated = [...(profile.client_logos || [])]
+                                          updated[index] = { ...client, name: e.target.value }
+                                          setProfile({ ...profile, client_logos: updated })
+                                        }}
+                                        placeholder="Organization name"
+                                      />
+                                      <Input
+                                        value={client.logoUrl || ''}
+                                        onChange={(e) => {
+                                          const updated = [...(profile.client_logos || [])]
+                                          updated[index] = { ...client, logoUrl: e.target.value }
+                                          setProfile({ ...profile, client_logos: updated })
+                                        }}
+                                        placeholder="Logo URL (optional)"
+                                      />
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        const updated = (profile.client_logos || []).filter((_: any, i: number) => i !== index)
+                                        setProfile({ ...profile, client_logos: updated })
+                                      }}
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setProfile({
+                                    ...profile,
+                                    client_logos: [...(profile.client_logos || []), { name: '', logoUrl: '' }]
+                                  })
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Client
+                              </Button>
+                            </>
+                          ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              {(profile.client_logos || []).length > 0 ? (
+                                (profile.client_logos || []).map((client: any, index: number) => (
+                                  <div key={index} className="border rounded p-3 text-center">
+                                    {client.logoUrl ? (
+                                      <img src={client.logoUrl} alt={client.name} className="w-full h-12 object-contain" />
+                                    ) : (
+                                      <p className="text-sm font-medium">{client.name}</p>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500 col-span-4">No clients added yet</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Testimonials */}
+                      <div>
+                        <Label>Testimonials</Label>
+                        <div className="mt-2 space-y-3">
+                          {editMode.experience ? (
+                            <>
+                              {(profile.testimonials || []).map((testimonial: any, index: number) => (
+                                <div key={index} className="border rounded p-3 bg-gray-50">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div className="flex-1 space-y-2">
+                                      <Textarea
+                                        value={testimonial.quote || ''}
+                                        onChange={(e) => {
+                                          const updated = [...(profile.testimonials || [])]
+                                          updated[index] = { ...testimonial, quote: e.target.value }
+                                          setProfile({ ...profile, testimonials: updated })
+                                        }}
+                                        placeholder="Testimonial quote"
+                                        rows={3}
+                                      />
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <Input
+                                          value={testimonial.author || ''}
+                                          onChange={(e) => {
+                                            const updated = [...(profile.testimonials || [])]
+                                            updated[index] = { ...testimonial, author: e.target.value }
+                                            setProfile({ ...profile, testimonials: updated })
+                                          }}
+                                          placeholder="Author name"
+                                        />
+                                        <Input
+                                          value={testimonial.position || ''}
+                                          onChange={(e) => {
+                                            const updated = [...(profile.testimonials || [])]
+                                            updated[index] = { ...testimonial, position: e.target.value }
+                                            setProfile({ ...profile, testimonials: updated })
+                                          }}
+                                          placeholder="Position"
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <Input
+                                          value={testimonial.company || ''}
+                                          onChange={(e) => {
+                                            const updated = [...(profile.testimonials || [])]
+                                            updated[index] = { ...testimonial, company: e.target.value }
+                                            setProfile({ ...profile, testimonials: updated })
+                                          }}
+                                          placeholder="Company"
+                                        />
+                                        <Input
+                                          value={testimonial.event || ''}
+                                          onChange={(e) => {
+                                            const updated = [...(profile.testimonials || [])]
+                                            updated[index] = { ...testimonial, event: e.target.value }
+                                            setProfile({ ...profile, testimonials: updated })
+                                          }}
+                                          placeholder="Event"
+                                        />
+                                      </div>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        const updated = (profile.testimonials || []).filter((_: any, i: number) => i !== index)
+                                        setProfile({ ...profile, testimonials: updated })
+                                      }}
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setProfile({
+                                    ...profile,
+                                    testimonials: [...(profile.testimonials || []), { quote: '', author: '', position: '', company: '', event: '' }]
+                                  })
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Testimonial
+                              </Button>
+                            </>
+                          ) : (
+                            <div className="space-y-3">
+                              {(profile.testimonials || []).length > 0 ? (
+                                (profile.testimonials || []).map((testimonial: any, index: number) => (
+                                  <div key={index} className="border-l-4 border-purple-600 pl-4 py-3 bg-gray-50 rounded">
+                                    <blockquote className="text-gray-700 italic mb-2">"{testimonial.quote}"</blockquote>
+                                    <div className="text-sm text-gray-600">
+                                      <p className="font-medium">{testimonial.author}</p>
+                                      {testimonial.position && <p>{testimonial.position}</p>}
+                                      {testimonial.company && <p>{testimonial.company}</p>}
+                                      {testimonial.event && <p className="text-gray-500">Event: {testimonial.event}</p>}
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500">No testimonials added yet</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end pt-4">
+                        {editMode.experience ? (
+                          <Button
+                            onClick={() => {
+                              setEditMode({ ...editMode, experience: false })
+                              handleSave()
+                            }}
+                            disabled={isSaving}
+                          >
+                            {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                            Save Experience
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            onClick={() => setEditMode({ ...editMode, experience: true })}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Experience
                           </Button>
                         )}
                       </div>
