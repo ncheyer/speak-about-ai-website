@@ -25,7 +25,7 @@ export default function TeamMembers() {
       name: "Noah Cheyer",
       title: "Head of Marketing & Operations",
       image: "/team/noah-cheyer-headshot.png",
-      bio: "Noah Cheyer leads marketing and operations at Speak About AI, bringing a unique perspective to the AI speaking industry. With a BA in Communication Studies and Entrepreneurship from Chapman University, Noah has built expertise across multiple industries. He previously served as Marketplace Account Manager for BlendJet and held various marketing roles in sports, technology, and E-Commerce. Having grown up alongside AI as the son of Siri Co-Founder Adam Cheyer, Noah combines practical business acumen with a lifetime of exposure to artificial intelligence innovation.",
+      bio: "Noah Cheyer is a co-founder and leads marketing and operations at Speak About AI. Since it's founding, Noah has had the chance to work with clients ranging from Fortune 100 to 150,000 person international conferences and government provinces. Previously, he's worked in a wide range of industries including e-commerce, sports, and technology and graduated from Chapman University with a BA in Communication and Entrepreneurship. Having grown up alongside AI as the son of Siri Co-Founder Adam Cheyer, he's had a front-row seat to watching the current climate develop.",
       linkedin: "https://linkedin.com/in/noahcheyer",
     },
   ]
