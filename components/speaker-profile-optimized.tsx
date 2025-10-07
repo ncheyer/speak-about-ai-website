@@ -260,26 +260,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   {/* Programs Tab */}
                   <TabsContent value="programs" className="space-y-8">
 
-                    {/* Keynote Speaking Topics */}
-                    {speaker.topics && speaker.topics.length > 0 && (
-                      <section>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                          Keynote Speaking Topics
-                        </h2>
-                        <div className="grid md:grid-cols-2 gap-6">
-                          {speaker.topics.map((topic, index) => (
-                            <div key={index} className="border-l-4 border-[#1E68C6] pl-4">
-                              <h3 className="text-xl font-semibold text-gray-900 mb-2">{topic}</h3>
-                              <p className="text-gray-600">
-                                Expert insights on {topic.toLowerCase()} for your audience
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </section>
-                    )}
-
-                    {/* Speaking Programs */}
+                    {/* Speaking Programs - MOVED TO TOP */}
                     {speaker.programs && speaker.programs.length > 0 && (
                   <section className="mb-12">
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">
@@ -319,6 +300,25 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         )
                       })}
                     </div>
+                      </section>
+                    )}
+
+                    {/* Keynote Speaking Topics - MOVED BELOW PROGRAMS */}
+                    {speaker.topics && speaker.topics.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                          Keynote Speaking Topics
+                        </h2>
+                        <div className="grid md:grid-cols-2 gap-6">
+                          {speaker.topics.map((topic, index) => (
+                            <div key={index} className="border-l-4 border-[#1E68C6] pl-4">
+                              <h3 className="text-xl font-semibold text-gray-900 mb-2">{topic}</h3>
+                              <p className="text-gray-600">
+                                Expert insights on {topic.toLowerCase()} for your audience
+                              </p>
+                            </div>
+                          ))}
+                        </div>
                       </section>
                     )}
 
