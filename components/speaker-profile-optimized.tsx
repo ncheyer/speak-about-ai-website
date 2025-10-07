@@ -170,15 +170,9 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
               {/* Right: Main Content with Proper H Tags */}
               <div className="lg:col-span-2">
                 {/* H1 - Main Title */}
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                  {speaker.name} - {speaker.title || 'AI Keynote Speaker'}
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
+                  {speaker.name}
                 </h1>
-                
-                {/* Subtitle with keywords */}
-                <p className="text-xl text-gray-600 mb-8">
-                  Book {speaker.name} for inspiring keynote speeches on{' '}
-                  {speaker.expertise?.slice(0, 3).join(', ') || 'artificial intelligence and innovation'}
-                </p>
 
                 {/* Tabs for Content Organization */}
                 <Tabs defaultValue="about" className="w-full">
