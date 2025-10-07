@@ -598,6 +598,49 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         </div>
                       </section>
                     )}
+
+                    {/* Testimonials */}
+                    {speaker.testimonials && speaker.testimonials.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6">Testimonials</h2>
+                        <div className="space-y-6">
+                          {speaker.testimonials.map((testimonial, index) => (
+                            <div key={index} className="bg-gray-50 p-6 rounded-lg border-l-4 border-[#1E68C6] relative">
+                              <Quote className="absolute top-4 right-4 w-8 h-8 text-gray-200" />
+                              <p className="text-gray-700 italic mb-4 relative z-10">
+                                "{testimonial.quote}"
+                              </p>
+                              <div className="space-y-1">
+                                <p className="font-semibold text-gray-900">{testimonial.author}</p>
+                                {(testimonial.position || testimonial.company) && (
+                                  <p className="text-sm text-gray-600">
+                                    {testimonial.position}
+                                    {testimonial.position && testimonial.company ? ", " : ""}
+                                    {testimonial.company}
+                                  </p>
+                                )}
+                                {testimonial.event && (
+                                  <p className="text-xs text-gray-500 flex items-center">
+                                    <Building className="w-3 h-3 mr-1.5 text-gray-400" />
+                                    {testimonial.event}
+                                  </p>
+                                )}
+                                {testimonial.date && (
+                                  <p className="text-xs text-gray-500 flex items-center">
+                                    <Calendar className="w-3 h-3 mr-1.5 text-gray-400" />
+                                    {new Date(testimonial.date).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                    })}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
                   </TabsContent>
                 </Tabs>
 
