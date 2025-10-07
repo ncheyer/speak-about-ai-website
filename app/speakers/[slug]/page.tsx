@@ -17,7 +17,7 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
     notFound()
   }
 
-  // Generate structured data for Google
+  // Generate comprehensive structured data for Google
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -35,12 +35,33 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
     ].filter(Boolean),
     "worksFor": {
       "@type": "Organization",
-      "name": "Speak About AI",
+      "name": "Speak About AI Speaker Bureau",
       "url": "https://speakabout.ai"
     },
-    "knowsAbout": [...(speaker.topics || []), ...(speaker.expertise || [])].filter(Boolean),
+    "knowsAbout": [...(speaker.topics || []), ...(speaker.expertise || []), "Artificial Intelligence", "Machine Learning", "AI Strategy"].filter(Boolean),
     "alumniOf": speaker.education || undefined,
     "award": speaker.awards || undefined,
+    "memberOf": {
+      "@type": "Organization",
+      "name": "Speak About AI",
+      "description": "Premier AI Keynote Speakers Bureau"
+    },
+    "performerIn": {
+      "@type": "Event",
+      "name": "AI Keynote Speaking Engagements",
+      "description": `Book ${speaker.name} for keynote speeches on AI and technology`
+    }
+  }
+  
+  // Add speakable schema for voice search
+  const speakableSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": `${speaker.name} - AI Keynote Speaker Profile`,
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": [".speaker-bio", ".speaker-title", ".speaker-expertise"]
+    }
   }
 
   return (
@@ -48,6 +69,10 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }}
       />
       <SpeakerProfile speaker={speaker} />
       <ScrollToTop />
@@ -122,15 +147,25 @@ export async function generateMetadata({ params }: SpeakerPageProps) {
         : `https://speakabout.ai${speaker.image}`)
     : "https://speakabout.ai/hero-image.jpg"
 
-  // Generate title with better SEO
-  const pageTitle = speaker.title 
-    ? `${speaker.name} - ${speaker.title} | AI Speaker`
-    : `${speaker.name} - AI Keynote Speaker | Speak About AI`
+  // Generate optimized title for better SEO
+  const isAdamCheyer = slug === 'adam-cheyer'
+  const pageTitle = isAdamCheyer
+    ? `Adam Cheyer - Siri Co-Founder & AI Pioneer | Book for Keynote Speaking`
+    : speaker.title 
+      ? `${speaker.name} - ${speaker.title} | Book AI Keynote Speaker`
+      : `${speaker.name} - AI Keynote Speaker | Book for Your Event`
 
+  // Special optimization for Adam Cheyer
+  const optimizedDescription = isAdamCheyer 
+    ? `Book Adam Cheyer, Siri Co-Founder and AI pioneer, for your next event. Leading AI keynote speaker with 30+ years experience. VP Engineering at Samsung, founder of Viv Labs (acquired by Samsung). Get pricing & availability.`
+    : description
+    
   return {
     title: pageTitle,
-    description,
-    keywords: keywords.slice(0, 20), // Limit to 20 keywords
+    description: optimizedDescription,
+    keywords: isAdamCheyer 
+      ? ["Adam Cheyer", "Adam Cheyer speaker", "Siri co-founder", "Adam Cheyer keynote", "book Adam Cheyer", "Adam Cheyer speaking fee", "AI pioneer speaker", "Viv Labs founder", "Samsung AI VP", ...keywords].slice(0, 25)
+      : keywords.slice(0, 20),
     openGraph: {
       title: `${speaker.name} - ${speaker.title || 'AI Keynote Speaker'}`,
       description,

@@ -4,6 +4,9 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import dynamic from "next/dynamic"
+
+const SpeakerSEOSection = dynamic(() => import("./speaker-seo-section"), { ssr: true })
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, CalendarDays, Building } from "lucide-react"
@@ -514,6 +517,9 @@ const SpeakerProfile: React.FC<SpeakerProfileProps> = ({ speaker }) => {
           </div>
         </div>
       </div>
+      
+      {/* SEO Content Section - Critical for Search Rankings */}
+      <SpeakerSEOSection speaker={speaker} />
     </div>
   )
 }
