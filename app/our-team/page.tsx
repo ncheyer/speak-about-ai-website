@@ -5,7 +5,7 @@ import TeamValues from "@/components/team-values"
 import JoinTeam from "@/components/join-team"
 
 export const metadata: Metadata = {
-  title: "Meet Our AI Speaker Bureau Team | Speak About AI", // 49 chars
+  title: "Meet Our Team | Speak About AI",
   description:
     "Meet the Speak About AI team, your experts for connecting you with top AI keynote speakers. We're the world's only AI-exclusive speaker bureau.",
   keywords:
