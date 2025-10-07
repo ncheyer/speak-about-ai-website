@@ -63,7 +63,9 @@ export async function GET(request: NextRequest) {
     
     console.log('Umami config check:', { 
       hasApiKey: !!process.env.UMAMI_API_KEY,
-      hasWebsiteId: !!process.env.UMAMI_WEBSITE_ID
+      hasWebsiteId: !!process.env.UMAMI_WEBSITE_ID,
+      apiKeyPrefix: process.env.UMAMI_API_KEY?.substring(0, 10),
+      websiteId: process.env.UMAMI_WEBSITE_ID
     })
     
     if (!hasUmamiConfig) {
@@ -106,8 +108,18 @@ export async function GET(request: NextRequest) {
       clearTimeout(timeoutId)
 
       if (!response.ok) {
-        console.log(`Umami API returned ${response.status}, using mock data`)
-        return NextResponse.json(generateMockData(days))
+        const errorText = await response.text()
+        console.log(`Umami API returned ${response.status}: ${errorText}`)
+        console.log('API Key format:', apiKey?.substring(0, 10) + '...')
+        console.log('Website ID:', websiteId)
+        
+        // Return mock data with a note about the API issue
+        const mockData = generateMockData(days)
+        return NextResponse.json({
+          ...mockData,
+          _note: 'Umami API authentication failed. Please check your API key in Umami Cloud dashboard.',
+          _status: response.status
+        })
       }
 
       const stats = await response.json()

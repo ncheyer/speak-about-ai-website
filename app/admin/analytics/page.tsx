@@ -272,12 +272,19 @@ export default function AdminAnalyticsPage() {
             </button>
           </div>
 
-          {activeTab === "overview" && !analytics ? (
+          {activeTab === "overview" && (!analytics || analytics._status === 401) ? (
             <Alert className="mb-8 border-yellow-200 bg-yellow-50">
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
-              <AlertTitle className="text-yellow-800">Analytics Setup Required</AlertTitle>
+              <AlertTitle className="text-yellow-800">Umami API Authentication Issue</AlertTitle>
               <AlertDescription className="text-yellow-700">
-                Umami Analytics is being configured. Please ensure the UMAMI_API_KEY is set in your environment variables.
+                The Umami API key is not authenticating correctly. Please:
+                <ol className="list-decimal ml-5 mt-2">
+                  <li>Log into your Umami Cloud dashboard at cloud.umami.is</li>
+                  <li>Navigate to Settings → API Keys</li>
+                  <li>Generate a new API key with read permissions</li>
+                  <li>Update the UMAMI_API_KEY in your Vercel environment variables</li>
+                </ol>
+                <p className="mt-2 text-sm">Note: The tracking script is working, but API access requires a valid API key.</p>
               </AlertDescription>
             </Alert>
           ) : activeTab === "overview" && analytics && analytics.totalPageViews === 0 && analytics.uniqueVisitors === 0 ? (
