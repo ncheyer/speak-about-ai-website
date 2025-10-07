@@ -241,7 +241,81 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   {/* Speaking & Experience Tab - Combines Programs, Experience, and Media */}
                   <TabsContent value="speaking" className="space-y-8">
 
-                    {/* Speaking Programs - MOVED TO TOP */}
+                    {/* Videos */}
+                {speaker.videos && speaker.videos.length > 0 && (
+                  <section className="mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                      <Play className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                      Speaker Videos & Media
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {speaker.videos.map((video, index) => {
+                        // Function to extract YouTube video ID
+                        const getYouTubeId = (url: string) => {
+                          const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+                          const match = url?.match(regExp)
+                          return (match && match[2].length === 11) ? match[2] : null
+                        }
+
+                        const getYouTubeThumbnail = (url: string) => {
+                          const videoId = getYouTubeId(url)
+                          if (videoId) {
+                            return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+                          }
+                          return null
+                        }
+
+                        const thumbnail = video.thumbnail || getYouTubeThumbnail(video.url) || "/placeholder.svg"
+
+                        return (
+                          <a
+                            key={index}
+                            href={video.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group block"
+                          >
+                            <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
+                              <div className="aspect-video bg-gray-100 relative">
+                                <img
+                                  src={thumbnail}
+                                  alt={video.title}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement
+                                    if (thumbnail.includes('maxresdefault')) {
+                                      target.src = thumbnail.replace('maxresdefault', 'hqdefault')
+                                    }
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
+                                  <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                    <Play className="w-8 h-8 text-[#1E68C6] ml-1" />
+                                  </div>
+                                </div>
+                                {video.duration && (
+                                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                                    {video.duration}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="p-4 bg-white">
+                                <h3 className="font-semibold text-gray-900 group-hover:text-[#1E68C6] transition-colors duration-300">
+                                  {video.title}
+                                </h3>
+                                {video.source && (
+                                  <p className="text-sm text-gray-500 mt-1">{video.source}</p>
+                                )}
+                              </div>
+                            </div>
+                          </a>
+                        )
+                      })}
+                    </div>
+                  </section>
+                    )}
+
+                    {/* Speaking Programs */}
                     {speaker.programs && speaker.programs.length > 0 && (
                   <section className="mb-12">
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">
@@ -281,6 +355,52 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         )
                       })}
                     </div>
+                      </section>
+                    )}
+
+                    {/* Testimonials */}
+                    {speaker.testimonials && speaker.testimonials.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                          <MessageSquare className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                          Testimonials
+                        </h2>
+                        <div className="space-y-6">
+                          {speaker.testimonials.map((testimonial, index) => (
+                            <div key={index} className="bg-gray-50 p-6 rounded-lg border-l-4 border-[#1E68C6] relative">
+                              <Quote className="absolute top-4 right-4 w-8 h-8 text-gray-200" />
+                              <p className="text-gray-700 italic mb-4 relative z-10">
+                                "{testimonial.quote}"
+                              </p>
+                              <div className="space-y-1">
+                                <p className="font-semibold text-gray-900">{testimonial.author}</p>
+                                {(testimonial.position || testimonial.company) && (
+                                  <p className="text-sm text-gray-600">
+                                    {testimonial.position}
+                                    {testimonial.position && testimonial.company ? ", " : ""}
+                                    {testimonial.company}
+                                  </p>
+                                )}
+                                {testimonial.event && (
+                                  <p className="text-xs text-gray-500 flex items-center">
+                                    <Building className="w-3 h-3 mr-1.5 text-gray-400" />
+                                    {testimonial.event}
+                                  </p>
+                                )}
+                                {testimonial.date && (
+                                  <p className="text-xs text-gray-500 flex items-center">
+                                    <Calendar className="w-3 h-3 mr-1.5 text-gray-400" />
+                                    {new Date(testimonial.date).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                    })}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </section>
                     )}
 
@@ -466,126 +586,6 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                           ))}
                         </div>
                       </section>
-                    )}
-
-                    {/* Testimonials */}
-                    {speaker.testimonials && speaker.testimonials.length > 0 && (
-                      <section>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                          <MessageSquare className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                          Testimonials
-                        </h2>
-                        <div className="space-y-6">
-                          {speaker.testimonials.map((testimonial, index) => (
-                            <div key={index} className="bg-gray-50 p-6 rounded-lg border-l-4 border-[#1E68C6] relative">
-                              <Quote className="absolute top-4 right-4 w-8 h-8 text-gray-200" />
-                              <p className="text-gray-700 italic mb-4 relative z-10">
-                                "{testimonial.quote}"
-                              </p>
-                              <div className="space-y-1">
-                                <p className="font-semibold text-gray-900">{testimonial.author}</p>
-                                {(testimonial.position || testimonial.company) && (
-                                  <p className="text-sm text-gray-600">
-                                    {testimonial.position}
-                                    {testimonial.position && testimonial.company ? ", " : ""}
-                                    {testimonial.company}
-                                  </p>
-                                )}
-                                {testimonial.event && (
-                                  <p className="text-xs text-gray-500 flex items-center">
-                                    <Building className="w-3 h-3 mr-1.5 text-gray-400" />
-                                    {testimonial.event}
-                                  </p>
-                                )}
-                                {testimonial.date && (
-                                  <p className="text-xs text-gray-500 flex items-center">
-                                    <Calendar className="w-3 h-3 mr-1.5 text-gray-400" />
-                                    {new Date(testimonial.date).toLocaleDateString("en-US", {
-                                      year: "numeric",
-                                      month: "long",
-                                      day: "numeric",
-                                    })}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </section>
-                    )}
-
-                    {/* Videos */}
-                {speaker.videos && speaker.videos.length > 0 && (
-                  <section className="mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                      <Play className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                      Speaker Videos & Media
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {speaker.videos.map((video, index) => {
-                        // Function to extract YouTube video ID
-                        const getYouTubeId = (url: string) => {
-                          const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
-                          const match = url?.match(regExp)
-                          return (match && match[2].length === 11) ? match[2] : null
-                        }
-                        
-                        const getYouTubeThumbnail = (url: string) => {
-                          const videoId = getYouTubeId(url)
-                          if (videoId) {
-                            return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
-                          }
-                          return null
-                        }
-                        
-                        const thumbnail = video.thumbnail || getYouTubeThumbnail(video.url) || "/placeholder.svg"
-                        
-                        return (
-                          <a
-                            key={index}
-                            href={video.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group block"
-                          >
-                            <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
-                              <div className="aspect-video bg-gray-100 relative">
-                                <img
-                                  src={thumbnail}
-                                  alt={video.title}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement
-                                    if (thumbnail.includes('maxresdefault')) {
-                                      target.src = thumbnail.replace('maxresdefault', 'hqdefault')
-                                    }
-                                  }}
-                                />
-                                <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
-                                  <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                    <Play className="w-8 h-8 text-[#1E68C6] ml-1" />
-                                  </div>
-                                </div>
-                                {video.duration && (
-                                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
-                                    {video.duration}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="p-4 bg-white">
-                                <h3 className="font-semibold text-gray-900 group-hover:text-[#1E68C6] transition-colors duration-300">
-                                  {video.title}
-                                </h3>
-                                {video.source && (
-                                  <p className="text-sm text-gray-500 mt-1">{video.source}</p>
-                                )}
-                              </div>
-                            </div>
-                          </a>
-                        )
-                      })}
-                    </div>
-                  </section>
                     )}
 
                     {/* Podcast & Media Appearances */}
