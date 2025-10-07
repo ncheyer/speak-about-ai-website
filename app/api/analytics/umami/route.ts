@@ -88,14 +88,14 @@ export async function GET(request: NextRequest) {
     const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
 
     try {
-      // Umami Cloud API authentication - CORRECTED!
+      // Umami Cloud API authentication
       const headers: HeadersInit = {
         'x-umami-api-key': apiKey as string,
         'Accept': 'application/json'
       }
 
-      // Use the correct Umami API endpoint structure
-      const apiUrl = `https://api.umami.is/v1/websites/${websiteId}/stats?startAt=${startAt}&endAt=${endAt}`
+      // Use the Umami Cloud API endpoint
+      const apiUrl = `https://cloud.umami.is/api/websites/${websiteId}/stats?startAt=${startAt}&endAt=${endAt}`
       console.log('Calling Umami API:', apiUrl)
       
       const response = await fetch(apiUrl, { 
@@ -118,11 +118,11 @@ export async function GET(request: NextRequest) {
       
       try {
         const [pageViewsRes, metricsRes] = await Promise.all([
-          fetch(`https://api.umami.is/v1/websites/${websiteId}/pageviews?startAt=${startAt}&endAt=${endAt}&unit=day`, { 
+          fetch(`https://cloud.umami.is/api/websites/${websiteId}/pageviews?startAt=${startAt}&endAt=${endAt}&unit=day`, { 
             headers,
             signal: metricsController.signal
           }),
-          fetch(`https://api.umami.is/v1/websites/${websiteId}/metrics?startAt=${startAt}&endAt=${endAt}&type=url`, { 
+          fetch(`https://cloud.umami.is/api/websites/${websiteId}/metrics?startAt=${startAt}&endAt=${endAt}&type=url`, { 
             headers,
             signal: metricsController.signal
           })

@@ -158,79 +158,38 @@ async function fetchUmamiAnalytics(startDate: string, endDate: string) {
       return { pageViews: 0, visitors: 0, bounceRate: 0, avgDuration: 0, pages: [] }
     }
 
-    // Use the correct Umami Cloud API endpoint structure
+    // Use the Umami Cloud API endpoint structure
     const startTimestamp = new Date(startDate).getTime()
     const endTimestamp = new Date(endDate).getTime()
     
-    // Try the stats endpoint with proper authentication
-    const statsUrl = `https://api.umami.is/v1/websites/${UMAMI_WEBSITE_ID}/stats`
-    const statsParams = new URLSearchParams({
-      startAt: startTimestamp.toString(),
-      endAt: endTimestamp.toString()
-    })
-    
-    const umamiResponse = await fetch(`${statsUrl}?${statsParams}`, {
-      headers: {
-        'Authorization': `Bearer ${UMAMI_API_KEY}`,
-        'Accept': 'application/json'
+    // Try the Umami Cloud API endpoint directly
+    const umamiResponse = await fetch(
+      `https://cloud.umami.is/api/websites/${UMAMI_WEBSITE_ID}/stats?startAt=${startTimestamp}&endAt=${endTimestamp}`,
+      {
+        headers: {
+          'x-umami-api-key': UMAMI_API_KEY,
+          'Accept': 'application/json'
+        }
       }
-    })
-
+    )
+    
     if (!umamiResponse.ok) {
-      // If the new API doesn't work, try the legacy format
-      const legacyResponse = await fetch(
-        `https://cloud.umami.is/api/websites/${UMAMI_WEBSITE_ID}/stats?startAt=${startTimestamp}&endAt=${endTimestamp}`,
-        {
-          headers: {
-            'x-umami-api-key': UMAMI_API_KEY,
-          }
-        }
-      )
-      
-      if (!legacyResponse.ok) {
-        console.log('Umami API returned error:', legacyResponse.status)
-        return { pageViews: 0, visitors: 0, bounceRate: 0, avgDuration: 0, pages: [] }
-      }
-      
-      const stats = await legacyResponse.json()
-      
-      // Try to get page metrics with legacy API
-      const pagesResponse = await fetch(
-        `https://cloud.umami.is/api/websites/${UMAMI_WEBSITE_ID}/metrics?type=url&startAt=${startTimestamp}&endAt=${endTimestamp}`,
-        {
-          headers: {
-            'x-umami-api-key': UMAMI_API_KEY,
-          }
-        }
-      )
-
-      const pages = pagesResponse.ok ? await pagesResponse.json() : []
-      
-      return {
-        pageViews: stats.pageviews?.value || stats.pageviews || 0,
-        visitors: stats.visitors?.value || stats.visitors || 0,
-        bounceRate: stats.bounces?.value || stats.bounceRate || 0,
-        avgDuration: stats.totaltime?.value || stats.avgSessionDuration || 0,
-        pages: Array.isArray(pages) ? pages.slice(0, 20) : []
-      }
+      console.log('Umami API returned error:', umamiResponse.status)
+      return { pageViews: 0, visitors: 0, bounceRate: 0, avgDuration: 0, pages: [] }
     }
-
-    const stats = await umamiResponse.json()
-
-    // Get page metrics with new API format
-    const pagesUrl = `https://api.umami.is/v1/websites/${UMAMI_WEBSITE_ID}/metrics`
-    const pagesParams = new URLSearchParams({
-      type: 'url',
-      startAt: startTimestamp.toString(),
-      endAt: endTimestamp.toString()
-    })
     
-    const pagesResponse = await fetch(`${pagesUrl}?${pagesParams}`, {
-      headers: {
-        'Authorization': `Bearer ${UMAMI_API_KEY}`,
-        'Accept': 'application/json'
+    const stats = await umamiResponse.json()
+    
+    // Try to get page metrics
+    const pagesResponse = await fetch(
+      `https://cloud.umami.is/api/websites/${UMAMI_WEBSITE_ID}/metrics?type=url&startAt=${startTimestamp}&endAt=${endTimestamp}`,
+      {
+        headers: {
+          'x-umami-api-key': UMAMI_API_KEY,
+          'Accept': 'application/json'
+        }
       }
-    })
+    )
 
     const pages = pagesResponse.ok ? await pagesResponse.json() : []
 
