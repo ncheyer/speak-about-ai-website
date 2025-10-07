@@ -43,6 +43,69 @@ export interface Speaker {
   listed?: boolean
   expertise?: string[]
   ranking?: number
+  
+  // New fields for enhanced speaker profiles
+  pastEvents?: {
+    eventName: string
+    eventType?: string // "Conference", "Corporate", "University", etc.
+    date?: string
+    location?: string
+    keynote?: boolean // Was it a keynote vs panel/workshop
+  }[]
+  
+  publications?: {
+    title: string
+    type: "book" | "article" | "research" | "whitepaper"
+    publisher?: string
+    date?: string
+    link?: string
+    coverImage?: string
+  }[]
+  
+  awards?: {
+    title: string
+    organization?: string
+    year?: string
+    description?: string
+  }[]
+  
+  speakingRequirements?: {
+    avNeeds?: string[]
+    stageSetup?: string
+    travelRequirements?: string
+    virtualCapable?: boolean
+    preferredMicType?: string
+    specialRequests?: string
+  }
+  
+  clientLogos?: {
+    name: string
+    logoUrl?: string
+    eventType?: string
+  }[]
+  
+  mediaAppearances?: {
+    title: string
+    type: "podcast" | "interview" | "tv" | "radio" | "article"
+    outlet?: string // "TED", "Forbes", "CNN", etc.
+    date?: string
+    link?: string
+    embedCode?: string // For embedded players
+  }[]
+  
+  speakerKit?: {
+    onePagerUrl?: string
+    highResPhotoUrl?: string
+    introScript?: string
+    bioVersions?: {
+      short?: string // 50 words
+      medium?: string // 100 words
+      long?: string // 200+ words
+    }
+  }
+  
+  similarSpeakers?: string[] // Array of speaker slugs
+  availabilityNote?: string // "Now booking 2025 events", "Limited availability Q2"
 }
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID

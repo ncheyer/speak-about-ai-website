@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, Building, Award, Calendar, CheckCircle } from "lucide-react"
+import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, Building, Award, Calendar, CheckCircle, BookOpen, Trophy, Download, Mic, Users, Clock, Briefcase, Star } from "lucide-react"
 import type { Speaker } from "@/lib/speakers-data"
 
 interface OptimizedSpeakerProfileProps {
@@ -96,6 +96,16 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                       )}
                     </div>
                     <CardContent className="p-6">
+                      {/* Availability Indicator */}
+                      {speaker.availabilityNote && (
+                        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center text-green-800">
+                            <Clock className="w-4 h-4 mr-2" />
+                            <span className="text-sm font-semibold">{speaker.availabilityNote}</span>
+                          </div>
+                        </div>
+                      )}
+                      
                       <Button
                         asChild
                         variant="gold"
@@ -287,8 +297,233 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   </section>
                 )}
 
+                {/* H2: Past Speaking Engagements */}
+                {speaker.pastEvents && speaker.pastEvents.length > 0 && (
+                  <section className="mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                      <Briefcase className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                      Past Speaking Engagements
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {speaker.pastEvents.map((event, index) => (
+                        <div key={index} className="border-l-4 border-gray-300 pl-4 py-2">
+                          <h3 className="font-semibold text-gray-900">
+                            {event.eventName}
+                            {event.keynote && <Badge className="ml-2 bg-[#FFB800] text-white">Keynote</Badge>}
+                          </h3>
+                          {(event.eventType || event.location || event.date) && (
+                            <p className="text-gray-600 text-sm">
+                              {event.eventType && <span>{event.eventType}</span>}
+                              {event.location && <span> • {event.location}</span>}
+                              {event.date && <span> • {event.date}</span>}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* H2: Books & Publications */}
+                {speaker.publications && speaker.publications.length > 0 && (
+                  <section className="mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                      <BookOpen className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                      Books & Publications
+                    </h2>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {speaker.publications.map((pub, index) => (
+                        <Card key={index} className="hover:shadow-lg transition-shadow">
+                          {pub.coverImage && (
+                            <img src={pub.coverImage} alt={pub.title} className="w-full h-48 object-cover rounded-t-lg" />
+                          )}
+                          <CardContent className="p-4">
+                            <Badge className="mb-2" variant="outline">{pub.type}</Badge>
+                            <h3 className="font-semibold text-gray-900 mb-1">{pub.title}</h3>
+                            {pub.publisher && <p className="text-sm text-gray-600">{pub.publisher}</p>}
+                            {pub.date && <p className="text-xs text-gray-500">{pub.date}</p>}
+                            {pub.link && (
+                              <a href={pub.link} target="_blank" rel="noopener noreferrer" className="text-[#1E68C6] text-sm hover:underline mt-2 inline-block">
+                                View →
+                              </a>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* H2: Awards & Recognition */}
+                {speaker.awards && speaker.awards.length > 0 && (
+                  <section className="mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                      <Trophy className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                      Awards & Recognition
+                    </h2>
+                    <div className="space-y-4">
+                      {speaker.awards.map((award, index) => (
+                        <div key={index} className="flex items-start">
+                          <Star className="w-5 h-5 mr-3 mt-1 text-[#FFB800] flex-shrink-0" />
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{award.title}</h3>
+                            {(award.organization || award.year) && (
+                              <p className="text-gray-600">
+                                {award.organization}
+                                {award.organization && award.year && ' • '}
+                                {award.year}
+                              </p>
+                            )}
+                            {award.description && (
+                              <p className="text-gray-600 text-sm mt-1">{award.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* H2: Client Logos */}
+                {speaker.clientLogos && speaker.clientLogos.length > 0 && (
+                  <section className="mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6">Trusted By Leading Organizations</h2>
+                    <div className="bg-gray-50 rounded-lg p-6">
+                      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center">
+                        {speaker.clientLogos.map((client, index) => (
+                          <div key={index} className="flex items-center justify-center">
+                            {client.logoUrl ? (
+                              <img src={client.logoUrl} alt={client.name} className="max-h-12 opacity-60 hover:opacity-100 transition-opacity" />
+                            ) : (
+                              <span className="text-gray-500 text-sm text-center">{client.name}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* H2: Podcast & Media Appearances */}
+                {speaker.mediaAppearances && speaker.mediaAppearances.length > 0 && (
+                  <section className="mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                      <Mic className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                      Media Appearances
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {speaker.mediaAppearances.map((media, index) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <Badge className="mb-2" variant="outline">{media.type}</Badge>
+                              <h3 className="font-semibold text-gray-900">{media.title}</h3>
+                              {media.outlet && <p className="text-gray-600">{media.outlet}</p>}
+                              {media.date && <p className="text-sm text-gray-500">{media.date}</p>}
+                            </div>
+                            {media.link && (
+                              <a href={media.link} target="_blank" rel="noopener noreferrer" className="text-[#1E68C6] hover:underline">
+                                <Play className="w-5 h-5" />
+                              </a>
+                            )}
+                          </div>
+                          {media.embedCode && (
+                            <div className="mt-4" dangerouslySetInnerHTML={{ __html: media.embedCode }} />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* H2: Speaking Requirements */}
+                {speaker.speakingRequirements && (
+                  <section className="mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6">Technical Requirements & Logistics</h2>
+                    <Card className="p-6">
+                      {speaker.speakingRequirements.avNeeds && speaker.speakingRequirements.avNeeds.length > 0 && (
+                        <div className="mb-4">
+                          <h3 className="font-semibold mb-2">AV Requirements:</h3>
+                          <ul className="list-disc list-inside text-gray-600">
+                            {speaker.speakingRequirements.avNeeds.map((need, index) => (
+                              <li key={index}>{need}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {speaker.speakingRequirements.stageSetup && (
+                        <div className="mb-4">
+                          <h3 className="font-semibold mb-2">Stage Setup:</h3>
+                          <p className="text-gray-600">{speaker.speakingRequirements.stageSetup}</p>
+                        </div>
+                      )}
+                      {speaker.speakingRequirements.virtualCapable && (
+                        <Badge className="bg-green-100 text-green-800">Virtual Presentations Available</Badge>
+                      )}
+                    </Card>
+                  </section>
+                )}
+
+                {/* H2: Downloadable Speaker Kit */}
+                {speaker.speakerKit && (
+                  <section className="mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                      <Download className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                      Speaker Resources
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {speaker.speakerKit.onePagerUrl && (
+                        <a href={speaker.speakerKit.onePagerUrl} download className="flex items-center p-4 border rounded-lg hover:bg-gray-50">
+                          <Download className="w-5 h-5 mr-3 text-[#1E68C6]" />
+                          <div>
+                            <p className="font-semibold">Speaker One-Pager</p>
+                            <p className="text-sm text-gray-600">PDF with bio, topics, and photos</p>
+                          </div>
+                        </a>
+                      )}
+                      {speaker.speakerKit.highResPhotoUrl && (
+                        <a href={speaker.speakerKit.highResPhotoUrl} download className="flex items-center p-4 border rounded-lg hover:bg-gray-50">
+                          <Download className="w-5 h-5 mr-3 text-[#1E68C6]" />
+                          <div>
+                            <p className="font-semibold">High-Res Photos</p>
+                            <p className="text-sm text-gray-600">Professional headshots for marketing</p>
+                          </div>
+                        </a>
+                      )}
+                    </div>
+                  </section>
+                )}
+
+                {/* H2: Similar Speakers */}
+                {speaker.similarSpeakers && speaker.similarSpeakers.length > 0 && (
+                  <section className="mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                      <Users className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                      You May Also Like
+                    </h2>
+                    <div className="grid md:grid-cols-3 gap-6">
+                      {/* This would need to load the actual speaker data */}
+                      {speaker.similarSpeakers.slice(0, 3).map((slug, index) => (
+                        <Card key={index} className="hover:shadow-lg transition-shadow">
+                          <CardContent className="p-4">
+                            <Link href={`/speakers/${slug}`} className="text-[#1E68C6] hover:underline">
+                              View Speaker →
+                            </Link>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
                 {/* H2: Book This Speaker CTA - Always show */}
                 <section className="bg-gradient-to-r from-[#1E68C6] to-[#5084C6] rounded-xl p-8 text-white">
+                  {speaker.availabilityNote && (
+                    <div className="mb-4 flex items-center justify-center">
+                      <Clock className="w-5 h-5 mr-2" />
+                      <span className="text-lg font-semibold">{speaker.availabilityNote}</span>
+                    </div>
+                  )}
                   <h2 className="text-3xl font-bold mb-4">
                     Book {speaker.name} for Your Next Event
                   </h2>
