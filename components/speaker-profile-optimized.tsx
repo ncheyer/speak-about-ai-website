@@ -243,7 +243,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
 
                     {/* Videos */}
                 {speaker.videos && speaker.videos.length > 0 && (
-                  <section className="mb-12 p-8 rounded-xl bg-gradient-to-br from-stone-50 via-amber-50 to-stone-50 border border-stone-200">
+                  <section className="mb-12 p-8 rounded-xl bg-gradient-to-br from-blue-50 via-slate-50 to-blue-50 border border-blue-100">
                     <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
                       <Play className="w-8 h-8 mr-3 text-[#1E68C6]" />
                       Speaker Videos & Media
@@ -360,7 +360,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
 
                     {/* Testimonials */}
                     {speaker.testimonials && speaker.testimonials.length > 0 && (
-                      <section className="p-8 rounded-xl bg-gradient-to-br from-stone-50 via-amber-50 to-stone-50 border border-stone-200">
+                      <section className="p-8 rounded-xl bg-gradient-to-br from-blue-50 via-slate-50 to-blue-50 border border-blue-100">
                         <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
                           <MessageSquare className="w-8 h-8 mr-3 text-[#1E68C6]" />
                           Testimonials
@@ -368,7 +368,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         <div className="space-y-6">
                           {speaker.testimonials.map((testimonial, index) => (
                             <div key={index} className="bg-white p-6 rounded-lg border-l-4 border-[#1E68C6] relative shadow-sm">
-                              <Quote className="absolute top-4 right-4 w-8 h-8 text-stone-300" />
+                              <Quote className="absolute top-4 right-4 w-8 h-8 text-slate-200" />
                               <p className="text-gray-700 italic mb-4 relative z-10 text-lg">
                                 "{testimonial.quote}"
                               </p>
