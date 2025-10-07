@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
         one_liner = 'Co-Founder, Head of Marketing & Operations at Speak About AI',
         location = 'San Francisco, CA',
         website = 'https://speakabout.ai',
-        social_media = '{"linkedin_url": "https://linkedin.com/in/noahcheyer"}',
+        social_media = '{"linkedin_url": "https://linkedin.com/in/noah-cheyer"}',
         topics = '["AI Strategy", "Speaker Bureau Management", "Event Planning", "Marketing"]'::jsonb,
         industries = '["Events", "Marketing", "Technology"]'::jsonb,
         programs = '["The Future of AI Speaking", "Building World-Class Events", "Marketing in the AI Era"]'::jsonb,
