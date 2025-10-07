@@ -97,6 +97,10 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                       )}
                     </div>
                     <CardContent className="p-6">
+                      {/* Name and Title */}
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">{speaker.name}</h2>
+                      <p className="text-[#5084C6] font-semibold mb-4">{speaker.title}</p>
+                      
                       {/* Availability Indicator */}
                       {speaker.availabilityNote && (
                         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
