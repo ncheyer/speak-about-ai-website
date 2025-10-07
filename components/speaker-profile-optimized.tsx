@@ -78,21 +78,21 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
         {/* Hero Section with H1 */}
         <section className="bg-gradient-to-br from-gray-50 to-white py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left: Image and Quick Info */}
               <div className="lg:col-span-1">
-                <div className="sticky top-4">
-                  <Card className="shadow-xl border-0 overflow-hidden">
-                    <div className="relative">
+                <div className="lg:sticky lg:top-24" style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+                  <Card className="shadow-lg border border-gray-200">
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-t-lg">
                       <img
                         src={imageUrl}
                         alt={`${speaker.name} - AI Keynote Speaker`}
-                        className="w-full h-96 object-cover"
+                        className="w-full h-full object-cover"
                         loading="eager"
                       />
                       {speaker.fee && (
-                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-full">
-                          <span className="font-bold text-gray-900">{speaker.fee}</span>
+                        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-md">
+                          <span className="font-semibold text-gray-900 text-sm">{speaker.fee}</span>
                         </div>
                       )}
                     </div>
