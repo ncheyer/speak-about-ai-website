@@ -81,7 +81,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left: Image and Quick Info */}
               <div className="lg:col-span-1">
-                <div className="lg:sticky lg:top-24" style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+                <div className="lg:sticky lg:top-24">
                   <Card className="shadow-lg border border-gray-200">
                     <div className="relative aspect-[3/4] overflow-hidden rounded-t-lg">
                       <img
@@ -153,20 +153,14 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                       )}
 
                       {/* Social Links */}
-                      <div className="flex justify-center space-x-4 mt-6 pt-6 border-t">
-                        {speaker.linkedin && (
+                      {speaker.linkedin && (
+                        <div className="flex justify-center space-x-4 mt-6 pt-6 border-t">
                           <a href={speaker.linkedin} target="_blank" rel="noopener noreferrer"
                              className="text-gray-500 hover:text-[#1E68C6]">
                             <Linkedin className="w-5 h-5" />
                           </a>
-                        )}
-                        {speaker.website && (
-                          <a href={speaker.website} target="_blank" rel="noopener noreferrer"
-                             className="text-gray-500 hover:text-[#1E68C6]">
-                            <Globe className="w-5 h-5" />
-                          </a>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
