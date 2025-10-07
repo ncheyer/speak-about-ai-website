@@ -115,7 +115,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                             <span>{speaker.location}</span>
                           </div>
                         )}
-                        {speaker.languages && (
+                        {speaker.languages && speaker.languages.length > 0 && (
                           <div className="flex items-center text-gray-600">
                             <Globe className="w-4 h-4 mr-2 text-[#1E68C6]" />
                             <span>{speaker.languages.join(', ')}</span>
@@ -156,7 +156,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   {speaker.expertise?.slice(0, 3).join(', ') || 'artificial intelligence and innovation'}
                 </p>
 
-                {/* Industry Badges */}
+                {/* Industry Badges - Only show if data exists */}
                 {speaker.industries && speaker.industries.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-8">
                     {speaker.industries.map((industry, index) => (
@@ -167,16 +167,18 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   </div>
                 )}
 
-                {/* H2: About Section */}
-                <section className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                    <Award className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                    About {speaker.name}
-                  </h2>
-                  <div className="prose prose-lg max-w-none text-gray-700">
-                    {formatBio(speaker.bio || '')}
-                  </div>
-                </section>
+                {/* H2: About Section - Only show if bio exists */}
+                {speaker.bio && (
+                  <section className="mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                      <Award className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                      About {speaker.name}
+                    </h2>
+                    <div className="prose prose-lg max-w-none text-gray-700">
+                      {formatBio(speaker.bio)}
+                    </div>
+                  </section>
+                )}
 
                 {/* H2: Keynote Speaking Topics */}
                 {speaker.topics && speaker.topics.length > 0 && (
@@ -197,33 +199,35 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   </section>
                 )}
 
-                {/* H2: Why Book This Speaker */}
-                <section className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                    Why Book {speaker.name}?
-                  </h2>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <Card className="p-6 border-[#1E68C6] border-2">
-                      <h3 className="text-xl font-semibold mb-3 flex items-center">
-                        <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
-                        Proven Expertise
-                      </h3>
-                      <p className="text-gray-600">
-                        {speaker.title || 'Leading AI expert'} with deep knowledge in{' '}
-                        {speaker.expertise?.slice(0, 2).join(' and ') || 'artificial intelligence'}
-                      </p>
-                    </Card>
-                    <Card className="p-6 border-[#1E68C6] border-2">
-                      <h3 className="text-xl font-semibold mb-3 flex items-center">
-                        <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
-                        Engaging Speaker
-                      </h3>
-                      <p className="text-gray-600">
-                        Delivers actionable insights that inspire and educate audiences worldwide
-                      </p>
-                    </Card>
-                  </div>
-                </section>
+                {/* H2: Why Book This Speaker - Show if we have title or expertise */}
+                {(speaker.title || speaker.expertise) && (
+                  <section className="mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                      Why Book {speaker.name}?
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <Card className="p-6 border-[#1E68C6] border-2">
+                        <h3 className="text-xl font-semibold mb-3 flex items-center">
+                          <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+                          Proven Expertise
+                        </h3>
+                        <p className="text-gray-600">
+                          {speaker.title || 'Leading AI expert'} with deep knowledge in{' '}
+                          {speaker.expertise?.slice(0, 2).join(' and ') || 'artificial intelligence'}
+                        </p>
+                      </Card>
+                      <Card className="p-6 border-[#1E68C6] border-2">
+                        <h3 className="text-xl font-semibold mb-3 flex items-center">
+                          <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+                          Engaging Speaker
+                        </h3>
+                        <p className="text-gray-600">
+                          Delivers actionable insights that inspire and educate audiences worldwide
+                        </p>
+                      </Card>
+                    </div>
+                  </section>
+                )}
 
                 {/* H2: Speaking Programs */}
                 {speaker.programs && speaker.programs.length > 0 && (
@@ -266,7 +270,24 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   </section>
                 )}
 
-                {/* H2: Book This Speaker CTA */}
+                {/* Minimal Content Fallback - Show if we have very little data */}
+                {!speaker.bio && (!speaker.topics || speaker.topics.length === 0) && !speaker.programs && (
+                  <section className="mb-12 bg-gray-50 rounded-lg p-8">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                      About {speaker.name}
+                    </h2>
+                    <p className="text-lg text-gray-700 mb-4">
+                      {speaker.name} is a renowned speaker specializing in artificial intelligence and emerging technologies. 
+                      With expertise in {speaker.expertise?.join(', ') || 'AI innovation'}, {speaker.name} delivers 
+                      compelling keynote presentations that inspire and educate audiences worldwide.
+                    </p>
+                    <p className="text-lg text-gray-700">
+                      Contact Speak About AI to learn more about booking {speaker.name} for your next event.
+                    </p>
+                  </section>
+                )}
+
+                {/* H2: Book This Speaker CTA - Always show */}
                 <section className="bg-gradient-to-r from-[#1E68C6] to-[#5084C6] rounded-xl p-8 text-white">
                   <h2 className="text-3xl font-bold mb-4">
                     Book {speaker.name} for Your Next Event

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { getSpeakerBySlug, getAllSpeakers } from "@/lib/speakers-data"
-import SpeakerProfile from "@/components/speaker-profile"
+import OptimizedSpeakerProfile from "@/components/speaker-profile-optimized"
 import ScrollToTop from "./scroll-to-top"
 import { generateSpeakerStructuredData } from "./structured-data"
 import Script from "next/script"
@@ -74,7 +74,7 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }}
       />
-      <SpeakerProfile speaker={speaker} />
+      <OptimizedSpeakerProfile speaker={speaker} />
       <ScrollToTop />
     </>
   )
