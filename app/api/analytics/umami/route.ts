@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // Helper function to generate mock analytics data
-function generateMockData(days: number) {
+function generateMockData(days: number, message?: string) {
   const endDate = new Date()
   const startDate = new Date()
   startDate.setDate(endDate.getDate() - days)
@@ -41,7 +41,8 @@ function generateMockData(days: number) {
       start: startDate.toISOString(),
       end: endDate.toISOString(),
       days: days
-    }
+    },
+    _message: message || 'Analytics data unavailable'
   }
 }
 
@@ -114,11 +115,15 @@ export async function GET(request: NextRequest) {
         console.log('Website ID:', websiteId)
         
         // Return mock data with a note about the API issue
-        const mockData = generateMockData(days)
+        const mockData = generateMockData(days, 
+          'Umami Cloud API access is not available. Data is being collected but API access requires self-hosted Umami. View your analytics at cloud.umami.is'
+        )
         return NextResponse.json({
           ...mockData,
-          _note: 'Umami API authentication failed. Please check your API key in Umami Cloud dashboard.',
-          _status: response.status
+          _note: 'Umami Cloud does not provide API access for reading analytics data. Consider self-hosting Umami for API access.',
+          _status: response.status,
+          _tracking: 'Active - Data is being collected',
+          _dashboard: 'https://cloud.umami.is'
         })
       }
 

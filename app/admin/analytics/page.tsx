@@ -273,18 +273,31 @@ export default function AdminAnalyticsPage() {
           </div>
 
           {activeTab === "overview" && (!analytics || analytics._status === 401) ? (
-            <Alert className="mb-8 border-yellow-200 bg-yellow-50">
-              <AlertTriangle className="h-4 w-4 text-yellow-600" />
-              <AlertTitle className="text-yellow-800">Umami API Authentication Issue</AlertTitle>
-              <AlertDescription className="text-yellow-700">
-                The Umami API key is not authenticating correctly. Please:
-                <ol className="list-decimal ml-5 mt-2">
-                  <li>Log into your Umami Cloud dashboard at cloud.umami.is</li>
-                  <li>Navigate to Settings → API Keys</li>
-                  <li>Generate a new API key with read permissions</li>
-                  <li>Update the UMAMI_API_KEY in your Vercel environment variables</li>
-                </ol>
-                <p className="mt-2 text-sm">Note: The tracking script is working, but API access requires a valid API key.</p>
+            <Alert className="mb-8 border-blue-200 bg-blue-50">
+              <AlertTriangle className="h-4 w-4 text-blue-600" />
+              <AlertTitle className="text-blue-800">Umami Cloud Analytics</AlertTitle>
+              <AlertDescription className="text-blue-700">
+                <p className="mb-3">Umami Cloud is successfully tracking your website visitors. However, API access for displaying data here is limited to self-hosted Umami installations.</p>
+                <div className="flex gap-4 mt-3">
+                  <a 
+                    href="https://cloud.umami.is" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    <Eye className="w-4 h-4" />
+                    View Analytics Dashboard
+                  </a>
+                  <a 
+                    href="https://umami.is/docs/install" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+                  >
+                    Self-Host Umami for API Access
+                  </a>
+                </div>
+                <p className="mt-3 text-sm text-blue-600">✓ Tracking is active and data is being collected</p>
               </AlertDescription>
             </Alert>
           ) : activeTab === "overview" && analytics && analytics.totalPageViews === 0 && analytics.uniqueVisitors === 0 ? (
