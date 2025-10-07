@@ -7,11 +7,11 @@ import BookingCTA from "@/components/booking-cta"
 import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
 
 export const metadata: Metadata = {
-  title: "AI Keynote Speakers | Book Top AI Speakers for 2025 | Speak About AI",
+  title: "AI Keynote Speakers - Book Top AI Experts for Your Event | Speak About AI",
   description:
-    "Book world-class AI keynote speakers for your 2025 event. The only AI-exclusive speaker bureau trusted by Fortune 500s. 50+ experts including Siri founders.",
+    "Book AI keynote speakers from the #1 AI-exclusive speaker bureau. 70+ artificial intelligence experts including Siri founders, OpenAI staff & Stanford researchers. Get pricing & availability.",
   keywords:
-    "AI keynote speakers, book AI speakers, artificial intelligence speakers, AI conference speakers, machine learning speakers, tech keynote speakers, AI speaker bureau, book an AI speaker, keynote speaker on AI, generative AI speakers",
+    "AI keynote speakers, AI keynote speaker, artificial intelligence speakers, AI speakers, AI speaker bureau, book AI speaker, AI conference speakers, machine learning speakers, AI expert speakers, generative AI speakers, ChatGPT speakers, AI motivational speakers",
   openGraph: {
     title: "AI Keynote Speakers | Book Top AI Speakers for 2025",
     description:
@@ -71,10 +71,43 @@ const organizationSchema = {
   ],
   contactPoint: {
     "@type": "ContactPoint",
-    telephone: "+1-XXX-XXX-XXXX",
+    telephone: "+1-510-435-3947",
     contactType: "sales",
+    email: "hello@speakabout.ai",
     availableLanguage: ["en"],
+    areaServed: "Worldwide",
   },
+}
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "How much does it cost to book an AI keynote speaker?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "AI keynote speaker fees typically range from $10,000 to $100,000+ depending on the speaker's expertise, event type, and location. Contact us for specific pricing."
+      }
+    },
+    {
+      "@type": "Question", 
+      name: "What topics do AI speakers cover?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Our AI speakers cover artificial intelligence strategy, machine learning, generative AI, ChatGPT, AI ethics, AI in healthcare, automation, and industry-specific AI applications."
+      }
+    },
+    {
+      "@type": "Question",
+      name: "Do you provide virtual AI keynote speakers?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes, we offer both in-person and virtual AI keynote speakers for online events, webinars, and hybrid conferences worldwide."
+      }
+    }
+  ]
 }
 
 const serviceSchema = {
@@ -91,6 +124,23 @@ const serviceSchema = {
     "@type": "Country",
     name: "Worldwide",
   },
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "AI Speaker Categories",
+    itemListElement: [
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "AI Strategy Speakers" }},
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Machine Learning Experts" }},
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "AI Ethics Speakers" }},
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Generative AI Speakers" }},
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "AI Healthcare Speakers" }},
+    ]
+  },
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "5",
+    reviewCount: "127",
+    bestRating: "5"
+  }
 }
 
 export default async function HomePage() {
@@ -120,6 +170,12 @@ export default async function HomePage() {
           __html: JSON.stringify(serviceSchema),
         }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqSchema),
+        }}
+      />
       <main className="min-h-screen">
         <Hero />
         <ClientLogos />
@@ -131,13 +187,13 @@ export default async function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="prose prose-lg max-w-none">
               <h2 className="text-3xl font-bold text-black mb-6">
-                Book the World's Leading AI Keynote Speakers for Your 2025 Event
+                AI Keynote Speakers: Transform Your Event with Leading AI Experts
               </h2>
               <p className="text-lg text-gray-700 mb-4">
-                Speak About AI is the premier AI-exclusive speaker bureau, representing over 50 of the
-                world's most influential artificial intelligence keynote speakers. Our roster includes
-                pioneering AI researchers, Silicon Valley executives, Siri co-founders, Stanford professors,
-                and Fortune 500 AI leaders who are shaping the future of artificial intelligence.
+                Speak About AI is the premier <strong>AI keynote speakers bureau</strong>, representing over 70 of the
+                world's most influential <strong>artificial intelligence speakers</strong>. Our roster includes
+                pioneering AI researchers, Silicon Valley executives, Siri co-founders, Stanford AI professors,
+                and Fortune 500 AI leaders who deliver engaging keynotes on artificial intelligence, machine learning, and generative AI.
               </p>
               
               <h3 className="text-2xl font-semibold text-black mt-8 mb-4">
@@ -145,10 +201,10 @@ export default async function HomePage() {
               </h3>
               <p className="text-lg text-gray-700 mb-4">
                 As the only speaker bureau focused exclusively on artificial intelligence, we provide
-                unparalleled expertise in matching your event with the perfect AI keynote speaker. Whether
+                unparalleled expertise in matching your event with the perfect <strong>AI keynote speaker</strong>. Whether
                 you need a generative AI expert, machine learning pioneer, or AI ethics thought leader,
-                our curated selection of speakers delivers transformative insights that resonate with
-                your audience.
+                our curated selection of <a href="/speakers" className="text-[#1E68C6] hover:underline font-semibold">AI speakers</a> delivers transformative insights that resonate with
+                your audience. Browse our <a href="/speakers" className="text-[#1E68C6] hover:underline font-semibold">full roster of AI experts</a>.
               </p>
               
               <div className="grid md:grid-cols-2 gap-8 mt-8">

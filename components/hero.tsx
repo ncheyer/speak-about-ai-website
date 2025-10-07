@@ -13,16 +13,16 @@ export default function Hero() {
             {/* Badge */}
             <div className="inline-flex items-center px-4 py-2 bg-[#1E68C6] bg-opacity-10 text-[#1E68C6] rounded-full text-sm font-medium mb-6 font-montserrat">
               <Award className="w-4 h-4 mr-2" />
-              AI-Exclusive Speaker Bureau
+              #1 AI-Exclusive Speaker Bureau
             </div>
 
-            {/* Main Headline */}
+            {/* Main Headline - Optimized for SEO */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-6 leading-tight font-neue-haas">
-              Book Top AI Keynote Speakers
+              AI Keynote Speakers for Your Event
             </h1>
 
             <p className="text-xl text-black mb-8 font-montserrat font-semibold">
-              <span className="text-[#1E68C6]">70+ AI experts in every industry</span>, including Siri Co-Founders, OpenAI Technical Staff, Stanford Researchers, and Amazon Executives
+              <span className="text-[#1E68C6]">Book from 70+ artificial intelligence experts</span> including Siri Co-Founders, OpenAI Technical Staff, Stanford AI Researchers, and Fortune 500 AI Leaders
             </p>
 
             {/* CTA Buttons */}
