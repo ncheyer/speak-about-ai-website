@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, Building, Award, Calendar, CheckCircle, BookOpen, Trophy, Download, Mic, Users, Clock, Briefcase, Star } from "lucide-react"
 import type { Speaker } from "@/lib/speakers-data"
 
@@ -175,76 +176,111 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                 </h1>
                 
                 {/* Subtitle with keywords */}
-                <p className="text-xl text-gray-600 mb-6">
+                <p className="text-xl text-gray-600 mb-8">
                   Book {speaker.name} for inspiring keynote speeches on{' '}
                   {speaker.expertise?.slice(0, 3).join(', ') || 'artificial intelligence and innovation'}
                 </p>
 
+                {/* Tabs for Content Organization */}
+                <Tabs defaultValue="about" className="w-full">
+                  <TabsList className="grid w-full grid-cols-4 mb-8 bg-gray-100">
+                    <TabsTrigger
+                      value="about"
+                      className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
+                    >
+                      About
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="programs"
+                      className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
+                    >
+                      Programs
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="experience"
+                      className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
+                    >
+                      Experience
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="media"
+                      className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
+                    >
+                      Media
+                    </TabsTrigger>
+                  </TabsList>
 
-                {/* H2: About Section - Only show if bio exists */}
-                {speaker.bio && (
-                  <section className="mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                      <Award className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                      About {speaker.name}
-                    </h2>
-                    <div className="prose prose-lg max-w-none text-gray-700">
-                      {formatBio(speaker.bio)}
-                    </div>
-                  </section>
-                )}
+                  {/* About Tab */}
+                  <TabsContent value="about" className="space-y-8">
 
-                {/* H2: Keynote Speaking Topics */}
-                {speaker.topics && speaker.topics.length > 0 && (
-                  <section className="mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                      Keynote Speaking Topics
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {speaker.topics.map((topic, index) => (
-                        <div key={index} className="border-l-4 border-[#1E68C6] pl-4">
-                          <h3 className="text-xl font-semibold text-gray-900 mb-2">{topic}</h3>
-                          <p className="text-gray-600">
-                            Expert insights on {topic.toLowerCase()} for your audience
-                          </p>
+
+                    {/* About Section - Only show if bio exists */}
+                    {speaker.bio && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                          <Award className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                          About {speaker.name}
+                        </h2>
+                        <div className="prose prose-lg max-w-none text-gray-700">
+                          {formatBio(speaker.bio)}
                         </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
+                      </section>
+                    )}
 
-                {/* H2: Why Book This Speaker - Show if we have title or expertise */}
-                {(speaker.title || speaker.expertise) && (
-                  <section className="mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                      Why Book {speaker.name}?
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <Card className="p-6 border-[#1E68C6] border-2">
-                        <h3 className="text-xl font-semibold mb-3 flex items-center">
-                          <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
-                          Proven Expertise
-                        </h3>
-                        <p className="text-gray-600">
-                          {speaker.title || 'Leading AI expert'} with deep knowledge in{' '}
-                          {speaker.expertise?.slice(0, 2).join(' and ') || 'artificial intelligence'}
-                        </p>
-                      </Card>
-                      <Card className="p-6 border-[#1E68C6] border-2">
-                        <h3 className="text-xl font-semibold mb-3 flex items-center">
-                          <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
-                          Engaging Speaker
-                        </h3>
-                        <p className="text-gray-600">
-                          Delivers actionable insights that inspire and educate audiences worldwide
-                        </p>
-                      </Card>
-                    </div>
-                  </section>
-                )}
+                    {/* Expertise */}
+                    {speaker.expertise && speaker.expertise.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6">Areas of Expertise</h2>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          {speaker.expertise.map((skill, index) => (
+                            <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                              <span className="font-semibold text-gray-900">{skill}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
 
-                {/* H2: Speaking Programs */}
-                {speaker.programs && speaker.programs.length > 0 && (
+                    {/* Minimal Content Fallback */}
+                    {!speaker.bio && (!speaker.expertise || speaker.expertise.length === 0) && (
+                      <section className="bg-gray-50 rounded-lg p-8">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                          About {speaker.name}
+                        </h2>
+                        <p className="text-lg text-gray-700 mb-4">
+                          {speaker.name} is a renowned speaker specializing in artificial intelligence and emerging technologies.
+                        </p>
+                        <p className="text-lg text-gray-700">
+                          Contact Speak About AI to learn more about booking {speaker.name} for your next event.
+                        </p>
+                      </section>
+                    )}
+                  </TabsContent>
+
+                  {/* Programs Tab */}
+                  <TabsContent value="programs" className="space-y-8">
+
+                    {/* Keynote Speaking Topics */}
+                    {speaker.topics && speaker.topics.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                          Keynote Speaking Topics
+                        </h2>
+                        <div className="grid md:grid-cols-2 gap-6">
+                          {speaker.topics.map((topic, index) => (
+                            <div key={index} className="border-l-4 border-[#1E68C6] pl-4">
+                              <h3 className="text-xl font-semibold text-gray-900 mb-2">{topic}</h3>
+                              <p className="text-gray-600">
+                                Expert insights on {topic.toLowerCase()} for your audience
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {/* Speaking Programs */}
+                    {speaker.programs && speaker.programs.length > 0 && (
                   <section className="mb-12">
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">
                       Available Speaking Programs
@@ -283,10 +319,181 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         )
                       })}
                     </div>
-                  </section>
-                )}
+                      </section>
+                    )}
 
-                {/* H2: Videos & Media */}
+                    {/* Speaking Requirements */}
+                    {speaker.speakingRequirements && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6">Technical Requirements & Logistics</h2>
+                        <Card className="p-6">
+                          {speaker.speakingRequirements.avNeeds && speaker.speakingRequirements.avNeeds.length > 0 && (
+                            <div className="mb-4">
+                              <h3 className="font-semibold mb-2">AV Requirements:</h3>
+                              <ul className="list-disc list-inside text-gray-600">
+                                {speaker.speakingRequirements.avNeeds.map((need, index) => (
+                                  <li key={index}>{need}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {speaker.speakingRequirements.stageSetup && (
+                            <div className="mb-4">
+                              <h3 className="font-semibold mb-2">Stage Setup:</h3>
+                              <p className="text-gray-600">{speaker.speakingRequirements.stageSetup}</p>
+                            </div>
+                          )}
+                          {speaker.speakingRequirements.virtualCapable && (
+                            <Badge className="bg-green-100 text-green-800">Virtual Presentations Available</Badge>
+                          )}
+                        </Card>
+                      </section>
+                    )}
+
+                    {/* Downloadable Speaker Kit */}
+                    {speaker.speakerKit && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                          <Download className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                          Speaker Resources
+                        </h2>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          {speaker.speakerKit.onePagerUrl && (
+                            <a href={speaker.speakerKit.onePagerUrl} download className="flex items-center p-4 border rounded-lg hover:bg-gray-50">
+                              <Download className="w-5 h-5 mr-3 text-[#1E68C6]" />
+                              <div>
+                                <p className="font-semibold">Speaker One-Pager</p>
+                                <p className="text-sm text-gray-600">PDF with bio, topics, and photos</p>
+                              </div>
+                            </a>
+                          )}
+                          {speaker.speakerKit.highResPhotoUrl && (
+                            <a href={speaker.speakerKit.highResPhotoUrl} download className="flex items-center p-4 border rounded-lg hover:bg-gray-50">
+                              <Download className="w-5 h-5 mr-3 text-[#1E68C6]" />
+                              <div>
+                                <p className="font-semibold">High-Res Photos</p>
+                                <p className="text-sm text-gray-600">Professional headshots for marketing</p>
+                              </div>
+                            </a>
+                          )}
+                        </div>
+                      </section>
+                    )}
+                  </TabsContent>
+
+                  {/* Experience Tab */}
+                  <TabsContent value="experience" className="space-y-8">
+                    {/* Past Speaking Engagements */}
+                    {speaker.pastEvents && speaker.pastEvents.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                          <Briefcase className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                          Past Speaking Engagements
+                        </h2>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          {speaker.pastEvents.map((event, index) => (
+                            <div key={index} className="border-l-4 border-gray-300 pl-4 py-2">
+                              <h3 className="font-semibold text-gray-900">
+                                {event.eventName}
+                                {event.keynote && <Badge className="ml-2 bg-[#FFB800] text-white">Keynote</Badge>}
+                              </h3>
+                              {(event.eventType || event.location || event.date) && (
+                                <p className="text-gray-600 text-sm">
+                                  {event.eventType && <span>{event.eventType}</span>}
+                                  {event.location && <span> • {event.location}</span>}
+                                  {event.date && <span> • {event.date}</span>}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {/* Awards & Recognition */}
+                    {speaker.awards && speaker.awards.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                          <Trophy className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                          Awards & Recognition
+                        </h2>
+                        <div className="space-y-4">
+                          {speaker.awards.map((award, index) => (
+                            <div key={index} className="flex items-start">
+                              <Star className="w-5 h-5 mr-3 mt-1 text-[#FFB800] flex-shrink-0" />
+                              <div>
+                                <h3 className="font-semibold text-gray-900">{award.title}</h3>
+                                {(award.organization || award.year) && (
+                                  <p className="text-gray-600">
+                                    {award.organization}
+                                    {award.organization && award.year && ' • '}
+                                    {award.year}
+                                  </p>
+                                )}
+                                {award.description && (
+                                  <p className="text-gray-600 text-sm mt-1">{award.description}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {/* Client Logos */}
+                    {speaker.clientLogos && speaker.clientLogos.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6">Trusted By Leading Organizations</h2>
+                        <div className="bg-gray-50 rounded-lg p-6">
+                          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center">
+                            {speaker.clientLogos.map((client, index) => (
+                              <div key={index} className="flex items-center justify-center">
+                                {client.logoUrl ? (
+                                  <img src={client.logoUrl} alt={client.name} className="max-h-12 opacity-60 hover:opacity-100 transition-opacity" />
+                                ) : (
+                                  <span className="text-gray-500 text-sm text-center">{client.name}</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </section>
+                    )}
+
+                    {/* Publications */}
+                    {speaker.publications && speaker.publications.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                          <BookOpen className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                          Books & Publications
+                        </h2>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {speaker.publications.map((pub, index) => (
+                            <Card key={index} className="hover:shadow-lg transition-shadow">
+                              {pub.coverImage && (
+                                <img src={pub.coverImage} alt={pub.title} className="w-full h-48 object-cover rounded-t-lg" />
+                              )}
+                              <CardContent className="p-4">
+                                <Badge className="mb-2" variant="outline">{pub.type}</Badge>
+                                <h3 className="font-semibold text-gray-900 mb-1">{pub.title}</h3>
+                                {pub.publisher && <p className="text-sm text-gray-600">{pub.publisher}</p>}
+                                {pub.date && <p className="text-xs text-gray-500">{pub.date}</p>}
+                                {pub.link && (
+                                  <a href={pub.link} target="_blank" rel="noopener noreferrer" className="text-[#1E68C6] text-sm hover:underline mt-2 inline-block">
+                                    View →
+                                  </a>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+                  </TabsContent>
+
+                  {/* Media Tab */}
+                  <TabsContent value="media" className="space-y-8">
+                    {/* Videos */}
                 {speaker.videos && speaker.videos.length > 0 && (
                   <section className="mb-12">
                     <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
@@ -358,231 +565,50 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                       })}
                     </div>
                   </section>
-                )}
+                    )}
 
-                {/* Minimal Content Fallback - Show if we have very little data */}
-                {!speaker.bio && (!speaker.topics || speaker.topics.length === 0) && !speaker.programs && (
-                  <section className="mb-12 bg-gray-50 rounded-lg p-8">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                      About {speaker.name}
-                    </h2>
-                    <p className="text-lg text-gray-700 mb-4">
-                      {speaker.name} is a renowned speaker specializing in artificial intelligence and emerging technologies. 
-                      With expertise in {speaker.expertise?.join(', ') || 'AI innovation'}, {speaker.name} delivers 
-                      compelling keynote presentations that inspire and educate audiences worldwide.
-                    </p>
-                    <p className="text-lg text-gray-700">
-                      Contact Speak About AI to learn more about booking {speaker.name} for your next event.
-                    </p>
-                  </section>
-                )}
-
-                {/* H2: Past Speaking Engagements */}
-                {speaker.pastEvents && speaker.pastEvents.length > 0 && (
-                  <section className="mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                      <Briefcase className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                      Past Speaking Engagements
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {speaker.pastEvents.map((event, index) => (
-                        <div key={index} className="border-l-4 border-gray-300 pl-4 py-2">
-                          <h3 className="font-semibold text-gray-900">
-                            {event.eventName}
-                            {event.keynote && <Badge className="ml-2 bg-[#FFB800] text-white">Keynote</Badge>}
-                          </h3>
-                          {(event.eventType || event.location || event.date) && (
-                            <p className="text-gray-600 text-sm">
-                              {event.eventType && <span>{event.eventType}</span>}
-                              {event.location && <span> • {event.location}</span>}
-                              {event.date && <span> • {event.date}</span>}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {/* H2: Books & Publications */}
-                {speaker.publications && speaker.publications.length > 0 && (
-                  <section className="mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                      <BookOpen className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                      Books & Publications
-                    </h2>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {speaker.publications.map((pub, index) => (
-                        <Card key={index} className="hover:shadow-lg transition-shadow">
-                          {pub.coverImage && (
-                            <img src={pub.coverImage} alt={pub.title} className="w-full h-48 object-cover rounded-t-lg" />
-                          )}
-                          <CardContent className="p-4">
-                            <Badge className="mb-2" variant="outline">{pub.type}</Badge>
-                            <h3 className="font-semibold text-gray-900 mb-1">{pub.title}</h3>
-                            {pub.publisher && <p className="text-sm text-gray-600">{pub.publisher}</p>}
-                            {pub.date && <p className="text-xs text-gray-500">{pub.date}</p>}
-                            {pub.link && (
-                              <a href={pub.link} target="_blank" rel="noopener noreferrer" className="text-[#1E68C6] text-sm hover:underline mt-2 inline-block">
-                                View →
-                              </a>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {/* H2: Awards & Recognition */}
-                {speaker.awards && speaker.awards.length > 0 && (
-                  <section className="mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                      <Trophy className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                      Awards & Recognition
-                    </h2>
-                    <div className="space-y-4">
-                      {speaker.awards.map((award, index) => (
-                        <div key={index} className="flex items-start">
-                          <Star className="w-5 h-5 mr-3 mt-1 text-[#FFB800] flex-shrink-0" />
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{award.title}</h3>
-                            {(award.organization || award.year) && (
-                              <p className="text-gray-600">
-                                {award.organization}
-                                {award.organization && award.year && ' • '}
-                                {award.year}
-                              </p>
-                            )}
-                            {award.description && (
-                              <p className="text-gray-600 text-sm mt-1">{award.description}</p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {/* H2: Client Logos */}
-                {speaker.clientLogos && speaker.clientLogos.length > 0 && (
-                  <section className="mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6">Trusted By Leading Organizations</h2>
-                    <div className="bg-gray-50 rounded-lg p-6">
-                      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center">
-                        {speaker.clientLogos.map((client, index) => (
-                          <div key={index} className="flex items-center justify-center">
-                            {client.logoUrl ? (
-                              <img src={client.logoUrl} alt={client.name} className="max-h-12 opacity-60 hover:opacity-100 transition-opacity" />
-                            ) : (
-                              <span className="text-gray-500 text-sm text-center">{client.name}</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </section>
-                )}
-
-                {/* H2: Podcast & Media Appearances */}
-                {speaker.mediaAppearances && speaker.mediaAppearances.length > 0 && (
-                  <section className="mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                      <Mic className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                      Media Appearances
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {speaker.mediaAppearances.map((media, index) => (
-                        <div key={index} className="border rounded-lg p-4">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <Badge className="mb-2" variant="outline">{media.type}</Badge>
-                              <h3 className="font-semibold text-gray-900">{media.title}</h3>
-                              {media.outlet && <p className="text-gray-600">{media.outlet}</p>}
-                              {media.date && <p className="text-sm text-gray-500">{media.date}</p>}
+                    {/* Podcast & Media Appearances */}
+                    {speaker.mediaAppearances && speaker.mediaAppearances.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                          <Mic className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                          Media Appearances
+                        </h2>
+                        <div className="grid md:grid-cols-2 gap-6">
+                          {speaker.mediaAppearances.map((media, index) => (
+                            <div key={index} className="border rounded-lg p-4">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <Badge className="mb-2" variant="outline">{media.type}</Badge>
+                                  <h3 className="font-semibold text-gray-900">{media.title}</h3>
+                                  {media.outlet && <p className="text-gray-600">{media.outlet}</p>}
+                                  {media.date && <p className="text-sm text-gray-500">{media.date}</p>}
+                                </div>
+                                {media.link && (
+                                  <a href={media.link} target="_blank" rel="noopener noreferrer" className="text-[#1E68C6] hover:underline">
+                                    <Play className="w-5 h-5" />
+                                  </a>
+                                )}
+                              </div>
+                              {media.embedCode && (
+                                <div className="mt-4" dangerouslySetInnerHTML={{ __html: media.embedCode }} />
+                              )}
                             </div>
-                            {media.link && (
-                              <a href={media.link} target="_blank" rel="noopener noreferrer" className="text-[#1E68C6] hover:underline">
-                                <Play className="w-5 h-5" />
-                              </a>
-                            )}
-                          </div>
-                          {media.embedCode && (
-                            <div className="mt-4" dangerouslySetInnerHTML={{ __html: media.embedCode }} />
-                          )}
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
+                      </section>
+                    )}
+                  </TabsContent>
+                </Tabs>
 
-                {/* H2: Speaking Requirements */}
-                {speaker.speakingRequirements && (
-                  <section className="mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6">Technical Requirements & Logistics</h2>
-                    <Card className="p-6">
-                      {speaker.speakingRequirements.avNeeds && speaker.speakingRequirements.avNeeds.length > 0 && (
-                        <div className="mb-4">
-                          <h3 className="font-semibold mb-2">AV Requirements:</h3>
-                          <ul className="list-disc list-inside text-gray-600">
-                            {speaker.speakingRequirements.avNeeds.map((need, index) => (
-                              <li key={index}>{need}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {speaker.speakingRequirements.stageSetup && (
-                        <div className="mb-4">
-                          <h3 className="font-semibold mb-2">Stage Setup:</h3>
-                          <p className="text-gray-600">{speaker.speakingRequirements.stageSetup}</p>
-                        </div>
-                      )}
-                      {speaker.speakingRequirements.virtualCapable && (
-                        <Badge className="bg-green-100 text-green-800">Virtual Presentations Available</Badge>
-                      )}
-                    </Card>
-                  </section>
-                )}
-
-                {/* H2: Downloadable Speaker Kit */}
-                {speaker.speakerKit && (
-                  <section className="mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                      <Download className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                      Speaker Resources
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {speaker.speakerKit.onePagerUrl && (
-                        <a href={speaker.speakerKit.onePagerUrl} download className="flex items-center p-4 border rounded-lg hover:bg-gray-50">
-                          <Download className="w-5 h-5 mr-3 text-[#1E68C6]" />
-                          <div>
-                            <p className="font-semibold">Speaker One-Pager</p>
-                            <p className="text-sm text-gray-600">PDF with bio, topics, and photos</p>
-                          </div>
-                        </a>
-                      )}
-                      {speaker.speakerKit.highResPhotoUrl && (
-                        <a href={speaker.speakerKit.highResPhotoUrl} download className="flex items-center p-4 border rounded-lg hover:bg-gray-50">
-                          <Download className="w-5 h-5 mr-3 text-[#1E68C6]" />
-                          <div>
-                            <p className="font-semibold">High-Res Photos</p>
-                            <p className="text-sm text-gray-600">Professional headshots for marketing</p>
-                          </div>
-                        </a>
-                      )}
-                    </div>
-                  </section>
-                )}
-
-                {/* H2: Similar Speakers */}
+                {/* Similar Speakers - Outside tabs for better visibility */}
                 {speaker.similarSpeakers && speaker.similarSpeakers.length > 0 && (
-                  <section className="mb-12">
+                  <section className="mb-12 mt-12">
                     <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
                       <Users className="w-8 h-8 mr-3 text-[#1E68C6]" />
                       You May Also Like
                     </h2>
                     <div className="grid md:grid-cols-3 gap-6">
-                      {/* This would need to load the actual speaker data */}
                       {speaker.similarSpeakers.slice(0, 3).map((slug, index) => (
                         <Card key={index} className="hover:shadow-lg transition-shadow">
                           <CardContent className="p-4">
@@ -596,8 +622,8 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   </section>
                 )}
 
-                {/* H2: Book This Speaker CTA - Always show */}
-                <section className="bg-gradient-to-r from-[#1E68C6] to-[#5084C6] rounded-xl p-8 text-white">
+                {/* Book This Speaker CTA - Always show */}
+                <section className="bg-gradient-to-r from-[#1E68C6] to-[#5084C6] rounded-xl p-8 text-white mt-12">
                   {speaker.availabilityNote && (
                     <div className="mb-4 flex items-center justify-center">
                       <Clock className="w-5 h-5 mr-2" />
