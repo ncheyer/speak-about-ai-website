@@ -172,6 +172,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       bgColor: "bg-pink-50",
       items: [
         {
+          title: "SEO Dashboard",
+          href: "/admin/seo-analysis",
+          icon: TrendingUp,
+          description: "Semrush Analytics",
+          color: "text-pink-600",
+          bgColor: "bg-pink-50"
+        },
+        {
           title: "Newsletter",
           href: "/admin/newsletter",
           icon: Mail,
