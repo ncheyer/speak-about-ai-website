@@ -324,6 +324,16 @@ const styleContentfulTables = (html: string): string => {
 const fixYouTubeEmbeds = (html: string): string => {
   if (!html || typeof html !== "string") return ""
 
+  // Wrap standalone YouTube iframes (not already wrapped in a div) with responsive styling
+  html = html.replace(
+    /(?<!<div[^>]*>)\s*(<iframe[^>]*src=["']https:\/\/www\.youtube\.com\/embed\/[^"']+["'][^>]*>.*?<\/iframe>)\s*(?!<\/div>)/gi,
+    (match, iframe) => {
+      return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
+              ${iframe.replace(/<iframe/, '<iframe class="absolute top-0 left-0 w-full h-full"')}
+            </div>`
+    }
+  )
+
   // Fix iframe embeds with watch URLs
   html = html.replace(
     /<iframe([^>]*)\ssrc=["']https:\/\/www\.youtube\.com\/watch\?v=([^"'&]+)[^"']*["']([^>]*)>/gi,
@@ -468,6 +478,20 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         (match, escapedTable) => {
           // Unescape HTML entities
           return escapedTable
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&amp;/g, '&')
+        }
+      )
+
+      // Unescape HTML iframes that were stored as text in Contentful
+      contentHtml = contentHtml.replace(
+        /<p[^>]*>(&lt;iframe[\s\S]*?&lt;\/iframe&gt;)<\/p>/g,
+        (match, escapedIframe) => {
+          // Unescape HTML entities
+          return escapedIframe
             .replace(/&lt;/g, '<')
             .replace(/&gt;/g, '>')
             .replace(/&quot;/g, '"')
