@@ -745,34 +745,41 @@ export default function MasterAdminPanel() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 bg-white border shadow-sm">
-              <TabsTrigger 
-                value="overview" 
+            <TabsList className="grid w-full grid-cols-5 bg-white border shadow-sm">
+              <TabsTrigger
+                value="overview"
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
                 <PieChart className="h-4 w-4" />
                 Overview
               </TabsTrigger>
-              <TabsTrigger 
-                value="crm" 
+              <TabsTrigger
+                value="crm"
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
                 <ShoppingCart className="h-4 w-4" />
                 CRM & Sales
               </TabsTrigger>
-              <TabsTrigger 
-                value="projects" 
+              <TabsTrigger
+                value="projects"
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
                 <Briefcase className="h-4 w-4" />
                 Projects
               </TabsTrigger>
-              <TabsTrigger 
-                value="finances" 
+              <TabsTrigger
+                value="finances"
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
                 <Wallet className="h-4 w-4" />
                 Finances
+              </TabsTrigger>
+              <TabsTrigger
+                value="marketing"
+                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
+              >
+                <TrendingUp className="h-4 w-4" />
+                Marketing
               </TabsTrigger>
             </TabsList>
 
@@ -1405,9 +1412,255 @@ export default function MasterAdminPanel() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Marketing Tab */}
+            <TabsContent value="marketing" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-pink-500" />
+                        SEO & Marketing Dashboard
+                      </CardTitle>
+                      <CardDescription>
+                        Comprehensive SEO analysis powered by Semrush
+                      </CardDescription>
+                    </div>
+                    <Link href="/admin/seo-analysis" target="_blank">
+                      <Button size="sm" variant="outline">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Open Full Dashboard
+                      </Button>
+                    </Link>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <SEODashboardEmbed />
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         </div>
       </div>
+    </div>
+  )
+}
+
+// SEO Dashboard Embed Component
+function SEODashboardEmbed() {
+  const [seoData, setSeoData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/seo/analyze')
+      .then(res => res.json())
+      .then(data => {
+        setSeoData(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Failed to load SEO data:', err)
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-pink-500" />
+        <p className="mt-4 text-gray-600">Loading SEO analytics...</p>
+      </div>
+    )
+  }
+
+  if (!seoData || seoData.error) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="h-8 w-8 mx-auto text-red-500" />
+        <p className="mt-4 text-gray-600">Failed to load SEO data</p>
+      </div>
+    )
+  }
+
+  const { overview, analysis } = seoData
+
+  return (
+    <div className="space-y-6">
+      {/* Overview Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="border-pink-200 bg-pink-50">
+          <CardHeader className="pb-3">
+            <CardDescription className="text-pink-800">Domain Rank</CardDescription>
+            <CardTitle className="text-2xl text-pink-900">
+              {parseInt(overview.Rank).toLocaleString()}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader className="pb-3">
+            <CardDescription className="text-blue-800">Organic Keywords</CardDescription>
+            <CardTitle className="text-2xl text-blue-900">
+              {overview['Organic Keywords']}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+
+        <Card className="border-green-200 bg-green-50">
+          <CardHeader className="pb-3">
+            <CardDescription className="text-green-800">Monthly Traffic</CardDescription>
+            <CardTitle className="text-2xl text-green-900">
+              {overview['Organic Traffic']}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+
+        <Card className="border-purple-200 bg-purple-50">
+          <CardHeader className="pb-3">
+            <CardDescription className="text-purple-800">Traffic Value</CardDescription>
+            <CardTitle className="text-2xl text-purple-900">
+              ${overview['Organic Cost']}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Position Distribution */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Keyword Position Distribution
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-5 gap-4">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600">{analysis.positionRanges.top3}</div>
+              <div className="text-sm text-gray-600">Top 3</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600">{analysis.positionRanges.top10}</div>
+              <div className="text-sm text-gray-600">Top 10</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-yellow-600">{analysis.positionRanges.top20}</div>
+              <div className="text-sm text-gray-600">Top 20</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-orange-600">{analysis.positionRanges.top50}</div>
+              <div className="text-sm text-gray-600">Top 50</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-gray-600">{analysis.positionRanges.top100}</div>
+              <div className="text-sm text-gray-600">Top 100</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Top Opportunities */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Low-Hanging Fruit */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Target className="h-5 w-5 text-orange-500" />
+              Low-Hanging Fruit
+            </CardTitle>
+            <CardDescription>
+              Keywords ranking #4-20 that can be optimized
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {analysis.lowHangingFruit.slice(0, 5).map((kw: any, i: number) => (
+                <div key={i} className="border-b pb-3 last:border-0">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm">{kw.Keyword}</span>
+                    <Badge variant="outline" className="text-xs">
+                      #{kw.Position}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {parseInt(kw['Search Volume']).toLocaleString()} searches/mo
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Link href="/admin/seo-analysis" target="_blank">
+              <Button size="sm" variant="ghost" className="w-full mt-4">
+                View All {analysis.lowHangingFruit.length} Opportunities
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        {/* High-Value Opportunities */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Award className="h-5 w-5 text-blue-500" />
+              High-Value Keywords
+            </CardTitle>
+            <CardDescription>
+              High-volume keywords on page 2-3
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {analysis.highValueOpportunities.slice(0, 5).map((kw: any, i: number) => (
+                <div key={i} className="border-b pb-3 last:border-0">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm">{kw.Keyword}</span>
+                    <Badge variant="outline" className="text-xs">
+                      #{kw.Position}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {parseInt(kw['Search Volume']).toLocaleString()} searches/mo
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Link href="/admin/seo-analysis" target="_blank">
+              <Button size="sm" variant="ghost" className="w-full mt-4">
+                View All {analysis.highValueOpportunities.length} Keywords
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <Card className="bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200">
+        <CardHeader>
+          <CardTitle className="text-lg">Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link href="/admin/seo-analysis?tab=recommendations" target="_blank">
+              <Button variant="outline" className="w-full justify-start">
+                <Target className="h-4 w-4 mr-2" />
+                View Recommendations
+              </Button>
+            </Link>
+            <Link href="/admin/seo-analysis?tab=competitors" target="_blank">
+              <Button variant="outline" className="w-full justify-start">
+                <Users className="h-4 w-4 mr-2" />
+                Competitor Analysis
+              </Button>
+            </Link>
+            <Link href="/admin/seo-analysis?tab=topics" target="_blank">
+              <Button variant="outline" className="w-full justify-start">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Keyword Topics
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
