@@ -170,7 +170,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
               {/* Right: Main Content with Proper H Tags */}
               <div className="lg:col-span-2">
                 {/* H1 - Main Title */}
-                <div className="mb-8">
+                <div className="mb-8 text-center">
                   <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
                     {speaker.name}
                   </h1>

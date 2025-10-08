@@ -59,18 +59,303 @@ const renderVideoEmbed = (node: Block | Inline): string => {
   return ""
 }
 
-// Helper function to fix YouTube URLs in iframe src attributes
-const fixYouTubeIframes = (html: string): string => {
+// Helper function to convert markdown-style images to HTML
+const convertMarkdownImages = (html: string): string => {
   if (!html || typeof html !== "string") return ""
+
+  // First handle the malformed case: !<a href="url">text</a>
+  html = html.replace(
+    /!<a href="([^"]+)"[^>]*>([^<]*)<\/a>/g,
+    (match, url, alt) => {
+      return `<div class="my-6 flex justify-center">
+                <img src="${url}" alt="${alt}" class="max-w-full md:max-w-[80%] h-auto rounded-lg shadow-md object-contain" loading="lazy" />
+              </div>`
+    }
+  )
+
+  // Then handle standard markdown: ![alt text](image url)
+  html = html.replace(
+    /!\[([^\]]*)\]\(([^)]+)\)/g,
+    (match, alt, url) => {
+      return `<div class="my-6 flex justify-center">
+                <img src="${url}" alt="${alt}" class="max-w-full md:max-w-[80%] h-auto rounded-lg shadow-md object-contain" loading="lazy" />
+              </div>`
+    }
+  )
+
+  return html
+}
+
+// Helper function to convert markdown-style tables to HTML
+const convertMarkdownTables = (html: string): string => {
+  if (!html || typeof html !== "string") return ""
+
+  // Match malformed tables without separator rows (each row in separate <p> tags)
+  // Pattern: <p>| header |</p><p>| row |</p><p>| row |</p>... (NO separator row)
+  // This pattern looks for a header row followed by at least 2 data rows
+  html = html.replace(
+    /(<p[^>]*>\s*\|.+?\|\s*<\/p>)(\s*<p[^>]*>\s*\|.+?\|\s*<\/p>){2,}/g,
+    (match) => {
+      // Extract all paragraph contents
+      const paragraphMatches = match.match(/<p[^>]*>(\s*\|.+?\|)\s*<\/p>/g) || []
+      if (paragraphMatches.length < 2) return match
+
+      const allRows = paragraphMatches.map((p) => {
+        // Remove <p> tags and extract content
+        const content = p.replace(/<p[^>]*>/g, '').replace(/<\/p>/g, '').trim()
+        // Split by | and process each cell
+        const cells = content.split('|')
+          .map((cell: string) => cell.trim())
+          .filter((cell: string) => cell)
+        return cells
+      })
+
+      // Check if we have enough rows
+      if (allRows.length < 2) return match
+
+      // First row is header
+      const headers = allRows[0]
+      const dataRows = allRows.slice(1).filter((row) => row.length > 0)
+
+      // If no valid data rows, return original
+      if (dataRows.length === 0) return match
+
+      let tableHTML = '<div class="my-8 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-300">'
+      tableHTML += '<thead class="bg-gray-100"><tr>'
+      headers.forEach((h: string) => {
+        tableHTML += `<th class="border border-gray-300 px-4 py-2 text-left font-semibold">${h}</th>`
+      })
+      tableHTML += '</tr></thead><tbody>'
+
+      dataRows.forEach((row: string[]) => {
+        tableHTML += '<tr>'
+        row.forEach((cell: string) => {
+          tableHTML += `<td class="border border-gray-300 px-4 py-2">${cell}</td>`
+        })
+        tableHTML += '</tr>'
+      })
+
+      tableHTML += '</tbody></table></div>'
+      return tableHTML
+    }
+  )
+
+  // Match tables that appear as separate paragraphs with separator row
+  // Pattern: <p>| header |</p><p>| --- |</p><p>| row |</p>...
+  html = html.replace(
+    /(?:<p[^>]*>)\s*\|(.+?)\|\s*<\/p>\s*(?:<p[^>]*>)\s*\|[-:\s|]+\|\s*<\/p>((?:\s*<p[^>]*>\s*\|.+?\|\s*<\/p>)+)/g,
+    (match, header, rows) => {
+      const headers = header.split('|').map((h: string) => h.trim()).filter((h: string) => h)
+      const rowMatches = rows.match(/<p[^>]*>\s*\|(.+?)\|\s*<\/p>/g) || []
+      const rowsArray = rowMatches.map((rowMatch: string) => {
+        const rowContent = rowMatch.replace(/<\/?p[^>]*>/g, '').trim()
+        return rowContent.split('|').map((cell: string) => cell.trim()).filter((cell: string) => cell)
+      })
+
+      let tableHTML = '<div class="my-8 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-300">'
+      tableHTML += '<thead class="bg-gray-100"><tr>'
+      headers.forEach((h: string) => {
+        tableHTML += `<th class="border border-gray-300 px-4 py-2 text-left font-semibold">${h}</th>`
+      })
+      tableHTML += '</tr></thead><tbody>'
+
+      rowsArray.forEach((row: string[]) => {
+        if (row.length > 0) {
+          tableHTML += '<tr>'
+          row.forEach((cell: string) => {
+            tableHTML += `<td class="border border-gray-300 px-4 py-2">${cell}</td>`
+          })
+          tableHTML += '</tr>'
+        }
+      })
+
+      tableHTML += '</tbody></table></div>'
+      return tableHTML
+    }
+  )
+
+  // Match tables within a single paragraph (each line is in the paragraph text)
+  // Pattern: <p>| header |\n| --- |\n| row |\n| row |</p>
+  html = html.replace(
+    /<p[^>]*>\s*(\|.+?\|)\s*\n\s*(\|[-:\s|]+\|)\s*\n((?:\s*\|.+?\|\s*\n?)+)\s*<\/p>/g,
+    (match, header, separator, rows) => {
+      const headers = header.split('|').map((h: string) => h.trim()).filter((h: string) => h)
+      const rowsArray = rows.trim().split('\n').map((row: string) =>
+        row.split('|').map((cell: string) => cell.trim()).filter((cell: string) => cell)
+      )
+
+      let tableHTML = '<div class="my-8 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-300">'
+      tableHTML += '<thead class="bg-gray-100"><tr>'
+      headers.forEach((h: string) => {
+        tableHTML += `<th class="border border-gray-300 px-4 py-2 text-left font-semibold">${h}</th>`
+      })
+      tableHTML += '</tr></thead><tbody>'
+
+      rowsArray.forEach((row: string[]) => {
+        if (row.length > 0) {
+          tableHTML += '<tr>'
+          row.forEach((cell: string) => {
+            tableHTML += `<td class="border border-gray-300 px-4 py-2">${cell}</td>`
+          })
+          tableHTML += '</tr>'
+        }
+      })
+
+      tableHTML += '</tbody></table></div>'
+      return tableHTML
+    }
+  )
+
+  // Match tables WITHOUT leading pipes (Outrank format)
+  // Pattern: <p>Header | Header</p><p>Cell | Cell</p><p>Cell | Cell</p>...
+  // Must have 3+ consecutive rows with pipes, where first row has 2+ words (header characteristics)
+  html = html.replace(
+    /(<p[^>]*>[A-Z][^<|]*\|[^<]+<\/p>)(?:\s*<p[^>]*>[^<]+\|[^<]+<\/p>){2,}/g,
+    (match) => {
+      // Extract all paragraph contents
+      const paragraphMatches = match.match(/<p[^>]*>([^<]+)<\/p>/g) || []
+      if (paragraphMatches.length < 3) return match
+
+      const allRows = paragraphMatches.map((p) => {
+        const content = p.replace(/<\/?p[^>]*>/g, '').trim()
+        return content.split('|').map((cell: string) => cell.trim()).filter((cell: string) => cell)
+      })
+
+      // Verify this looks like a table (all rows have same number of columns, 2+)
+      const columnCount = allRows[0].length
+      if (columnCount < 2) return match
+      if (!allRows.every(row => row.length === columnCount)) return match
+
+      // First row is header
+      const headers = allRows[0]
+      const dataRows = allRows.slice(1)
+
+      let tableHTML = '<div class="my-8 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-300">'
+      tableHTML += '<thead class="bg-gray-100"><tr>'
+      headers.forEach((h: string) => {
+        tableHTML += `<th class="border border-gray-300 px-4 py-2 text-left font-semibold">${h}</th>`
+      })
+      tableHTML += '</tr></thead><tbody>'
+
+      dataRows.forEach((row: string[]) => {
+        tableHTML += '<tr>'
+        row.forEach((cell: string) => {
+          tableHTML += `<td class="border border-gray-300 px-4 py-2">${cell}</td>`
+        })
+        tableHTML += '</tr>'
+      })
+
+      tableHTML += '</tbody></table></div>'
+      return tableHTML
+    }
+  )
+
+  // Remove duplicate table rows that appear without leading pipes (plain text format)
+  // These are the duplicate versions that appear after the proper table
+
+  // Pattern 1: Header row with all text in <strong>, followed by rows with first cell in <strong>
+  // <p><strong>Header1 | Header2 | Header3</strong></p>
+  // <p><strong>Cell1</strong> | Cell2 | Cell3</p>
+  html = html.replace(
+    /<p[^>]*><strong>[^<]+\|[^<]+\|[^<]+<\/strong><\/p>(?:\s*<p[^>]*><strong>[^<]+<\/strong>\s*\|[^<]+<\/p>){2,}/g,
+    ''
+  )
+
+  // Pattern 2: <p><strong>Header | ... </strong></p> followed by multiple <p><strong>Row</strong> | ... </p>
+  html = html.replace(
+    /<p[^>]*><strong>[^<|]+\|[^<]*<\/strong><\/p>(?:\s*<p[^>]*>(?:<strong>)?[^<]+\|[^<]*(?:<\/strong>)?<\/p>){2,}/g,
+    ''
+  )
+
+  // Pattern 3: Plain text without strong tags - <p>Header | ... </p> followed by multiple <p>Text | ... </p>
+  // Look for header row without leading pipe, followed by 3+ data rows with pipes
+  html = html.replace(
+    /<p[^>]*>(?!.*<\/table>)([A-Z][^<|]*\|[^<]*)<\/p>(?:\s*<p[^>]*>(?!.*<\/table>)(?:<strong>)?[^<]+\|[^<]*(?:<\/strong>)?<\/p>){3,}/g,
+    ''
+  )
+
+  // Pattern 4: Clean up any remaining orphaned table-like rows (rows with 2+ pipes)
+  // These are leftover rows from partial matches above
+  // Match: <p><strong>Text</strong> | ... | ... </p> (allows <strong> tags anywhere)
+  html = html.replace(
+    /<p[^>]*><strong>[^<]+<\/strong>\s*\|[^|]+\|.+?<\/p>/g,
+    ''
+  )
+
+  return html
+}
+
+// Helper function to convert markdown blockquotes to HTML
+const convertMarkdownBlockquotes = (html: string): string => {
+  if (!html || typeof html !== "string") return ""
+
+  // Match > at start of paragraph
   return html.replace(
+    /<p class="mb-4 leading-relaxed">&gt;\s*(.*?)<\/p>/g,
+    (match, content) => {
+      return `<blockquote class="border-l-4 border-blue-500 bg-blue-50 pl-4 pr-4 py-3 italic my-6 text-gray-700">${content}</blockquote>`
+    }
+  )
+}
+
+// Helper function to style HTML tables from Contentful
+const styleContentfulTables = (html: string): string => {
+  if (!html || typeof html !== "string") return ""
+
+  // Replace table classes with Tailwind classes
+  html = html.replace(
+    /<table[^>]*>/g,
+    '<div class="my-8 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-300">'
+  )
+
+  // Close the wrapper div after table
+  html = html.replace(/<\/table>/g, '</table></div>')
+
+  // Style th tags
+  html = html.replace(/<th([^>]*)>/g, '<th$1 class="border border-gray-300 px-4 py-2 text-left font-semibold bg-gray-100">')
+
+  // Style td tags
+  html = html.replace(/<td([^>]*)>/g, '<td$1 class="border border-gray-300 px-4 py-2">')
+
+  return html
+}
+
+// Helper function to fix YouTube URLs in content
+const fixYouTubeEmbeds = (html: string): string => {
+  if (!html || typeof html !== "string") return ""
+
+  // Wrap standalone YouTube iframes (not already wrapped in a div) with responsive styling
+  html = html.replace(
+    /(?<!<div[^>]*>)\s*(<iframe[^>]*src=["']https:\/\/www\.youtube\.com\/embed\/[^"']+["'][^>]*>.*?<\/iframe>)\s*(?!<\/div>)/gi,
+    (match, iframe) => {
+      return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
+              ${iframe.replace(/<iframe/, '<iframe class="absolute top-0 left-0 w-full h-full"')}
+            </div>`
+    }
+  )
+
+  // Fix iframe embeds with watch URLs
+  html = html.replace(
     /<iframe([^>]*)\ssrc=["']https:\/\/www\.youtube\.com\/watch\?v=([^"'&]+)[^"']*["']([^>]*)>/gi,
     (match, beforeSrc, videoId, afterSrc) => {
       const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`
       return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
               <iframe${beforeSrc} src="${embedUrl}"${afterSrc} class="absolute top-0 left-0 w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
             </div>`
-    },
+    }
   )
+
+  // Fix bare YouTube embed URLs in paragraphs
+  html = html.replace(
+    /<p class="mb-4 leading-relaxed">https:\/\/www\.youtube\.com\/embed\/([a-zA-Z0-9_-]+)<\/p>/g,
+    (match, videoId) => {
+      return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
+              <iframe src="https://www.youtube.com/embed/${videoId}?rel=0" class="absolute top-0 left-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>`
+    }
+  )
+
+  return html
 }
 
 type BlogPostPageProps = {
@@ -131,7 +416,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     if (typeof post.content === "string") {
       // Fallback for plain markdown string content
       contentHtml = marked(post.content)
-      contentHtml = fixYouTubeIframes(contentHtml) // Apply YouTube fix if needed
+      contentHtml = convertMarkdownImages(contentHtml)
+      contentHtml = convertMarkdownTables(contentHtml)
+      contentHtml = convertMarkdownBlockquotes(contentHtml)
+      contentHtml = fixYouTubeEmbeds(contentHtml)
     } else if (typeof post.content === "object" && post.content.nodeType === "document") {
       // Preferred: Contentful Rich Text
       const richTextDocument = post.content as Document
@@ -183,7 +471,40 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         },
       }
       contentHtml = documentToHtmlString(richTextDocument, renderOptions)
-      contentHtml = fixYouTubeIframes(contentHtml) // Apply YouTube fix after Rich Text processing
+
+      // Unescape HTML tables that were stored as text in Contentful
+      contentHtml = contentHtml.replace(
+        /<p[^>]*>(&lt;table[\s\S]*?&lt;\/table&gt;)<\/p>/g,
+        (match, escapedTable) => {
+          // Unescape HTML entities
+          return escapedTable
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&amp;/g, '&')
+        }
+      )
+
+      // Unescape HTML iframes that were stored as text in Contentful
+      contentHtml = contentHtml.replace(
+        /<p[^>]*>(&lt;iframe[\s\S]*?&lt;\/iframe&gt;)<\/p>/g,
+        (match, escapedIframe) => {
+          // Unescape HTML entities
+          return escapedIframe
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&amp;/g, '&')
+        }
+      )
+
+      contentHtml = styleContentfulTables(contentHtml)
+      contentHtml = convertMarkdownImages(contentHtml)
+      contentHtml = convertMarkdownTables(contentHtml)
+      contentHtml = convertMarkdownBlockquotes(contentHtml)
+      contentHtml = fixYouTubeEmbeds(contentHtml)
     } else {
       contentHtml = "<p>Content is in an unexpected format.</p>"
     }
