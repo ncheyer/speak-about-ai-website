@@ -298,6 +298,28 @@ const convertMarkdownBlockquotes = (html: string): string => {
   )
 }
 
+// Helper function to style HTML tables from Contentful
+const styleContentfulTables = (html: string): string => {
+  if (!html || typeof html !== "string") return ""
+
+  // Replace table classes with Tailwind classes
+  html = html.replace(
+    /<table[^>]*>/g,
+    '<div class="my-8 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-300">'
+  )
+
+  // Close the wrapper div after table
+  html = html.replace(/<\/table>/g, '</table></div>')
+
+  // Style th tags
+  html = html.replace(/<th([^>]*)>/g, '<th$1 class="border border-gray-300 px-4 py-2 text-left font-semibold bg-gray-100">')
+
+  // Style td tags
+  html = html.replace(/<td([^>]*)>/g, '<td$1 class="border border-gray-300 px-4 py-2">')
+
+  return html
+}
+
 // Helper function to fix YouTube URLs in content
 const fixYouTubeEmbeds = (html: string): string => {
   if (!html || typeof html !== "string") return ""
@@ -439,6 +461,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         },
       }
       contentHtml = documentToHtmlString(richTextDocument, renderOptions)
+      contentHtml = styleContentfulTables(contentHtml)
       contentHtml = convertMarkdownImages(contentHtml)
       contentHtml = convertMarkdownTables(contentHtml)
       contentHtml = convertMarkdownBlockquotes(contentHtml)
