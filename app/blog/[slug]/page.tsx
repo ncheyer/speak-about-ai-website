@@ -206,6 +206,50 @@ const convertMarkdownTables = (html: string): string => {
     }
   )
 
+  // Match tables WITHOUT leading pipes (Outrank format)
+  // Pattern: <p>Header | Header</p><p>Cell | Cell</p><p>Cell | Cell</p>...
+  // Must have 3+ consecutive rows with pipes, where first row has 2+ words (header characteristics)
+  html = html.replace(
+    /(<p[^>]*>[A-Z][^<|]*\|[^<]+<\/p>)(?:\s*<p[^>]*>[^<]+\|[^<]+<\/p>){2,}/g,
+    (match) => {
+      // Extract all paragraph contents
+      const paragraphMatches = match.match(/<p[^>]*>([^<]+)<\/p>/g) || []
+      if (paragraphMatches.length < 3) return match
+
+      const allRows = paragraphMatches.map((p) => {
+        const content = p.replace(/<\/?p[^>]*>/g, '').trim()
+        return content.split('|').map((cell: string) => cell.trim()).filter((cell: string) => cell)
+      })
+
+      // Verify this looks like a table (all rows have same number of columns, 2+)
+      const columnCount = allRows[0].length
+      if (columnCount < 2) return match
+      if (!allRows.every(row => row.length === columnCount)) return match
+
+      // First row is header
+      const headers = allRows[0]
+      const dataRows = allRows.slice(1)
+
+      let tableHTML = '<div class="my-8 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-300">'
+      tableHTML += '<thead class="bg-gray-100"><tr>'
+      headers.forEach((h: string) => {
+        tableHTML += `<th class="border border-gray-300 px-4 py-2 text-left font-semibold">${h}</th>`
+      })
+      tableHTML += '</tr></thead><tbody>'
+
+      dataRows.forEach((row: string[]) => {
+        tableHTML += '<tr>'
+        row.forEach((cell: string) => {
+          tableHTML += `<td class="border border-gray-300 px-4 py-2">${cell}</td>`
+        })
+        tableHTML += '</tr>'
+      })
+
+      tableHTML += '</tbody></table></div>'
+      return tableHTML
+    }
+  )
+
   // Remove duplicate table rows that appear without leading pipes (plain text format)
   // These are the duplicate versions that appear after the proper table
 
