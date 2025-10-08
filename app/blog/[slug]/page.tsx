@@ -461,6 +461,21 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         },
       }
       contentHtml = documentToHtmlString(richTextDocument, renderOptions)
+
+      // Unescape HTML tables that were stored as text in Contentful
+      contentHtml = contentHtml.replace(
+        /<p[^>]*>(&lt;table[\s\S]*?&lt;\/table&gt;)<\/p>/g,
+        (match, escapedTable) => {
+          // Unescape HTML entities
+          return escapedTable
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&amp;/g, '&')
+        }
+      )
+
       contentHtml = styleContentfulTables(contentHtml)
       contentHtml = convertMarkdownImages(contentHtml)
       contentHtml = convertMarkdownTables(contentHtml)
