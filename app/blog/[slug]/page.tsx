@@ -90,7 +90,57 @@ const convertMarkdownImages = (html: string): string => {
 const convertMarkdownTables = (html: string): string => {
   if (!html || typeof html !== "string") return ""
 
-  // Match tables that appear as separate paragraphs (common in Rich Text rendering)
+  // Match malformed tables without separator rows (each row in separate <p> tags)
+  // Pattern: <p>| header |</p><p>| row |</p><p>| row |</p>... (NO separator row)
+  // This pattern looks for a header row followed by at least 2 data rows
+  html = html.replace(
+    /(<p[^>]*>\s*\|.+?\|\s*<\/p>)(\s*<p[^>]*>\s*\|.+?\|\s*<\/p>){2,}/g,
+    (match) => {
+      // Extract all paragraph contents
+      const paragraphMatches = match.match(/<p[^>]*>(\s*\|.+?\|)\s*<\/p>/g) || []
+      if (paragraphMatches.length < 2) return match
+
+      const allRows = paragraphMatches.map((p) => {
+        // Remove <p> tags and extract content
+        const content = p.replace(/<p[^>]*>/g, '').replace(/<\/p>/g, '').trim()
+        // Split by | and process each cell
+        const cells = content.split('|')
+          .map((cell: string) => cell.trim())
+          .filter((cell: string) => cell)
+        return cells
+      })
+
+      // Check if we have enough rows
+      if (allRows.length < 2) return match
+
+      // First row is header
+      const headers = allRows[0]
+      const dataRows = allRows.slice(1).filter((row) => row.length > 0)
+
+      // If no valid data rows, return original
+      if (dataRows.length === 0) return match
+
+      let tableHTML = '<div class="my-8 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-300">'
+      tableHTML += '<thead class="bg-gray-100"><tr>'
+      headers.forEach((h: string) => {
+        tableHTML += `<th class="border border-gray-300 px-4 py-2 text-left font-semibold">${h}</th>`
+      })
+      tableHTML += '</tr></thead><tbody>'
+
+      dataRows.forEach((row: string[]) => {
+        tableHTML += '<tr>'
+        row.forEach((cell: string) => {
+          tableHTML += `<td class="border border-gray-300 px-4 py-2">${cell}</td>`
+        })
+        tableHTML += '</tr>'
+      })
+
+      tableHTML += '</tbody></table></div>'
+      return tableHTML
+    }
+  )
+
+  // Match tables that appear as separate paragraphs with separator row
   // Pattern: <p>| header |</p><p>| --- |</p><p>| row |</p>...
   html = html.replace(
     /(?:<p[^>]*>)\s*\|(.+?)\|\s*<\/p>\s*(?:<p[^>]*>)\s*\|[-:\s|]+\|\s*<\/p>((?:\s*<p[^>]*>\s*\|.+?\|\s*<\/p>)+)/g,
@@ -124,10 +174,11 @@ const convertMarkdownTables = (html: string): string => {
     }
   )
 
-  // Also match traditional newline-separated markdown tables
+  // Match tables within a single paragraph (each line is in the paragraph text)
+  // Pattern: <p>| header |\n| --- |\n| row |\n| row |</p>
   html = html.replace(
-    /\|(.+)\|\n\|[-:\s|]+\|\n((?:\|.+\|\n?)+)/g,
-    (match, header, rows) => {
+    /<p[^>]*>\s*(\|.+?\|)\s*\n\s*(\|[-:\s|]+\|)\s*\n((?:\s*\|.+?\|\s*\n?)+)\s*<\/p>/g,
+    (match, header, separator, rows) => {
       const headers = header.split('|').map((h: string) => h.trim()).filter((h: string) => h)
       const rowsArray = rows.trim().split('\n').map((row: string) =>
         row.split('|').map((cell: string) => cell.trim()).filter((cell: string) => cell)
@@ -153,6 +204,38 @@ const convertMarkdownTables = (html: string): string => {
       tableHTML += '</tbody></table></div>'
       return tableHTML
     }
+  )
+
+  // Remove duplicate table rows that appear without leading pipes (plain text format)
+  // These are the duplicate versions that appear after the proper table
+
+  // Pattern 1: Header row with all text in <strong>, followed by rows with first cell in <strong>
+  // <p><strong>Header1 | Header2 | Header3</strong></p>
+  // <p><strong>Cell1</strong> | Cell2 | Cell3</p>
+  html = html.replace(
+    /<p[^>]*><strong>[^<]+\|[^<]+\|[^<]+<\/strong><\/p>(?:\s*<p[^>]*><strong>[^<]+<\/strong>\s*\|[^<]+<\/p>){2,}/g,
+    ''
+  )
+
+  // Pattern 2: <p><strong>Header | ... </strong></p> followed by multiple <p><strong>Row</strong> | ... </p>
+  html = html.replace(
+    /<p[^>]*><strong>[^<|]+\|[^<]*<\/strong><\/p>(?:\s*<p[^>]*>(?:<strong>)?[^<]+\|[^<]*(?:<\/strong>)?<\/p>){2,}/g,
+    ''
+  )
+
+  // Pattern 3: Plain text without strong tags - <p>Header | ... </p> followed by multiple <p>Text | ... </p>
+  // Look for header row without leading pipe, followed by 3+ data rows with pipes
+  html = html.replace(
+    /<p[^>]*>(?!.*<\/table>)([A-Z][^<|]*\|[^<]*)<\/p>(?:\s*<p[^>]*>(?!.*<\/table>)(?:<strong>)?[^<]+\|[^<]*(?:<\/strong>)?<\/p>){3,}/g,
+    ''
+  )
+
+  // Pattern 4: Clean up any remaining orphaned table-like rows (rows with 2+ pipes)
+  // These are leftover rows from partial matches above
+  // Match: <p><strong>Text</strong> | ... | ... </p> (allows <strong> tags anywhere)
+  html = html.replace(
+    /<p[^>]*><strong>[^<]+<\/strong>\s*\|[^|]+\|.+?<\/p>/g,
+    ''
   )
 
   return html
