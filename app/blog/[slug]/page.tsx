@@ -59,18 +59,105 @@ const renderVideoEmbed = (node: Block | Inline): string => {
   return ""
 }
 
-// Helper function to fix YouTube URLs in iframe src attributes
-const fixYouTubeIframes = (html: string): string => {
+// Helper function to convert markdown-style images to HTML
+const convertMarkdownImages = (html: string): string => {
   if (!html || typeof html !== "string") return ""
+
+  // First handle the malformed case: !<a href="url">text</a>
+  html = html.replace(
+    /!<a href="([^"]+)"[^>]*>([^<]*)<\/a>/g,
+    (match, url, alt) => {
+      return `<div class="my-6 flex justify-center">
+                <img src="${url}" alt="${alt}" class="max-w-full md:max-w-[80%] h-auto rounded-lg shadow-md object-contain" loading="lazy" />
+              </div>`
+    }
+  )
+
+  // Then handle standard markdown: ![alt text](image url)
+  html = html.replace(
+    /!\[([^\]]*)\]\(([^)]+)\)/g,
+    (match, alt, url) => {
+      return `<div class="my-6 flex justify-center">
+                <img src="${url}" alt="${alt}" class="max-w-full md:max-w-[80%] h-auto rounded-lg shadow-md object-contain" loading="lazy" />
+              </div>`
+    }
+  )
+
+  return html
+}
+
+// Helper function to convert markdown-style tables to HTML
+const convertMarkdownTables = (html: string): string => {
+  if (!html || typeof html !== "string") return ""
+
+  // Match markdown table pattern
+  const tableRegex = /\|(.+)\|\n\|[-:\s|]+\|\n((?:\|.+\|\n?)+)/g
+
+  return html.replace(tableRegex, (match, header, rows) => {
+    const headers = header.split('|').map((h: string) => h.trim()).filter((h: string) => h)
+    const rowsArray = rows.trim().split('\n').map((row: string) =>
+      row.split('|').map((cell: string) => cell.trim()).filter((cell: string) => cell)
+    )
+
+    let tableHTML = '<div class="my-8 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-300">'
+    tableHTML += '<thead class="bg-gray-100"><tr>'
+    headers.forEach((h: string) => {
+      tableHTML += `<th class="border border-gray-300 px-4 py-2 text-left font-semibold">${h}</th>`
+    })
+    tableHTML += '</tr></thead><tbody>'
+
+    rowsArray.forEach((row: string[]) => {
+      tableHTML += '<tr>'
+      row.forEach((cell: string) => {
+        tableHTML += `<td class="border border-gray-300 px-4 py-2">${cell}</td>`
+      })
+      tableHTML += '</tr>'
+    })
+
+    tableHTML += '</tbody></table></div>'
+    return tableHTML
+  })
+}
+
+// Helper function to convert markdown blockquotes to HTML
+const convertMarkdownBlockquotes = (html: string): string => {
+  if (!html || typeof html !== "string") return ""
+
+  // Match > at start of paragraph
   return html.replace(
+    /<p class="mb-4 leading-relaxed">&gt;\s*(.*?)<\/p>/g,
+    (match, content) => {
+      return `<blockquote class="border-l-4 border-blue-500 bg-blue-50 pl-4 pr-4 py-3 italic my-6 text-gray-700">${content}</blockquote>`
+    }
+  )
+}
+
+// Helper function to fix YouTube URLs in content
+const fixYouTubeEmbeds = (html: string): string => {
+  if (!html || typeof html !== "string") return ""
+
+  // Fix iframe embeds with watch URLs
+  html = html.replace(
     /<iframe([^>]*)\ssrc=["']https:\/\/www\.youtube\.com\/watch\?v=([^"'&]+)[^"']*["']([^>]*)>/gi,
     (match, beforeSrc, videoId, afterSrc) => {
       const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`
       return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
               <iframe${beforeSrc} src="${embedUrl}"${afterSrc} class="absolute top-0 left-0 w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
             </div>`
-    },
+    }
   )
+
+  // Fix bare YouTube embed URLs in paragraphs
+  html = html.replace(
+    /<p class="mb-4 leading-relaxed">https:\/\/www\.youtube\.com\/embed\/([a-zA-Z0-9_-]+)<\/p>/g,
+    (match, videoId) => {
+      return `<div class="my-8 relative w-full overflow-hidden rounded-lg shadow-lg mx-auto" style="padding-bottom: 56.25%; max-width: 800px;">
+              <iframe src="https://www.youtube.com/embed/${videoId}?rel=0" class="absolute top-0 left-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>`
+    }
+  )
+
+  return html
 }
 
 type BlogPostPageProps = {
@@ -131,7 +218,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     if (typeof post.content === "string") {
       // Fallback for plain markdown string content
       contentHtml = marked(post.content)
-      contentHtml = fixYouTubeIframes(contentHtml) // Apply YouTube fix if needed
+      contentHtml = convertMarkdownImages(contentHtml)
+      contentHtml = convertMarkdownTables(contentHtml)
+      contentHtml = convertMarkdownBlockquotes(contentHtml)
+      contentHtml = fixYouTubeEmbeds(contentHtml)
     } else if (typeof post.content === "object" && post.content.nodeType === "document") {
       // Preferred: Contentful Rich Text
       const richTextDocument = post.content as Document
@@ -183,7 +273,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         },
       }
       contentHtml = documentToHtmlString(richTextDocument, renderOptions)
-      contentHtml = fixYouTubeIframes(contentHtml) // Apply YouTube fix after Rich Text processing
+      contentHtml = convertMarkdownImages(contentHtml)
+      contentHtml = convertMarkdownTables(contentHtml)
+      contentHtml = convertMarkdownBlockquotes(contentHtml)
+      contentHtml = fixYouTubeEmbeds(contentHtml)
     } else {
       contentHtml = "<p>Content is in an unexpected format.</p>"
     }
