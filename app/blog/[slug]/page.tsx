@@ -90,33 +90,72 @@ const convertMarkdownImages = (html: string): string => {
 const convertMarkdownTables = (html: string): string => {
   if (!html || typeof html !== "string") return ""
 
-  // Match markdown table pattern
-  const tableRegex = /\|(.+)\|\n\|[-:\s|]+\|\n((?:\|.+\|\n?)+)/g
-
-  return html.replace(tableRegex, (match, header, rows) => {
-    const headers = header.split('|').map((h: string) => h.trim()).filter((h: string) => h)
-    const rowsArray = rows.trim().split('\n').map((row: string) =>
-      row.split('|').map((cell: string) => cell.trim()).filter((cell: string) => cell)
-    )
-
-    let tableHTML = '<div class="my-8 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-300">'
-    tableHTML += '<thead class="bg-gray-100"><tr>'
-    headers.forEach((h: string) => {
-      tableHTML += `<th class="border border-gray-300 px-4 py-2 text-left font-semibold">${h}</th>`
-    })
-    tableHTML += '</tr></thead><tbody>'
-
-    rowsArray.forEach((row: string[]) => {
-      tableHTML += '<tr>'
-      row.forEach((cell: string) => {
-        tableHTML += `<td class="border border-gray-300 px-4 py-2">${cell}</td>`
+  // Match tables that appear as separate paragraphs (common in Rich Text rendering)
+  // Pattern: <p>| header |</p><p>| --- |</p><p>| row |</p>...
+  html = html.replace(
+    /(?:<p[^>]*>)\s*\|(.+?)\|\s*<\/p>\s*(?:<p[^>]*>)\s*\|[-:\s|]+\|\s*<\/p>((?:\s*<p[^>]*>\s*\|.+?\|\s*<\/p>)+)/g,
+    (match, header, rows) => {
+      const headers = header.split('|').map((h: string) => h.trim()).filter((h: string) => h)
+      const rowMatches = rows.match(/<p[^>]*>\s*\|(.+?)\|\s*<\/p>/g) || []
+      const rowsArray = rowMatches.map((rowMatch: string) => {
+        const rowContent = rowMatch.replace(/<\/?p[^>]*>/g, '').trim()
+        return rowContent.split('|').map((cell: string) => cell.trim()).filter((cell: string) => cell)
       })
-      tableHTML += '</tr>'
-    })
 
-    tableHTML += '</tbody></table></div>'
-    return tableHTML
-  })
+      let tableHTML = '<div class="my-8 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-300">'
+      tableHTML += '<thead class="bg-gray-100"><tr>'
+      headers.forEach((h: string) => {
+        tableHTML += `<th class="border border-gray-300 px-4 py-2 text-left font-semibold">${h}</th>`
+      })
+      tableHTML += '</tr></thead><tbody>'
+
+      rowsArray.forEach((row: string[]) => {
+        if (row.length > 0) {
+          tableHTML += '<tr>'
+          row.forEach((cell: string) => {
+            tableHTML += `<td class="border border-gray-300 px-4 py-2">${cell}</td>`
+          })
+          tableHTML += '</tr>'
+        }
+      })
+
+      tableHTML += '</tbody></table></div>'
+      return tableHTML
+    }
+  )
+
+  // Also match traditional newline-separated markdown tables
+  html = html.replace(
+    /\|(.+)\|\n\|[-:\s|]+\|\n((?:\|.+\|\n?)+)/g,
+    (match, header, rows) => {
+      const headers = header.split('|').map((h: string) => h.trim()).filter((h: string) => h)
+      const rowsArray = rows.trim().split('\n').map((row: string) =>
+        row.split('|').map((cell: string) => cell.trim()).filter((cell: string) => cell)
+      )
+
+      let tableHTML = '<div class="my-8 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-300">'
+      tableHTML += '<thead class="bg-gray-100"><tr>'
+      headers.forEach((h: string) => {
+        tableHTML += `<th class="border border-gray-300 px-4 py-2 text-left font-semibold">${h}</th>`
+      })
+      tableHTML += '</tr></thead><tbody>'
+
+      rowsArray.forEach((row: string[]) => {
+        if (row.length > 0) {
+          tableHTML += '<tr>'
+          row.forEach((cell: string) => {
+            tableHTML += `<td class="border border-gray-300 px-4 py-2">${cell}</td>`
+          })
+          tableHTML += '</tr>'
+        }
+      })
+
+      tableHTML += '</tbody></table></div>'
+      return tableHTML
+    }
+  )
+
+  return html
 }
 
 // Helper function to convert markdown blockquotes to HTML
