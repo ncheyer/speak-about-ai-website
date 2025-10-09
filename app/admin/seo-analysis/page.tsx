@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { TrendingUp, TrendingDown, Target, Award, Search, BarChart3 } from 'lucide-react'
+import { TrendingUp, TrendingDown, Target, Award, Search, BarChart3, CheckSquare, ListTodo, FileText } from 'lucide-react'
 
 interface SemrushData {
   overview: {
@@ -50,8 +50,10 @@ interface SemrushData {
 export default function SEOAnalysisPage() {
   const [data, setData] = useState<SemrushData | null>(null)
   const [competitorData, setCompetitorData] = useState<any>(null)
+  const [actionPlan, setActionPlan] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [competitorLoading, setCompetitorLoading] = useState(true)
+  const [actionPlanLoading, setActionPlanLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -84,11 +86,25 @@ export default function SEOAnalysisPage() {
         console.error('Failed to load competitor data:', err)
         setCompetitorLoading(false)
       })
+
+    // Fetch action plan data
+    fetch('/api/seo/action-plan')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) {
+          setActionPlan(data)
+        }
+        setActionPlanLoading(false)
+      })
+      .catch(err => {
+        console.error('Failed to load action plan:', err)
+        setActionPlanLoading(false)
+      })
   }, [])
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="p-8">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
@@ -105,7 +121,7 @@ export default function SEOAnalysisPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="p-8">
         <div className="max-w-7xl mx-auto">
           <Card className="border-red-200 bg-red-50">
             <CardHeader>
@@ -121,7 +137,7 @@ export default function SEOAnalysisPage() {
   const { overview, analysis, totalKeywords } = data
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -209,8 +225,9 @@ export default function SEOAnalysisPage() {
 
         {/* Tabs for different sections */}
         <Tabs defaultValue="recommendations" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+            <TabsTrigger value="action-plan">Action Plan</TabsTrigger>
             <TabsTrigger value="competitors">Competitors</TabsTrigger>
             <TabsTrigger value="low-hanging">Low-Hanging Fruit</TabsTrigger>
             <TabsTrigger value="high-value">High-Value</TabsTrigger>
@@ -288,6 +305,179 @@ export default function SEOAnalysisPage() {
               <Card>
                 <CardContent className="pt-6">
                   <p className="text-center text-gray-600">No recommendations available</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Action Plan Tab */}
+          <TabsContent value="action-plan">
+            {actionPlanLoading ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading action plan...</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : actionPlan ? (
+              <div className="space-y-6">
+                {/* Executive Summary */}
+                <Card className="border-l-4 border-l-blue-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-blue-500" />
+                      Executive Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-600">Current Traffic</p>
+                        <p className="text-2xl font-bold">{actionPlan.yourDomain?.overview?.Ot || 0}</p>
+                        <p className="text-xs text-gray-500">visits/month</p>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-600">Current Keywords</p>
+                        <p className="text-2xl font-bold">{actionPlan.yourDomain?.overview?.Or || 0}</p>
+                      </div>
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-600">Traffic Potential</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          {Math.round(actionPlan.competitorAnalysis?.reduce((sum: number, c: any) => sum + parseInt(c.overview?.Ot || 0), 0) / actionPlan.competitorAnalysis?.length || 0)}
+                        </p>
+                        <p className="text-xs text-gray-500">avg competitor</p>
+                      </div>
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-600">Pages to Create</p>
+                        <p className="text-2xl font-bold text-blue-600">{actionPlan.pageList?.total || 0}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Action Plan Phases */}
+                {actionPlan.actionPlan?.map((phase: any, i: number) => (
+                  <Card key={i} className={i === 0 ? 'border-l-4 border-l-orange-500' : ''}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <ListTodo className="w-5 h-5" />
+                        {phase.phase}
+                      </CardTitle>
+                      <CardDescription>
+                        {phase.priority} Priority · Goal: {phase.trafficGoal}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        {phase.actions.map((action: any, j: number) => (
+                          <div key={j} className="border-l-4 border-gray-200 pl-4">
+                            <h4 className="font-semibold text-lg mb-3">{action.action}</h4>
+                            <div className="space-y-2">
+                              {action.tasks.map((task: string, k: number) => (
+                                <div key={k} className="flex items-start gap-2">
+                                  <CheckSquare className="w-4 h-4 mt-1 text-gray-400" />
+                                  <p className="text-sm text-gray-700">{task}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {/* Page Production List */}
+                <Card className="border-l-4 border-l-purple-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-purple-500" />
+                      Page Production List
+                    </CardTitle>
+                    <CardDescription>
+                      {actionPlan.pageList?.total || 0} pages to create · Prioritized by impact
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {/* Critical Pages */}
+                      {actionPlan.pageList?.critical?.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <Badge className="bg-red-100 text-red-800">CRITICAL</Badge>
+                            <p className="text-sm text-gray-600">{actionPlan.pageList.critical.length} pages</p>
+                          </div>
+                          <div className="space-y-2">
+                            {actionPlan.pageList.critical.map((page: any, i: number) => (
+                              <div key={i} className="bg-red-50 p-3 rounded-lg border border-red-200">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <p className="font-semibold">{page.title}</p>
+                                    <p className="text-xs text-gray-600 mt-1">{page.urlSlug}</p>
+                                  </div>
+                                  <Badge variant="outline" className="text-xs">{page.intent}</Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* High Priority Pages */}
+                      {actionPlan.pageList?.highPriority?.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <Badge className="bg-orange-100 text-orange-800">HIGH PRIORITY</Badge>
+                            <p className="text-sm text-gray-600">{actionPlan.pageList.highPriority.length} pages</p>
+                          </div>
+                          <div className="space-y-2">
+                            {actionPlan.pageList.highPriority.map((page: any, i: number) => (
+                              <div key={i} className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <p className="font-semibold">{page.title}</p>
+                                    <p className="text-xs text-gray-600 mt-1">{page.urlSlug}</p>
+                                  </div>
+                                  <Badge variant="outline" className="text-xs">{page.intent}</Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Medium Priority Pages */}
+                      {actionPlan.pageList?.mediumPriority?.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <Badge className="bg-blue-100 text-blue-800">MEDIUM PRIORITY</Badge>
+                            <p className="text-sm text-gray-600">{actionPlan.pageList.mediumPriority.length} pages</p>
+                          </div>
+                          <div className="space-y-2">
+                            {actionPlan.pageList.mediumPriority.map((page: any, i: number) => (
+                              <div key={i} className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <p className="font-semibold">{page.title}</p>
+                                    <p className="text-xs text-gray-600 mt-1">{page.urlSlug}</p>
+                                  </div>
+                                  <Badge variant="outline" className="text-xs">{page.intent}</Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-center text-gray-600">No action plan available. Run competitor analysis to generate one.</p>
                 </CardContent>
               </Card>
             )}

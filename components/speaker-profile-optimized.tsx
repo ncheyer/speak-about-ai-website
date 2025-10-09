@@ -639,14 +639,6 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   limit={3}
                 />
 
-                {/* Similar Speakers - Automatically generated based on similarity algorithm */}
-                {similarSpeakers && similarSpeakers.length > 0 && (
-                  <SpeakerSimilarSpeakers
-                    similarSpeakers={similarSpeakers}
-                    currentSpeakerName={speaker.name}
-                  />
-                )}
-
                 {/* Book This Speaker CTA - Always show */}
                 <section className="bg-gradient-to-r from-[#1E68C6] to-[#5084C6] rounded-xl p-8 text-white mt-12">
                   {speaker.availabilityNote && (
@@ -719,6 +711,18 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
             </div>
           </div>
         </section>
+
+        {/* Similar Speakers - Automatically generated based on similarity algorithm */}
+        {similarSpeakers && similarSpeakers.length > 0 && (
+          <section className="py-16 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <SpeakerSimilarSpeakers
+                similarSpeakers={similarSpeakers}
+                currentSpeakerName={speaker.name}
+              />
+            </div>
+          </section>
+        )}
       </div>
     </>
   )
