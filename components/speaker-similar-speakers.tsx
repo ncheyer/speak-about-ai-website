@@ -1,48 +1,17 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { Users } from "lucide-react"
-import { getSpeakerBySlug, type Speaker } from "@/lib/speakers-data"
+import type { Speaker } from "@/lib/speakers-data"
 import { SpeakerCard } from "@/components/speaker-card"
 
 interface SpeakerSimilarSpeakersProps {
-  similarSpeakerSlugs: string[]
+  similarSpeakers: Speaker[]
   currentSpeakerName: string
-  limit?: number
 }
 
-export function SpeakerSimilarSpeakers({ similarSpeakerSlugs, currentSpeakerName, limit = 3 }: SpeakerSimilarSpeakersProps) {
-  const [speakers, setSpeakers] = useState<Speaker[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function fetchSpeakers() {
-      try {
-        // Fetch all similar speakers
-        const speakerPromises = similarSpeakerSlugs.slice(0, limit).map(slug => getSpeakerBySlug(slug))
-        const results = await Promise.all(speakerPromises)
-
-        // Filter out undefined/null results
-        const validSpeakers = results.filter((s): s is Speaker => s !== undefined && s !== null)
-
-        setSpeakers(validSpeakers)
-      } catch (error) {
-        console.error("Failed to fetch similar speakers:", error)
-        setSpeakers([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (similarSpeakerSlugs && similarSpeakerSlugs.length > 0) {
-      fetchSpeakers()
-    } else {
-      setLoading(false)
-    }
-  }, [similarSpeakerSlugs, limit])
-
-  // Don't render anything if loading or no speakers
-  if (loading || speakers.length === 0) {
+export function SpeakerSimilarSpeakers({ similarSpeakers, currentSpeakerName }: SpeakerSimilarSpeakersProps) {
+  // Don't render anything if no speakers
+  if (!similarSpeakers || similarSpeakers.length === 0) {
     return null
   }
 
@@ -59,7 +28,7 @@ export function SpeakerSimilarSpeakers({ similarSpeakerSlugs, currentSpeakerName
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {speakers.map((speaker) => (
+        {similarSpeakers.map((speaker) => (
           <SpeakerCard
             key={speaker.slug}
             speaker={speaker}

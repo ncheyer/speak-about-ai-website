@@ -3,6 +3,7 @@ import { getSpeakerBySlug, getAllSpeakers } from "@/lib/speakers-data"
 import OptimizedSpeakerProfile from "@/components/speaker-profile-optimized"
 import ScrollToTop from "./scroll-to-top"
 import { generateSpeakerStructuredData } from "./structured-data"
+import { findSimilarSpeakers } from "@/lib/speaker-similarity"
 import Script from "next/script"
 
 interface SpeakerPageProps {
@@ -16,6 +17,10 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
   if (!speaker) {
     notFound()
   }
+
+  // Find similar speakers using the similarity algorithm
+  const allSpeakers = await getAllSpeakers()
+  const similarSpeakers = findSimilarSpeakers(speaker, allSpeakers, 3)
 
   // Generate comprehensive structured data for Google
   const structuredData = {
@@ -74,7 +79,7 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }}
       />
-      <OptimizedSpeakerProfile speaker={speaker} />
+      <OptimizedSpeakerProfile speaker={speaker} similarSpeakers={similarSpeakers} />
       <ScrollToTop />
     </>
   )

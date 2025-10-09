@@ -13,9 +13,10 @@ import { SpeakerSimilarSpeakers } from "@/components/speaker-similar-speakers"
 
 interface OptimizedSpeakerProfileProps {
   speaker: Speaker
+  similarSpeakers?: Speaker[]
 }
 
-const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speaker }) => {
+const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speaker, similarSpeakers }) => {
   const imageUrl = speaker.image || "/placeholder.svg"
 
   // Format bio with proper paragraphs
@@ -638,12 +639,11 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   limit={3}
                 />
 
-                {/* Similar Speakers - Enhanced with actual speaker data */}
-                {speaker.similarSpeakers && speaker.similarSpeakers.length > 0 && (
+                {/* Similar Speakers - Automatically generated based on similarity algorithm */}
+                {similarSpeakers && similarSpeakers.length > 0 && (
                   <SpeakerSimilarSpeakers
-                    similarSpeakerSlugs={speaker.similarSpeakers}
+                    similarSpeakers={similarSpeakers}
                     currentSpeakerName={speaker.name}
-                    limit={3}
                   />
                 )}
 
