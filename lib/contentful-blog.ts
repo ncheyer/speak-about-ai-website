@@ -44,6 +44,7 @@ export interface BlogPost {
   featuredImage?: { url: string; alt: string }
   readTime?: number
   featured?: boolean
+  speakers?: string[] // Array of speaker names or slugs mentioned in the post
   sys: any
 }
 
@@ -120,6 +121,17 @@ function resolveRichTextLinks(content: any, includes: ContentfulIncludes | undef
 
 function mapEntryToPost(entry: Entry<any>, includes?: ContentfulIncludes): BlogPost {
   const { sys, fields } = entry
+
+  // Extract speakers field - can be array or comma-separated string
+  let speakers: string[] = []
+  if (fields.speakers) {
+    if (Array.isArray(fields.speakers)) {
+      speakers = fields.speakers.map(s => String(s).trim()).filter(Boolean)
+    } else if (typeof fields.speakers === 'string') {
+      speakers = fields.speakers.split(',').map(s => s.trim()).filter(Boolean)
+    }
+  }
+
   return {
     id: sys.id,
     slug: (fields.slug as string) || `post-${sys.id}`,
@@ -132,6 +144,7 @@ function mapEntryToPost(entry: Entry<any>, includes?: ContentfulIncludes): BlogP
     featuredImage: extractAsset(includes?.Asset, (fields.featuredImage as Asset)?.sys.id),
     readTime: fields.readTime as number,
     featured: (fields.featured as boolean) ?? false,
+    speakers: speakers.length > 0 ? speakers : undefined,
     sys,
   }
 }
@@ -216,6 +229,51 @@ export async function getRelatedBlogPosts(currentId: string, limit = 3): Promise
       .map((i) => mapEntryToPost(i, includes))
   } catch (e) {
     console.error("[getRelatedBlogPosts] Error:", e)
+    return []
+  }
+}
+
+export async function getBlogPostsBySpeaker(speakerNameOrSlug: string, limit = 10): Promise<BlogPost[]> {
+  const client = getClient()
+  if (!client) return []
+
+  try {
+    // Get all blog posts and filter client-side for now
+    // In the future, if Contentful has the speakers field as a proper array,
+    // we can use Contentful's query operators
+    const res = await client.getEntries({
+      content_type: "blogPost",
+      order: ["-fields.publishedDate", "-sys.createdAt"],
+      include: INCLUDE_LEVEL,
+      limit: 100, // Get more to filter from
+    })
+
+    const includes = { Asset: res.includes?.Asset, Entry: res.includes?.Entry }
+    const allPosts = res.items.map((i) => mapEntryToPost(i, includes))
+
+    // Normalize the search term (handle both name and slug)
+    const searchTerm = speakerNameOrSlug.toLowerCase().trim()
+    const searchTermSlug = searchTerm.replace(/\s+/g, '-')
+
+    // Filter posts that mention this speaker
+    const filtered = allPosts.filter(post => {
+      if (!post.speakers || post.speakers.length === 0) return false
+
+      return post.speakers.some(speaker => {
+        const speakerLower = speaker.toLowerCase().trim()
+        const speakerSlug = speakerLower.replace(/\s+/g, '-')
+
+        // Match by exact name, slug, or partial match
+        return speakerLower === searchTerm ||
+               speakerSlug === searchTermSlug ||
+               speakerLower.includes(searchTerm) ||
+               searchTerm.includes(speakerLower)
+      })
+    })
+
+    return filtered.slice(0, limit)
+  } catch (e) {
+    console.error(`[getBlogPostsBySpeaker] Error for speaker "${speakerNameOrSlug}":`, e)
     return []
   }
 }

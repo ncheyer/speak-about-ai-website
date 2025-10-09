@@ -22,14 +22,27 @@ export async function GET() {
 
     const competitorAnalysis = await Promise.all(
       topCompetitors.map(async (comp) => {
-        const competitorDomain = comp.Dn
+        const competitorDomain = comp.Dn || comp.Domain
 
         try {
+          console.log(`Analyzing competitor: ${competitorDomain}`)
+
           const [overview, keywords, keywordGap] = await Promise.all([
-            getDomainOverview(competitorDomain),
-            getOrganicKeywords(competitorDomain, 'us', 50, 0),
-            getKeywordGap(domain, competitorDomain, 'us', 50),
+            getDomainOverview(competitorDomain).catch(e => {
+              console.error(`Failed to get overview for ${competitorDomain}:`, e.message)
+              return null
+            }),
+            getOrganicKeywords(competitorDomain, 'us', 50, 0).catch(e => {
+              console.error(`Failed to get keywords for ${competitorDomain}:`, e.message)
+              return []
+            }),
+            getKeywordGap(domain, competitorDomain, 'us', 50).catch(e => {
+              console.error(`Failed to get keyword gap for ${competitorDomain}:`, e.message)
+              return []
+            }),
           ])
+
+          console.log(`${competitorDomain} - Overview:`, overview ? 'Found' : 'null', 'Keywords:', keywords.length)
 
           // Analyze their top keywords
           const topKeywords = keywords
@@ -49,8 +62,8 @@ export async function GET() {
 
           return {
             domain: competitorDomain,
-            competitiveness: comp.Cr,
-            commonKeywords: comp.Np,
+            competitiveness: comp.Cr || comp['Competitor Relevance'],
+            commonKeywords: comp.Np || comp['Common Keywords'],
             overview,
             topKeywords,
             bestKeywords,
@@ -61,7 +74,10 @@ export async function GET() {
           console.error(`Error analyzing competitor ${competitorDomain}:`, error)
           return {
             domain: competitorDomain,
+            competitiveness: comp.Cr || comp['Competitor Relevance'],
+            commonKeywords: comp.Np || comp['Common Keywords'],
             error: 'Failed to analyze competitor',
+            errorMessage: error instanceof Error ? error.message : 'Unknown error'
           }
         }
       })

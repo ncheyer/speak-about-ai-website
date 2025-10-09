@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, Building, Award, Calendar, CheckCircle, BookOpen, Trophy, Download, Mic, Users, Clock, Briefcase, Star, MessageSquare } from "lucide-react"
 import type { Speaker } from "@/lib/speakers-data"
+import { SpeakerRelatedBlogPosts } from "@/components/speaker-related-blog-posts"
+import { SpeakerSimilarSpeakers } from "@/components/speaker-similar-speakers"
 
 interface OptimizedSpeakerProfileProps {
   speaker: Speaker
@@ -629,25 +631,20 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   </TabsContent>
                 </Tabs>
 
-                {/* Similar Speakers - Outside tabs for better visibility */}
+                {/* Related Blog Posts - Show articles featuring this speaker */}
+                <SpeakerRelatedBlogPosts
+                  speakerName={speaker.name}
+                  speakerSlug={speaker.slug}
+                  limit={3}
+                />
+
+                {/* Similar Speakers - Enhanced with actual speaker data */}
                 {speaker.similarSpeakers && speaker.similarSpeakers.length > 0 && (
-                  <section className="mb-12 mt-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                      <Users className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                      You May Also Like
-                    </h2>
-                    <div className="grid md:grid-cols-3 gap-6">
-                      {speaker.similarSpeakers.slice(0, 3).map((slug, index) => (
-                        <Card key={index} className="hover:shadow-lg transition-shadow">
-                          <CardContent className="p-4">
-                            <Link href={`/speakers/${slug}`} className="text-[#1E68C6] hover:underline">
-                              View Speaker →
-                            </Link>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </section>
+                  <SpeakerSimilarSpeakers
+                    similarSpeakerSlugs={speaker.similarSpeakers}
+                    currentSpeakerName={speaker.name}
+                    limit={3}
+                  />
                 )}
 
                 {/* Book This Speaker CTA - Always show */}
