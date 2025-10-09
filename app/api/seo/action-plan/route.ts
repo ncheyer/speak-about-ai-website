@@ -11,9 +11,30 @@ export async function GET() {
     }
 
     const fileContent = fs.readFileSync(filePath, 'utf-8')
-    const data = JSON.parse(fileContent)
+    const rawData = JSON.parse(fileContent)
 
-    return NextResponse.json(data)
+    // Transform snake_case keys to camelCase for UI compatibility
+    const critical = rawData.page_production_list?.critical || []
+    const highPriority = rawData.page_production_list?.high_priority || []
+    const mediumPriority = rawData.page_production_list?.medium_priority || []
+    const longTerm = rawData.page_production_list?.long_term || []
+
+    const transformedData = {
+      yourDomain: rawData.your_domain,
+      competitorAnalysis: rawData.competitors,
+      actionPlan: rawData.action_plan,
+      pageList: {
+        total: critical.length + highPriority.length + mediumPriority.length + longTerm.length,
+        critical,
+        highPriority,
+        mediumPriority,
+        longTerm
+      },
+      summary: rawData.summary,
+      generatedAt: rawData.generated_at
+    }
+
+    return NextResponse.json(transformedData)
   } catch (error) {
     console.error('Error reading action plan:', error)
     return NextResponse.json({ error: 'Failed to load action plan' }, { status: 500 })
