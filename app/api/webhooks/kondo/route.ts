@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, x-api-key',
+    },
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
     const sql = neon(process.env.DATABASE_URL!)
@@ -11,7 +22,12 @@ export async function POST(request: NextRequest) {
     // Validate webhook
     const apiKey = request.headers.get('x-api-key')
     if (apiKey !== process.env.KONDO_API_KEY) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, {
+        status: 401,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        }
+      })
     }
 
     console.log('Kondo webhook received:', event.type, data.contact_first_name, data.contact_last_name)
@@ -166,6 +182,10 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Webhook processed successfully',
       shouldCreateDeal
+    }, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      }
     })
 
   } catch (error) {
@@ -173,6 +193,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    }, {
+      status: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      }
+    })
   }
 }
