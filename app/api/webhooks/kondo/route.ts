@@ -32,17 +32,8 @@ export async function POST(request: NextRequest) {
 
     console.log('Kondo webhook received:', event.type, data.contact_first_name, data.contact_last_name)
 
-    // Map Kondo labels to deal priority and status
+    // Extract labels
     const labels = data.kondo_labels?.map((l: any) => l.kondo_label_name) || []
-
-    let dealStatus: string = 'lead'
-    let priority: string = 'medium'
-
-    if (labels.includes('SQL')) dealStatus = 'negotiation'
-    else if (labels.includes('MQL - High')) { dealStatus = 'qualified'; priority = 'high' }
-    else if (labels.includes('MQL - Medium')) { dealStatus = 'qualified'; priority = 'medium' }
-    else if (labels.includes('MQL - Low')) { dealStatus = 'qualified'; priority = 'low' }
-    else if (labels.includes('Disqualified')) dealStatus = 'lost'
 
     // Upsert Kondo contact
     await sql`
@@ -107,81 +98,77 @@ export async function POST(request: NextRequest) {
       RETURNING id
     `
 
-    // Check if this contact should create/update a deal
-    const shouldCreateDeal = labels.some((l: string) =>
-      ['SQL', 'MQL - High', 'MQL - Medium', 'MQL - Low', 'Client'].includes(l)
-    )
+    // Check if this contact is an SQL (should create a lead)
+    const isSQL = labels.includes('SQL')
+    let leadCreated = false
 
-    if (shouldCreateDeal) {
-      // Check if deal already exists for this contact
-      const existingDeal = await sql`
-        SELECT id FROM deals
-        WHERE client_email = ${event.email}
-        OR (client_name = ${data.contact_first_name + ' ' + data.contact_last_name} AND company = ${data.contact_headline?.split(' at ')[1] || ''})
+    if (isSQL) {
+      const company = data.contact_headline?.split(' at ')[1]?.trim() || null
+
+      // Check if lead already exists for this contact
+      const existingLead = await sql`
+        SELECT id FROM leads
+        WHERE email = ${event.email}
         LIMIT 1
       `
 
-      if (existingDeal.length > 0) {
-        // Update existing deal
+      if (existingLead.length > 0) {
+        // Update existing lead
         await sql`
-          UPDATE deals SET
-            status = ${dealStatus},
-            priority = ${priority},
-            notes = COALESCE(notes, '') || E'\n\nKondo Update: ' || ${data.conversation_latest_content || 'No message'},
-            last_contact = ${data.conversation_latest_timestamp ? new Date(data.conversation_latest_timestamp) : new Date()},
+          UPDATE leads SET
+            name = ${data.contact_first_name + ' ' + data.contact_last_name},
+            company = ${company},
+            title = ${data.contact_headline},
+            linkedin_url = ${data.contact_linkedin_url},
+            notes = COALESCE(notes, '') || E'\n\nKondo Update (' || NOW() || '): ' || ${data.conversation_latest_content || 'No message'},
+            last_contact_date = ${data.conversation_latest_timestamp ? new Date(data.conversation_latest_timestamp) : new Date()},
+            next_follow_up_date = ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)},
             updated_at = NOW()
-          WHERE id = ${existingDeal[0].id}
+          WHERE id = ${existingLead[0].id}
         `
       } else {
-        // Create new deal
-        const company = data.contact_headline?.split(' at ')[1]?.trim() || 'Unknown Company'
-
-        await sql`
-          INSERT INTO deals (
-            client_name,
-            client_email,
+        // Create new lead
+        const result = await sql`
+          INSERT INTO leads (
+            name,
+            email,
             company,
-            event_title,
-            event_date,
-            event_location,
-            event_type,
-            attendee_count,
-            deal_value,
-            budget_range,
+            title,
+            linkedin_url,
+            source,
             status,
             priority,
-            source,
             notes,
-            last_contact,
+            last_contact_date,
+            next_follow_up_date,
             created_at,
             updated_at
           ) VALUES (
             ${data.contact_first_name + ' ' + data.contact_last_name},
             ${event.email},
             ${company},
-            ${'Potential Event - ' + company},
-            ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()},
-            ${data.contact_location || 'TBD'},
-            'Conference',
-            100,
-            25000,
-            '$20k-$30k',
-            ${dealStatus},
-            ${priority},
+            ${data.contact_headline},
+            ${data.contact_linkedin_url},
             'kondo_linkedin',
-            ${data.conversation_latest_content || 'Contact from Kondo LinkedIn integration'},
+            'new',
+            'high',
+            ${data.conversation_latest_content || 'SQL contact from Kondo LinkedIn integration'},
             ${data.conversation_latest_timestamp ? new Date(data.conversation_latest_timestamp) : new Date()},
+            ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)},
             NOW(),
             NOW()
           )
+          RETURNING id
         `
+        leadCreated = true
       }
     }
 
     return NextResponse.json({
       success: true,
       message: 'Webhook processed successfully',
-      shouldCreateDeal
+      leadCreated,
+      isSQL
     }, {
       headers: {
         'Access-Control-Allow-Origin': '*',
