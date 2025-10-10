@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { CheckSquare, RefreshCw, Calendar, AlertCircle, Plus, Check, X, User, Briefcase } from "lucide-react"
+import { CheckSquare, RefreshCw, Calendar, AlertCircle, Plus, Check, X, User, Briefcase, Sparkles } from "lucide-react"
 import { AdminSidebar } from "@/components/admin-sidebar"
 
 interface Task {
@@ -53,6 +53,7 @@ export default function TasksPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [filterType, setFilterType] = useState<string>("all")
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [autoGenerating, setAutoGenerating] = useState(false)
 
   const [newTask, setNewTask] = useState({
     title: "",
@@ -135,6 +136,27 @@ export default function TasksPage() {
     }
   }
 
+  const autoGenerateTasks = async () => {
+    setAutoGenerating(true)
+    try {
+      const response = await fetch('/api/tasks/auto-generate', {
+        method: 'POST'
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        const total = data.results.leads.tasksCreated + data.results.deals.tasksCreated + data.results.projects.tasksCreated
+        alert(`Auto-generated ${total} new tasks!\n\nLeads: ${data.results.leads.tasksCreated}\nDeals: ${data.results.deals.tasksCreated}\nProjects: ${data.results.projects.tasksCreated}`)
+        loadTasks()
+      }
+    } catch (error) {
+      console.error('Error auto-generating tasks:', error)
+      alert('Failed to auto-generate tasks')
+    } finally {
+      setAutoGenerating(false)
+    }
+  }
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'pending': 'bg-yellow-100 text-yellow-800',
@@ -198,6 +220,10 @@ export default function TasksPage() {
               <p className="text-gray-600">Manage tasks for leads and deals</p>
             </div>
             <div className="flex gap-2">
+              <Button onClick={autoGenerateTasks} disabled={autoGenerating} variant="outline">
+                <Sparkles className={`w-4 h-4 mr-2 ${autoGenerating ? 'animate-spin' : ''}`} />
+                {autoGenerating ? 'Generating...' : 'Auto-Generate'}
+              </Button>
               <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
