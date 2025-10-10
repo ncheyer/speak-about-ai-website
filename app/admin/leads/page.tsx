@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Users, RefreshCw, Calendar, ExternalLink, Linkedin, AlertCircle } from "lucide-react"
+import { Users, RefreshCw, Calendar, ExternalLink, Linkedin, AlertCircle, CheckSquare } from "lucide-react"
 import Link from "next/link"
 import { AdminSidebar } from "@/components/admin-sidebar"
 
@@ -28,6 +28,8 @@ interface Lead {
   latest_message: string
   created_at: string
   updated_at: string
+  pending_tasks_count: number
+  overdue_tasks_count: number
 }
 
 export default function LeadsPage() {
@@ -221,6 +223,15 @@ export default function LeadsPage() {
                           <Badge variant="outline">
                             Source: {lead.source.replace('_', ' ')}
                           </Badge>
+                          {lead.pending_tasks_count > 0 && (
+                            <Link href={`/admin/tasks?lead_id=${lead.id}`}>
+                              <Badge className={lead.overdue_tasks_count > 0 ? "bg-red-100 text-red-800 cursor-pointer hover:bg-red-200" : "bg-blue-100 text-blue-800 cursor-pointer hover:bg-blue-200"}>
+                                <CheckSquare className="w-3 h-3 mr-1" />
+                                {lead.pending_tasks_count} task{lead.pending_tasks_count !== 1 ? 's' : ''}
+                                {lead.overdue_tasks_count > 0 && ` (${lead.overdue_tasks_count} overdue)`}
+                              </Badge>
+                            </Link>
+                          )}
                         </div>
 
                         {/* Latest Message */}

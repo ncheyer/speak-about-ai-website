@@ -88,6 +88,9 @@ interface Deal {
   hotel_required?: boolean
   travel_stipend?: number
   travel_notes?: string
+  // Task counts
+  pending_tasks_count?: number
+  overdue_tasks_count?: number
 }
 
 interface Contract {
@@ -1413,9 +1416,20 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                               />
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline" className={PRIORITY_COLORS[deal.priority]}>
-                                {deal.priority.toUpperCase()}
-                              </Badge>
+                              <div className="flex gap-2">
+                                <Badge variant="outline" className={PRIORITY_COLORS[deal.priority]}>
+                                  {deal.priority.toUpperCase()}
+                                </Badge>
+                                {deal.pending_tasks_count && deal.pending_tasks_count > 0 && (
+                                  <Link href={`/admin/tasks?deal_id=${deal.id}`}>
+                                    <Badge className={deal.overdue_tasks_count && deal.overdue_tasks_count > 0 ? "bg-red-100 text-red-800 cursor-pointer hover:bg-red-200" : "bg-blue-100 text-blue-800 cursor-pointer hover:bg-blue-200"}>
+                                      <CheckSquare className="w-3 h-3 mr-1" />
+                                      {deal.pending_tasks_count}
+                                      {deal.overdue_tasks_count && deal.overdue_tasks_count > 0 && ` (${deal.overdue_tasks_count}!)`}
+                                    </Badge>
+                                  </Link>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>
                               {new Date(deal.event_date).toLocaleDateString()}

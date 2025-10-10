@@ -62,6 +62,9 @@ export interface Deal {
   lost_date?: string
   won_date?: string
   closed_notes?: string
+  // Task counts
+  pending_tasks_count?: number
+  overdue_tasks_count?: number
 }
 
 export async function getAllDeals(): Promise<Deal[]> {
@@ -74,8 +77,18 @@ export async function getAllDeals(): Promise<Deal[]> {
   try {
     console.log("Fetching all deals from database...")
     const deals = await sql`
-      SELECT * FROM deals 
-      ORDER BY created_at DESC
+      SELECT
+        d.*,
+        COALESCE(
+          (SELECT COUNT(*) FROM tasks t WHERE t.deal_id = d.id AND t.status = 'pending'),
+          0
+        ) as pending_tasks_count,
+        COALESCE(
+          (SELECT COUNT(*) FROM tasks t WHERE t.deal_id = d.id AND t.status = 'pending' AND t.due_date < NOW()),
+          0
+        ) as overdue_tasks_count
+      FROM deals d
+      ORDER BY d.created_at DESC
     `
     console.log(`Successfully fetched ${deals.length} deals`)
     return deals as Deal[]
