@@ -18,7 +18,11 @@ export async function GET(request: NextRequest) {
         COALESCE(
           (SELECT COUNT(*) FROM tasks t WHERE t.lead_id = l.id AND t.status = 'pending' AND t.due_date < NOW()),
           0
-        ) as overdue_tasks_count
+        ) as overdue_tasks_count,
+        COALESCE(
+          (SELECT COUNT(*) FROM email_threads e WHERE e.lead_id = l.id),
+          0
+        ) as email_thread_count
       FROM leads l
       LEFT JOIN kondo_contacts kc ON l.kondo_contact_id = kc.id
       ORDER BY

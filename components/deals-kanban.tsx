@@ -4,7 +4,7 @@ import { useState, useEffect, DragEvent } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, DollarSign, Users, Building2, MapPin, FileText } from "lucide-react"
+import { Calendar, DollarSign, Users, Building2, MapPin, FileText, Mail } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 
@@ -35,6 +35,7 @@ interface Deal {
   last_contact?: string
   next_follow_up?: string
   updated_at?: string
+  email_thread_count?: number
 }
 
 const STAGES = [
@@ -180,9 +181,17 @@ export function DealsKanban({ onDealClick }: DealsKanbanProps = {}) {
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <CardTitle className="text-base">{deal.event_title}</CardTitle>
-                        <Badge className={cn("text-xs", PRIORITY_COLORS[deal.priority as keyof typeof PRIORITY_COLORS])}>
-                          {deal.priority}
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Badge className={cn("text-xs", PRIORITY_COLORS[deal.priority as keyof typeof PRIORITY_COLORS])}>
+                            {deal.priority}
+                          </Badge>
+                          {deal.email_thread_count && deal.email_thread_count > 0 && (
+                            <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">
+                              <Mail className="w-3 h-3 mr-1" />
+                              {deal.email_thread_count}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <CardDescription className="text-sm">
                         {deal.client_name} • {deal.company}

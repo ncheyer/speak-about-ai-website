@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Users, RefreshCw, Calendar, ExternalLink, Linkedin, AlertCircle, CheckSquare } from "lucide-react"
+import { Users, RefreshCw, Calendar, ExternalLink, Linkedin, AlertCircle, CheckSquare, Mail, ChevronDown, ChevronUp } from "lucide-react"
 import Link from "next/link"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { EmailActivity } from "@/components/email-activity"
 
 interface Lead {
   id: number
@@ -30,11 +31,13 @@ interface Lead {
   updated_at: string
   pending_tasks_count: number
   overdue_tasks_count: number
+  email_thread_count: number
 }
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
+  const [expandedEmailLeads, setExpandedEmailLeads] = useState<Set<number>>(new Set())
 
   const loadLeads = async () => {
     setLoading(true)
@@ -76,6 +79,16 @@ export default function LeadsPage() {
   const isOverdue = (date: string) => {
     if (!date) return false
     return new Date(date) < new Date()
+  }
+
+  const toggleEmailExpanded = (leadId: number) => {
+    const newExpanded = new Set(expandedEmailLeads)
+    if (newExpanded.has(leadId)) {
+      newExpanded.delete(leadId)
+    } else {
+      newExpanded.add(leadId)
+    }
+    setExpandedEmailLeads(newExpanded)
   }
 
   const newLeads = leads.filter(l => l.status === 'new')
@@ -232,6 +245,12 @@ export default function LeadsPage() {
                               </Badge>
                             </Link>
                           )}
+                          {lead.email_thread_count > 0 && (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              <Mail className="w-3 h-3 mr-1" />
+                              {lead.email_thread_count} email{lead.email_thread_count !== 1 ? 's' : ''}
+                            </Badge>
+                          )}
                         </div>
 
                         {/* Latest Message */}
@@ -249,7 +268,7 @@ export default function LeadsPage() {
                         )}
 
                         {/* Timeline */}
-                        <div className="flex gap-4 text-sm text-gray-600">
+                        <div className="flex gap-4 text-sm text-gray-600 mb-3">
                           {lead.last_contact_date && (
                             <div className="flex items-center gap-2">
                               <Calendar className="w-4 h-4" />
@@ -261,6 +280,35 @@ export default function LeadsPage() {
                               <Calendar className="w-4 h-4" />
                               Next follow-up: {new Date(lead.next_follow_up_date).toLocaleDateString()}
                               {isOverdue(lead.next_follow_up_date) && ' (OVERDUE)'}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Email Activity Toggle */}
+                        <div className="border-t pt-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => toggleEmailExpanded(lead.id)}
+                            className="w-full"
+                          >
+                            <Mail className="w-4 h-4 mr-2" />
+                            {expandedEmailLeads.has(lead.id) ? (
+                              <>
+                                <ChevronUp className="w-4 h-4 mr-2" />
+                                Hide Email Activity
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-4 h-4 mr-2" />
+                                Show Email Activity
+                              </>
+                            )}
+                          </Button>
+
+                          {expandedEmailLeads.has(lead.id) && (
+                            <div className="mt-3">
+                              <EmailActivity leadId={lead.id} />
                             </div>
                           )}
                         </div>

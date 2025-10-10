@@ -65,6 +65,8 @@ export interface Deal {
   // Task counts
   pending_tasks_count?: number
   overdue_tasks_count?: number
+  // Email counts
+  email_thread_count?: number
 }
 
 export async function getAllDeals(): Promise<Deal[]> {
@@ -86,7 +88,11 @@ export async function getAllDeals(): Promise<Deal[]> {
         COALESCE(
           (SELECT COUNT(*) FROM tasks t WHERE t.deal_id = d.id AND t.status = 'pending' AND t.due_date < NOW()),
           0
-        ) as overdue_tasks_count
+        ) as overdue_tasks_count,
+        COALESCE(
+          (SELECT COUNT(*) FROM email_threads e WHERE e.deal_id = d.id),
+          0
+        ) as email_thread_count
       FROM deals d
       ORDER BY d.created_at DESC
     `
