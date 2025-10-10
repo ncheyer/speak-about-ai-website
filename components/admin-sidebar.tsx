@@ -34,7 +34,8 @@ import {
   Briefcase,
   Globe,
   Megaphone,
-  Building2
+  Building2,
+  Linkedin
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -93,6 +94,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           href: "/admin/crm",
           icon: BarChart3,
           description: "Deals & Proposals",
+          color: "text-blue-600",
+          bgColor: "bg-blue-50"
+        },
+        {
+          title: "Kondo",
+          href: "/admin/kondo",
+          icon: Linkedin,
+          description: "LinkedIn Contacts",
           color: "text-blue-600",
           bgColor: "bg-blue-50"
         }
