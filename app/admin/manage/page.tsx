@@ -210,6 +210,8 @@ export default function MasterAdminPanel() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [lastSync, setLastSync] = useState<Date | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [gmailConnected, setGmailConnected] = useState<string | null>(null)
+  const [gmailConnecting, setGmailConnecting] = useState(false)
   
   // Data states
   const [speakers, setSpeakers] = useState<Speaker[]>([])
@@ -441,21 +443,74 @@ export default function MasterAdminPanel() {
     }
   }
   
+  // Handle Gmail OAuth callback
+  const handleGmailConnect = async () => {
+    setGmailConnecting(true)
+    try {
+      const response = await fetch('/api/auth/gmail')
+      const data = await response.json()
+
+      if (data.authUrl) {
+        window.location.href = data.authUrl
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to initiate Gmail connection",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error('Error connecting Gmail:', error)
+      toast({
+        title: "Error",
+        description: "Failed to connect Gmail",
+        variant: "destructive"
+      })
+    } finally {
+      setGmailConnecting(false)
+    }
+  }
+
   // Check authentication and load data on mount
   useEffect(() => {
     // Only run on client side
     if (typeof window === 'undefined') {
       return
     }
-    
+
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
     if (!isAdminLoggedIn) {
       router.push("/admin")
       return
     }
-    
+
     setIsLoggedIn(true)
-    
+
+    // Check for Gmail connection status in URL params
+    const searchParams = new URLSearchParams(window.location.search)
+    const gmailConnectedEmail = searchParams.get('gmail_connected')
+    const gmailError = searchParams.get('gmail_error')
+
+    if (gmailConnectedEmail) {
+      setGmailConnected(gmailConnectedEmail)
+      toast({
+        title: "Gmail Connected!",
+        description: `Successfully connected ${gmailConnectedEmail}. Email tracking is now active.`,
+      })
+      // Clean up URL
+      window.history.replaceState({}, '', '/admin/manage')
+    }
+
+    if (gmailError) {
+      toast({
+        title: "Gmail Connection Failed",
+        description: gmailError,
+        variant: "destructive"
+      })
+      // Clean up URL
+      window.history.replaceState({}, '', '/admin/manage')
+    }
+
     // Load all data
     loadDeals()
     loadProjects()
@@ -828,48 +883,48 @@ export default function MasterAdminPanel() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      <Button 
-                        className="w-full justify-start" 
+                      <Button
+                        className="w-full justify-start"
                         variant="outline"
                         onClick={() => router.push("/admin/crm")}
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         New Deal
                       </Button>
-                      <Button 
-                        className="w-full justify-start" 
+                      <Button
+                        className="w-full justify-start"
                         variant="outline"
                         onClick={() => router.push("/admin/projects/new")}
                       >
                         <Briefcase className="h-4 w-4 mr-2" />
                         New Project
                       </Button>
-                      <Button 
-                        className="w-full justify-start" 
+                      <Button
+                        className="w-full justify-start"
                         variant="outline"
                         onClick={() => router.push("/admin/proposals/new")}
                       >
                         <FileText className="h-4 w-4 mr-2" />
                         Create Proposal
                       </Button>
-                      <Button 
-                        className="w-full justify-start" 
+                      <Button
+                        className="w-full justify-start"
                         variant="outline"
                         onClick={() => router.push("/admin/invoicing")}
                       >
                         <Receipt className="h-4 w-4 mr-2" />
                         Generate Invoice
                       </Button>
-                      <Button 
-                        className="w-full justify-start" 
+                      <Button
+                        className="w-full justify-start"
                         variant="outline"
                         onClick={() => router.push("/admin/contracts-hub")}
                       >
                         <FileSignature className="h-4 w-4 mr-2" />
                         Create Contract
                       </Button>
-                      <Button 
-                        className="w-full justify-start" 
+                      <Button
+                        className="w-full justify-start"
                         variant="outline"
                         onClick={() => router.push("/admin/blog")}
                       >
@@ -877,6 +932,90 @@ export default function MasterAdminPanel() {
                         Blog Management
                       </Button>
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Gmail Integration */}
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Mail className="h-5 w-5 text-blue-600" />
+                          Gmail Integration
+                        </CardTitle>
+                        <CardDescription className="mt-1">
+                          Track email conversations with leads and deals automatically
+                        </CardDescription>
+                      </div>
+                      {gmailConnected && (
+                        <Badge className="bg-green-100 text-green-800">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Connected
+                        </Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {gmailConnected ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                          <div>
+                            <p className="text-sm font-medium text-green-900">Email Tracking Active</p>
+                            <p className="text-xs text-green-700 mt-1">
+                              Connected: {gmailConnected}
+                            </p>
+                          </div>
+                          <CheckCircle className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <p className="text-xs text-blue-900 font-medium mb-2">What's being tracked:</p>
+                          <ul className="text-xs text-blue-700 space-y-1">
+                            <li>• Emails matched to leads and deals by email address</li>
+                            <li>• Automatic last contact date updates</li>
+                            <li>• Full email thread history visible in CRM</li>
+                            <li>• Syncs every 15 minutes automatically</li>
+                          </ul>
+                        </div>
+                        <Link href="/admin/leads">
+                          <Button variant="outline" size="sm" className="w-full">
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Email Activity in Leads
+                          </Button>
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <p className="text-sm text-gray-700 mb-3">
+                            Connect your Gmail account to automatically track email conversations with leads and deals.
+                          </p>
+                          <ul className="text-xs text-gray-600 space-y-1 mb-4">
+                            <li>✓ Auto-sync emails every 15 minutes</li>
+                            <li>✓ Match emails to leads and deals</li>
+                            <li>✓ Update last contact dates automatically</li>
+                            <li>✓ View full email history in CRM</li>
+                          </ul>
+                          <Button
+                            onClick={handleGmailConnect}
+                            disabled={gmailConnecting}
+                            className="w-full"
+                          >
+                            {gmailConnecting ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Connecting...
+                              </>
+                            ) : (
+                              <>
+                                <Mail className="h-4 w-4 mr-2" />
+                                Connect Gmail Account
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
