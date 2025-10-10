@@ -112,14 +112,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "MQL Pipeline",
           color: "text-orange-600",
           bgColor: "bg-orange-50"
-        },
-        {
-          title: "Tasks & Follow-ups",
-          href: "/admin/tasks",
-          icon: CheckSquare,
-          description: "Action Items",
-          color: "text-green-600",
-          bgColor: "bg-green-50"
         }
       ]
     },
@@ -137,6 +129,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Live Projects",
           color: "text-orange-600",
           bgColor: "bg-orange-50"
+        },
+        {
+          title: "Tasks & Follow-ups",
+          href: "/admin/tasks",
+          icon: CheckSquare,
+          description: "Action Items",
+          color: "text-green-600",
+          bgColor: "bg-green-50"
         },
         {
           title: "Finances",
