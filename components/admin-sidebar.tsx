@@ -90,20 +90,28 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       bgColor: "bg-blue-50",
       items: [
         {
+          title: "Leads",
+          href: "/admin/leads",
+          icon: Users,
+          description: "SQL Leads",
+          color: "text-purple-600",
+          bgColor: "bg-purple-50"
+        },
+        {
           title: "CRM",
           href: "/admin/crm",
           icon: BarChart3,
-          description: "Deals & Proposals",
+          description: "Active Deals",
           color: "text-blue-600",
           bgColor: "bg-blue-50"
         },
         {
-          title: "Kondo",
+          title: "Kondo MQL",
           href: "/admin/kondo",
           icon: Linkedin,
-          description: "LinkedIn Contacts",
-          color: "text-blue-600",
-          bgColor: "bg-blue-50"
+          description: "MQL Pipeline",
+          color: "text-orange-600",
+          bgColor: "bg-orange-50"
         }
       ]
     },

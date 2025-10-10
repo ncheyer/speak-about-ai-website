@@ -96,7 +96,7 @@ export default function KondoContactsPage() {
             </Button>
           </div>
 
-          {/* Stats */}
+          {/* Stats - Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <Card>
               <CardHeader className="pb-3">
@@ -108,22 +108,24 @@ export default function KondoContactsPage() {
             </Card>
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">SQL</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">SQLs (Leads)</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-purple-600">
                   {contacts.filter(c => c.labels?.some(l => l.kondo_label_name === 'SQL')).length}
                 </p>
+                <p className="text-xs text-gray-500 mt-1">Added to CRM as leads</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">MQL</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">Total MQLs</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-orange-600">
                   {contacts.filter(c => c.labels?.some(l => l.kondo_label_name?.startsWith('MQL'))).length}
                 </p>
+                <p className="text-xs text-gray-500 mt-1">Marketing qualified</p>
               </CardContent>
             </Card>
             <Card>
@@ -136,6 +138,46 @@ export default function KondoContactsPage() {
                 </p>
               </CardContent>
             </Card>
+          </div>
+
+          {/* MQL Funnel */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">MQL Pipeline</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="border-red-200 bg-red-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-red-900">MQL - High Priority</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-4xl font-bold text-red-600">
+                    {contacts.filter(c => c.labels?.some(l => l.kondo_label_name === 'MQL - High')).length}
+                  </p>
+                  <p className="text-xs text-red-700 mt-2">Hot prospects - prioritize outreach</p>
+                </CardContent>
+              </Card>
+              <Card className="border-orange-200 bg-orange-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-orange-900">MQL - Medium Priority</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-4xl font-bold text-orange-600">
+                    {contacts.filter(c => c.labels?.some(l => l.kondo_label_name === 'MQL - Medium')).length}
+                  </p>
+                  <p className="text-xs text-orange-700 mt-2">Warm leads - regular follow-up</p>
+                </CardContent>
+              </Card>
+              <Card className="border-yellow-200 bg-yellow-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-yellow-900">MQL - Low Priority</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-4xl font-bold text-yellow-600">
+                    {contacts.filter(c => c.labels?.some(l => l.kondo_label_name === 'MQL - Low')).length}
+                  </p>
+                  <p className="text-xs text-yellow-700 mt-2">Nurture over time</p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* Contacts List */}

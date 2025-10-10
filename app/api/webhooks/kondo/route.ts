@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const labels = data.kondo_labels?.map((l: any) => l.kondo_label_name) || []
 
     // Upsert Kondo contact
-    await sql`
+    const contactResult = await sql`
       INSERT INTO kondo_contacts (
         kondo_id,
         first_name,
@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
 
     if (isSQL) {
       const company = data.contact_headline?.split(' at ')[1]?.trim() || null
+      const kondoContactId = contactResult[0].id
 
       // Check if lead already exists for this contact
       const existingLead = await sql`
@@ -120,6 +121,7 @@ export async function POST(request: NextRequest) {
             company = ${company},
             title = ${data.contact_headline},
             linkedin_url = ${data.contact_linkedin_url},
+            kondo_contact_id = ${kondoContactId},
             notes = COALESCE(notes, '') || E'\n\nKondo Update (' || NOW() || '): ' || ${data.conversation_latest_content || 'No message'},
             last_contact_date = ${data.conversation_latest_timestamp ? new Date(data.conversation_latest_timestamp) : new Date()},
             next_follow_up_date = ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)},
@@ -141,6 +143,7 @@ export async function POST(request: NextRequest) {
             notes,
             last_contact_date,
             next_follow_up_date,
+            kondo_contact_id,
             created_at,
             updated_at
           ) VALUES (
@@ -155,6 +158,7 @@ export async function POST(request: NextRequest) {
             ${data.conversation_latest_content || 'SQL contact from Kondo LinkedIn integration'},
             ${data.conversation_latest_timestamp ? new Date(data.conversation_latest_timestamp) : new Date()},
             ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)},
+            ${kondoContactId},
             NOW(),
             NOW()
           )
