@@ -341,7 +341,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
               <h3 className="text-lg font-semibold mb-4">Speaker Preferences</h3>
 
               <div className="space-y-2">
-                <Label>Speakers You're Interested In</Label>
+                <Label>Speaker or Workshop You're Interested In</Label>
                 <div className="relative" ref={dropdownRef}>
                   <div 
                     className={cn(
@@ -541,7 +541,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="eventBudget">Speaker Budget Range</Label>
+                <Label htmlFor="eventBudget">Budget Range</Label>
                 <Select value={formData.eventBudget} onValueChange={(value) => handleInputChange('eventBudget', value)}>
                   <SelectTrigger className="h-12">
                     <SelectValue placeholder="Select your budget range" />
