@@ -172,6 +172,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           bgColor: "bg-green-50"
         },
         {
+          title: "Workshops",
+          href: "/admin/workshops",
+          icon: Briefcase,
+          description: "Training Sessions",
+          color: "text-teal-600",
+          bgColor: "bg-teal-50"
+        },
+        {
           title: "Activity Log",
           href: "/admin/activity",
           icon: Activity,

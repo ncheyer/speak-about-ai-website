@@ -31,16 +31,19 @@ export default function Header() {
               Home
             </Link>
             <Link href="/speakers" className="text-gray-700 hover:text-[#1E68C6] font-medium">
-              All Speakers
+              Speakers
+            </Link>
+            <Link href="/workshops" className="text-gray-700 hover:text-[#1E68C6] font-medium">
+              Workshops
             </Link>
             <Link href="/our-services" className="text-gray-700 hover:text-[#1E68C6] font-medium">
-              Our Services
+              Services
             </Link>
             <Link href="/our-team" className="text-gray-700 hover:text-[#1E68C6] font-medium">
-              Our Team
+              About Us
             </Link>
             <Link href="/blog" className="text-gray-700 hover:text-[#1E68C6] font-medium">
-              Blog
+              Resources
             </Link>
           </nav>
 
@@ -93,28 +96,35 @@ export default function Header() {
                 className="text-gray-700 hover:text-[#1E68C6] font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                All Speakers
+                Speakers
+              </Link>
+              <Link
+                href="/workshops"
+                className="text-gray-700 hover:text-[#1E68C6] font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Workshops
               </Link>
               <Link
                 href="/our-services"
                 className="text-gray-700 hover:text-[#1E68C6] font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Our Services
+                Services
               </Link>
               <Link
                 href="/our-team"
                 className="text-gray-700 hover:text-[#1E68C6] font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Our Team
+                About Us
               </Link>
               <Link
                 href="/blog"
                 className="text-gray-700 hover:text-[#1E68C6] font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Blog
+                Resources
               </Link>
               <Link
                 href="/portal"
