@@ -1,7 +1,7 @@
 "use client"
 
 import { useAdminSession } from "@/hooks/use-admin-session"
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Clock, LogOut, RefreshCw } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -33,46 +33,46 @@ export function AdminSessionMonitor() {
   }, [timeUntilLogout])
 
   return (
-    <AlertDialog open={showWarning}>
-      <AlertDialogContent className="max-w-md">
-        <AlertDialogHeader>
+    <Dialog open={showWarning} onOpenChange={() => {}}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-3 bg-yellow-100 rounded-full">
               <Clock className="h-6 w-6 text-yellow-600" />
             </div>
             <div>
-              <AlertDialogTitle className="text-xl">Session Expiring Soon</AlertDialogTitle>
+              <DialogTitle className="text-xl">Session Expiring Soon</DialogTitle>
             </div>
           </div>
-          <AlertDialogDescription className="text-base pt-2">
+          <DialogDescription className="text-base pt-2">
             Your admin session will expire due to inactivity in{" "}
             <span className="font-bold text-yellow-600">{displayTime}</span>.
-          </AlertDialogDescription>
+          </DialogDescription>
           <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
             <p className="text-sm text-gray-700">
               For security, you'll be automatically logged out after 1 hour of inactivity.
               Click <strong>"Stay Logged In"</strong> to extend your session.
             </p>
           </div>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+        </DialogHeader>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button
             variant="outline"
             onClick={logout}
-            className="w-full sm:w-auto order-2 sm:order-1"
+            className="w-full sm:w-auto"
           >
             <LogOut className="h-4 w-4 mr-2" />
             Logout Now
           </Button>
-          <AlertDialogAction
+          <Button
             onClick={extendSession}
-            className="w-full sm:w-auto order-1 sm:order-2 bg-blue-600 hover:bg-blue-700"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Stay Logged In
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
