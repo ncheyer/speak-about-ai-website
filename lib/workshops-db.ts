@@ -31,6 +31,10 @@ export interface Workshop {
   active: boolean
   featured: boolean
   popularity_score: number
+  category: string | null
+  display_order: number
+  badge_text: string | null
+  roi_stats: Record<string, string> | null
   created_at: string
   updated_at: string
 }
@@ -174,11 +178,39 @@ export async function getWorkshopsBySpeaker(speakerId: number): Promise<Workshop
     const workshops = await sql`
       SELECT * FROM workshops
       WHERE speaker_id = ${speakerId} AND active = true
-      ORDER BY featured DESC, popularity_score DESC
+      ORDER BY display_order ASC, category ASC, featured DESC, popularity_score DESC
     `
     return workshops as Workshop[]
   } catch (error) {
     console.error("Error fetching workshops by speaker:", error)
+    throw error
+  }
+}
+
+/**
+ * Get workshops by speaker with category grouping
+ */
+export async function getWorkshopsBySpeakerGrouped(speakerId: number): Promise<Record<string, Workshop[]>> {
+  try {
+    const workshops = await sql`
+      SELECT * FROM workshops
+      WHERE speaker_id = ${speakerId} AND active = true
+      ORDER BY display_order ASC, featured DESC
+    `
+
+    // Group by category
+    const grouped: Record<string, Workshop[]> = {}
+    for (const workshop of workshops as Workshop[]) {
+      const category = workshop.category || 'Other Workshops'
+      if (!grouped[category]) {
+        grouped[category] = []
+      }
+      grouped[category].push(workshop)
+    }
+
+    return grouped
+  } catch (error) {
+    console.error("Error fetching grouped workshops by speaker:", error)
     throw error
   }
 }
