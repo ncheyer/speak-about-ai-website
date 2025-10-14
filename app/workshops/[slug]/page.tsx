@@ -34,7 +34,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
         </div>
       )}
 
@@ -44,46 +44,48 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">
-              <div className="flex gap-2 mb-4">
-                <Badge variant="default" className="capitalize">
-                  {workshop.format}
-                </Badge>
-                {workshop.featured && (
-                  <Badge className="bg-yellow-100 text-yellow-800">
-                    <Star className="h-3 w-3 mr-1 fill-yellow-800" />
-                    Featured
+              <div className={`p-8 rounded-xl ${workshop.thumbnail_url ? 'bg-white shadow-xl' : ''}`}>
+                <div className="flex gap-2 mb-4">
+                  <Badge variant="default" className="capitalize">
+                    {workshop.format}
                   </Badge>
-                )}
-              </div>
+                  {workshop.featured && (
+                    <Badge className="bg-yellow-100 text-yellow-800">
+                      <Star className="h-3 w-3 mr-1 fill-yellow-800" />
+                      Featured
+                    </Badge>
+                  )}
+                </div>
 
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                {workshop.title}
-              </h1>
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                  {workshop.title}
+                </h1>
 
-              {workshop.short_description && (
-                <p className="text-xl text-gray-600 mb-6">{workshop.short_description}</p>
-              )}
+                {workshop.short_description && (
+                  <p className="text-xl text-gray-600 mb-6">{workshop.short_description}</p>
+                )}
 
-              {/* Quick Stats */}
-              <div className="flex flex-wrap gap-6 mb-8">
-                {workshop.duration_minutes && (
-                  <div className="flex items-center text-gray-700">
-                    <Clock className="h-5 w-5 mr-2 text-blue-600" />
-                    <span className="font-medium">{workshop.duration_minutes} minutes</span>
-                  </div>
-                )}
-                {workshop.target_audience && (
-                  <div className="flex items-center text-gray-700">
-                    <Users className="h-5 w-5 mr-2 text-blue-600" />
-                    <span className="font-medium">{workshop.target_audience}</span>
-                  </div>
-                )}
-                {workshop.max_participants && (
-                  <div className="flex items-center text-gray-700">
-                    <Award className="h-5 w-5 mr-2 text-blue-600" />
-                    <span className="font-medium">Max {workshop.max_participants} participants</span>
-                  </div>
-                )}
+                {/* Quick Stats */}
+                <div className="flex flex-wrap gap-6 mb-8">
+                  {workshop.duration_minutes && (
+                    <div className="flex items-center text-gray-700">
+                      <Clock className="h-5 w-5 mr-2 text-blue-600" />
+                      <span className="font-medium">{workshop.duration_minutes} minutes</span>
+                    </div>
+                  )}
+                  {workshop.target_audience && (
+                    <div className="flex items-center text-gray-700">
+                      <Users className="h-5 w-5 mr-2 text-blue-600" />
+                      <span className="font-medium">{workshop.target_audience}</span>
+                    </div>
+                  )}
+                  {workshop.max_participants && (
+                    <div className="flex items-center text-gray-700">
+                      <Award className="h-5 w-5 mr-2 text-blue-600" />
+                      <span className="font-medium">Max {workshop.max_participants} participants</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
