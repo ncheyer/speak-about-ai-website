@@ -200,17 +200,17 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                 </div>
               )}
 
-              {/* Agenda */}
+              {/* Format Options */}
               {workshop.agenda && (
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
                     <BookOpen className="h-8 w-8 mr-3 text-green-600" />
-                    Workshop Agenda
+                    Available Formats & Options
                   </h2>
                   <div className="bg-gray-50 rounded-lg p-6">
                     <div className="prose prose-lg max-w-none">
                       {workshop.agenda.split('\n').map((line, i) => (
-                        <p key={i} className="mb-2 text-gray-800">{line}</p>
+                        <p key={i} className="mb-2 text-gray-800 whitespace-pre-wrap">{line}</p>
                       ))}
                     </div>
                   </div>
