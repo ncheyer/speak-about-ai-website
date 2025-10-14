@@ -286,6 +286,104 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Employee & Participant Testimonials
+            </h2>
+            <p className="text-xl text-gray-600">
+              Don't take our word for it. Wall of testimonials
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Testimonial 1 */}
+            <Card className="bg-white">
+              <CardContent className="pt-6">
+                <div className="mb-4">
+                  <div className="flex text-yellow-400 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-gray-700 italic mb-4">
+                    "I wish we had more time with her."
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Testimonial 2 */}
+            <Card className="bg-white">
+              <CardContent className="pt-6">
+                <div className="mb-4">
+                  <div className="flex text-yellow-400 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-gray-700 italic mb-4">
+                    "She was funny, kind, and incredibly intelligent."
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Testimonial 3 */}
+            <Card className="bg-white">
+              <CardContent className="pt-6">
+                <div className="mb-4">
+                  <div className="flex text-yellow-400 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-gray-700 italic mb-4">
+                    "Clear in her words and spoke in a way that a whole room of people would understand."
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Testimonial 4 */}
+            <Card className="bg-white md:col-span-2 lg:col-span-1">
+              <CardContent className="pt-6">
+                <div className="mb-4">
+                  <div className="flex text-yellow-400 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-gray-700 italic mb-4">
+                    "Joan was a great instructor. I learned so much about ChatGPT from her! Her interactive exercises were fun and informative."
+                  </p>
+                  <p className="text-gray-900 font-semibold">- Nidhi B.</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Testimonial 5 - Featured Large */}
+            <Card className="bg-white md:col-span-2">
+              <CardContent className="pt-6">
+                <div className="mb-4">
+                  <div className="flex text-yellow-400 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-gray-700 italic mb-4 text-lg">
+                    "I highly recommend Joan Palmiter Bajorek's "AI ChatGPT for Beginners" workshop to anyone interested in harnessing the benefits of ChatGPT. Joan's expertise, her energetic presentation style, and hands-on approach made it an engaging—and fun—learning experience."
+                  </p>
+                  <p className="text-gray-900 font-semibold">- Shana C.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
