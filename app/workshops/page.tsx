@@ -23,6 +23,7 @@ interface Workshop {
   target_audience: string | null
   price_range: string | null
   topics: string[] | null
+  thumbnail_url: string | null
   featured: boolean
   active: boolean
 }
@@ -217,13 +218,33 @@ export default function WorkshopsPage() {
 function WorkshopCard({ workshop, featured = false }: { workshop: Workshop; featured?: boolean }) {
   return (
     <Link href={`/workshops/${workshop.slug}`}>
-      <Card className={`h-full hover:shadow-xl transition-all duration-300 ${featured ? "border-yellow-400 border-2" : ""}`}>
+      <Card className={`h-full hover:shadow-xl transition-all duration-300 overflow-hidden ${featured ? "border-yellow-400 border-2" : ""}`}>
+        {/* Workshop Image */}
+        {workshop.thumbnail_url && (
+          <div className="relative w-full h-48 overflow-hidden">
+            <Image
+              src={workshop.thumbnail_url}
+              alt={workshop.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            {featured && (
+              <div className="absolute top-3 right-3">
+                <Badge className="bg-yellow-100 text-yellow-800">
+                  <Star className="h-3 w-3 mr-1 fill-yellow-800" />
+                  Featured
+                </Badge>
+              </div>
+            )}
+          </div>
+        )}
+
         <CardHeader>
           <div className="flex justify-between items-start mb-2">
             <Badge variant={workshop.format === "virtual" ? "default" : "outline"} className="capitalize">
               {workshop.format || "TBD"}
             </Badge>
-            {featured && (
+            {featured && !workshop.thumbnail_url && (
               <Badge className="bg-yellow-100 text-yellow-800">
                 <Star className="h-3 w-3 mr-1 fill-yellow-800" />
                 Featured

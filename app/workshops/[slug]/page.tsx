@@ -1,7 +1,5 @@
 import { notFound } from "next/navigation"
 import { getWorkshopBySlug, incrementWorkshopPopularity } from "@/lib/workshops-db"
-import Header from "@/components/header"
-import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,11 +23,23 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
   await incrementWorkshopPopularity(workshop.id)
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <Header />
+    <>
+      {/* Hero Image */}
+      {workshop.thumbnail_url && (
+        <div className="relative w-full h-96 overflow-hidden">
+          <Image
+            src={workshop.thumbnail_url}
+            alt={workshop.title}
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        </div>
+      )}
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12">
+      <section className={workshop.thumbnail_url ? "py-12 -mt-32 relative z-10" : "bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12"}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
@@ -295,9 +305,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
           </div>
         </div>
       </section>
-
-      <Footer />
-    </div>
+    </>
   )
 }
 
