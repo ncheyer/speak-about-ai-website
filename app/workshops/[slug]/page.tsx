@@ -205,14 +205,67 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
                     <BookOpen className="h-8 w-8 mr-3 text-green-600" />
-                    Available Formats & Options
+                    Workshop Formats & Options
                   </h2>
-                  <div className="bg-gray-50 rounded-lg p-6">
-                    <div className="prose prose-lg max-w-none">
-                      {workshop.agenda.split('\n').map((line, i) => (
-                        <p key={i} className="mb-2 text-gray-800 whitespace-pre-wrap">{line}</p>
-                      ))}
-                    </div>
+
+                  {/* Parse and display agenda as structured cards */}
+                  <div className="space-y-6">
+                    {workshop.agenda.split('\n\n').map((section, sectionIndex) => {
+                      const lines = section.split('\n').filter(line => line.trim())
+                      if (lines.length === 0) return null
+
+                      const title = lines[0]
+                      const isFeatured = title.includes('FEATURED') || title.includes('Most Popular')
+                      const isMainHeading = title === title.toUpperCase() && !title.includes(':')
+
+                      if (isMainHeading && lines.length === 1) {
+                        // Section header
+                        return (
+                          <div key={sectionIndex} className="mt-8 mb-4">
+                            <h3 className="text-xl font-bold text-gray-800 border-b-2 border-gray-200 pb-2">
+                              {title}
+                            </h3>
+                          </div>
+                        )
+                      }
+
+                      // Workshop offering card
+                      return (
+                        <Card
+                          key={sectionIndex}
+                          className={`${isFeatured ? 'border-2 border-blue-500 shadow-lg' : 'border border-gray-200'}`}
+                        >
+                          <CardHeader className={isFeatured ? 'bg-blue-50' : ''}>
+                            <div className="flex items-start justify-between">
+                              <CardTitle className="text-xl">
+                                {title.replace('FEATURED WORKSHOP:', '').replace(/\([^)]*\)/g, '').trim()}
+                              </CardTitle>
+                              {isFeatured && (
+                                <Badge className="bg-blue-600 text-white ml-2">Featured</Badge>
+                              )}
+                            </div>
+                            {title.match(/\(([^)]+)\)/) && (
+                              <div className="flex gap-2 mt-2">
+                                {title.match(/\(([^)]+)\)/)?.[1].split('-').map((badge, i) => (
+                                  <Badge key={i} variant="secondary" className="text-xs">
+                                    {badge.trim()}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </CardHeader>
+                          <CardContent className="pt-4">
+                            <div className="space-y-2">
+                              {lines.slice(1).map((line, lineIndex) => (
+                                <p key={lineIndex} className="text-gray-700 leading-relaxed">
+                                  {line}
+                                </p>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
                   </div>
                 </div>
               )}
