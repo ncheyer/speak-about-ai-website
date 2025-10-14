@@ -40,14 +40,25 @@ interface Speaker {
   oneLiner?: string
 }
 
+interface Workshop {
+  id: number
+  title: string
+  duration_minutes: number | null
+  format: string | null
+  badge_text: string | null
+}
+
 export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?: string }) {
   const { toast } = useToast()
   
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [speakers, setSpeakers] = useState<Speaker[]>([])
+  const [workshops, setWorkshops] = useState<Workshop[]>([])
   const [loadingSpeakers, setLoadingSpeakers] = useState(true)
+  const [loadingWorkshops, setLoadingWorkshops] = useState(true)
   const [selectedSpeakers, setSelectedSpeakers] = useState<Speaker[]>([])
+  const [selectedWorkshops, setSelectedWorkshops] = useState<Workshop[]>([])
   const [speakerSearchTerm, setSpeakerSearchTerm] = useState('')
   const [showSpeakerDropdown, setShowSpeakerDropdown] = useState(false)
   const [eventDates, setEventDates] = useState<string[]>([''])
@@ -76,6 +87,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
 
   useEffect(() => {
     fetchSpeakers()
+    fetchWorkshops()
   }, [])
 
   // Click outside handler for dropdown
@@ -118,6 +130,18 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
     }
   }
 
+  const fetchWorkshops = async () => {
+    try {
+      const response = await fetch('/api/workshops')
+      const data = await response.json()
+      setWorkshops(data || [])
+    } catch (error) {
+      console.error('Error fetching workshops:', error)
+    } finally {
+      setLoadingWorkshops(false)
+    }
+  }
+
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
@@ -139,9 +163,24 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
     })
   }
 
+  const toggleWorkshop = (workshop: Workshop) => {
+    // If selecting a workshop, clear "no speaker in mind"
+    if (hasNoSpeakerInMind) {
+      setHasNoSpeakerInMind(false)
+    }
+    setSelectedWorkshops(prev => {
+      const exists = prev.find(w => w.id === workshop.id)
+      if (exists) {
+        return prev.filter(w => w.id !== workshop.id)
+      }
+      return [...prev, workshop]
+    })
+  }
+
   const handleNoSpeakerInMind = () => {
     setHasNoSpeakerInMind(true)
     setSelectedSpeakers([])
+    setSelectedWorkshops([])
     setShowSpeakerDropdown(false)
   }
 
@@ -149,8 +188,16 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
     setSelectedSpeakers(prev => prev.filter(s => s.id !== speakerId))
   }
 
+  const removeWorkshop = (workshopId: number) => {
+    setSelectedWorkshops(prev => prev.filter(w => w.id !== workshopId))
+  }
+
   const filteredSpeakers = speakers.filter(speaker =>
     speaker.name.toLowerCase().includes(speakerSearchTerm.toLowerCase())
+  )
+
+  const filteredWorkshops = workshops.filter(workshop =>
+    workshop.title.toLowerCase().includes(speakerSearchTerm.toLowerCase())
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -177,7 +224,12 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
         body: JSON.stringify({
           ...formData,
           eventDates: eventDates.filter(date => date !== ''),
-          specificSpeaker: hasNoSpeakerInMind ? 'No specific speaker in mind' : selectedSpeakers.map(s => s.name).join(', '),
+          specificSpeaker: hasNoSpeakerInMind
+            ? 'No specific speaker in mind'
+            : [
+                ...selectedSpeakers.map(s => s.name),
+                ...selectedWorkshops.map(w => `Workshop: ${w.title}`)
+              ].join(', '),
           hasNoSpeakerInMind
         })
       })
@@ -224,6 +276,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
           newsletterOptIn: false
         })
         setSelectedSpeakers([])
+        setSelectedWorkshops([])
         setEventDates([''])
       } else {
         throw new Error(result.error || 'Failed to submit')
@@ -365,11 +418,11 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                           <X className="h-4 w-4" />
                         </button>
                       </div>
-                    ) : selectedSpeakers.length > 0 ? (
+                    ) : (selectedSpeakers.length > 0 || selectedWorkshops.length > 0) ? (
                       <div className="flex flex-wrap gap-2">
                         {selectedSpeakers.map(speaker => (
-                          <Badge 
-                            key={speaker.id}
+                          <Badge
+                            key={`speaker-${speaker.id}`}
                             variant="secondary"
                             className="bg-blue-100 text-blue-700 hover:bg-blue-200"
                           >
@@ -381,6 +434,25 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                                 removeSpeaker(speaker.id)
                               }}
                               className="ml-1 hover:text-blue-900"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                        {selectedWorkshops.map(workshop => (
+                          <Badge
+                            key={`workshop-${workshop.id}`}
+                            variant="secondary"
+                            className="bg-green-100 text-green-700 hover:bg-green-200"
+                          >
+                            {workshop.title}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                removeWorkshop(workshop.id)
+                              }}
+                              className="ml-1 hover:text-green-900"
                             >
                               <X className="h-3 w-3" />
                             </button>
@@ -421,21 +493,64 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                         >
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="font-medium text-gray-700">No specific speaker in mind</div>
-                              <div className="text-sm text-gray-500">We'll recommend speakers based on your needs</div>
+                              <div className="font-medium text-gray-700">No specific speaker or workshop in mind</div>
+                              <div className="text-sm text-gray-500">We'll recommend options based on your needs</div>
                             </div>
                             {hasNoSpeakerInMind && (
                               <CheckCircle className="h-5 w-5 text-blue-600" />
                             )}
                           </div>
                         </div>
+
+                        {/* Workshops Section */}
+                        {loadingWorkshops ? null : filteredWorkshops.length > 0 && (
+                          <>
+                            <div className="px-4 py-2 bg-gray-100 border-b">
+                              <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Workshops</div>
+                            </div>
+                            {filteredWorkshops.map(workshop => {
+                              const isSelected = selectedWorkshops.find(w => w.id === workshop.id)
+                              return (
+                                <div
+                                  key={workshop.id}
+                                  className={cn(
+                                    "px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b",
+                                    isSelected && "bg-green-50"
+                                  )}
+                                  onClick={() => toggleWorkshop(workshop)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <div className="font-medium">{workshop.title}</div>
+                                      <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                                        {workshop.badge_text && (
+                                          <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">{workshop.badge_text}</span>
+                                        )}
+                                        {workshop.format && <span>• {workshop.format}</span>}
+                                      </div>
+                                    </div>
+                                    {isSelected && (
+                                      <CheckCircle className="h-5 w-5 text-green-600" />
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </>
+                        )}
+
+                        {/* Speakers Section */}
                         {loadingSpeakers ? (
                           <div className="p-8 text-center">
                             <Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" />
-                            <p className="text-sm text-gray-500 mt-2">Loading speakers...</p>
+                            <p className="text-sm text-gray-500 mt-2">Loading...</p>
                           </div>
                         ) : filteredSpeakers.length > 0 ? (
-                          filteredSpeakers.map(speaker => {
+                          <>
+                            <div className="px-4 py-2 bg-gray-100 border-b">
+                              <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Speakers</div>
+                            </div>
+                            {filteredSpeakers.map(speaker => {
                             const isSelected = selectedSpeakers.find(s => s.id === speaker.id)
                             return (
                               <div
@@ -459,7 +574,8 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                                 </div>
                               </div>
                             )
-                          })
+                          })}
+                          </>
                         ) : (
                           <div className="p-8 text-center text-gray-500">
                             No speakers found matching "{speakerSearchTerm}"
