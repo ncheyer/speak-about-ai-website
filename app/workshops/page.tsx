@@ -7,8 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Search, Clock, Users, Star, MapPin, ChevronRight, Loader2 } from "lucide-react"
 import Link from "next/link"
-import Header from "@/components/header"
-import Footer from "@/components/footer"
 import Image from "next/image"
 
 interface Workshop {
@@ -86,9 +84,7 @@ export default function WorkshopsPage() {
   const regularWorkshops = filteredWorkshops.filter((w) => !w.featured)
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <Header />
-
+    <>
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-50 via-white to-purple-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -214,9 +210,7 @@ export default function WorkshopsPage() {
           </Link>
         </div>
       </section>
-
-      <Footer />
-    </div>
+    </>
   )
 }
 
