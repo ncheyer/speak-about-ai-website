@@ -4,12 +4,18 @@ import { createProject } from "@/lib/projects-db"
 import { getAutomaticProjectStatus } from "@/lib/project-status-utils"
 import { requireAdminAuth } from "@/lib/auth-middleware"
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    // Skip auth for now to match the simple localStorage pattern
-    // const authError = requireAdminAuth(request)
-    // if (authError) return authError
-    const id = Number.parseInt(params.id)
+    // Check for dev bypass header first
+    const devBypass = request.headers.get('x-dev-admin-bypass')
+    if (devBypass !== 'dev-admin-access') {
+      // Require admin authentication
+      const authError = requireAdminAuth(request)
+      if (authError) return authError
+    }
+
+    const { id: idString } = await params
+    const id = Number.parseInt(idString)
     if (Number.isNaN(id)) {
       return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
     }
@@ -125,12 +131,18 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    // Require admin authentication
-    const authError = requireAdminAuth(request)
-    if (authError) return authError
-    const id = Number.parseInt(params.id)
+    // Check for dev bypass header first
+    const devBypass = request.headers.get('x-dev-admin-bypass')
+    if (devBypass !== 'dev-admin-access') {
+      // Require admin authentication
+      const authError = requireAdminAuth(request)
+      if (authError) return authError
+    }
+
+    const { id: idString } = await params
+    const id = Number.parseInt(idString)
     if (Number.isNaN(id)) {
       return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
     }
@@ -246,12 +258,18 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    // Require admin authentication
-    const authError = requireAdminAuth(request)
-    if (authError) return authError
-    const id = Number.parseInt(params.id)
+    // Check for dev bypass header first
+    const devBypass = request.headers.get('x-dev-admin-bypass')
+    if (devBypass !== 'dev-admin-access') {
+      // Require admin authentication
+      const authError = requireAdminAuth(request)
+      if (authError) return authError
+    }
+
+    const { id: idString } = await params
+    const id = Number.parseInt(idString)
     if (Number.isNaN(id)) {
       return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
     }

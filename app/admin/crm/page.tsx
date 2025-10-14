@@ -923,7 +923,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
       <div className="fixed left-0 top-0 h-full z-[60]">
         <AdminSidebar />
       </div>
-      
+
       {/* Main Content */}
       <div className="flex-1 ml-72 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

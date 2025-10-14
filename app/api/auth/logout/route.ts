@@ -2,13 +2,29 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   try {
-    // In a real application, you would invalidate the session token in the database
-    // For now, we'll just return success and let the client clear localStorage
-    
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: "Logged out successfully"
     })
+
+    // Clear all admin session cookies
+    response.cookies.set('adminLoggedIn', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0, // Expire immediately
+      path: '/'
+    })
+
+    response.cookies.set('adminSessionToken', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0, // Expire immediately
+      path: '/'
+    })
+
+    return response
 
   } catch (error) {
     console.error("Logout error:", error)
