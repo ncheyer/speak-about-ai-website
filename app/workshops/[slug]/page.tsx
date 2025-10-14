@@ -129,7 +129,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                   )}
 
                   <div className="space-y-3">
-                    <Link href="/contact">
+                    <Link href={`/contact?workshop=${workshop.id}`}>
                       <Button className="w-full" size="lg">
                         Request This Workshop
                       </Button>
@@ -219,48 +219,84 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                       const isMainHeading = title === title.toUpperCase() && !title.includes(':')
 
                       if (isMainHeading && lines.length === 1) {
-                        // Section header
+                        // Section header with gradient styling
                         return (
-                          <div key={sectionIndex} className="mt-8 mb-4">
-                            <h3 className="text-xl font-bold text-gray-800 border-b-2 border-gray-200 pb-2">
-                              {title}
-                            </h3>
+                          <div key={sectionIndex} className="mt-12 mb-6">
+                            <div className="flex items-center">
+                              <div className="flex-grow h-px bg-gradient-to-r from-gray-300 via-gray-400 to-gray-300"></div>
+                              <h3 className="px-6 text-xl font-bold text-gray-700 uppercase tracking-wide">
+                                {title}
+                              </h3>
+                              <div className="flex-grow h-px bg-gradient-to-r from-gray-300 via-gray-400 to-gray-300"></div>
+                            </div>
                           </div>
                         )
                       }
 
-                      // Workshop offering card
+                      // Workshop offering card with enhanced styling
                       return (
                         <Card
                           key={sectionIndex}
-                          className={`${isFeatured ? 'border-2 border-blue-500 shadow-lg' : 'border border-gray-200'}`}
+                          className={`${
+                            isFeatured
+                              ? 'border-2 border-blue-500 shadow-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 hover:shadow-blue-200 transition-all duration-300'
+                              : 'border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300'
+                          }`}
                         >
-                          <CardHeader className={isFeatured ? 'bg-blue-50' : ''}>
-                            <div className="flex items-start justify-between">
-                              <CardTitle className="text-xl">
-                                {title.replace('FEATURED WORKSHOP:', '').replace(/\([^)]*\)/g, '').trim()}
-                              </CardTitle>
+                          <CardHeader className={`${isFeatured ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' : 'bg-gray-50'} relative overflow-hidden`}>
+                            {isFeatured && (
+                              <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                            )}
+                            <div className="flex items-start justify-between relative z-10">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <div className={`p-2 rounded-lg ${isFeatured ? 'bg-white/20' : 'bg-blue-100'}`}>
+                                    <BookOpen className={`h-6 w-6 ${isFeatured ? 'text-white' : 'text-blue-600'}`} />
+                                  </div>
+                                  <CardTitle className={`text-xl ${isFeatured ? 'text-white' : 'text-gray-900'}`}>
+                                    {title.replace('FEATURED WORKSHOP:', '').replace(/\([^)]*\)/g, '').trim()}
+                                  </CardTitle>
+                                </div>
+                                {title.match(/\(([^)]+)\)/) && (
+                                  <div className="flex gap-2 mt-3">
+                                    {title.match(/\(([^)]+)\)/)?.[1].split('-').map((badge, i) => (
+                                      <Badge
+                                        key={i}
+                                        className={`${
+                                          isFeatured
+                                            ? 'bg-white text-blue-600 hover:bg-white/90'
+                                            : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                        } text-xs font-semibold`}
+                                      >
+                                        {badge.trim()}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                               {isFeatured && (
-                                <Badge className="bg-blue-600 text-white ml-2">Featured</Badge>
+                                <Badge className="bg-yellow-400 text-yellow-900 ml-3 flex items-center gap-1 font-bold">
+                                  <Star className="h-3 w-3 fill-yellow-900" />
+                                  Featured
+                                </Badge>
                               )}
                             </div>
-                            {title.match(/\(([^)]+)\)/) && (
-                              <div className="flex gap-2 mt-2">
-                                {title.match(/\(([^)]+)\)/)?.[1].split('-').map((badge, i) => (
-                                  <Badge key={i} variant="secondary" className="text-xs">
-                                    {badge.trim()}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
                           </CardHeader>
-                          <CardContent className="pt-4">
-                            <div className="space-y-2">
-                              {lines.slice(1).map((line, lineIndex) => (
-                                <p key={lineIndex} className="text-gray-700 leading-relaxed">
-                                  {line}
-                                </p>
-                              ))}
+                          <CardContent className="pt-6 pb-6">
+                            <div className="space-y-3">
+                              {lines.slice(1).map((line, lineIndex) => {
+                                const isBullet = line.startsWith('•') || line.startsWith('-')
+                                return (
+                                  <div key={lineIndex} className="flex items-start gap-3">
+                                    {isBullet && (
+                                      <CheckCircle className={`h-5 w-5 mt-0.5 flex-shrink-0 ${isFeatured ? 'text-blue-600' : 'text-green-600'}`} />
+                                    )}
+                                    <p className={`${isBullet ? 'flex-1' : ''} text-gray-700 leading-relaxed text-base`}>
+                                      {line.replace(/^[•\-]\s*/, '')}
+                                    </p>
+                                  </div>
+                                )
+                              })}
                             </div>
                           </CardContent>
                         </Card>
@@ -318,16 +354,34 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
 
               {/* Customization */}
               {workshop.customizable && (
-                <Card>
+                <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-white">
                   <CardHeader>
-                    <CardTitle>Fully Customizable</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-purple-900">
+                      <Target className="h-5 w-5" />
+                      Fully Customizable
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-700 mb-4">
-                      {workshop.custom_options || "This workshop can be tailored to your organization's specific needs, industry, and learning objectives."}
-                    </p>
-                    <Link href="/contact">
-                      <Button variant="outline" className="w-full">
+                    <ul className="space-y-2 text-sm text-gray-700 mb-4">
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                        <span>Tailored to your industry</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                        <span>Scaled for team size</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                        <span>Adjusted for skill level</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                        <span>Flexible scheduling</span>
+                      </li>
+                    </ul>
+                    <Link href={`/contact?workshop=${workshop.id}`} className="block">
+                      <Button variant="outline" className="w-full border-purple-300 text-purple-700 hover:bg-purple-100">
                         Discuss Customization
                       </Button>
                     </Link>
@@ -445,7 +499,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
             Book this workshop for your organization and equip your team with cutting-edge AI knowledge.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/contact">
+            <Link href={`/contact?workshop=${workshop.id}`}>
               <Button size="lg" variant="secondary" className="font-semibold">
                 Request This Workshop
               </Button>

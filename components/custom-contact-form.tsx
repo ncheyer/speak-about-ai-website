@@ -116,6 +116,19 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
     }
   }, [preselectedSpeaker, speakers])
 
+  useEffect(() => {
+    // Auto-select workshop if passed as URL parameter
+    const params = new URLSearchParams(window.location.search)
+    const workshopId = params.get('workshop')
+
+    if (workshopId && workshops.length > 0 && selectedWorkshops.length === 0) {
+      const workshop = workshops.find(w => w.id === parseInt(workshopId))
+      if (workshop) {
+        setSelectedWorkshops([workshop])
+      }
+    }
+  }, [workshops])
+
   const fetchSpeakers = async () => {
     try {
       const response = await fetch('/api/speakers')
