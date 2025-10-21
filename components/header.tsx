@@ -14,19 +14,29 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center flex-shrink-0">
+            {/* Full Logo - Mobile and Large Desktop */}
             <Image
               src="/speak-about-ai-logo.png"
               alt="Speak About AI"
               width={200}
               height={60}
               priority
-              className="h-12 w-auto"
+              className="md:hidden xl:block h-10 md:h-12 w-auto flex-shrink-0"
+            />
+            {/* Circular Logo - Condensed Desktop (tablet/small desktop) */}
+            <Image
+              src="/new-ai-logo.png"
+              alt="Speak About AI"
+              width={48}
+              height={48}
+              priority
+              className="hidden md:block xl:hidden h-12 w-12 rounded-full object-cover flex-shrink-0"
             />
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 xl:space-x-8">
             <Link href="/" className="text-gray-700 hover:text-[#1E68C6] font-medium">
               Home
             </Link>
@@ -45,17 +55,17 @@ export default function Header() {
           </nav>
 
           {/* CTA Button - Desktop */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 flex-shrink-0">
             <Link
               href="/portal"
               className="flex items-center text-gray-600 hover:text-[#1E68C6] transition-colors"
             >
-              <Users className="w-4 h-4 mr-2" />
-              <span className="text-sm font-medium">Portal</span>
+              <Users className="w-4 h-4 lg:mr-2" />
+              <span className="text-sm font-medium hidden lg:inline">Portal</span>
             </Link>
             <a
               href="tel:+1-510-435-3947"
-              className="flex items-center text-gray-600 hover:text-[#1E68C6] transition-colors"
+              className="hidden lg:flex items-center text-gray-600 hover:text-[#1E68C6] transition-colors"
               style={{ textDecoration: "none" }}
             >
               <Phone className="w-4 h-4 mr-2" />
@@ -64,8 +74,8 @@ export default function Header() {
             <Button
               asChild
               variant="gold"
-              size="sm" // Using 'sm' for a more compact nav button
-              className="font-montserrat font-bold"
+              size="sm"
+              className="font-montserrat font-bold text-xs lg:text-sm whitespace-nowrap"
             >
               <Link href="/contact">Book Speaker Today</Link>
             </Button>
