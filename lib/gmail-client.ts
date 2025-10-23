@@ -35,6 +35,8 @@ export class GmailClient {
     const scopes = [
       'https://www.googleapis.com/auth/gmail.readonly',
       'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/calendar', // Add calendar access
+      'https://www.googleapis.com/auth/calendar.events', // Create/edit events
     ]
 
     return this.oauth2Client.generateAuthUrl({
