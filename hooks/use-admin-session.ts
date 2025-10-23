@@ -65,6 +65,7 @@ export function useAdminSession(options: UseAdminSessionOptions = {}) {
 
       const response = await fetch('/api/auth/refresh', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -95,7 +96,8 @@ export function useAdminSession(options: UseAdminSessionOptions = {}) {
 
       // Call logout endpoint to clear cookies
       await fetch('/api/auth/logout', {
-        method: 'POST'
+        method: 'POST',
+        credentials: 'include'
       })
 
       // Redirect to login
