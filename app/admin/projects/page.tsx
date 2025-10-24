@@ -12,6 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   Table,
   TableBody,
   TableCell,
@@ -49,7 +57,10 @@ import {
   Check,
   X,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  MoreHorizontal,
+  LayoutGrid,
+  List
 } from "lucide-react"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
@@ -215,7 +226,9 @@ export default function EnhancedProjectManagementPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [activeTab, setActiveTab] = useState("dashboard")
+  const [viewMode, setViewMode] = useState<"table" | "cards">("table")
+  const [quickFilter, setQuickFilter] = useState<"all" | "this_week" | "urgent" | "overdue">("all")
+  const [activeTab, setActiveTab] = useState("projects")
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [selectedProjectForDetails, setSelectedProjectForDetails] = useState<Project | null>(null)
   const [showCreateInvoice, setShowCreateInvoice] = useState(false)
@@ -834,6 +847,52 @@ export default function EnhancedProjectManagementPage() {
       toast({
         title: "Error",
         description: "Failed to delete project",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleCreateCalendarEvent = async (project: Project) => {
+    if (!project.event_date) {
+      toast({
+        title: "Error",
+        description: "Project must have an event date to create a calendar event",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      const response = await fetch("/api/calendar/create-event", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          projectId: project.id
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast({
+          title: "Success",
+          description: "Calendar event created and invitations sent!",
+        })
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to create calendar event",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error creating calendar event:", error)
+      toast({
+        title: "Error",
+        description: "Failed to create calendar event",
         variant: "destructive"
       })
     }
@@ -1645,6 +1704,15 @@ export default function EnhancedProjectManagementPage() {
                                 title="Edit Project"
                               >
                                 <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleCreateCalendarEvent(project)}
+                                title="Create Calendar Event"
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                <CalendarDays className="h-4 w-4" />
                               </Button>
                               <Button
                                 size="sm"
