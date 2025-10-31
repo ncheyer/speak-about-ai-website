@@ -48,36 +48,6 @@ interface Testimonial {
   event?: string
 }
 
-interface PastEvent {
-  eventName: string
-  eventType?: string
-  date?: string
-  location?: string
-  keynote?: boolean
-}
-
-interface Award {
-  title: string
-  organization?: string
-  year?: string
-  description?: string
-}
-
-interface Publication {
-  title: string
-  type: "book" | "article" | "research" | "whitepaper"
-  publisher?: string
-  date?: string
-  link?: string
-  coverImage?: string
-}
-
-interface ClientLogo {
-  name: string
-  logoUrl?: string
-  eventType?: string
-}
-
 interface Speaker {
   id: number
   name: string
@@ -101,10 +71,6 @@ interface Speaker {
   industries: string[]
   videos: Video[]
   testimonials: Testimonial[]
-  pastEvents?: PastEvent[]
-  awards?: Award[]
-  publications?: Publication[]
-  clientLogos?: ClientLogo[]
   speaking_fee_range: string
   travel_preferences: string
   technical_requirements: string
@@ -149,10 +115,6 @@ export default function AdminSpeakerEditPage() {
     industries: [] as string[],
     videos: [] as Video[],
     testimonials: [] as Testimonial[],
-    pastEvents: [] as PastEvent[],
-    awards: [] as Award[],
-    publications: [] as Publication[],
-    clientLogos: [] as ClientLogo[],
     speaking_fee_range: "",
     travel_preferences: "",
     technical_requirements: "",
@@ -169,10 +131,6 @@ export default function AdminSpeakerEditPage() {
   const [newProgram, setNewProgram] = useState("")
   const [newVideo, setNewVideo] = useState<Video>({ id: "", title: "", url: "", thumbnail: "" })
   const [newTestimonial, setNewTestimonial] = useState<Testimonial>({ quote: "", author: "" })
-  const [newPastEvent, setNewPastEvent] = useState<PastEvent>({ eventName: "" })
-  const [newAward, setNewAward] = useState<Award>({ title: "" })
-  const [newPublication, setNewPublication] = useState<Publication>({ title: "", type: "article" })
-  const [newClientLogo, setNewClientLogo] = useState<ClientLogo>({ name: "" })
 
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
@@ -287,10 +245,6 @@ export default function AdminSpeakerEditPage() {
           industries: speakerData.industries || [],
           videos: speakerData.videos || [],
           testimonials: speakerData.testimonials || [],
-          pastEvents: speakerData.pastEvents || [],
-          awards: speakerData.awards || [],
-          publications: speakerData.publications || [],
-          clientLogos: speakerData.clientLogos || [],
           speaking_fee_range: speakerData.speaking_fee_range || "",
           travel_preferences: speakerData.travel_preferences || "",
           technical_requirements: speakerData.technical_requirements || "",
@@ -498,75 +452,6 @@ export default function AdminSpeakerEditPage() {
     }))
   }
 
-  // Experience tab helper functions
-  const addPastEvent = () => {
-    if (newPastEvent.eventName.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        pastEvents: [...(prev.pastEvents || []), newPastEvent]
-      }))
-      setNewPastEvent({ eventName: "" })
-    }
-  }
-
-  const removePastEvent = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      pastEvents: (prev.pastEvents || []).filter((_, i) => i !== index)
-    }))
-  }
-
-  const addAward = () => {
-    if (newAward.title.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        awards: [...(prev.awards || []), newAward]
-      }))
-      setNewAward({ title: "" })
-    }
-  }
-
-  const removeAward = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      awards: (prev.awards || []).filter((_, i) => i !== index)
-    }))
-  }
-
-  const addPublication = () => {
-    if (newPublication.title.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        publications: [...(prev.publications || []), newPublication]
-      }))
-      setNewPublication({ title: "", type: "article" })
-    }
-  }
-
-  const removePublication = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      publications: (prev.publications || []).filter((_, i) => i !== index)
-    }))
-  }
-
-  const addClientLogo = () => {
-    if (newClientLogo.name.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        clientLogos: [...(prev.clientLogos || []), newClientLogo]
-      }))
-      setNewClientLogo({ name: "" })
-    }
-  }
-
-  const removeClientLogo = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      clientLogos: (prev.clientLogos || []).filter((_, i) => i !== index)
-    }))
-  }
-
   if (!isLoggedIn || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -635,7 +520,7 @@ export default function AdminSpeakerEditPage() {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               Profile
@@ -643,10 +528,6 @@ export default function AdminSpeakerEditPage() {
             <TabsTrigger value="content" className="flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
               Content
-            </TabsTrigger>
-            <TabsTrigger value="experience" className="flex items-center gap-2">
-              <Briefcase className="h-4 w-4" />
-              Experience
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -1055,302 +936,6 @@ export default function AdminSpeakerEditPage() {
                   <Button onClick={addVideo} size="sm">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Video
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Experience Tab */}
-          <TabsContent value="experience" className="space-y-6">
-            {/* Past Events */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Past Speaking Engagements</CardTitle>
-                <CardDescription>Previous events and conferences</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {(formData.pastEvents || []).map((event, index) => (
-                    <div key={index} className="border rounded p-3">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <h4 className="font-medium flex items-center gap-2">
-                            {event.eventName}
-                            {event.keynote && <Badge variant="secondary">Keynote</Badge>}
-                          </h4>
-                          <div className="text-sm text-gray-600 mt-1">
-                            {event.eventType && <span>{event.eventType}</span>}
-                            {event.location && <span> • {event.location}</span>}
-                            {event.date && <span> • {event.date}</span>}
-                          </div>
-                        </div>
-                        <Button
-                          onClick={() => removePastEvent(index)}
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="border rounded p-3 bg-gray-50">
-                  <h4 className="font-medium mb-2">Add Past Event</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
-                    <Input
-                      value={newPastEvent.eventName}
-                      onChange={(e) => setNewPastEvent(prev => ({ ...prev, eventName: e.target.value }))}
-                      placeholder="Event name *"
-                    />
-                    <Input
-                      value={newPastEvent.eventType || ""}
-                      onChange={(e) => setNewPastEvent(prev => ({ ...prev, eventType: e.target.value }))}
-                      placeholder="Event type (optional)"
-                    />
-                    <Input
-                      value={newPastEvent.location || ""}
-                      onChange={(e) => setNewPastEvent(prev => ({ ...prev, location: e.target.value }))}
-                      placeholder="Location (optional)"
-                    />
-                    <Input
-                      value={newPastEvent.date || ""}
-                      onChange={(e) => setNewPastEvent(prev => ({ ...prev, date: e.target.value }))}
-                      placeholder="Date (optional)"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Switch
-                      checked={newPastEvent.keynote || false}
-                      onCheckedChange={(checked) => setNewPastEvent(prev => ({ ...prev, keynote: checked }))}
-                    />
-                    <Label>Keynote presentation</Label>
-                  </div>
-                  <Button onClick={addPastEvent} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Past Event
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Awards */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Awards & Recognition</CardTitle>
-                <CardDescription>Professional awards and honors</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {(formData.awards || []).map((award, index) => (
-                    <div key={index} className="border rounded p-3">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h4 className="font-medium">{award.title}</h4>
-                          <div className="text-sm text-gray-600 mt-1">
-                            {award.organization && <span>{award.organization}</span>}
-                            {award.year && <span> • {award.year}</span>}
-                          </div>
-                          {award.description && (
-                            <p className="text-sm text-gray-600 mt-1">{award.description}</p>
-                          )}
-                        </div>
-                        <Button
-                          onClick={() => removeAward(index)}
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="border rounded p-3 bg-gray-50">
-                  <h4 className="font-medium mb-2">Add Award</h4>
-                  <div className="space-y-2">
-                    <Input
-                      value={newAward.title}
-                      onChange={(e) => setNewAward(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="Award title *"
-                    />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <Input
-                        value={newAward.organization || ""}
-                        onChange={(e) => setNewAward(prev => ({ ...prev, organization: e.target.value }))}
-                        placeholder="Organization (optional)"
-                      />
-                      <Input
-                        value={newAward.year || ""}
-                        onChange={(e) => setNewAward(prev => ({ ...prev, year: e.target.value }))}
-                        placeholder="Year (optional)"
-                      />
-                    </div>
-                    <Textarea
-                      value={newAward.description || ""}
-                      onChange={(e) => setNewAward(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Description (optional)"
-                      rows={2}
-                    />
-                  </div>
-                  <Button onClick={addAward} size="sm" className="mt-2">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Award
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Publications */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Publications</CardTitle>
-                <CardDescription>Books, articles, and research papers</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {(formData.publications || []).map((pub, index) => (
-                    <div key={index} className="border rounded p-3">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium">{pub.title}</h4>
-                            <Badge variant="outline">{pub.type}</Badge>
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {pub.publisher && <p>Publisher: {pub.publisher}</p>}
-                            {pub.date && <p>Date: {pub.date}</p>}
-                            {pub.link && (
-                              <a
-                                href={pub.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline flex items-center gap-1"
-                              >
-                                View publication
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                        <Button
-                          onClick={() => removePublication(index)}
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="border rounded p-3 bg-gray-50">
-                  <h4 className="font-medium mb-2">Add Publication</h4>
-                  <div className="space-y-2">
-                    <Input
-                      value={newPublication.title}
-                      onChange={(e) => setNewPublication(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="Publication title *"
-                    />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <div>
-                        <Label>Type</Label>
-                        <select
-                          value={newPublication.type}
-                          onChange={(e) => setNewPublication(prev => ({ ...prev, type: e.target.value as any }))}
-                          className="w-full p-2 border rounded"
-                        >
-                          <option value="book">Book</option>
-                          <option value="article">Article</option>
-                          <option value="research">Research Paper</option>
-                          <option value="whitepaper">Whitepaper</option>
-                        </select>
-                      </div>
-                      <Input
-                        value={newPublication.publisher || ""}
-                        onChange={(e) => setNewPublication(prev => ({ ...prev, publisher: e.target.value }))}
-                        placeholder="Publisher (optional)"
-                      />
-                      <Input
-                        value={newPublication.date || ""}
-                        onChange={(e) => setNewPublication(prev => ({ ...prev, date: e.target.value }))}
-                        placeholder="Date (optional)"
-                      />
-                      <Input
-                        value={newPublication.link || ""}
-                        onChange={(e) => setNewPublication(prev => ({ ...prev, link: e.target.value }))}
-                        placeholder="Link URL (optional)"
-                      />
-                    </div>
-                    <Input
-                      value={newPublication.coverImage || ""}
-                      onChange={(e) => setNewPublication(prev => ({ ...prev, coverImage: e.target.value }))}
-                      placeholder="Cover image URL (optional)"
-                    />
-                  </div>
-                  <Button onClick={addPublication} size="sm" className="mt-2">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Publication
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Client Logos */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Client Logos</CardTitle>
-                <CardDescription>Organizations the speaker has worked with</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {(formData.clientLogos || []).map((client, index) => (
-                    <div key={index} className="border rounded p-3 relative group">
-                      <Button
-                        onClick={() => removeClientLogo(index)}
-                        size="sm"
-                        variant="ghost"
-                        className="absolute top-1 right-1 text-red-600 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                      {client.logoUrl ? (
-                        <img src={client.logoUrl} alt={client.name} className="w-full h-12 object-contain" />
-                      ) : (
-                        <div className="text-sm font-medium text-center">{client.name}</div>
-                      )}
-                      {client.eventType && (
-                        <p className="text-xs text-gray-500 text-center mt-1">{client.eventType}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="border rounded p-3 bg-gray-50">
-                  <h4 className="font-medium mb-2">Add Client Logo</h4>
-                  <div className="space-y-2">
-                    <Input
-                      value={newClientLogo.name}
-                      onChange={(e) => setNewClientLogo(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Client/Organization name *"
-                    />
-                    <Input
-                      value={newClientLogo.logoUrl || ""}
-                      onChange={(e) => setNewClientLogo(prev => ({ ...prev, logoUrl: e.target.value }))}
-                      placeholder="Logo URL (optional)"
-                    />
-                    <Input
-                      value={newClientLogo.eventType || ""}
-                      onChange={(e) => setNewClientLogo(prev => ({ ...prev, eventType: e.target.value }))}
-                      placeholder="Event type (optional)"
-                    />
-                  </div>
-                  <Button onClick={addClientLogo} size="sm" className="mt-2">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Client
                   </Button>
                 </div>
               </CardContent>
