@@ -6,10 +6,37 @@ import { recordPageView, updateSession } from './lib/analytics-db'
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   const pathname = url.pathname
-  
+
   // URL normalization for SEO (before creating response)
   let shouldRedirect = false
-  
+
+  // List of known root-level routes that should NOT be redirected to /speakers/
+  const knownRoutes = [
+    '/',
+    '/speakers',
+    '/contact',
+    '/about',
+    '/blog',
+    '/our-services',
+    '/partners',
+    '/ai-workshops',
+    '/workshops',
+    '/conference-directory',
+    '/admin',
+    '/api',
+    '/clients',
+  ]
+
+  // Check if this is a root-level path (no nested paths)
+  const isRootLevelPath = pathname.split('/').filter(Boolean).length === 1
+
+  // If it's a root-level path and not a known route, redirect to /speakers/:slug
+  if (isRootLevelPath && !knownRoutes.includes(pathname) && !pathname.startsWith('/api/')) {
+    const slug = pathname.slice(1) // Remove leading slash
+    url.pathname = `/speakers/${slug}`
+    return NextResponse.redirect(url, 301)
+  }
+
   // Convert speaker and blog slugs to lowercase
   if (pathname.startsWith('/speakers/') || pathname.startsWith('/blog/')) {
     const lowerPathname = pathname.toLowerCase()
@@ -18,13 +45,13 @@ export async function middleware(request: NextRequest) {
       shouldRedirect = true
     }
   }
-  
+
   // Remove trailing slash except for homepage
   if (pathname !== '/' && pathname.endsWith('/')) {
     url.pathname = pathname.slice(0, -1)
     shouldRedirect = true
   }
-  
+
   // Redirect if URL needs normalization
   if (shouldRedirect) {
     return NextResponse.redirect(url, 301)
