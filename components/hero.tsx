@@ -18,11 +18,11 @@ export default function Hero() {
 
             {/* Main Headline - Optimized for SEO with bolder hierarchy and modern gradient */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-black mb-4 leading-[1.1] font-neue-haas tracking-tight">
-              Book <span className="bg-gradient-to-r from-[#1E68C6] via-blue-600 to-[#1E68C6] bg-clip-text text-transparent">World-Class AI Speakers</span>
+              Book an <span className="bg-gradient-to-r from-[#1E68C6] via-blue-600 to-[#1E68C6] bg-clip-text text-transparent">AI Speaker</span> for Your Event
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-800 mb-6 font-montserrat font-semibold leading-tight">
-              Exclusive access to 70+ AI pioneers including Siri Co-Founders, OpenAI Staff, and Stanford Researchers
+              The #1 AI speaker bureau with exclusive access to 70+ AI pioneers including Siri Co-Founders, OpenAI Staff, and Stanford Researchers
             </p>
 
             {/* CTA Buttons */}

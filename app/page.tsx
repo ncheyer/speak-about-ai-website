@@ -12,11 +12,11 @@ import { Button } from "@/components/ui/button"
 import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
 
 export const metadata: Metadata = {
-  title: "AI Keynote Speakers - Book Top AI Experts for Your Event | Speak About AI",
+  title: "AI Speaker Bureau - Book Top AI Keynote Speakers | Speak About AI",
   description:
-    "Book AI keynote speakers from the #1 AI-exclusive bureau. 70+ experts including Siri founders, OpenAI staff & Stanford researchers.",
+    "Book an AI speaker from the #1 AI-exclusive speaker bureau. 70+ experts including Siri founders, OpenAI staff & Stanford researchers for your event.",
   keywords:
-    "AI keynote speakers, AI keynote speaker, artificial intelligence speakers, AI speakers, AI speaker bureau, book AI speaker, AI conference speakers, machine learning speakers, AI expert speakers, generative AI speakers, ChatGPT speakers, AI motivational speakers",
+    "AI speaker, AI speaker bureau, book AI speaker, AI keynote speakers, AI keynote speaker, artificial intelligence speakers, AI speakers, AI conference speakers, machine learning speakers, AI expert speakers, generative AI speakers, ChatGPT speakers, AI motivational speakers",
   openGraph: {
     title: "AI Keynote Speakers | Book Top AI Speakers for 2025",
     description:
