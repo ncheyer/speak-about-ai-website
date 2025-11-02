@@ -17,7 +17,7 @@ export default function Header() {
           <Link href="/" className="flex items-center">
             <Image
               src="/speak-about-ai-logo.png"
-              alt="Speak About AI"
+              alt="Speak About AI - AI Keynote Speaker Bureau Logo"
               width={200}
               height={60}
               priority

@@ -16,25 +16,25 @@ export default function ClientLogos() {
     {
       name: "Stanford University",
       src: "/logos/stanford-university-logo-1024x335-1.png",
-      alt: "Stanford University logo",
+      alt: "Stanford University - Academic institution partnering with AI speaker bureau for tech conferences",
       size: "small",
     },
     {
       name: "Google",
       src: "/logos/Google_2015_logo.svg.png",
-      alt: "Google logo",
+      alt: "Google - Technology leader using AI keynote speakers for corporate events",
       size: "small",
     },
     {
       name: "Amazon",
       src: "/logos/Amazon-Logo-2000.png",
-      alt: "Amazon logo",
+      alt: "Amazon - E-commerce and cloud computing company booking AI expert speakers",
       size: "default",
     },
     {
       name: "Visa",
       src: "/logos/Visa_Inc._logo.svg",
-      alt: "Visa Inc. logo",
+      alt: "Visa - Global payments company using AI speakers for fintech conferences",
       size: "small",
     },
     {
@@ -70,7 +70,7 @@ export default function ClientLogos() {
     {
       name: "KPMG",
       src: "/logos/KPMG_logo.svg.png",
-      alt: "KPMG logo",
+      alt: "KPMG - Professional services firm booking AI speakers for business conferences",
       size: "default",
     },
   ]

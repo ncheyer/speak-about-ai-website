@@ -46,7 +46,7 @@ export default function TeamMembers() {
                   priority
                 />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-1 font-neue-haas text-center">{member.name}</h3>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1 font-neue-haas text-center">{member.name}</h2>
               <p className="text-[#1E68C6] font-semibold mb-4 font-montserrat text-center">{member.title}</p>
               <p className="text-gray-600 text-center mb-4 font-montserrat leading-relaxed">{member.bio}</p>
 

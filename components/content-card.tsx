@@ -77,11 +77,11 @@ export function ContentCard({ item }: ContentCardProps) {
         </div>
 
         {/* Title */}
-        <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors duration-200">
+        <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors duration-200">
           <Link href={linkHref}>
             {item.title}
           </Link>
-        </h3>
+        </h2>
 
         {/* Excerpt */}
         <p className="text-gray-600 mb-6 line-clamp-3 text-sm leading-relaxed">

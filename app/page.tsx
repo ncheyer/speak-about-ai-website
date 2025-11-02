@@ -14,7 +14,7 @@ import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
 export const metadata: Metadata = {
   title: "AI Keynote Speakers - Book Top AI Experts for Your Event | Speak About AI",
   description:
-    "Book AI keynote speakers from the #1 AI-exclusive speaker bureau. 70+ artificial intelligence experts including Siri founders, OpenAI staff & Stanford researchers. Get pricing & availability.",
+    "Book AI keynote speakers from the #1 AI-exclusive bureau. 70+ experts including Siri founders, OpenAI staff & Stanford researchers.",
   keywords:
     "AI keynote speakers, AI keynote speaker, artificial intelligence speakers, AI speakers, AI speaker bureau, book AI speaker, AI conference speakers, machine learning speakers, AI expert speakers, generative AI speakers, ChatGPT speakers, AI motivational speakers",
   openGraph: {
