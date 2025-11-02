@@ -45,8 +45,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://speakabout.ai",
-    siteName: "Speak About AI",
-    title: "Speak About AI - Premier AI Keynote Speakers Bureau",
+    title: "AI Keynote Speakers - Premier AI Speaking Bureau",
     description:
       "Book world-class AI keynote speakers for your next event. Our expert speakers include AI pioneers, researchers, and industry leaders.",
     images: [
