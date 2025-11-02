@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Quote, Building2, MapPin, User } from "lucide-react"
+import { Quote, Building2, MapPin, User, CalendarCheck } from "lucide-react"
 
 interface Speaker {
   name: string
   slug: string
+  title: string
+  headshot: string
 }
 
 interface CaseStudy {
@@ -17,6 +19,7 @@ interface CaseStudy {
   location: string
   eventType: string
   image: string
+  imageAlt: string
   testimonial: string
   speakers: Speaker[]
   impact: string[]
@@ -27,16 +30,96 @@ export default function ClientCaseStudies() {
 
   const caseStudies: CaseStudy[] = [
     {
+      id: "st-engineering",
+      company: "ST Engineering",
+      logo: "/logos/st-engineering-logo.png",
+      location: "Singapore",
+      eventType: "Engineering Innovation Forum",
+      image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/20240903-STE-InnoTech-A-175.jpg",
+      imageAlt: "ST Engineering AI Innovation Forum in Singapore - AI keynote speaker Lucien Engelen presenting artificial intelligence insights to engineering professionals on aerospace defense and smart city technologies",
+      testimonial: "Exceptional expertise in AI applications for aerospace, defense, and smart city technologies that inspired our engineering teams.",
+      speakers: [
+        {
+          name: "Lucien Engelen",
+          slug: "lucien-engelen",
+          title: "Healthcare Innovation Expert & Digital Transformation Leader",
+          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/lucien-engelen-headshot-1749733448794.jpg"
+        }
+      ],
+      impact: [
+        "Cross-sector AI innovation insights",
+        "Defense and aerospace applications",
+        "Smart city technology roadmap"
+      ]
+    },
+    {
+      id: "hansen",
+      company: "Hansen Technologies",
+      logo: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/Hansen-Technologies.-Powering-the-Next-Age-of-Digital-Experience-.jpg",
+      location: "Columbia, South Carolina",
+      eventType: "Customer Conference",
+      image: "/case-studies/hansen-event.jpg",
+      imageAlt: "Hansen Technologies Customer Conference Columbia South Carolina - Brittany Hodak keynote speaker presenting AI strategies for utilities and telecommunications digital transformation",
+      testimonial: "Delivered cutting-edge AI insights for utility and telecommunications sectors, driving digital transformation strategies across our global operations.",
+      speakers: [
+        {
+          name: "Brittany Hodak",
+          slug: "brittany-hodak",
+          title: "Customer Experience Expert & Keynote Speaker",
+          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/brittany-hodak-headshot-1752742665518.jpg"
+        }
+      ],
+      impact: [
+        "Enterprise AI strategy development",
+        "Utilities and telecom innovation",
+        "Digital transformation roadmap"
+      ]
+    },
+    {
+      id: "rio-innovation-week",
+      company: "Rio Innovation Week",
+      logo: "/logos/rio-innovation-week-logo.png",
+      location: "São Paulo, Brazil",
+      eventType: "Innovation & Technology Conference",
+      image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/14082024_AL_Peter Norvig_3841 (1).JPG",
+      imageAlt: "Rio Innovation Week São Paulo Brazil - Peter Norvig AI keynote speaker presenting artificial intelligence and innovation insights at Latin America's premier technology conference",
+      testimonial: "Delivered transformative AI insights that inspired innovation leaders across Latin America's largest technology and entrepreneurship event.",
+      speakers: [
+        {
+          name: "Peter Norvig",
+          slug: "peter-norvig",
+          title: "Former Director of Research at Google, Co-Author of AI Textbook",
+          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/peter-norvig-headshot-1749608907310.jpg"
+        }
+      ],
+      impact: [
+        "Latin American innovation ecosystem insights",
+        "AI-driven entrepreneurship strategies",
+        "Regional technology transformation"
+      ]
+    },
+    {
       id: "nice",
       company: "NICE",
       logo: "/logos/nice-logo.png",
-      location: "Global",
-      eventType: "Corporate Conference",
+      location: "Virtual",
+      eventType: "Global Training Webinar",
       image: "/case-studies/nice-event.jpg",
+      imageAlt: "NICE Global Training Webinar - Adam Cheyer and Maya Ackerman presenting customer experience AI transformation to enterprise decision-makers in virtual training session",
       testimonial: "Outstanding AI expertise that resonated with our global audience and delivered actionable insights for our customer experience transformation.",
       speakers: [
-        { name: "Adam Cheyer", slug: "adam-cheyer" },
-        { name: "Maya Ackerman", slug: "maya-ackerman" }
+        {
+          name: "Adam Cheyer",
+          slug: "adam-cheyer",
+          title: "VP of AI Experience at Airbnb, Co-Founder of Siri",
+          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/adam-cheyer-headshot-1749607372221.jpg"
+        },
+        {
+          name: "Maya Ackerman",
+          slug: "maya-ackerman",
+          title: "AI Research Scientist & Professor at Santa Clara University",
+          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/Maya-Ackerman-Headshot-1749732144887.jpg"
+        }
       ],
       impact: [
         "Engaged 500+ enterprise decision-makers",
@@ -48,85 +131,98 @@ export default function ClientCaseStudies() {
       id: "juniper",
       company: "Juniper Networks",
       logo: "/logos/juniper-networks-logo.svg",
-      location: "United States",
-      eventType: "Tech Leadership Summit",
-      image: "/case-studies/juniper-event.jpg",
-      testimonial: "World-class AI thought leadership that elevated our networking innovation summit with cutting-edge insights on AI-driven solutions.",
+      location: "Virtual",
+      eventType: "Marketing Webinar",
+      image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/1707414885816.jpeg",
+      imageAlt: "Juniper Networks AI Marketing Webinar - Peter Norvig presenting AI insights to drive client acquisition among developers and educate existing clients on artificial intelligence",
+      testimonial: "Exceptional AI thought leadership that drove significant client engagement and educated our developer community on cutting-edge AI-driven networking solutions.",
       speakers: [
-        { name: "Peter Norvig", slug: "peter-norvig" }
+        {
+          name: "Peter Norvig",
+          slug: "peter-norvig",
+          title: "Former Director of Research at Google, Co-Author of AI Textbook",
+          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/peter-norvig-headshot-1749608907310.jpg"
+        }
       ],
       impact: [
-        "Technology innovation showcase",
-        "AI-driven networking solutions",
-        "Executive-level strategic insights"
-      ]
-    },
-    {
-      id: "st-engineering",
-      company: "ST Engineering",
-      logo: "/logos/st-engineering-logo.png",
-      location: "Singapore",
-      eventType: "Engineering Innovation Forum",
-      image: "/case-studies/st-engineering-event.jpg",
-      testimonial: "Exceptional expertise in AI applications for aerospace, defense, and smart city technologies that inspired our engineering teams.",
-      speakers: [
-        { name: "Lucien Engelen", slug: "lucien-engelen" }
-      ],
-      impact: [
-        "Cross-sector AI innovation insights",
-        "Defense and aerospace applications",
-        "Smart city technology roadmap"
-      ]
-    },
-    {
-      id: "korea",
-      company: "Gyeonggi Province",
-      logo: "/logos/korea-government-logo.png",
-      location: "South Korea",
-      eventType: "Government Technology Forum",
-      image: "/case-studies/korea-event.jpg",
-      testimonial: "Delivered compelling AI policy insights for public sector digital transformation and innovation initiatives across our region.",
-      speakers: [
-        { name: "Peter Norvig", slug: "peter-norvig" }
-      ],
-      impact: [
-        "Government AI policy framework",
-        "Public sector digital transformation",
-        "Regional innovation strategy"
-      ]
-    },
-    {
-      id: "hansen",
-      company: "Hansen Technologies",
-      logo: "/logos/hansen-technologies-logo.png",
-      location: "Australia",
-      eventType: "Technology Conference",
-      image: "/case-studies/hansen-event.jpg",
-      testimonial: "Delivered cutting-edge AI insights for utility and telecommunications sectors, driving digital transformation strategies across our global operations.",
-      speakers: [
-        { name: "Brittany Hodak", slug: "brittany-hodak" }
-      ],
-      impact: [
-        "Enterprise AI strategy development",
-        "Utilities and telecom innovation",
-        "Digital transformation roadmap"
+        "Client acquisition among developers",
+        "Education on AI-driven networking solutions",
+        "Enhanced developer and client engagement"
       ]
     },
     {
       id: "litman-gregory",
       company: "Litman Gregory",
-      logo: "/logos/litman-gregory-logo.png",
+      logo: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/litman_gregory_logo.jpeg",
       location: "United States",
-      eventType: "Investment Conference",
+      eventType: "Annual Client Education Event",
       image: "/case-studies/litman-gregory-event.jpg",
-      testimonial: "Brought transformative insights on digital disruption and emerging technologies that reshaped our understanding of future market opportunities.",
+      imageAlt: "Litman Gregory Annual Investment Event - Jeremiah Owyang presenting AI market impact and investment trends for wealth management clients",
+      testimonial: "Jeremiah delivered exceptional insights on how AI will reshape investment markets and helped our clients identify key trends to watch, making complex technology accessible and actionable for wealth management.",
       speakers: [
-        { name: "Jeremiah Owyang", slug: "jeremiah-owyang" }
+        {
+          name: "Jeremiah Owyang",
+          slug: "jeremiah-owyang",
+          title: "Tech Industry Analyst & Digital Transformation Expert",
+          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/jeremiah-owyang-headshot-1749730844346.jpg"
+        }
       ],
       impact: [
-        "Strategic investment insights",
-        "Digital transformation framework",
-        "Emerging technology analysis"
+        "Client education on AI's impact on investment markets",
+        "Identification of key technology trends for investors",
+        "Actionable insights for wealth management strategy"
+      ]
+    },
+    {
+      id: "chapman-university",
+      company: "Chapman University",
+      logo: "/logos/chapman-university-logo.png",
+      location: "Orange, California",
+      eventType: "Academic AI Symposium",
+      image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/IMG_075.jpg",
+      imageAlt: "Chapman University AI Symposium - Noah Cheyer and Adam Cheyer presenting artificial intelligence insights to students faculty and researchers on practical AI applications and innovation",
+      testimonial: "Delivered exceptional insights on AI innovation and practical applications that inspired our academic community and enriched our understanding of cutting-edge technology.",
+      speakers: [
+        {
+          name: "Noah Cheyer",
+          slug: "noah-cheyer",
+          title: "Founder of Speak About AI",
+          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/noah-cheyer-new-headshot.jpg"
+        },
+        {
+          name: "Adam Cheyer",
+          slug: "adam-cheyer",
+          title: "VP of AI Experience at Airbnb, Co-Founder of Siri",
+          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/adam-cheyer-headshot-1749607372221.jpg"
+        }
+      ],
+      impact: [
+        "Academic AI education and research insights",
+        "Practical AI implementation strategies for education",
+        "Next-generation technology thought leadership"
+      ]
+    },
+    {
+      id: "speak-about-ai-conference",
+      company: "Speak About AI Conference",
+      logo: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/speak-about-ai-logo.png",
+      location: "San Francisco, California",
+      eventType: "AI Industry Conference",
+      image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/robert-strong-speak-about-ai.jpg",
+      imageAlt: "Speak About AI Conference San Francisco - Robert Strong serving as MC and emcee for premier AI industry conference bringing together thought leaders innovators and practitioners",
+      testimonial: "Robert Strong brought exceptional energy and professionalism as MC, seamlessly guiding our AI conference and ensuring engaging interactions between speakers and attendees.",
+      speakers: [
+        {
+          name: "Robert Strong",
+          slug: "robert-strong",
+          title: "Professional MC & Event Host",
+          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/robert-strong-headshot-speak-about-ai.png"
+        }
+      ],
+      impact: [
+        "Seamless conference flow and professional hosting",
+        "Engaging Q&A moderation and speaker introductions",
+        "Enhanced attendee experience and networking"
       ]
     }
   ]
@@ -183,7 +279,7 @@ export default function ClientCaseStudies() {
                 )}
                 <img
                   src={study.image || "/placeholder.svg"}
-                  alt={`${study.company} event`}
+                  alt={study.imageAlt}
                   className={`w-full h-full object-cover transition-opacity duration-300 ${
                     loadedImages.has(study.id) ? "opacity-100" : "opacity-0"
                   }`}
@@ -219,19 +315,52 @@ export default function ClientCaseStudies() {
                 {/* Featured Speakers */}
                 {study.speakers && study.speakers.length > 0 && (
                   <div className="mb-6 pb-6 border-b border-gray-200">
-                    <h4 className="text-sm font-bold text-gray-900 font-neue-haas mb-3 flex items-center">
+                    <h4 className="text-sm font-bold text-gray-900 font-neue-haas mb-4 flex items-center">
                       <User className="w-4 h-4 mr-2 text-[#1E68C6]" />
                       Featured Speaker{study.speakers.length > 1 ? 's' : ''}:
                     </h4>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="space-y-4">
                       {study.speakers.map((speaker, idx) => (
-                        <Link
-                          key={idx}
-                          href={`/speakers/${speaker.slug}`}
-                          className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#1E68C6] to-blue-600 text-white rounded-lg text-sm font-semibold font-montserrat hover:shadow-lg transition-all duration-300 hover:scale-105"
-                        >
-                          {speaker.name}
-                        </Link>
+                        <div key={idx} className="flex items-start gap-4 bg-gradient-to-r from-blue-50 to-transparent p-4 rounded-lg border border-blue-100">
+                          {/* Speaker Headshot */}
+                          <Link href={`/speakers/${speaker.slug}`} className="flex-shrink-0">
+                            <img
+                              src={speaker.headshot}
+                              alt={speaker.name}
+                              className="w-20 h-20 rounded-full object-cover border-2 border-[#1E68C6] hover:border-[#D4AF37] transition-all duration-300"
+                            />
+                          </Link>
+
+                          {/* Speaker Info and CTA */}
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/speakers/${speaker.slug}`} className="group">
+                              <h5 className="text-lg font-bold text-gray-900 font-neue-haas group-hover:text-[#1E68C6] transition-colors">
+                                {speaker.name}
+                              </h5>
+                              <p className="text-sm text-gray-600 font-montserrat mt-1 leading-snug">
+                                {speaker.title}
+                              </p>
+                            </Link>
+
+                            {/* Book Speaker CTA */}
+                            <div className="mt-3">
+                              <Button
+                                asChild
+                                variant="gold"
+                                size="sm"
+                                className="font-montserrat font-bold shadow-lg hover:shadow-xl transition-all duration-300"
+                              >
+                                <Link
+                                  href={`/contact?source=case_study_${study.id}&speakerName=${encodeURIComponent(speaker.name)}`}
+                                  className="inline-flex items-center gap-2"
+                                >
+                                  <CalendarCheck className="w-4 h-4" />
+                                  Book Speaker Today
+                                </Link>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>

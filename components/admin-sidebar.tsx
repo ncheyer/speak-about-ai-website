@@ -180,6 +180,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           bgColor: "bg-teal-50"
         },
         {
+          title: "Case Studies",
+          href: "/admin/case-studies",
+          icon: Building2,
+          description: "Client Success Stories",
+          color: "text-cyan-600",
+          bgColor: "bg-cyan-50"
+        },
+        {
           title: "Activity Log",
           href: "/admin/activity",
           icon: Activity,
