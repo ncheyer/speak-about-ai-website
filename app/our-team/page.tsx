@@ -5,11 +5,11 @@ import TeamValues from "@/components/team-values"
 import JoinTeam from "@/components/join-team"
 
 export const metadata: Metadata = {
-  title: "AI Speaker Bureau Team - Expert Booking Agents | Speak About AI",
+  title: "Meet Our Team | Speak About AI",
   description:
-    "Expert AI speaker bureau team connecting you with top AI keynote speakers. World's only AI-exclusive speaker bureau with dedicated booking agents.",
+    "Meet the Speak About AI team, your experts for connecting you with top AI keynote speakers. We're the world's only AI-exclusive speaker bureau.",
   keywords:
-    "AI speaker bureau team, AI booking agents, AI keynote speaker experts, artificial intelligence bureau staff, speaker booking team",
+    "AI speaker bureau team, Speak About AI team, AI keynote speaker experts, artificial intelligence bureau staff",
   alternates: {
     canonical: "https://speakabout.ai/our-team",
   },

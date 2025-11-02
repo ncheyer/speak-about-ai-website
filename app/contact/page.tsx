@@ -2,10 +2,10 @@ import type { Metadata } from "next"
 import { ContactFormWrapper } from "@/components/contact-form-wrapper"
 
 export const metadata: Metadata = {
-  title: "Book AI Keynote Speakers - Contact Our Bureau | Speak About AI",
+  title: "Contact AI Speaker Bureau | Speak About AI", // 43 chars
   description:
-    "Book top AI keynote speakers for your event. Get personalized speaker recommendations, check availability, and receive custom proposals. Contact us today.",
-  keywords: "book AI keynote speakers, contact AI speakers, AI speaker availability, AI speaker bureau contact, book AI speaker",
+    "Contact Speak About AI to book top AI keynote speakers. Get personalized recommendations and check availability for your event. Reach out today.",
+  keywords: "contact AI speakers, book AI keynote speakers, AI speaker availability, AI speaker bureau contact",
   alternates: {
     canonical: "https://speakabout.ai/contact",
   },
