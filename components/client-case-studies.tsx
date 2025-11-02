@@ -21,6 +21,8 @@ interface CaseStudy {
   image: string
   imageAlt: string
   testimonial: string
+  testimonialAuthor?: string
+  testimonialTitle?: string
   speakers: Speaker[]
   impact: string[]
 }
@@ -42,7 +44,7 @@ export default function ClientCaseStudies() {
         {
           name: "Lucien Engelen",
           slug: "lucien-engelen",
-          title: "Healthcare Innovation Expert & Digital Transformation Leader",
+          title: "TransformHealth CEO and Healthcare Visionary",
           headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/lucien-engelen-headshot-1749733448794.jpg"
         }
       ],
@@ -60,12 +62,14 @@ export default function ClientCaseStudies() {
       eventType: "Customer Conference",
       image: "/case-studies/hansen-event.jpg",
       imageAlt: "Hansen Technologies Customer Conference Columbia South Carolina - Brittany Hodak keynote speaker presenting AI strategies for utilities and telecommunications digital transformation",
-      testimonial: "Delivered cutting-edge AI insights for utility and telecommunications sectors, driving digital transformation strategies across our global operations.",
+      testimonial: "Though this was our first time working with them and they were a random find; I thought the whole interaction from first meeting to speaker execution were fantastic. I would definitely go through Speak About AI again on speaker needs in the technology field.",
+      testimonialAuthor: "Fengning Yu",
+      testimonialTitle: "Marketing Manager",
       speakers: [
         {
           name: "Brittany Hodak",
           slug: "brittany-hodak",
-          title: "Customer Experience Expert & Keynote Speaker",
+          title: "Speaker & Author",
           headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/brittany-hodak-headshot-1752742665518.jpg"
         }
       ],
@@ -88,7 +92,7 @@ export default function ClientCaseStudies() {
         {
           name: "Peter Norvig",
           slug: "peter-norvig",
-          title: "Former Director of Research at Google, Co-Author of AI Textbook",
+          title: "Former Director of Research at Google, AI Pioneer",
           headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/peter-norvig-headshot-1749608907310.jpg"
         }
       ],
@@ -106,7 +110,9 @@ export default function ClientCaseStudies() {
       eventType: "Global Training Webinar",
       image: "/case-studies/nice-event.jpg",
       imageAlt: "NICE Global Training Webinar - Adam Cheyer and Maya Ackerman presenting customer experience AI transformation to enterprise decision-makers in virtual training session",
-      testimonial: "Outstanding AI expertise that resonated with our global audience and delivered actionable insights for our customer experience transformation.",
+      testimonial: "We had a better turnout that we expected – ~1000 employees from all around the globe jumped on each virtual talk and held a lively chat. The content and presentation exceeded our expectations as well.",
+      testimonialAuthor: "Lee B.",
+      testimonialTitle: "Global Learning Manager",
       speakers: [
         {
           name: "Adam Cheyer",
@@ -117,7 +123,7 @@ export default function ClientCaseStudies() {
         {
           name: "Maya Ackerman",
           slug: "maya-ackerman",
-          title: "AI Research Scientist & Professor at Santa Clara University",
+          title: "CEO/Co-founder of WaveAI, Santa Clara University Professor",
           headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/Maya-Ackerman-Headshot-1749732144887.jpg"
         }
       ],
@@ -135,12 +141,14 @@ export default function ClientCaseStudies() {
       eventType: "Marketing Webinar",
       image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/1707414885816.jpeg",
       imageAlt: "Juniper Networks AI Marketing Webinar - Peter Norvig presenting AI insights to drive client acquisition among developers and educate existing clients on artificial intelligence",
-      testimonial: "Exceptional AI thought leadership that drove significant client engagement and educated our developer community on cutting-edge AI-driven networking solutions.",
+      testimonial: "The event was great!! We had incredible interest and saw strong numbers. The process was smooth and your communication was fantastic. Truly, I don't know if there's anything I could think of to improve.",
+      testimonialAuthor: "Rachel F.",
+      testimonialTitle: "Marketing Campaign Manager",
       speakers: [
         {
           name: "Peter Norvig",
           slug: "peter-norvig",
-          title: "Former Director of Research at Google, Co-Author of AI Textbook",
+          title: "Former Director of Research at Google, AI Pioneer",
           headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/peter-norvig-headshot-1749608907310.jpg"
         }
       ],
@@ -163,7 +171,7 @@ export default function ClientCaseStudies() {
         {
           name: "Jeremiah Owyang",
           slug: "jeremiah-owyang",
-          title: "Tech Industry Analyst & Digital Transformation Expert",
+          title: "General Partner, Blitzscaling Ventures. Llama Lounge, AI Event Founder",
           headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/jeremiah-owyang-headshot-1749730844346.jpg"
         }
       ],
@@ -186,7 +194,7 @@ export default function ClientCaseStudies() {
         {
           name: "Noah Cheyer",
           slug: "noah-cheyer",
-          title: "Founder of Speak About AI",
+          title: "Co-Founder, Head of Marketing & Operations at Speak About AI",
           headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/noah-cheyer-new-headshot.jpg"
         },
         {
@@ -215,7 +223,7 @@ export default function ClientCaseStudies() {
         {
           name: "Robert Strong",
           slug: "robert-strong",
-          title: "Professional MC & Event Host",
+          title: "Magician, Author, and Speaker",
           headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/robert-strong-headshot-speak-about-ai.png"
         }
       ],
@@ -369,9 +377,21 @@ export default function ClientCaseStudies() {
                 {/* Testimonial */}
                 <div className="mb-6 relative">
                   <Quote className="absolute -top-2 -left-2 w-8 h-8 text-[#1E68C6] opacity-20" />
-                  <p className="text-gray-700 font-montserrat leading-relaxed pl-6 italic">
+                  <p className="text-gray-700 font-montserrat leading-relaxed pl-6 italic mb-3">
                     "{study.testimonial}"
                   </p>
+                  {study.testimonialAuthor && (
+                    <div className="pl-6 mt-3">
+                      <p className="text-gray-900 font-bold font-neue-haas text-sm">
+                        — {study.testimonialAuthor}
+                      </p>
+                      {study.testimonialTitle && (
+                        <p className="text-gray-600 font-montserrat text-xs mt-0.5">
+                          {study.testimonialTitle}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Impact Points */}
