@@ -1,6 +1,15 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { ArrowRight } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export default function ClientLogos() {
   const clients = [
@@ -79,49 +88,66 @@ export default function ClientLogos() {
           </p>
         </div>
       </div>
-      <div className="relative w-full overflow-hidden py-1">
-        {/* Added gap-x-16 for spacing between logos */}
-        <div className="flex animate-marquee gap-x-16">
-          {allClients.map((client, index) => (
-            // Removed px-8 from here
-            <div key={index} className="flex-shrink-0 flex items-center justify-center py-2">
-              <Image
-                src={client.src || "/placeholder.svg"}
-                alt={client.alt}
-                // Increased width and height for larger logos
-                width={
-                  client.size === "super-large"
-                    ? 800 // Increased from 600
-                    : client.size === "extra-large"
-                      ? 500 // Increased from 400
-                      : client.size === "small"
-                        ? 250 // Increased from 200
-                        : 400 // Increased from 320
-                }
-                height={
-                  client.size === "super-large"
-                    ? 400 // Increased from 300
-                    : client.size === "extra-large"
-                      ? 250 // Increased from 200
-                      : client.size === "small"
-                        ? 120 // Increased from 100
-                        : 200 // Increased from 160
-                }
-                className={`w-auto object-contain opacity-80 hover:opacity-100 transition-opacity duration-300 ${
-                  // Increased h-* classes for larger logos
-                  client.size === "super-large"
-                    ? "h-64" // Increased from h-48
-                    : client.size === "extra-large"
-                      ? "h-40" // Increased from h-32
-                      : client.size === "small"
-                        ? "h-24" // Increased from h-16
-                        : "h-32" // Increased from h-24
-                }`}
-                loading="lazy"
-              />
-            </div>
-          ))}
+      <TooltipProvider>
+        <div className="relative w-full overflow-hidden py-1">
+          {/* Added gap-x-16 for spacing between logos - faster animation */}
+          <div className="flex animate-marquee-fast gap-x-16">
+            {allClients.map((client, index) => (
+              // Removed px-8 from here
+              <Tooltip key={index}>
+                <TooltipTrigger asChild>
+                  <div className="flex-shrink-0 flex items-center justify-center py-2 cursor-pointer">
+                    <Image
+                      src={client.src || "/placeholder.svg"}
+                      alt={client.alt}
+                      width={
+                        client.size === "super-large"
+                          ? 800
+                          : client.size === "extra-large"
+                            ? 500
+                            : client.size === "small"
+                              ? 250
+                              : 400
+                      }
+                      height={
+                        client.size === "super-large"
+                          ? 400
+                          : client.size === "extra-large"
+                            ? 250
+                            : client.size === "small"
+                              ? 120
+                              : 200
+                      }
+                      className={`w-auto object-contain opacity-80 hover:opacity-100 transition-opacity duration-300 ${
+                        client.size === "super-large"
+                          ? "h-64"
+                          : client.size === "extra-large"
+                            ? "h-40"
+                            : client.size === "small"
+                              ? "h-24"
+                              : "h-32"
+                      }`}
+                      loading="lazy"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-semibold">{client.name}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
         </div>
+      </TooltipProvider>
+
+      {/* View Past Clients & Events Link */}
+      <div className="text-center mt-8 pb-4">
+        <Button asChild variant="outline" size="lg" className="font-montserrat font-semibold">
+          <Link href="/partners" className="flex items-center">
+            View Past Clients & Events
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Link>
+        </Button>
       </div>
     </section>
   )

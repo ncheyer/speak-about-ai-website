@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Menu, X, Phone, Users } from "lucide-react"
+import { Menu, X, Phone, Users, Mail, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button" // Import the Button component
 
 export default function Header() {
@@ -33,7 +33,7 @@ export default function Header() {
             <Link href="/speakers" className="text-gray-700 hover:text-[#1E68C6] font-medium">
               Speakers
             </Link>
-            <Link href="/workshops" className="text-gray-700 hover:text-[#1E68C6] font-medium">
+            <Link href="/ai-workshops" className="text-gray-700 hover:text-[#1E68C6] font-medium">
               Workshops
             </Link>
             <Link href="/our-services" className="text-gray-700 hover:text-[#1E68C6] font-medium">
@@ -67,7 +67,7 @@ export default function Header() {
             <Button
               asChild
               variant="gold"
-              size="sm" // Using 'sm' for a more compact nav button
+              size="sm"
               className="font-montserrat font-bold"
             >
               <Link href="/contact">Book Speaker Today</Link>
@@ -99,7 +99,7 @@ export default function Header() {
                 Speakers
               </Link>
               <Link
-                href="/workshops"
+                href="/ai-workshops"
                 className="text-gray-700 hover:text-[#1E68C6] font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >

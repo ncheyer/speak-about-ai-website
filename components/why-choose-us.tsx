@@ -1,42 +1,89 @@
 import { Shield, Clock, Users, Headphones, Target, Globe } from "lucide-react"
 
+interface Feature {
+  icon: any
+  title: string
+  description: string
+  highlights?: string[]
+}
+
 export default function WhyChooseUs() {
-  const features = [
+  const features: Feature[] = [
+    {
+      icon: Users,
+      title: "Access to Exclusive AI Pioneers",
+      description:
+        "Direct connections to the architects of modern AI—Siri co-founders, former Shazam executives, and the researchers who literally authored the AI textbooks.",
+      highlights: [
+        "Innovators who built products used by billions",
+        "Stanford & MIT faculty and researchers",
+        "Former executives from OpenAI, Google, Meta, Amazon"
+      ]
+    },
     {
       icon: Shield,
-      title: "We're On Your Team",
+      title: "24-Hour Response Guarantee",
       description:
-        "Lightning-fast 24-hour response guarantee, rain or shine. Whether you need a speaker in three days or three months, we work around the clock to secure the perfect match for your event.",
+        "Lightning-fast turnaround, guaranteed. From first inquiry to booking:",
+      highlights: [
+        "Initial response: within 24 hours of inquiry",
+        "Custom recommendations matched to your event needs",
+        "Speaker availability check: we reach out to speakers immediately",
+        "Contract finalization: 3-5 business days after speaker confirmation",
+        "Typical booking timeline: 1-2 weeks for most engagements"
+      ]
     },
     {
       icon: Headphones,
-      title: "We Handle Your Logistical Headaches",
+      title: "White-Glove Speaker Coordination",
       description:
-        "Event planning is complex enough without speaker booking stress. We proactively manage travel contingencies and maintain backup options, so you're never left scrambling if emergencies arise.",
+        "We ensure seamless execution from booking to showtime:",
+      highlights: [
+        "Pre-event briefings: coordinate speaker prep calls with your team",
+        "Technical checks: arrange and facilitate tech rehearsals",
+        "On-site support: we attend events in-person where possible",
+        "Multi-engagement coordination: ensure speaker availability for additional sessions",
+        "Direct liaison: single point of contact throughout the entire process"
+      ]
     },
     {
       icon: Target,
       title: "We Help You Navigate The Noise",
       description:
-        "Cut through the AI hype with our deep industry expertise. We deliver custom-tailored speaker recommendations within 24 hours, perfectly aligned with your budget, audience demographics, and industry focus.",
-    },
-    {
-      icon: Users,
-      title: "Access to Exclusive AI Pioneers",
-      description:
-        "Direct connections to the architects of modern AI—Siri co-founders, former Shazam executives, and the researchers who literally authored the AI textbooks. These innovators have built products used by billions.",
+        "Cut through the AI hype with our deep industry expertise and transparent guidance:",
+      highlights: [
+        "Budget ranges: $10K-$25K (emerging experts) to $50K-$100K+ (pioneers)",
+        "Audience types: executives, engineers, entrepreneurs, medical professionals, public sector, academic institutions",
+        "Global delivery: worldwide coverage + virtual/hybrid capabilities",
+        "Custom recommendations within 24 hours of inquiry",
+        "Our speakers tailor AI talk depth to your audience"
+      ]
     },
     {
       icon: Globe,
       title: "Proven Stage Presence",
       description:
-        "From intimate boardroom discussions to stadium-sized keynotes, our speakers command every venue. Learn from LinkedIn Top Voices, Google's Chief Evangelist, and Stanford professors with decades of global speaking experience.",
+        "Our speakers command every venue with authority and authenticity:",
+      highlights: [
+        "Delivery styles: visionary storytellers, pragmatic operators, data-led strategists",
+        "Venue experience: intimate boardrooms to 10,000+ stadium keynotes",
+        "Context-aware messaging aligned to your audience & objectives",
+        "Due diligence on sensitive topics (ethics, bias, job displacement)",
+        "We brief speakers thoroughly to ensure appropriate tone & depth"
+      ]
     },
     {
       icon: Clock,
       title: "Actionable Industry Intelligence",
       description:
-        "Skip the theoretical fluff. Our experts share real-world case studies, implementation strategies, and hard-won lessons that help your audience immediately apply AI insights and future-proof their organizations.",
+        "Tailored AI insights for your sector with concrete next steps:",
+      highlights: [
+        "Proven frameworks & ROI-focused implementation strategies",
+        "Real-world case studies: documented metrics from Fortune 500 deployments",
+        "Immediate action: tactical roadmaps your team can execute Monday morning",
+        "Industry examples: productivity improvements, accelerated rollouts, cost optimization strategies",
+        "Post-event resources: slides, recordings, follow-up Q&A sessions"
+      ]
     },
   ]
 
@@ -55,15 +102,40 @@ export default function WhyChooseUs() {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+              className="group bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-blue-100"
             >
               <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                  <feature.icon className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4 group-hover:bg-blue-200 group-hover:scale-110 transition-all duration-300">
+                  <feature.icon className="w-6 h-6 text-blue-600 group-hover:text-[#1E68C6] transition-colors duration-300" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 font-neue-haas">{feature.title}</h3>
               </div>
-              <p className="text-gray-600 leading-relaxed font-montserrat">{feature.description}</p>
+              <p className="text-gray-700 leading-relaxed font-montserrat mb-4 font-medium">{feature.description}</p>
+              {feature.highlights && feature.highlights.length > 0 && (
+                <ul className="space-y-2.5">
+                  {feature.highlights.map((highlight, idx) => {
+                    // Bold text before colons (e.g., "Budget ranges:", "Audience types:")
+                    const parts = highlight.split(':')
+                    if (parts.length > 1) {
+                      return (
+                        <li key={idx} className="flex items-start gap-2.5 text-sm text-gray-600 font-montserrat">
+                          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[#1E68C6] mt-2"></span>
+                          <span className="leading-relaxed">
+                            <strong className="font-bold text-gray-900">{parts[0]}:</strong>
+                            {parts.slice(1).join(':')}
+                          </span>
+                        </li>
+                      )
+                    }
+                    return (
+                      <li key={idx} className="flex items-start gap-2.5 text-sm text-gray-600 font-montserrat">
+                        <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[#1E68C6] mt-2"></span>
+                        <span className="leading-relaxed">{highlight}</span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
             </div>
           ))}
         </div>

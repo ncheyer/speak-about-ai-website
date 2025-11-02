@@ -1,9 +1,14 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import Hero from "@/components/hero"
 import ClientLogos from "@/components/client-logos"
+import ExclusiveAccess from "@/components/exclusive-access"
 import FeaturedSpeakers from "@/components/featured-speakers"
 import WhyChooseUs from "@/components/why-choose-us"
+import NavigateTheNoise from "@/components/navigate-the-noise"
+import FounderNextGen from "@/components/founder-next-gen"
 import BookingCTA from "@/components/booking-cta"
+import { Button } from "@/components/ui/button"
 import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
 
 export const metadata: Metadata = {
@@ -179,9 +184,11 @@ export default async function HomePage() {
       <main className="min-h-screen">
         <Hero />
         <ClientLogos />
+        <ExclusiveAccess />
         <FeaturedSpeakers initialSpeakers={featuredSpeakers} />
         <WhyChooseUs />
-        
+        <NavigateTheNoise />
+
         {/* SEO Content Section - Essential for Rankings */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -246,7 +253,20 @@ export default async function HomePage() {
                 to every engagement. Each speaker is carefully vetted for their expertise, presentation
                 skills, and ability to translate complex AI concepts into actionable business strategies.
               </p>
-              
+
+              <div className="flex justify-center my-8">
+                <Button
+                  asChild
+                  variant="gold"
+                  size="lg"
+                  className="font-montserrat font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300"
+                >
+                  <Link href="/contact?source=book_ai_speaker_seo_section">
+                    Book an AI Speaker Today
+                  </Link>
+                </Button>
+              </div>
+
               <p className="text-lg text-gray-700 mb-4">
                 Our clients include Microsoft, Google, Amazon, Fortune 500 companies, leading universities,
                 and innovative startups. When you book an AI keynote speaker through Speak About AI,
@@ -294,15 +314,15 @@ export default async function HomePage() {
                 <h3 className="text-xl font-semibold text-black mb-3">
                   What's the typical fee for an AI speaker?
                 </h3>
-                <p className="text-gray-700">
-                  Speaker fees vary based on expertise, event type, and location. Contact us for a
-                  customized quote based on your specific requirements and budget.
+                <p className="text-gray-700 mb-3">
+                  AI speaker fees typically range from <strong>$10k-$25k</strong> (rising experts), <strong>$25k-$50k</strong> (industry leaders), to <strong>$50k+</strong> (AI pioneers and founders). Final pricing depends on format, location, date, and speaker requirements. Contact us for a precise quote tailored to your event.
                 </p>
               </div>
             </div>
           </div>
         </section>
-        
+
+        <FounderNextGen />
         <BookingCTA />
       </main>
     </>

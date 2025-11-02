@@ -504,7 +504,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                 Request This Workshop
               </Button>
             </Link>
-            <Link href="/workshops">
+            <Link href="/ai-workshops">
               <Button size="lg" variant="outline" className="font-semibold bg-transparent text-white border-white hover:bg-white hover:text-blue-600">
                 Browse All Workshops
               </Button>

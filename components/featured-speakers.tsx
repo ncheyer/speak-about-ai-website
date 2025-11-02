@@ -77,8 +77,10 @@ export default function FeaturedSpeakers({ initialSpeakers }: FeaturedSpeakersPr
   }
 
   return (
-    <section className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-20 bg-white relative overflow-hidden">
+      {/* Very subtle dot pattern background */}
+      <div className="absolute inset-0 opacity-[0.01]" style={{ backgroundImage: "radial-gradient(circle, #1E68C6 1px, transparent 1px)", backgroundSize: "40px 40px" }}></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-black mb-4 font-neue-haas">Featured AI Keynote Speakers</h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat">

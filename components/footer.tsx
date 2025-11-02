@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Phone, Mail, Linkedin } from "lucide-react"
+import { Phone, Mail, Linkedin, MessageCircle } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -25,11 +25,33 @@ export default function Footer() {
             <div className="space-y-2">
               <div className="flex items-center">
                 <Phone className="w-4 h-4 mr-3 text-[#1E68C6]" />
-                <span className="text-[#EAEAEE]">(510) 435-3947</span>
+                <a href="tel:+1-510-435-3947" className="text-[#EAEAEE] hover:text-white">
+                  (510) 435-3947
+                </a>
+                <span className="ml-2 text-xs text-gray-400">(9am-6pm PT)</span>
+              </div>
+              <div className="flex items-center">
+                <MessageCircle className="w-4 h-4 mr-3 text-[#1E68C6]" />
+                <a
+                  href="https://wa.me/15104353947"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#EAEAEE] hover:text-white"
+                >
+                  WhatsApp (24/7 Global)
+                </a>
               </div>
               <div className="flex items-center">
                 <Mail className="w-4 h-4 mr-3 text-[#1E68C6]" />
-                <span className="text-[#EAEAEE]">human@speakabout.ai</span>
+                <a href="mailto:human@speakabout.ai" className="text-[#EAEAEE] hover:text-white">
+                  human@speakabout.ai
+                </a>
+              </div>
+              <div className="mt-3 text-xs text-gray-400">
+                <Link href="/contact" className="text-[#1E68C6] hover:text-blue-400">
+                  Request a callback
+                </Link>{" "}
+                for international inquiries
               </div>
             </div>
           </div>
