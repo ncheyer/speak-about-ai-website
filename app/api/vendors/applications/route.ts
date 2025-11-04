@@ -159,6 +159,11 @@ export async function POST(request: NextRequest) {
         preferred_partners,
         languages,
         accessibility_accommodations,
+        pricing_range,
+        team_size,
+        why_join,
+        certifications,
+        testimonials,
         logo_url,
         submission_ip,
         user_agent
@@ -195,6 +200,11 @@ export async function POST(request: NextRequest) {
         ${body.preferred_partners || null},
         ${body.languages || []},
         ${body.accessibility_accommodations || null},
+        ${body.pricing_range || null},
+        ${body.team_size || null},
+        ${body.why_join || null},
+        ${body.certifications || null},
+        ${body.testimonials || null},
         ${body.logo_url || null},
         ${ip},
         ${userAgent}

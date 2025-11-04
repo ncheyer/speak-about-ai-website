@@ -125,6 +125,9 @@ export default function VendorApplicationPage() {
           specialty_capabilities: formData.specialties,
           testimonials: formData.testimonials,
           certifications: formData.certifications,
+          pricing_range: formData.pricing_range,
+          team_size: formData.team_size,
+          why_join: formData.why_join,
           logo_url: logoUrl
         })
       })
