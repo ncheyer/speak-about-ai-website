@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Insert application
+    // Insert application with all fields
     const [application] = await sql`
       INSERT INTO speaker_applications (
         first_name,
@@ -51,18 +51,49 @@ export async function POST(request: NextRequest) {
         website,
         linkedin_url,
         location,
+        timezone,
+        headshot_url,
         title,
         company,
         bio,
+        short_bio,
+        achievements,
+        education,
+        certifications,
         expertise_areas,
         speaking_topics,
+        signature_talks,
+        industries_experience,
+        case_studies,
         years_speaking,
+        total_engagements,
         previous_engagements,
+        client_testimonials,
         video_links,
+        media_coverage,
+        twitter_url,
+        youtube_url,
+        instagram_url,
+        blog_url,
+        published_content,
+        podcast_appearances,
         reference_contacts,
+        past_client_references,
+        speaker_bureau_experience,
         speaking_fee_range,
         travel_requirements,
         available_formats,
+        booking_lead_time,
+        availability_constraints,
+        technical_requirements,
+        speaking_experience,
+        notable_organizations,
+        ai_expertise,
+        unique_perspective,
+        audience_size_preference,
+        why_speak_about_ai,
+        additional_info,
+        agree_to_terms,
         status
       ) VALUES (
         ${body.first_name},
@@ -72,18 +103,49 @@ export async function POST(request: NextRequest) {
         ${body.website || null},
         ${body.linkedin_url || null},
         ${body.location},
+        ${body.timezone || null},
+        ${body.headshot_url || null},
         ${body.title},
         ${body.company},
         ${body.bio},
+        ${body.short_bio || null},
+        ${body.achievements || null},
+        ${body.education || null},
+        ${body.certifications || null},
         ${body.expertise_areas || []},
         ${body.speaking_topics},
+        ${body.signature_talks || null},
+        ${body.industries_experience || []},
+        ${body.case_studies || null},
         ${body.years_speaking || null},
+        ${body.total_engagements || null},
         ${body.previous_engagements || null},
+        ${body.client_testimonials || null},
         ${body.video_links || []},
+        ${body.media_coverage || null},
+        ${body.twitter_url || null},
+        ${body.youtube_url || null},
+        ${body.instagram_url || null},
+        ${body.blog_url || null},
+        ${body.published_content || null},
+        ${body.podcast_appearances || null},
         ${body.reference_contacts || null},
+        ${body.past_client_references || null},
+        ${body.speaker_bureau_experience || null},
         ${body.speaking_fee_range || null},
         ${body.travel_requirements || null},
         ${body.available_formats || []},
+        ${body.booking_lead_time || null},
+        ${body.availability_constraints || null},
+        ${body.technical_requirements || null},
+        ${body.speaking_experience || null},
+        ${body.notable_organizations || null},
+        ${body.ai_expertise || null},
+        ${body.unique_perspective || null},
+        ${body.audience_size_preference || null},
+        ${body.why_speak_about_ai || null},
+        ${body.additional_info || null},
+        ${body.agree_to_terms || false},
         'pending'
       )
       RETURNING id, email, first_name, last_name
@@ -129,62 +191,49 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const search = searchParams.get('search')
 
-    let query = sql`
-      SELECT 
-        id,
-        first_name,
-        last_name,
-        email,
-        phone,
-        website,
-        linkedin_url,
-        location,
-        title,
-        company,
-        bio,
-        expertise_areas,
-        speaking_topics,
-        years_speaking,
-        previous_engagements,
-        video_links,
-        reference_contacts,
-        speaking_fee_range,
-        travel_requirements,
-        available_formats,
-        status,
-        admin_notes,
-        rejection_reason,
-        invitation_sent_at,
-        account_created_at,
-        created_at,
-        updated_at,
-        reviewed_at,
-        reviewed_by
-      FROM speaker_applications
-    `
+    // Build query with proper parameterization to prevent SQL injection
+    let applications
 
-    let conditions = []
-    
-    if (status && status !== 'all') {
-      conditions.push(`status = '${status}'`)
+    if (status && status !== 'all' && search) {
+      // Both status and search filters
+      const searchPattern = `%${search}%`
+      applications = await sql`
+        SELECT * FROM speaker_applications
+        WHERE status = ${status}
+        AND (
+          LOWER(first_name) LIKE LOWER(${searchPattern}) OR
+          LOWER(last_name) LIKE LOWER(${searchPattern}) OR
+          LOWER(email) LIKE LOWER(${searchPattern}) OR
+          LOWER(company) LIKE LOWER(${searchPattern})
+        )
+        ORDER BY created_at DESC
+      `
+    } else if (status && status !== 'all') {
+      // Only status filter
+      applications = await sql`
+        SELECT * FROM speaker_applications
+        WHERE status = ${status}
+        ORDER BY created_at DESC
+      `
+    } else if (search) {
+      // Only search filter
+      const searchPattern = `%${search}%`
+      applications = await sql`
+        SELECT * FROM speaker_applications
+        WHERE
+          LOWER(first_name) LIKE LOWER(${searchPattern}) OR
+          LOWER(last_name) LIKE LOWER(${searchPattern}) OR
+          LOWER(email) LIKE LOWER(${searchPattern}) OR
+          LOWER(company) LIKE LOWER(${searchPattern})
+        ORDER BY created_at DESC
+      `
+    } else {
+      // No filters
+      applications = await sql`
+        SELECT * FROM speaker_applications
+        ORDER BY created_at DESC
+      `
     }
-
-    if (search) {
-      conditions.push(`
-        (LOWER(first_name) LIKE '%${search.toLowerCase()}%' OR
-         LOWER(last_name) LIKE '%${search.toLowerCase()}%' OR
-         LOWER(email) LIKE '%${search.toLowerCase()}%' OR
-         LOWER(company) LIKE '%${search.toLowerCase()}%')
-      `)
-    }
-
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
-    
-    const applications = await sql`
-      SELECT * FROM speaker_applications
-      ${sql.unsafe(whereClause)}
-      ORDER BY created_at DESC
-    `
 
     return NextResponse.json({
       applications,
