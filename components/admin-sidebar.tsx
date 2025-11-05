@@ -235,6 +235,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Email Resources",
           color: "text-cyan-600",
           bgColor: "bg-cyan-50"
+        },
+        {
+          title: "WhatsApp Group",
+          href: "/admin/whatsapp-applications",
+          icon: MessageSquare,
+          description: "Event Pro Community",
+          color: "text-green-600",
+          bgColor: "bg-green-50"
         }
       ]
     },
