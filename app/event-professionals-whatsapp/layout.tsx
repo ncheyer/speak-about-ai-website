@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     url: "https://speakabout.ai/event-professionals-whatsapp",
     images: [
       {
-        url: "/event-professionals-networking.jpg",
+        url: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/IMG_9585.jpg",
         width: 1200,
         height: 630,
         alt: "Event Professional Networking Groups - AI WhatsApp Community",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     title: "Event Professional Networking Groups for AI Innovation",
     description:
       "Join 200+ event professionals in WhatsApp networking groups focused on AI tools.",
-    images: ["/event-professionals-networking.jpg"],
+    images: ["https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/IMG_9585.jpg"],
   },
   alternates: {
     canonical: "https://speakabout.ai/event-professionals-whatsapp",

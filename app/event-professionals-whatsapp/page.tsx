@@ -164,6 +164,15 @@ export default function EventProfessionalsWhatsAppPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50">
+      {/* Header Image */}
+      <div className="w-full">
+        <img
+          src="https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/IMG_9585.jpg"
+          alt="AI for Event Professionals WhatsApp Community"
+          className="w-full h-auto max-h-[500px] object-cover"
+        />
+      </div>
+
       {/* Hero Section */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
