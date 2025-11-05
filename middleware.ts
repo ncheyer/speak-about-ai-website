@@ -25,6 +25,10 @@ export async function middleware(request: NextRequest) {
     '/admin',
     '/api',
     '/clients',
+    '/apply',
+    '/vendors',
+    '/vendor-directory',
+    '/event-professionals-whatsapp',
   ]
 
   // Check if this is a root-level path (no nested paths)
