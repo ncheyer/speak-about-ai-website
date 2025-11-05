@@ -164,42 +164,45 @@ export default function EventProfessionalsWhatsAppPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50">
-      {/* Header Image */}
-      <div className="w-full">
-        <img
-          src="https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/IMG_9585.jpg"
-          alt="AI for Event Professionals WhatsApp Community"
-          className="w-full h-auto max-h-[500px] object-cover"
-        />
-      </div>
-
       {/* Hero Section */}
       <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-6">
-              <Users className="w-4 h-4 mr-2" />
-              Join 200+ Event Professionals
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center mb-12">
+            {/* Left Column - Content */}
+            <div>
+              <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-6">
+                <Users className="w-4 h-4 mr-2" />
+                Join 200+ Event Professionals
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                Event Professional Networking Groups for AI Innovation
+              </h1>
+              <p className="text-xl md:text-2xl text-gray-600 mb-8">
+                Connect with event planners, venue managers, and industry experts in the most active event professional networking groups focused on AI tools and technology
+              </p>
+              <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-8">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  <span>Free to Join</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  <span>Vetted Members Only</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  <span>Active Daily Discussions</span>
+                </div>
+              </div>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Event Professional Networking Groups for AI Innovation
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-8">
-              Connect with event planners, venue managers, and industry experts in the most active event professional networking groups focused on AI tools and technology
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <span>Free to Join</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <span>Vetted Members Only</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <span>Active Daily Discussions</span>
-              </div>
+
+            {/* Right Column - Image */}
+            <div className="flex justify-center lg:justify-end">
+              <img
+                src="https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/IMG_9585.jpg"
+                alt="AI for Event Professionals WhatsApp Community"
+                className="rounded-2xl shadow-2xl max-w-md w-full h-auto object-cover"
+              />
             </div>
           </div>
 
