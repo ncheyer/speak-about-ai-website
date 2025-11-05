@@ -6,7 +6,7 @@ export default function Footer() {
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-8">
           {/* Company Info */}
           <div className="col-span-1 md:col-span-2">
             <div className="mb-6">
@@ -59,11 +59,6 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/vendor-directory" className="text-[#EAEAEE] hover:text-white">
-                  Vendor Directory
-                </Link>
-              </li>
-              <li>
                 <Link href="/blog" className="text-[#EAEAEE] hover:text-white">
                   Blog
                 </Link>
@@ -96,6 +91,23 @@ export default function Footer() {
                   className="text-[#EAEAEE] hover:text-white"
                 >
                   Technology & Enterprise
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Resources</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/vendor-directory" className="text-[#EAEAEE] hover:text-white">
+                  Vendor Directory
+                </Link>
+              </li>
+              <li>
+                <Link href="/event-professionals-whatsapp" className="text-[#EAEAEE] hover:text-white">
+                  Event Professionals Group
                 </Link>
               </li>
             </ul>
