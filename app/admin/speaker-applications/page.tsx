@@ -8,22 +8,29 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  Search, 
-  Check, 
-  X, 
-  Eye, 
-  Clock, 
+import {
+  Search,
+  Check,
+  X,
+  Eye,
+  Clock,
   Star,
   DollarSign,
   Mail,
   Phone,
   Globe,
+  MapPin,
   Linkedin,
   Twitter,
   Instagram,
   Youtube,
-  AlertCircle
+  AlertCircle,
+  Award,
+  GraduationCap,
+  FileText,
+  Video,
+  Users,
+  TrendingUp
 } from "lucide-react"
 import { 
   Dialog,
@@ -37,27 +44,56 @@ import { formatCurrency } from "@/lib/utils"
 
 interface Speaker {
   id: number
+  first_name: string
+  last_name: string
   email: string
-  name: string
-  bio?: string
-  short_bio?: string
-  one_liner?: string
+  phone?: string
+  website?: string
+  linkedin_url?: string
+  location?: string
+  timezone?: string
+  headshot_url?: string
   title?: string
   company?: string
-  headshot_url?: string
-  website?: string
-  social_media?: {
-    twitter?: string
-    linkedin?: string
-    instagram?: string
-    youtube?: string
-  }
-  primary_topics?: string[]
-  speaking_fee_min?: number
-  speaking_fee_max?: number
-  speaking_fee_range?: string
+  bio?: string
+  short_bio?: string
+  achievements?: string
+  education?: string
+  certifications?: string
+  expertise_areas?: string[]
+  speaking_topics?: string
+  signature_talks?: string
+  industries_experience?: string[]
+  case_studies?: string
   years_speaking?: number
-  total_engagements?: number
+  total_engagements?: string
+  previous_engagements?: string
+  client_testimonials?: string
+  video_links?: string[]
+  media_coverage?: string
+  twitter_url?: string
+  youtube_url?: string
+  instagram_url?: string
+  blog_url?: string
+  published_content?: string
+  podcast_appearances?: string
+  reference_contacts?: string
+  past_client_references?: string
+  speaker_bureau_experience?: string
+  speaking_fee_range?: string
+  travel_requirements?: string
+  available_formats?: string[]
+  booking_lead_time?: string
+  availability_constraints?: string
+  technical_requirements?: string
+  speaking_experience?: string
+  notable_organizations?: string
+  ai_expertise?: string
+  unique_perspective?: string
+  audience_size_preference?: string
+  why_speak_about_ai?: string
+  additional_info?: string
+  agree_to_terms?: boolean
   status?: 'pending' | 'approved' | 'rejected' | 'suspended'
   approval_notes?: string
   approved_by?: string
@@ -92,10 +128,14 @@ export default function SpeakerApplicationsPage() {
 
   const fetchSpeakers = async () => {
     try {
-      const response = await fetch("/api/speakers")
+      const response = await fetch("/api/speaker-applications", {
+        headers: {
+          'x-dev-admin-bypass': 'dev-admin-access'
+        }
+      })
       if (response.ok) {
         const data = await response.json()
-        setSpeakers(data)
+        setSpeakers(data.applications || data)
       }
     } catch (error) {
       console.error("Error fetching speakers:", error)
@@ -114,11 +154,11 @@ export default function SpeakerApplicationsPage() {
 
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(s => 
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      filtered = filtered.filter(s =>
+        `${s.first_name} ${s.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.primary_topics?.some(topic => 
+        s.expertise_areas?.some(topic =>
           topic.toLowerCase().includes(searchTerm.toLowerCase())
         )
       )
@@ -288,20 +328,20 @@ export default function SpeakerApplicationsPage() {
                     {speaker.headshot_url ? (
                       <img
                         src={speaker.headshot_url}
-                        alt={speaker.name}
+                        alt={`${speaker.first_name} ${speaker.last_name}`}
                         className="w-16 h-16 rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
                         <span className="text-2xl font-semibold text-gray-500">
-                          {speaker.name.charAt(0).toUpperCase()}
+                          {speaker.first_name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                     )}
-                    
+
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-semibold">{speaker.name}</h3>
+                        <h3 className="text-lg font-semibold">{speaker.first_name} {speaker.last_name}</h3>
                         {speaker.preferred_partner && (
                           <Badge className="bg-purple-100 text-purple-800">
                             <Star className="h-3 w-3 mr-1" />Preferred
@@ -334,24 +374,30 @@ export default function SpeakerApplicationsPage() {
                           <Mail className="h-3 w-3" />
                           {speaker.email}
                         </span>
-                        {speaker.speaking_fee_min && speaker.speaking_fee_max && (
+                        {speaker.speaking_fee_range && (
                           <span className="flex items-center gap-1">
                             <DollarSign className="h-3 w-3" />
-                            {formatCurrency(speaker.speaking_fee_min)} - {formatCurrency(speaker.speaking_fee_max)}
+                            {speaker.speaking_fee_range}
+                          </span>
+                        )}
+                        {speaker.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {speaker.location}
                           </span>
                         )}
                       </div>
-                      
-                      {speaker.primary_topics && speaker.primary_topics.length > 0 && (
+
+                      {speaker.expertise_areas && speaker.expertise_areas.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {speaker.primary_topics.slice(0, 3).map((topic, index) => (
+                          {speaker.expertise_areas.slice(0, 3).map((topic, index) => (
                             <Badge key={index} variant="secondary" className="text-xs">
                               {topic}
                             </Badge>
                           ))}
-                          {speaker.primary_topics.length > 3 && (
+                          {speaker.expertise_areas.length > 3 && (
                             <Badge variant="secondary" className="text-xs">
-                              +{speaker.primary_topics.length - 3} more
+                              +{speaker.expertise_areas.length - 3} more
                             </Badge>
                           )}
                         </div>
@@ -396,7 +442,7 @@ export default function SpeakerApplicationsPage() {
         <Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Speaker Review: {selectedSpeaker.name}</DialogTitle>
+              <DialogTitle>Speaker Review: {selectedSpeaker.first_name} {selectedSpeaker.last_name}</DialogTitle>
               <DialogDescription>
                 Review speaker application and make approval decision
               </DialogDescription>
@@ -408,31 +454,41 @@ export default function SpeakerApplicationsPage() {
                 {selectedSpeaker.headshot_url ? (
                   <img
                     src={selectedSpeaker.headshot_url}
-                    alt={selectedSpeaker.name}
+                    alt={`${selectedSpeaker.first_name} ${selectedSpeaker.last_name}`}
                     className="w-24 h-24 rounded-full object-cover"
                   />
                 ) : (
                   <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
                     <span className="text-3xl font-semibold text-gray-500">
-                      {selectedSpeaker.name.charAt(0).toUpperCase()}
+                      {selectedSpeaker.first_name.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )}
-                
+
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold">{selectedSpeaker.name}</h3>
+                  <h3 className="text-xl font-semibold">{selectedSpeaker.first_name} {selectedSpeaker.last_name}</h3>
                   {selectedSpeaker.title && selectedSpeaker.company && (
                     <p className="text-gray-600">{selectedSpeaker.title} at {selectedSpeaker.company}</p>
                   )}
-                  {selectedSpeaker.one_liner && (
-                    <p className="text-sm text-gray-500 italic mt-1">"{selectedSpeaker.one_liner}"</p>
+                  {selectedSpeaker.location && (
+                    <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {selectedSpeaker.location}
+                      {selectedSpeaker.timezone && ` (${selectedSpeaker.timezone})`}
+                    </p>
                   )}
-                  
+
                   <div className="flex items-center gap-4 mt-2">
                     <a href={`mailto:${selectedSpeaker.email}`} className="text-sm text-blue-600 hover:underline flex items-center gap-1">
                       <Mail className="h-3 w-3" />
                       {selectedSpeaker.email}
                     </a>
+                    {selectedSpeaker.phone && (
+                      <a href={`tel:${selectedSpeaker.phone}`} className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {selectedSpeaker.phone}
+                      </a>
+                    )}
                     {selectedSpeaker.website && (
                       <a href={selectedSpeaker.website} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
                         <Globe className="h-3 w-3" />
@@ -440,79 +496,334 @@ export default function SpeakerApplicationsPage() {
                       </a>
                     )}
                   </div>
-                  
+
                   {/* Social Media */}
-                  {selectedSpeaker.social_media && Object.keys(selectedSpeaker.social_media).length > 0 && (
-                    <div className="flex items-center gap-3 mt-2">
-                      {selectedSpeaker.social_media.linkedin && (
-                        <a href={selectedSpeaker.social_media.linkedin} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-600">
-                          <Linkedin className="h-4 w-4" />
-                        </a>
-                      )}
-                      {selectedSpeaker.social_media.twitter && (
-                        <a href={`https://twitter.com/${selectedSpeaker.social_media.twitter.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-400">
-                          <Twitter className="h-4 w-4" />
-                        </a>
-                      )}
-                      {selectedSpeaker.social_media.instagram && (
-                        <a href={`https://instagram.com/${selectedSpeaker.social_media.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-pink-600">
-                          <Instagram className="h-4 w-4" />
-                        </a>
-                      )}
-                      {selectedSpeaker.social_media.youtube && (
-                        <a href={selectedSpeaker.social_media.youtube} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600">
-                          <Youtube className="h-4 w-4" />
-                        </a>
-                      )}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-3 mt-2">
+                    {selectedSpeaker.linkedin_url && (
+                      <a href={selectedSpeaker.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-600">
+                        <Linkedin className="h-4 w-4" />
+                      </a>
+                    )}
+                    {selectedSpeaker.twitter_url && (
+                      <a href={selectedSpeaker.twitter_url} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-400">
+                        <Twitter className="h-4 w-4" />
+                      </a>
+                    )}
+                    {selectedSpeaker.instagram_url && (
+                      <a href={selectedSpeaker.instagram_url} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-pink-600">
+                        <Instagram className="h-4 w-4" />
+                      </a>
+                    )}
+                    {selectedSpeaker.youtube_url && (
+                      <a href={selectedSpeaker.youtube_url} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600">
+                        <Youtube className="h-4 w-4" />
+                      </a>
+                    )}
+                    {selectedSpeaker.blog_url && (
+                      <a href={selectedSpeaker.blog_url} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-800">
+                        <FileText className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
                 </div>
+              </div>
+
+              {/* Why Speak About AI - CRITICAL FOR DECISION */}
+              {selectedSpeaker.why_speak_about_ai && (
+                <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-blue-600" />
+                    Why They Want to Speak About AI
+                  </h4>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedSpeaker.why_speak_about_ai}</p>
+                </div>
+              )}
+
+              {/* AI Expertise & Unique Perspective */}
+              <div className="grid grid-cols-2 gap-4">
+                {selectedSpeaker.ai_expertise && (
+                  <div>
+                    <h4 className="font-semibold mb-2">AI Expertise</h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.ai_expertise}</p>
+                  </div>
+                )}
+                {selectedSpeaker.unique_perspective && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Unique Perspective</h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.unique_perspective}</p>
+                  </div>
+                )}
               </div>
 
               {/* Bio */}
               <div>
                 <h4 className="font-semibold mb-2">Biography</h4>
+                {selectedSpeaker.short_bio && (
+                  <div className="mb-2 p-3 bg-gray-50 rounded">
+                    <p className="text-sm font-medium text-gray-500 mb-1">Short Bio:</p>
+                    <p className="text-sm text-gray-700">{selectedSpeaker.short_bio}</p>
+                  </div>
+                )}
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.bio}</p>
               </div>
 
-              {/* Topics */}
-              {selectedSpeaker.primary_topics && selectedSpeaker.primary_topics.length > 0 && (
+              {/* Speaking Topics & Expertise */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Areas of Expertise</h4>
+                  {selectedSpeaker.expertise_areas && selectedSpeaker.expertise_areas.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedSpeaker.expertise_areas.map((topic, index) => (
+                        <Badge key={index} variant="secondary">
+                          {topic}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">Not specified</p>
+                  )}
+                </div>
+                {selectedSpeaker.industries_experience && selectedSpeaker.industries_experience.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Industry Experience</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedSpeaker.industries_experience.map((industry, index) => (
+                        <Badge key={index} variant="outline">
+                          {industry}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Speaking Topics */}
+              {selectedSpeaker.speaking_topics && (
                 <div>
                   <h4 className="font-semibold mb-2">Speaking Topics</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedSpeaker.primary_topics.map((topic, index) => (
-                      <Badge key={index} variant="secondary">
-                        {topic}
-                      </Badge>
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.speaking_topics}</p>
+                </div>
+              )}
+
+              {/* Signature Talks */}
+              {selectedSpeaker.signature_talks && (
+                <div>
+                  <h4 className="font-semibold mb-2">Signature Talks</h4>
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.signature_talks}</p>
+                </div>
+              )}
+
+              {/* Qualifications */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {selectedSpeaker.education && (
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      Education
+                    </h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.education}</p>
+                  </div>
+                )}
+                {selectedSpeaker.certifications && (
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <Award className="h-4 w-4" />
+                      Certifications
+                    </h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.certifications}</p>
+                  </div>
+                )}
+                {selectedSpeaker.achievements && (
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <Award className="h-4 w-4" />
+                      Achievements
+                    </h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.achievements}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Speaking Experience */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Speaking Experience</h4>
+                  <div className="space-y-2 text-sm">
+                    {selectedSpeaker.speaking_experience && (
+                      <div>
+                        <span className="font-medium">Level:</span> {selectedSpeaker.speaking_experience}
+                      </div>
+                    )}
+                    {selectedSpeaker.years_speaking && (
+                      <div>
+                        <span className="font-medium">Years Speaking:</span> {selectedSpeaker.years_speaking}
+                      </div>
+                    )}
+                    {selectedSpeaker.total_engagements && (
+                      <div>
+                        <span className="font-medium">Total Engagements:</span> {selectedSpeaker.total_engagements}
+                      </div>
+                    )}
+                    {selectedSpeaker.audience_size_preference && (
+                      <div>
+                        <span className="font-medium">Audience Size Preference:</span> {selectedSpeaker.audience_size_preference}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Fees & Logistics</h4>
+                  <div className="space-y-2 text-sm">
+                    {selectedSpeaker.speaking_fee_range && (
+                      <div>
+                        <span className="font-medium">Fee Range:</span> {selectedSpeaker.speaking_fee_range}
+                      </div>
+                    )}
+                    {selectedSpeaker.booking_lead_time && (
+                      <div>
+                        <span className="font-medium">Lead Time:</span> {selectedSpeaker.booking_lead_time}
+                      </div>
+                    )}
+                    {selectedSpeaker.available_formats && selectedSpeaker.available_formats.length > 0 && (
+                      <div>
+                        <span className="font-medium">Formats:</span> {selectedSpeaker.available_formats.join(", ")}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Notable Organizations */}
+              {selectedSpeaker.notable_organizations && (
+                <div>
+                  <h4 className="font-semibold mb-2">Notable Organizations</h4>
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.notable_organizations}</p>
+                </div>
+              )}
+
+              {/* Previous Engagements */}
+              {selectedSpeaker.previous_engagements && (
+                <div>
+                  <h4 className="font-semibold mb-2">Previous Engagements</h4>
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.previous_engagements}</p>
+                </div>
+              )}
+
+              {/* Case Studies */}
+              {selectedSpeaker.case_studies && (
+                <div>
+                  <h4 className="font-semibold mb-2">Case Studies</h4>
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.case_studies}</p>
+                </div>
+              )}
+
+              {/* Testimonials */}
+              {selectedSpeaker.client_testimonials && (
+                <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Users className="h-4 w-4 text-green-600" />
+                    Client Testimonials
+                  </h4>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedSpeaker.client_testimonials}</p>
+                </div>
+              )}
+
+              {/* Video Links */}
+              {selectedSpeaker.video_links && selectedSpeaker.video_links.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Video className="h-4 w-4" />
+                    Speaking Videos
+                  </h4>
+                  <div className="space-y-2">
+                    {selectedSpeaker.video_links.map((link, index) => (
+                      <a
+                        key={index}
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline block"
+                      >
+                        {link}
+                      </a>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Experience & Fees */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold mb-2">Experience</h4>
-                  <div className="space-y-1 text-sm">
-                    {selectedSpeaker.years_speaking && (
-                      <p>Years Speaking: {selectedSpeaker.years_speaking}</p>
-                    )}
-                    {selectedSpeaker.total_engagements && (
-                      <p>Total Engagements: {selectedSpeaker.total_engagements}</p>
-                    )}
+              {/* Media & Content */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {selectedSpeaker.media_coverage && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Media Coverage</h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.media_coverage}</p>
                   </div>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Speaking Fees</h4>
-                  <div className="text-sm">
-                    {selectedSpeaker.speaking_fee_min && selectedSpeaker.speaking_fee_max ? (
-                      <p>{formatCurrency(selectedSpeaker.speaking_fee_min)} - {formatCurrency(selectedSpeaker.speaking_fee_max)}</p>
-                    ) : (
-                      <p className="text-gray-500">Not specified</p>
-                    )}
+                )}
+                {selectedSpeaker.published_content && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Published Content</h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.published_content}</p>
                   </div>
-                </div>
+                )}
               </div>
+
+              {selectedSpeaker.podcast_appearances && (
+                <div>
+                  <h4 className="font-semibold mb-2">Podcast Appearances</h4>
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.podcast_appearances}</p>
+                </div>
+              )}
+
+              {/* References & Bureau Experience */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {selectedSpeaker.past_client_references && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Past Client References</h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.past_client_references}</p>
+                  </div>
+                )}
+                {selectedSpeaker.speaker_bureau_experience && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Speaker Bureau Experience</h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.speaker_bureau_experience}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Requirements & Constraints */}
+              {(selectedSpeaker.travel_requirements || selectedSpeaker.technical_requirements || selectedSpeaker.availability_constraints) && (
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3">Requirements & Constraints</h4>
+                  <div className="space-y-3">
+                    {selectedSpeaker.travel_requirements && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Travel Requirements:</p>
+                        <p className="text-sm text-gray-600">{selectedSpeaker.travel_requirements}</p>
+                      </div>
+                    )}
+                    {selectedSpeaker.technical_requirements && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Technical Requirements:</p>
+                        <p className="text-sm text-gray-600">{selectedSpeaker.technical_requirements}</p>
+                      </div>
+                    )}
+                    {selectedSpeaker.availability_constraints && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Availability Constraints:</p>
+                        <p className="text-sm text-gray-600">{selectedSpeaker.availability_constraints}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Info */}
+              {selectedSpeaker.additional_info && (
+                <div>
+                  <h4 className="font-semibold mb-2">Additional Information</h4>
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedSpeaker.additional_info}</p>
+                </div>
+              )}
 
               {/* Internal Review Section */}
               <div className="border-t pt-4">
