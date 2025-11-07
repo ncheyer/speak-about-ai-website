@@ -18,6 +18,7 @@ export async function middleware(request: NextRequest) {
     '/about',
     '/blog',
     '/our-services',
+    '/our-team',
     '/partners',
     '/ai-workshops',
     '/workshops',
