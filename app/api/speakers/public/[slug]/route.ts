@@ -8,31 +8,31 @@ export async function GET(
   try {
     const sql = neon(process.env.DATABASE_URL!)
     
-    // Try to find speaker by slug (derived from name)
-    // First try exact match, then try variations
+    // Try to find speaker by slug
     const slug = params.slug
-    
-    // Convert slug back to possible names
+
+    // Convert slug back to possible names for fallback
     const possibleName = slug.replace(/-/g, ' ')
     const possibleNameTitleCase = possibleName
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ')
-    
-    // Query for speaker by name variations
+
+    // Query for speaker by slug column first, then fall back to name matching
     const speakers = await sql`
-      SELECT 
-        id, email, name, bio, short_bio, one_liner,
+      SELECT
+        id, email, name, slug, bio, short_bio, one_liner,
         headshot_url, website, social_media,
         topics, industries, programs, videos, testimonials, publications,
-        speaking_fee_range, 
+        speaking_fee_range,
         travel_preferences, technical_requirements, dietary_restrictions,
         location,
         featured, active, listed, ranking,
         created_at, updated_at
       FROM speakers
-      WHERE 
-        LOWER(REPLACE(name, ' ', '-')) = ${slug}
+      WHERE
+        slug = ${slug}
+        OR LOWER(REPLACE(name, ' ', '-')) = ${slug}
         OR LOWER(name) = ${possibleName.toLowerCase()}
         OR name = ${possibleNameTitleCase}
       LIMIT 1
@@ -46,7 +46,7 @@ export async function GET(
     
     // Transform database data to match frontend Speaker interface
     const transformedSpeaker = {
-      slug: slug,
+      slug: speaker.slug || slug,
       name: speaker.name || '',
       title: speaker.one_liner || '',
       bio: speaker.bio || speaker.short_bio || '',

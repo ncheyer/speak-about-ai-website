@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
     const sql = neon(process.env.DATABASE_URL)
     // Get all active and listed speakers with existing columns only
     const speakers = await sql`
-      SELECT 
-        id, name, email, 
+      SELECT
+        id, name, slug, email,
         bio, short_bio, one_liner, headshot_url, website, social_media,
         topics, speaking_fee_range, travel_preferences,
         technical_requirements, dietary_restrictions,
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       try {
         return {
         id: speaker.id,
-        slug: speaker.name?.toLowerCase().replace(/\s+/g, '-') || `speaker-${speaker.id}`,
+        slug: speaker.slug || speaker.name?.toLowerCase().replace(/\s+/g, '-') || `speaker-${speaker.id}`,
         name: speaker.name,
         email: speaker.email,
         phone: '', // Column doesn't exist yet
@@ -81,8 +81,9 @@ export async function GET(request: NextRequest) {
         // Return minimal speaker data if parsing fails
         return {
           id: speaker.id,
-          slug: speaker.name?.toLowerCase().replace(/\s+/g, '-') || `speaker-${speaker.id}`,
+          slug: speaker.slug || speaker.name?.toLowerCase().replace(/\s+/g, '-') || `speaker-${speaker.id}`,
           name: speaker.name,
+          image: speaker.headshot_url,
           programs: [],
           industries: [],
           topics: [],
