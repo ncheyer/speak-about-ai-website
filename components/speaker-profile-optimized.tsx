@@ -87,7 +87,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
               <div className="lg:col-span-1">
                 <div className="lg:sticky lg:top-24" suppressHydrationWarning>
                   <Card className="shadow-lg border border-gray-200">
-                    <div className="relative aspect-[3/4] overflow-hidden rounded-t-lg">
+                    <div className="relative aspect-square overflow-hidden rounded-t-lg">
                       <img
                         src={imageUrl}
                         alt={`${speaker.name} - AI Keynote Speaker`}
