@@ -3,13 +3,13 @@ import { neon } from '@neondatabase/serverless'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const sql = neon(process.env.DATABASE_URL!)
-    
+
     // Try to find speaker by slug
-    const slug = params.slug
+    const { slug } = await params
 
     // Convert slug back to possible names for fallback
     const possibleName = slug.replace(/-/g, ' ')
@@ -23,7 +23,7 @@ export async function GET(
       SELECT
         id, email, name, slug, bio, short_bio, one_liner,
         headshot_url, website, social_media,
-        topics, industries, programs, videos, testimonials, publications,
+        topics, industries, programs, videos, testimonials,
         speaking_fee_range,
         travel_preferences, technical_requirements, dietary_restrictions,
         location,
