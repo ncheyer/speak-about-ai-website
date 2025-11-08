@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Building2, Globe, Users } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import ClientCaseStudies from "@/components/client-case-studies"
 
 export const metadata: Metadata = {
@@ -104,26 +104,6 @@ export default function PartnersPage() {
     },
   ]
 
-  const stats = [
-    {
-      icon: Building2,
-      value: "100+",
-      label: "Global Organizations",
-    },
-    {
-      icon: Globe,
-      value: "25+",
-      label: "Countries Served",
-    },
-    {
-      icon: Users,
-      value: "500+",
-      label: "Events Delivered",
-    },
-  ]
-
-  const categories = Array.from(new Set(partners.map((p) => p.category)))
-
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -137,26 +117,9 @@ export default function PartnersPage() {
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 font-neue-haas">
             Trusted by <span className="text-[#1E68C6]">Leading Organizations</span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mb-12 font-montserrat">
+          <p className="text-xl text-gray-600 max-w-3xl font-montserrat">
             Fortune 500 companies, international conferences, and government agencies worldwide trust Speak About AI speakers to deliver world-class AI expertise for their most important events.
           </p>
-
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-                <div className="flex items-center mb-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                    <stat.icon className="w-6 h-6 text-[#1E68C6]" />
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-gray-900 font-neue-haas">{stat.value}</div>
-                    <div className="text-sm text-gray-600 font-montserrat">{stat.label}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
