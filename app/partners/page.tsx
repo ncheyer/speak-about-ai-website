@@ -82,13 +82,6 @@ export default function PartnersPage() {
       description: "Global technology and engineering leader",
     },
     {
-      name: "Government of Korea",
-      src: "/logos/korea-government-logo.png",
-      alt: "Government of the Republic of Korea - Official government emblem",
-      category: "Government",
-      description: "Republic of Korea government",
-    },
-    {
       name: "Juniper Networks",
       src: "/logos/juniper-networks-logo.svg",
       alt: "Juniper Networks - AI-driven enterprise networking solutions",

@@ -515,43 +515,6 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                           </div>
                         </div>
 
-                        {/* Workshops Section */}
-                        {loadingWorkshops ? null : filteredWorkshops.length > 0 && (
-                          <>
-                            <div className="px-4 py-2 bg-gray-100 border-b">
-                              <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Workshops</div>
-                            </div>
-                            {filteredWorkshops.map(workshop => {
-                              const isSelected = selectedWorkshops.find(w => w.id === workshop.id)
-                              return (
-                                <div
-                                  key={workshop.id}
-                                  className={cn(
-                                    "px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b",
-                                    isSelected && "bg-green-50"
-                                  )}
-                                  onClick={() => toggleWorkshop(workshop)}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <div className="font-medium">{workshop.title}</div>
-                                      <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
-                                        {workshop.badge_text && (
-                                          <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">{workshop.badge_text}</span>
-                                        )}
-                                        {workshop.format && <span>• {workshop.format}</span>}
-                                      </div>
-                                    </div>
-                                    {isSelected && (
-                                      <CheckCircle className="h-5 w-5 text-green-600" />
-                                    )}
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </>
-                        )}
-
                         {/* Speakers Section */}
                         {loadingSpeakers ? (
                           <div className="p-8 text-center">
@@ -593,6 +556,43 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                           <div className="p-8 text-center text-gray-500">
                             No speakers found matching "{speakerSearchTerm}"
                           </div>
+                        )}
+
+                        {/* Workshops Section */}
+                        {loadingWorkshops ? null : filteredWorkshops.length > 0 && (
+                          <>
+                            <div className="px-4 py-2 bg-gray-100 border-b">
+                              <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Workshops</div>
+                            </div>
+                            {filteredWorkshops.map(workshop => {
+                              const isSelected = selectedWorkshops.find(w => w.id === workshop.id)
+                              return (
+                                <div
+                                  key={workshop.id}
+                                  className={cn(
+                                    "px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b",
+                                    isSelected && "bg-green-50"
+                                  )}
+                                  onClick={() => toggleWorkshop(workshop)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <div className="font-medium">{workshop.title}</div>
+                                      <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                                        {workshop.badge_text && (
+                                          <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">{workshop.badge_text}</span>
+                                        )}
+                                        {workshop.format && <span>• {workshop.format}</span>}
+                                      </div>
+                                    </div>
+                                    {isSelected && (
+                                      <CheckCircle className="h-5 w-5 text-green-600" />
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </>
                         )}
                       </div>
                     </div>
