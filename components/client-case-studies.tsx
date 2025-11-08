@@ -408,18 +408,6 @@ export default function ClientCaseStudies() {
             </div>
           ))}
         </div>
-
-        {/* CTA */}
-        <div className="text-center">
-          <Button
-            asChild
-            variant="gold"
-            size="lg"
-            className="font-montserrat font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300"
-          >
-            <Link href="/partners">View All Client Success Stories</Link>
-          </Button>
-        </div>
       </div>
     </section>
   )
