@@ -37,7 +37,7 @@ export default function ClientCaseStudies() {
       company: "ST Engineering",
       logo: "/logos/st-engineering-logo.png",
       location: "Singapore",
-      eventType: "Engineering Innovation Forum",
+      eventType: "Customer Conference",
       image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/20240903-STE-InnoTech-A-175.jpg",
       imageAlt: "ST Engineering AI Innovation Forum in Singapore - AI keynote speaker Lucien Engelen presenting artificial intelligence insights to engineering professionals on aerospace defense and smart city technologies",
       speakerContribution: "Lucien delivered a transformative keynote on AI applications in healthcare and how those innovations translate to aerospace, defense, and smart city engineering. He provided practical frameworks for cross-sector AI implementation that inspired new approaches to complex engineering challenges.",
