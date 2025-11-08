@@ -62,7 +62,7 @@ export default function ClientCaseStudies() {
       logo: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/Hansen-Technologies.-Powering-the-Next-Age-of-Digital-Experience-.jpg",
       location: "Columbia, South Carolina",
       eventType: "Customer Conference",
-      image: "/case-studies/hansen-event.jpg",
+      image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=675&fit=crop",
       imageAlt: "Hansen Technologies Customer Conference Columbia South Carolina - Brittany Hodak keynote speaker presenting AI strategies for utilities and telecommunications digital transformation",
       speakerContribution: "Brittany delivered an engaging keynote on leveraging AI for enhanced customer experiences in utilities and telecommunications. She shared actionable strategies for digital transformation that resonated with Hansen's enterprise clients and sparked meaningful conversations about AI adoption.",
       testimonial: "Though this was our first time working with them and they were a random find; I thought the whole interaction from first meeting to speaker execution were fantastic. I would definitely go through Speak About AI again on speaker needs in the technology field.",
@@ -85,7 +85,7 @@ export default function ClientCaseStudies() {
     {
       id: "rio-innovation-week",
       company: "Rio Innovation Week",
-      logo: "/logos/rio-innovation-week-logo.png",
+      logo: "/logos/rio-innovation-week-new.png",
       location: "São Paulo, Brazil",
       eventType: "Innovation & Technology Conference",
       image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/14082024_AL_Peter Norvig_3841 (1).JPG",
@@ -112,7 +112,7 @@ export default function ClientCaseStudies() {
       logo: "/logos/nice-logo.png",
       location: "Virtual",
       eventType: "Global Training Webinar",
-      image: "/case-studies/nice-event.jpg",
+      image: "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=1200&h=675&fit=crop",
       imageAlt: "NICE Global Training Webinar - Adam Cheyer and Maya Ackerman presenting customer experience AI transformation to enterprise decision-makers in virtual training session",
       speakerContribution: "Adam and Maya delivered separate virtual keynotes on AI's role in customer experience transformation, reaching over 1,000 NICE employees globally. Adam shared insights from building Siri and AI applications at scale, while Maya provided practical frameworks for implementing AI in enterprise customer service workflows.",
       testimonial: "We had a better turnout that we expected – ~1000 employees from all around the globe jumped on each virtual talk and held a lively chat. The content and presentation exceeded our expectations as well.",
@@ -170,7 +170,7 @@ export default function ClientCaseStudies() {
       logo: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/litman_gregory_logo.jpeg",
       location: "United States",
       eventType: "Annual Client Education Event",
-      image: "/case-studies/litman-gregory-event.jpg",
+      image: "https://images.unsplash.com/photo-1560439513-74b037a25d84?w=1200&h=675&fit=crop",
       imageAlt: "Litman Gregory Annual Investment Event - Jeremiah Owyang presenting AI market impact and investment trends for wealth management clients",
       speakerContribution: "Jeremiah presented a thought-provoking keynote on AI's transformative impact on investment markets and wealth management. He translated complex AI trends into actionable insights for investors, helping Litman Gregory's clients understand which technology trends to watch and how AI will reshape their investment portfolios.",
       testimonial: "Jeremiah delivered exceptional insights on how AI will reshape investment markets and helped our clients identify key trends to watch, making complex technology accessible and actionable for wealth management.",
@@ -191,7 +191,7 @@ export default function ClientCaseStudies() {
     {
       id: "chapman-university",
       company: "Chapman University",
-      logo: "/logos/chapman-university-logo.png",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Chapman_University_seal.svg/200px-Chapman_University_seal.svg.png",
       location: "Orange, California",
       eventType: "Academic AI Symposium",
       image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/IMG_075.jpg",
@@ -398,19 +398,20 @@ export default function ClientCaseStudies() {
                     <p className="text-gray-700 font-montserrat leading-relaxed pl-6 italic mb-3">
                       "{study.testimonial}"
                     </p>
-                  {study.testimonialAuthor && (
-                    <div className="pl-6 mt-3">
-                      <p className="text-gray-900 font-bold font-neue-haas text-sm">
-                        — {study.testimonialAuthor}
-                      </p>
-                      {study.testimonialTitle && (
-                        <p className="text-gray-600 font-montserrat text-xs mt-0.5">
-                          {study.testimonialTitle}
+                    {study.testimonialAuthor && (
+                      <div className="pl-6 mt-3">
+                        <p className="text-gray-900 font-bold font-neue-haas text-sm">
+                          — {study.testimonialAuthor}
                         </p>
-                      )}
-                    </div>
-                  )}
-                </div>
+                        {study.testimonialTitle && (
+                          <p className="text-gray-600 font-montserrat text-xs mt-0.5">
+                            {study.testimonialTitle}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Impact Points */}
                 <div className="space-y-2">
