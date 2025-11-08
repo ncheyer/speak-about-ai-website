@@ -168,7 +168,7 @@ export default function PartnersPage() {
               Our Partners & Clients
             </h2>
             <p className="text-lg text-gray-600 font-montserrat">
-              A selection of organizations we've had the privilege to work with
+              A selection of organizations our speakers have had the privilege to work with
             </p>
           </div>
 
