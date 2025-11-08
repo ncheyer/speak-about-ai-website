@@ -114,7 +114,7 @@ export default function ClientCaseStudies() {
       eventType: "Global Training Webinar",
       image: "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=1200&h=675&fit=crop",
       imageAlt: "NICE Global Training Webinar - Adam Cheyer and Maya Ackerman presenting customer experience AI transformation to enterprise decision-makers in virtual training session",
-      speakerContribution: "Adam and Maya delivered separate virtual keynotes on AI's role in customer experience transformation, reaching over 1,000 NICE employees globally. Adam shared insights from building Siri and AI applications at scale, while Maya provided practical frameworks for implementing AI in enterprise customer service workflows.",
+      speakerContribution: "Adam and Maya delivered separate virtual keynotes on AI's role in customer experience transformation, reaching over 1,000 NICE employees globally. Adam shared insights from building Siri and AI applications at scale, while Maya explored how hallucination is an innately human trait that sparks creativity, providing practical frameworks for implementing AI in enterprise customer service workflows.",
       testimonial: "We had a better turnout that we expected – ~1000 employees from all around the globe jumped on each virtual talk and held a lively chat. The content and presentation exceeded our expectations as well.",
       testimonialAuthor: "Lee B.",
       testimonialTitle: "Global Learning Manager",
