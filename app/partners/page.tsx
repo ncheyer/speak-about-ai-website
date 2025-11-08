@@ -3,6 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Building2, Globe, Users } from "lucide-react"
+import ClientCaseStudies from "@/components/client-case-studies"
 
 export const metadata: Metadata = {
   title: "Our Partners & Clients | Speak About AI",
@@ -199,6 +200,9 @@ export default function PartnersPage() {
           </div>
         </div>
       </section>
+
+      {/* Client Case Studies */}
+      <ClientCaseStudies />
 
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-[#1E68C6] to-blue-700">
