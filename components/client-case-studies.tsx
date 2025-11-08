@@ -20,6 +20,7 @@ interface CaseStudy {
   eventType: string
   image: string
   imageAlt: string
+  speakerContribution: string
   testimonial: string
   testimonialAuthor?: string
   testimonialTitle?: string
@@ -39,6 +40,7 @@ export default function ClientCaseStudies() {
       eventType: "Engineering Innovation Forum",
       image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/20240903-STE-InnoTech-A-175.jpg",
       imageAlt: "ST Engineering AI Innovation Forum in Singapore - AI keynote speaker Lucien Engelen presenting artificial intelligence insights to engineering professionals on aerospace defense and smart city technologies",
+      speakerContribution: "Lucien delivered a transformative keynote on AI applications in healthcare and how those innovations translate to aerospace, defense, and smart city engineering. He provided practical frameworks for cross-sector AI implementation that inspired new approaches to complex engineering challenges.",
       testimonial: "Exceptional expertise in AI applications for aerospace, defense, and smart city technologies that inspired our engineering teams.",
       speakers: [
         {
@@ -62,6 +64,7 @@ export default function ClientCaseStudies() {
       eventType: "Customer Conference",
       image: "/case-studies/hansen-event.jpg",
       imageAlt: "Hansen Technologies Customer Conference Columbia South Carolina - Brittany Hodak keynote speaker presenting AI strategies for utilities and telecommunications digital transformation",
+      speakerContribution: "Brittany delivered an engaging keynote on leveraging AI for enhanced customer experiences in utilities and telecommunications. She shared actionable strategies for digital transformation that resonated with Hansen's enterprise clients and sparked meaningful conversations about AI adoption.",
       testimonial: "Though this was our first time working with them and they were a random find; I thought the whole interaction from first meeting to speaker execution were fantastic. I would definitely go through Speak About AI again on speaker needs in the technology field.",
       testimonialAuthor: "Fengning Yu",
       testimonialTitle: "Marketing Manager",
@@ -87,6 +90,7 @@ export default function ClientCaseStudies() {
       eventType: "Innovation & Technology Conference",
       image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/14082024_AL_Peter Norvig_3841 (1).JPG",
       imageAlt: "Rio Innovation Week São Paulo Brazil - Peter Norvig AI keynote speaker presenting artificial intelligence and innovation insights at Latin America's premier technology conference",
+      speakerContribution: "Peter delivered a captivating keynote on the evolution of AI and its impact on Latin American innovation and entrepreneurship. He shared insights from Google's AI research and provided actionable guidance for startups and enterprises navigating the AI revolution.",
       testimonial: "Delivered transformative AI insights that inspired innovation leaders across Latin America's largest technology and entrepreneurship event.",
       speakers: [
         {
@@ -110,6 +114,7 @@ export default function ClientCaseStudies() {
       eventType: "Global Training Webinar",
       image: "/case-studies/nice-event.jpg",
       imageAlt: "NICE Global Training Webinar - Adam Cheyer and Maya Ackerman presenting customer experience AI transformation to enterprise decision-makers in virtual training session",
+      speakerContribution: "Adam and Maya delivered separate virtual keynotes on AI's role in customer experience transformation, reaching over 1,000 NICE employees globally. Adam shared insights from building Siri and AI applications at scale, while Maya provided practical frameworks for implementing AI in enterprise customer service workflows.",
       testimonial: "We had a better turnout that we expected – ~1000 employees from all around the globe jumped on each virtual talk and held a lively chat. The content and presentation exceeded our expectations as well.",
       testimonialAuthor: "Lee B.",
       testimonialTitle: "Global Learning Manager",
@@ -141,6 +146,7 @@ export default function ClientCaseStudies() {
       eventType: "Marketing Webinar",
       image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/1707414885816.jpeg",
       imageAlt: "Juniper Networks AI Marketing Webinar - Peter Norvig presenting AI insights to drive client acquisition among developers and educate existing clients on artificial intelligence",
+      speakerContribution: "Peter presented a developer-focused webinar on AI fundamentals and practical applications in networking technology. His expertise from Google's AI research helped Juniper educate both prospects and existing clients on AI-driven networking solutions, resulting in strong developer engagement and lead generation.",
       testimonial: "The event was great!! We had incredible interest and saw strong numbers. The process was smooth and your communication was fantastic. Truly, I don't know if there's anything I could think of to improve.",
       testimonialAuthor: "Rachel F.",
       testimonialTitle: "Marketing Campaign Manager",
@@ -166,6 +172,7 @@ export default function ClientCaseStudies() {
       eventType: "Annual Client Education Event",
       image: "/case-studies/litman-gregory-event.jpg",
       imageAlt: "Litman Gregory Annual Investment Event - Jeremiah Owyang presenting AI market impact and investment trends for wealth management clients",
+      speakerContribution: "Jeremiah presented a thought-provoking keynote on AI's transformative impact on investment markets and wealth management. He translated complex AI trends into actionable insights for investors, helping Litman Gregory's clients understand which technology trends to watch and how AI will reshape their investment portfolios.",
       testimonial: "Jeremiah delivered exceptional insights on how AI will reshape investment markets and helped our clients identify key trends to watch, making complex technology accessible and actionable for wealth management.",
       speakers: [
         {
@@ -189,6 +196,7 @@ export default function ClientCaseStudies() {
       eventType: "Academic AI Symposium",
       image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/IMG_075.jpg",
       imageAlt: "Chapman University AI Symposium - Noah Cheyer and Adam Cheyer presenting artificial intelligence insights to students faculty and researchers on practical AI applications and innovation",
+      speakerContribution: "Noah and Adam delivered a comprehensive presentation on AI innovation, from Siri's creation to modern AI applications. Adam shared technical insights on building conversational AI systems, while Noah discussed how the speaker industry can leverage AI, providing students and faculty with both foundational knowledge and practical implementation guidance.",
       testimonial: "Delivered exceptional insights on AI innovation and practical applications that inspired our academic community and enriched our understanding of cutting-edge technology.",
       speakers: [
         {
@@ -218,6 +226,7 @@ export default function ClientCaseStudies() {
       eventType: "AI Industry Conference",
       image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/robert-strong-speak-about-ai.jpg",
       imageAlt: "Speak About AI Conference San Francisco - Robert Strong serving as MC and emcee for premier AI industry conference bringing together thought leaders innovators and practitioners",
+      speakerContribution: "Robert served as the master of ceremonies for our inaugural AI conference, bringing his unique blend of entertainment and professionalism to keep the audience engaged throughout the day. He expertly introduced speakers, moderated Q&A sessions, and facilitated networking breaks, ensuring seamless transitions and maintaining conference energy from start to finish.",
       testimonial: "Robert Strong brought exceptional energy and professionalism as MC, seamlessly guiding our AI conference and ensuring engaging interactions between speakers and attendees.",
       speakers: [
         {
@@ -374,12 +383,21 @@ export default function ClientCaseStudies() {
                   </div>
                 )}
 
-                {/* Testimonial */}
-                <div className="mb-6 relative">
-                  <Quote className="absolute -top-2 -left-2 w-8 h-8 text-[#1E68C6] opacity-20" />
-                  <p className="text-gray-700 font-montserrat leading-relaxed pl-6 italic mb-3">
-                    "{study.testimonial}"
+                {/* Speaker Contribution */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-bold text-gray-900 font-neue-haas mb-3">What the Speaker Provided:</h4>
+                  <p className="text-gray-700 font-montserrat leading-relaxed">
+                    {study.speakerContribution}
                   </p>
+                </div>
+
+                {/* Testimonial */}
+                {study.testimonial && (
+                  <div className="mb-6 relative">
+                    <Quote className="absolute -top-2 -left-2 w-8 h-8 text-[#1E68C6] opacity-20" />
+                    <p className="text-gray-700 font-montserrat leading-relaxed pl-6 italic mb-3">
+                      "{study.testimonial}"
+                    </p>
                   {study.testimonialAuthor && (
                     <div className="pl-6 mt-3">
                       <p className="text-gray-900 font-bold font-neue-haas text-sm">
