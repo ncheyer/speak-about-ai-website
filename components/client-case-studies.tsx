@@ -133,9 +133,9 @@ export default function ClientCaseStudies() {
         }
       ],
       impact: [
-        "Engaged 500+ enterprise decision-makers",
-        "Practical AI implementation strategies",
-        "Enhanced customer experience initiatives"
+        "Sparked excitement about AI within the organization to create change",
+        "Applicable insights for all employees across the organization",
+        "Enhanced understanding of AI-driven customer experience transformation"
       ]
     },
     {
