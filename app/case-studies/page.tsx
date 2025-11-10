@@ -6,13 +6,13 @@ import { ArrowLeft } from "lucide-react"
 import ClientCaseStudies from "@/components/client-case-studies"
 
 export const metadata: Metadata = {
-  title: "Our Partners & Clients | Speak About AI",
+  title: "Case Studies | Speak About AI",
   description:
     "Discover the global brands and organizations that trust Speak About AI for their most important events. From Fortune 500 companies to leading universities and government agencies.",
   keywords:
     "AI speaking bureau clients, corporate event partners, technology conference partners, enterprise AI events, Fortune 500 AI speakers",
   openGraph: {
-    title: "Our Partners & Clients | Speak About AI",
+    title: "Case Studies | Speak About AI",
     description:
       "Trusted by industry leaders worldwide including Google, Amazon, Stanford University, and more.",
     images: [
@@ -20,17 +20,17 @@ export const metadata: Metadata = {
         url: "/hero-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Speak About AI Partners",
+        alt: "Speak About AI Case Studies",
       },
     ],
     type: "website",
   },
   alternates: {
-    canonical: "https://speakabout.ai/partners",
+    canonical: "https://speakabout.ai/case-studies",
   },
 }
 
-export default function PartnersPage() {
+export default function CaseStudiesPage() {
   const partners = [
     {
       name: "Stanford University",
@@ -108,20 +108,23 @@ export default function PartnersPage() {
           </Link>
 
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 font-neue-haas">
-            Trusted by <span className="text-[#1E68C6]">Leading Organizations</span>
+            From <span className="text-[#1E68C6]">Singapore to Silicon Valley</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl font-montserrat">
-            Fortune 500 companies, international conferences, and government agencies worldwide trust Speak About AI speakers to deliver world-class AI expertise for their most important events.
+            Our speakers have delivered keynotes at customer conferences, innovation forums, and executive briefings for technology leaders, financial institutions, and research universities across four continents.
           </p>
         </div>
       </section>
+
+      {/* Client Case Studies */}
+      <ClientCaseStudies />
 
       {/* Partners Grid */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-neue-haas">
-              Our Partners & Clients
+              Other Partners & Clients
             </h2>
             <p className="text-lg text-gray-600 font-montserrat">
               A selection of organizations our speakers have had the privilege to work with
@@ -156,9 +159,6 @@ export default function PartnersPage() {
           </div>
         </div>
       </section>
-
-      {/* Client Case Studies */}
-      <ClientCaseStudies />
 
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-[#1E68C6] to-blue-700">

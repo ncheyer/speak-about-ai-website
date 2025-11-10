@@ -46,6 +46,13 @@ interface Testimonial {
   event?: string
 }
 
+interface Program {
+  title: string
+  format?: string
+  duration?: string
+  description?: string
+}
+
 interface Speaker {
   id: number
   name: string
@@ -56,7 +63,7 @@ interface Speaker {
   headshot_url: string
   website: string
   location: string
-  programs: string[]
+  programs: (string | Program)[]
   topics: string[]
   industries: string[]
   videos: Video[]
@@ -425,7 +432,7 @@ export default function AdminSpeakerViewPage() {
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {speaker.programs.map((program, index) => (
-                      <Badge key={index} variant="outline">{program}</Badge>
+                      <Badge key={index} variant="outline">{typeof program === 'string' ? program : program.title}</Badge>
                     ))}
                   </div>
                 </CardContent>

@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import Hero from "@/components/hero"
 import ClientLogos from "@/components/client-logos"
-import ExclusiveAccess from "@/components/exclusive-access"
 import FeaturedSpeakers from "@/components/featured-speakers"
 import WhyChooseUs from "@/components/why-choose-us"
 import NavigateTheNoise from "@/components/navigate-the-noise"
@@ -93,7 +92,7 @@ const faqSchema = {
       name: "How much does it cost to book an AI keynote speaker?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "AI keynote speaker fees typically range from $10,000 to $100,000+ depending on the speaker's expertise, event type, and location. Contact us for specific pricing."
+        text: "AI keynote speaker fees typically range from $10k-$25k (emerging experts, academics, and bigger names doing virtual talks), $25k-$50k (industry leaders, published authors, and proven speakers), to $50k+ (AI pioneers and founders). Final pricing depends on format, location, date, and speaker requirements."
       }
     },
     {
@@ -184,7 +183,6 @@ export default async function HomePage() {
       <main className="min-h-screen">
         <Hero />
         <ClientLogos />
-        <ExclusiveAccess />
         <FeaturedSpeakers initialSpeakers={featuredSpeakers} />
         <WhyChooseUs />
         <NavigateTheNoise />
@@ -268,7 +266,7 @@ export default async function HomePage() {
               </div>
 
               <p className="text-lg text-gray-700 mb-4">
-                Our clients include Microsoft, Google, Amazon, Fortune 500 companies, leading universities,
+                Our clients include provincial governments, international conferences, Fortune 500 companies, leading universities,
                 and innovative startups. When you book an AI keynote speaker through Speak About AI,
                 you're partnering with the trusted leader in AI thought leadership.
               </p>
@@ -315,7 +313,7 @@ export default async function HomePage() {
                   What's the typical fee for an AI speaker?
                 </h3>
                 <p className="text-gray-700 mb-3">
-                  AI speaker fees typically range from <strong>$10k-$25k</strong> (rising experts), <strong>$25k-$50k</strong> (industry leaders), to <strong>$50k+</strong> (AI pioneers and founders). Final pricing depends on format, location, date, and speaker requirements. Contact us for a precise quote tailored to your event.
+                  AI speaker fees typically range from <strong>$10k-$25k</strong> (emerging experts, academics, and bigger names doing virtual talks), <strong>$25k-$50k</strong> (industry leaders, published authors, and proven speakers), to <strong>$50k+</strong> (AI pioneers and founders). Final pricing depends on format, location, date, and speaker requirements. Contact us for a precise quote tailored to your event.
                 </p>
               </div>
             </div>

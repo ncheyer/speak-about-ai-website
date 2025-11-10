@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Quote, Building2, MapPin, User, CalendarCheck } from "lucide-react"
+import { Quote, Building2, MapPin, User, CalendarCheck, X, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface Speaker {
   name: string
@@ -13,421 +13,686 @@ interface Speaker {
 }
 
 interface CaseStudy {
-  id: string
+  id: number
   company: string
-  logo: string
+  logo_url: string
   location: string
-  eventType: string
-  image: string
-  imageAlt: string
-  speakerContribution: string
+  event_type: string
+  image_url: string
+  image_alt: string
+  speaker_contribution: string
   testimonial: string
-  testimonialAuthor?: string
-  testimonialTitle?: string
+  testimonial_author?: string
+  testimonial_title?: string
+  video_url?: string
   speakers: Speaker[]
-  impact: string[]
+  impact_points: string[]
 }
 
 export default function ClientCaseStudies() {
+  const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([])
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(true)
+  const [expandedSpeaker, setExpandedSpeaker] = useState<{speaker: Speaker, caseStudyId: number} | null>(null)
+  const [expandedCaseStudy, setExpandedCaseStudy] = useState<CaseStudy | null>(null)
+  const [speakerDetails, setSpeakerDetails] = useState<any>(null)
+  const [loadingSpeaker, setLoadingSpeaker] = useState(false)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
 
-  const caseStudies: CaseStudy[] = [
-    {
-      id: "st-engineering",
-      company: "ST Engineering",
-      logo: "/logos/st-engineering-logo.png",
-      location: "Singapore",
-      eventType: "Customer Conference",
-      image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/20240903-STE-InnoTech-A-175.jpg",
-      imageAlt: "ST Engineering AI Innovation Forum in Singapore - AI keynote speaker Lucien Engelen presenting artificial intelligence insights to engineering professionals on aerospace defense and smart city technologies",
-      speakerContribution: "Lucien delivered a transformative keynote on AI applications in healthcare and how those innovations translate to aerospace, defense, and smart city engineering. He provided practical frameworks for cross-sector AI implementation that inspired new approaches to complex engineering challenges.",
-      testimonial: "Exceptional expertise in AI applications for aerospace, defense, and smart city technologies that inspired our engineering teams.",
-      speakers: [
-        {
-          name: "Lucien Engelen",
-          slug: "lucien-engelen",
-          title: "TransformHealth CEO and Healthcare Visionary",
-          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/lucien-engelen-headshot-1749733448794.jpg"
-        }
-      ],
-      impact: [
-        "Cross-sector AI innovation insights",
-        "Defense and aerospace applications",
-        "Smart city technology roadmap"
-      ]
-    },
-    {
-      id: "hansen",
-      company: "Hansen Technologies",
-      logo: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/Hansen-Technologies.-Powering-the-Next-Age-of-Digital-Experience-.jpg",
-      location: "Columbia, South Carolina",
-      eventType: "Customer Conference",
-      image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=675&fit=crop",
-      imageAlt: "Hansen Technologies Customer Conference Columbia South Carolina - Brittany Hodak keynote speaker presenting AI strategies for utilities and telecommunications digital transformation",
-      speakerContribution: "Brittany delivered an engaging keynote on leveraging AI for enhanced customer experiences in utilities and telecommunications. She shared actionable strategies for digital transformation that resonated with Hansen's enterprise clients and sparked meaningful conversations about AI adoption.",
-      testimonial: "Though this was our first time working with them and they were a random find; I thought the whole interaction from first meeting to speaker execution were fantastic. I would definitely go through Speak About AI again on speaker needs in the technology field.",
-      testimonialAuthor: "Fengning Yu",
-      testimonialTitle: "Marketing Manager",
-      speakers: [
-        {
-          name: "Brittany Hodak",
-          slug: "brittany-hodak",
-          title: "Speaker & Author",
-          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/brittany-hodak-headshot-1752742665518.jpg"
-        }
-      ],
-      impact: [
-        "Enterprise AI strategy development",
-        "Utilities and telecom innovation",
-        "Digital transformation roadmap"
-      ]
-    },
-    {
-      id: "rio-innovation-week",
-      company: "Rio Innovation Week",
-      logo: "/logos/rio-innovation-week-new.png",
-      location: "Rio de Janeiro, Brazil",
-      eventType: "Innovation & Technology Conference",
-      image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/14082024_AL_Peter Norvig_3841 (1).JPG",
-      imageAlt: "Rio Innovation Week São Paulo Brazil - Peter Norvig AI keynote speaker presenting artificial intelligence and innovation insights at Latin America's premier technology conference",
-      speakerContribution: "Peter delivered a captivating keynote on the evolution of AI and its impact on Latin American innovation and entrepreneurship. He shared insights from Google's AI research and provided actionable guidance for startups and enterprises navigating the AI revolution.",
-      testimonial: "Delivered transformative AI insights that inspired innovation leaders across Latin America's largest technology and entrepreneurship event.",
-      speakers: [
-        {
-          name: "Peter Norvig",
-          slug: "peter-norvig",
-          title: "Former Director of Research at Google, AI Pioneer",
-          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/peter-norvig-headshot-1749608907310.jpg"
-        }
-      ],
-      impact: [
-        "Latin American innovation ecosystem insights",
-        "AI-driven entrepreneurship strategies",
-        "Regional technology transformation"
-      ]
-    },
-    {
-      id: "nice",
-      company: "NICE",
-      logo: "/logos/nice-logo.png",
-      location: "Virtual",
-      eventType: "Global Training Webinar",
-      image: "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=1200&h=675&fit=crop",
-      imageAlt: "NICE Global Training Webinar - Adam Cheyer and Maya Ackerman presenting customer experience AI transformation to enterprise decision-makers in virtual training session",
-      speakerContribution: "Adam and Maya delivered separate virtual keynotes on AI's role in customer experience transformation, reaching over 1,000 NICE employees globally. Adam shared insights from building Siri and AI applications at scale, while Maya explored how hallucination is an innately human trait that sparks creativity.",
-      testimonial: "We had a better turnout that we expected – ~1000 employees from all around the globe jumped on each virtual talk and held a lively chat. The content and presentation exceeded our expectations as well.",
-      testimonialAuthor: "Lee B.",
-      testimonialTitle: "Global Learning Manager",
-      speakers: [
-        {
-          name: "Adam Cheyer",
-          slug: "adam-cheyer",
-          title: "VP of AI Experience at Airbnb, Co-Founder of Siri",
-          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/adam-cheyer-headshot-1749607372221.jpg"
-        },
-        {
-          name: "Maya Ackerman",
-          slug: "maya-ackerman",
-          title: "CEO/Co-founder of WaveAI, Santa Clara University Professor",
-          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/Maya-Ackerman-Headshot-1749732144887.jpg"
-        }
-      ],
-      impact: [
-        "Sparked excitement about AI within the organization to create change",
-        "Applicable insights for all employees across the organization",
-        "Enhanced understanding of AI-driven customer experience transformation"
-      ]
-    },
-    {
-      id: "juniper",
-      company: "Juniper Networks",
-      logo: "/logos/juniper-networks-logo.svg",
-      location: "Virtual",
-      eventType: "Marketing Webinar",
-      image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/1707414885816.jpeg",
-      imageAlt: "Juniper Networks AI Marketing Webinar - Peter Norvig presenting AI insights to drive client acquisition among developers and educate existing clients on artificial intelligence",
-      speakerContribution: "Peter presented a developer-focused webinar on AI fundamentals and practical applications in networking technology. His expertise from Google's AI research helped Juniper educate both prospects and existing clients on AI-driven networking solutions, resulting in strong developer engagement and lead generation.",
-      testimonial: "The event was great!! We had incredible interest and saw strong numbers. The process was smooth and your communication was fantastic. Truly, I don't know if there's anything I could think of to improve.",
-      testimonialAuthor: "Rachel F.",
-      testimonialTitle: "Marketing Campaign Manager",
-      speakers: [
-        {
-          name: "Peter Norvig",
-          slug: "peter-norvig",
-          title: "Former Director of Research at Google, AI Pioneer",
-          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/peter-norvig-headshot-1749608907310.jpg"
-        }
-      ],
-      impact: [
-        "Client acquisition among developers",
-        "Education on AI-driven networking solutions",
-        "Enhanced developer and client engagement"
-      ]
-    },
-    {
-      id: "litman-gregory",
-      company: "Litman Gregory",
-      logo: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/litman_gregory_logo.jpeg",
-      location: "San Francisco, California",
-      eventType: "Annual Client Education Event",
-      image: "https://images.unsplash.com/photo-1560439513-74b037a25d84?w=1200&h=675&fit=crop",
-      imageAlt: "Litman Gregory Annual Investment Event - Jeremiah Owyang presenting AI market impact and investment trends for wealth management clients",
-      speakerContribution: "Jeremiah presented a thought-provoking keynote on AI's transformative impact on investment markets and wealth management. He translated complex AI trends into actionable insights for investors, helping Litman Gregory's clients understand which technology trends to watch and how AI will reshape their investment portfolios.",
-      testimonial: "Jeremiah delivered exceptional insights on how AI will reshape investment markets and helped our clients identify key trends to watch, making complex technology accessible and actionable for wealth management.",
-      speakers: [
-        {
-          name: "Jeremiah Owyang",
-          slug: "jeremiah-owyang",
-          title: "General Partner, Blitzscaling Ventures. Llama Lounge, AI Event Founder",
-          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/jeremiah-owyang-headshot-1749730844346.jpg"
-        }
-      ],
-      impact: [
-        "Client education on AI's impact on investment markets",
-        "Identification of key technology trends for investors",
-        "Actionable insights for wealth management strategy"
-      ]
-    },
-    {
-      id: "chapman-university",
-      company: "Chapman University",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Chapman_University_seal.svg/200px-Chapman_University_seal.svg.png",
-      location: "Orange, California",
-      eventType: "Academic AI Symposium",
-      image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/IMG_075.jpg",
-      imageAlt: "Chapman University AI Symposium - Noah Cheyer and Adam Cheyer presenting artificial intelligence insights to students faculty and researchers on practical AI applications and innovation",
-      speakerContribution: "Noah and Adam delivered a comprehensive presentation on AI innovation, from Siri's creation to modern AI applications. Adam shared technical insights on building conversational AI systems, while Noah discussed how the speaker industry can leverage AI, providing students and faculty with both foundational knowledge and practical implementation guidance.",
-      testimonial: "Delivered exceptional insights on AI innovation and practical applications that inspired our academic community and enriched our understanding of cutting-edge technology.",
-      speakers: [
-        {
-          name: "Noah Cheyer",
-          slug: "noah-cheyer",
-          title: "Co-Founder, Head of Marketing & Operations at Speak About AI",
-          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/noah-cheyer-new-headshot.jpg"
-        },
-        {
-          name: "Adam Cheyer",
-          slug: "adam-cheyer",
-          title: "VP of AI Experience at Airbnb, Co-Founder of Siri",
-          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/adam-cheyer-headshot-1749607372221.jpg"
-        }
-      ],
-      impact: [
-        "Academic AI education and research insights",
-        "Practical AI implementation strategies for education",
-        "Next-generation technology thought leadership"
-      ]
-    },
-    {
-      id: "speak-about-ai-conference",
-      company: "Speak About AI Conference",
-      logo: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/speak-about-ai-logo.png",
-      location: "Silicon Valley, California",
-      eventType: "AI Industry Conference",
-      image: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/robert-strong-speak-about-ai.jpg",
-      imageAlt: "Speak About AI Conference San Francisco - Robert Strong serving as MC and emcee for premier AI industry conference bringing together thought leaders innovators and practitioners",
-      speakerContribution: "Robert served as the master of ceremonies for our inaugural AI conference, bringing his unique blend of entertainment and professionalism to keep the audience engaged throughout the day. He expertly introduced speakers, moderated Q&A sessions, and facilitated networking breaks, ensuring seamless transitions and maintaining conference energy from start to finish.",
-      testimonial: "Robert Strong brought exceptional energy and professionalism as MC, seamlessly guiding our AI conference and ensuring engaging interactions between speakers and attendees.",
-      speakers: [
-        {
-          name: "Robert Strong",
-          slug: "robert-strong",
-          title: "Magician, Author, and Speaker",
-          headshot: "https://oo7gkn3bwcev8cb0.public.blob.vercel-storage.com/robert-strong-headshot-speak-about-ai.png"
-        }
-      ],
-      impact: [
-        "Seamless conference flow and professional hosting",
-        "Engaging Q&A moderation and speaker introductions",
-        "Enhanced attendee experience and networking"
-      ]
-    }
-  ]
-
-  // Preload images
   useEffect(() => {
-    const preloadImage = (src: string, id: string) => {
-      const img = new Image()
-      img.onload = () => {
-        setLoadedImages((prev) => new Set([...prev, id]))
+    const fetchCaseStudies = async () => {
+      try {
+        const response = await fetch('/api/case-studies')
+        const data = await response.json()
+        if (data.success && data.data) {
+          setCaseStudies(data.data)
+        }
+      } catch (error) {
+        console.error('Error fetching case studies:', error)
+      } finally {
+        setLoading(false)
       }
-      img.onerror = () => {
-        console.warn(`Failed to preload image: ${src}`)
-        setLoadedImages((prev) => new Set([...prev, id]))
-      }
-      img.src = src
     }
 
-    caseStudies.forEach((study) => {
-      preloadImage(study.image, study.id)
-      preloadImage(study.logo, `${study.id}-logo`)
-    })
+    fetchCaseStudies()
   }, [])
 
-  return (
-    <section className="py-20 bg-white relative overflow-hidden">
-      {/* Very subtle dot pattern background */}
-      <div className="absolute inset-0 opacity-[0.01]" style={{ backgroundImage: "radial-gradient(circle, #1E68C6 1px, transparent 1px)", backgroundSize: "40px 40px" }}></div>
+  const handleImageLoad = (id: number) => {
+    setLoadedImages((prev) => new Set(prev).add(String(id)))
+  }
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+  const handleNext = useCallback(() => {
+    // Move by 2 since we're showing 2 at a time
+    setCurrentIndex((prev) => {
+      const next = prev + 2
+      return next >= caseStudies.length ? 0 : next
+    })
+  }, [caseStudies.length])
+
+  const handlePrev = useCallback(() => {
+    // Move by 2 since we're showing 2 at a time
+    setCurrentIndex((prev) => {
+      const prevIndex = prev - 2
+      return prevIndex < 0 ? Math.max(0, caseStudies.length - 2) : prevIndex
+    })
+  }, [caseStudies.length])
+
+  const handleExpandSpeaker = async (speaker: Speaker, caseStudyId: number) => {
+    setExpandedSpeaker({speaker, caseStudyId})
+    setLoadingSpeaker(true)
+
+    try {
+      const response = await fetch(`/api/speakers/public/${speaker.slug}`)
+      const data = await response.json()
+      if (data.found) {
+        setSpeakerDetails(data.speaker)
+      }
+    } catch (error) {
+      console.error('Error fetching speaker details:', error)
+    } finally {
+      setLoadingSpeaker(false)
+    }
+  }
+
+  // Convert YouTube URL to embed format
+  const getYouTubeEmbedUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url)
+      let videoId = ''
+      let startTime = ''
+
+      if (urlObj.hostname.includes('youtube.com')) {
+        videoId = urlObj.searchParams.get('v') || ''
+        startTime = urlObj.searchParams.get('t') || ''
+      } else if (urlObj.hostname.includes('youtu.be')) {
+        videoId = urlObj.pathname.slice(1)
+      }
+
+      if (videoId) {
+        let embedUrl = `https://www.youtube.com/embed/${videoId}`
+        if (startTime) {
+          // Remove 's' suffix if present and convert to start parameter
+          const timeInSeconds = startTime.replace('s', '')
+          embedUrl += `?start=${timeInSeconds}`
+        }
+        return embedUrl
+      }
+    } catch (error) {
+      console.error('Error parsing YouTube URL:', error)
+    }
+    return null
+  }
+
+  // Auto-rotation effect
+  useEffect(() => {
+    if (!isPaused && caseStudies.length > 2) {
+      const interval = setInterval(() => {
+        handleNext()
+      }, 5000) // Rotate every 5 seconds
+
+      return () => clearInterval(interval)
+    }
+  }, [isPaused, currentIndex, caseStudies.length, handleNext])
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-gray-600 font-montserrat">Loading case studies...</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (caseStudies.length === 0) {
+    return null
+  }
+
+  return (
+    <section className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center px-4 py-2 bg-[#1E68C6] bg-opacity-10 text-[#1E68C6] rounded-full text-sm font-medium mb-6 font-montserrat">
+          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-amber-100 text-gray-900 rounded-full text-sm font-medium mb-6 font-montserrat">
             <Building2 className="w-4 h-4 mr-2" />
             Client Success Stories
           </div>
-          <h2 className="text-4xl font-bold text-black mb-4 font-neue-haas">Trusted by Industry Leaders Worldwide</h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat">
-            From Fortune 500 companies to international conferences and government agencies—see how our AI speakers deliver transformative insights at the world's most important events.
+          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 font-neue-haas">
+            Real Results from Real Events
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat leading-relaxed">
+            See how our speakers have delivered exceptional value and measurable impact for organizations worldwide
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          {caseStudies.map((study) => (
+        {/* Case Studies - Carousel with Arrows */}
+        <div
+          className="relative group/carousel"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {/* Navigation Arrows */}
+          {caseStudies.length > 1 && (
+            <>
+              <button
+                onClick={handlePrev}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 lg:-translate-x-12 z-10 p-4 rounded-full bg-white/95 backdrop-blur-sm border-2 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white transition-all duration-300 shadow-2xl hover:shadow-[0_0_30px_rgba(30,104,198,0.5)] hover:scale-110"
+                aria-label="Previous case study"
+              >
+                <ChevronLeft className="w-7 h-7" />
+              </button>
+              <button
+                onClick={handleNext}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 lg:translate-x-12 z-10 p-4 rounded-full bg-white/95 backdrop-blur-sm border-2 border-[#1E68C6] text-[#1E68C6] hover:bg-[#1E68C6] hover:text-white transition-all duration-300 shadow-2xl hover:shadow-[0_0_30px_rgba(30,104,198,0.5)] hover:scale-110"
+                aria-label="Next case study"
+              >
+                <ChevronRight className="w-7 h-7" />
+              </button>
+            </>
+          )}
+
+          {/* Carousel Container */}
+          <div className="overflow-hidden">
             <div
-              key={study.id}
-              className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100"
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{
+                transform: `translateX(-${currentIndex * 50}%)`
+              }}
             >
-              {/* Image Section */}
-              <div className="relative w-full aspect-[16/9] bg-gray-200">
-                {!loadedImages.has(study.id) && (
-                  <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
-                    <div className="w-16 h-16 bg-gray-300 rounded-full animate-pulse"></div>
-                  </div>
-                )}
-                <img
-                  src={study.image || "/placeholder.svg"}
-                  alt={study.imageAlt}
-                  className={`w-full h-full object-cover transition-opacity duration-300 ${
-                    loadedImages.has(study.id) ? "opacity-100" : "opacity-0"
-                  }`}
-                  loading="lazy"
-                />
-                {/* Company Logo Overlay */}
-                <div className="absolute top-4 left-4 bg-white rounded-lg p-3 shadow-lg">
-                  <img
-                    src={study.logo || "/placeholder.svg"}
-                    alt={`${study.company} logo`}
-                    className="h-8 w-auto object-contain"
-                    loading="lazy"
-                  />
-                </div>
-              </div>
-
-              {/* Content Section */}
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-2xl font-bold text-gray-900 font-neue-haas">{study.company}</h3>
-                  <div className="flex items-center text-gray-600 text-sm font-montserrat">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    {study.location}
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <span className="inline-block px-3 py-1 bg-blue-100 text-[#1E68C6] rounded-full text-sm font-semibold font-montserrat">
-                    {study.eventType}
-                  </span>
-                </div>
-
-                {/* Featured Speakers */}
-                {study.speakers && study.speakers.length > 0 && (
-                  <div className="mb-6 pb-6 border-b border-gray-200">
-                    <h4 className="text-sm font-bold text-gray-900 font-neue-haas mb-4 flex items-center">
-                      <User className="w-4 h-4 mr-2 text-[#1E68C6]" />
-                      Featured Speaker{study.speakers.length > 1 ? 's' : ''}:
-                    </h4>
-                    <div className="space-y-4">
-                      {study.speakers.map((speaker, idx) => (
-                        <div key={idx} className="flex items-start gap-4 bg-gradient-to-r from-blue-50 to-transparent p-4 rounded-lg border border-blue-100">
-                          {/* Speaker Headshot */}
-                          <Link href={`/speakers/${speaker.slug}`} className="flex-shrink-0">
-                            <img
-                              src={speaker.headshot}
-                              alt={speaker.name}
-                              className="w-20 h-20 rounded-full object-cover border-2 border-[#1E68C6] hover:border-[#D4AF37] transition-all duration-300"
-                            />
-                          </Link>
-
-                          {/* Speaker Info and CTA */}
-                          <div className="flex-1 min-w-0">
-                            <Link href={`/speakers/${speaker.slug}`} className="group">
-                              <h5 className="text-lg font-bold text-gray-900 font-neue-haas group-hover:text-[#1E68C6] transition-colors">
-                                {speaker.name}
-                              </h5>
-                              <p className="text-sm text-gray-600 font-montserrat mt-1 leading-snug">
-                                {speaker.title}
-                              </p>
-                            </Link>
-
-                            {/* Book Speaker CTA */}
-                            <div className="mt-3">
-                              <Button
-                                asChild
-                                variant="gold"
-                                size="sm"
-                                className="font-montserrat font-bold shadow-lg hover:shadow-xl transition-all duration-300"
-                              >
-                                <Link
-                                  href={`/contact?source=case_study_${study.id}&speakerName=${encodeURIComponent(speaker.name)}`}
-                                  className="inline-flex items-center gap-2"
-                                >
-                                  <CalendarCheck className="w-4 h-4" />
-                                  Book Speaker Today
-                                </Link>
-                              </Button>
-                            </div>
+              {caseStudies.map((study) => (
+                <div
+                  key={study.id}
+                  className="flex-shrink-0 w-full md:w-1/2 px-2 md:px-4"
+                >
+                  <div className="group bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 border-gray-200 hover:border-[#1E68C6]">
+                    <div className="flex flex-col">
+                      {/* Event Image */}
+                      <div className="relative h-64 bg-gray-200 overflow-hidden">
+                        <img
+                          src={study.image_url}
+                          alt={study.image_alt}
+                          onLoad={() => handleImageLoad(study.id)}
+                          className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+                            loadedImages.has(String(study.id)) ? "opacity-100" : "opacity-0"
+                          }`}
+                          loading="lazy"
+                        />
+                        {/* Company Logo Overlay */}
+                        <div className="absolute top-6 left-6 bg-white rounded-xl p-4 shadow-xl">
+                          <img
+                            src={study.logo_url || "/placeholder.svg"}
+                            alt={`${study.company} logo`}
+                            className={`w-auto object-contain ${study.company === 'Chapman University' ? 'h-7' : 'h-10'}`}
+                            loading="lazy"
+                          />
+                        </div>
+                        {/* Event Type Badge */}
+                        <div className="absolute bottom-6 left-6">
+                          <div className="px-5 py-2 bg-gradient-to-r from-[#1E68C6] to-blue-700 text-white rounded-full text-sm font-bold font-montserrat shadow-xl">
+                            {study.event_type}
                           </div>
                         </div>
-                      ))}
+                      </div>
+
+                      {/* Content Section */}
+                      <div className="p-6 flex flex-col flex-1">
+                        <h3 className="text-2xl font-bold text-gray-900 font-neue-haas mb-4">{study.company}</h3>
+
+                        {/* Featured Speakers */}
+                        {study.speakers && study.speakers.length > 0 && (
+                          <div className="mb-5">
+                            <h4 className="text-xs uppercase tracking-wide font-bold text-gray-500 font-montserrat mb-3">
+                              Featured Speaker{study.speakers.length > 1 ? 's' : ''}
+                            </h4>
+                            <div className="space-y-3">
+                              {study.speakers.slice(0, 2).map((speaker, idx) => (
+                                <div
+                                  key={idx}
+                                  className="relative flex items-center gap-4 p-4 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 rounded-xl border-2 border-blue-700 cursor-pointer hover:border-[#D4AF37] hover:shadow-2xl transition-all duration-300 overflow-hidden group/speaker"
+                                  onClick={() => handleExpandSpeaker(speaker, study.id)}
+                                >
+                                  {/* Animated gradient overlay */}
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover/speaker:opacity-100 transition-opacity duration-500"></div>
+
+                                  <img
+                                    src={speaker.headshot}
+                                    alt={speaker.name}
+                                    className="relative z-10 w-14 h-14 rounded-full object-cover border-3 border-white shadow-xl group-hover/speaker:scale-110 transition-transform duration-300"
+                                  />
+                                  <div className="relative z-10 flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-white font-neue-haas drop-shadow-lg">
+                                      {speaker.name}
+                                    </p>
+                                    <p className="text-xs text-blue-100 font-montserrat line-clamp-1">
+                                      {speaker.title}
+                                    </p>
+                                  </div>
+                                  {/* Click indicator */}
+                                  <div className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover/speaker:bg-[#D4AF37] transition-colors">
+                                    <ChevronRight className="w-4 h-4 text-white" />
+                                  </div>
+                                </div>
+                              ))}
+                              {study.speakers.length > 2 && (
+                                <p className="text-xs text-gray-500 font-montserrat pl-3">
+                                  + {study.speakers.length - 2} more
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Testimonial - Truncated */}
+                        {study.testimonial && (
+                          <div className="mb-5 bg-blue-50 rounded-lg p-4 relative">
+                            <Quote className="absolute top-3 left-3 w-6 h-6 text-[#1E68C6] opacity-20" />
+                            <p className="text-gray-700 font-montserrat leading-relaxed text-sm italic pl-6 line-clamp-3">
+                              "{study.testimonial}"
+                            </p>
+                            {study.testimonial_author && (
+                              <p className="text-xs text-gray-600 font-montserrat mt-2 pl-6">
+                                — {study.testimonial_author}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Impact Points */}
+                        {study.impact_points && study.impact_points.length > 0 && (
+                          <div className="mb-5">
+                            <h4 className="text-xs uppercase tracking-wide font-bold text-gray-500 font-montserrat mb-3">
+                              Key Impact
+                            </h4>
+                            <div className="space-y-2">
+                              {study.impact_points.slice(0, 2).map((point, idx) => (
+                                <div key={idx} className="flex items-start gap-2">
+                                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[#1E68C6] flex items-center justify-center mt-0.5">
+                                    <span className="text-white text-xs font-bold">{idx + 1}</span>
+                                  </div>
+                                  <span className="text-gray-700 font-montserrat text-sm leading-relaxed flex-1">
+                                    {point}
+                                  </span>
+                                </div>
+                              ))}
+                              {study.impact_points.length > 2 && (
+                                <p className="text-xs text-gray-500 font-montserrat ml-7">
+                                  + {study.impact_points.length - 2} more
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* View More Button */}
+                        <div className="mt-auto pt-4">
+                          <Button
+                            variant="gold"
+                            size="sm"
+                            className="w-full font-montserrat font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                            onClick={() => setExpandedCaseStudy(study)}
+                          >
+                            View Full Case Study →
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                )}
+                </div>
+              ))}
+        </div>
+      </div>
 
-                {/* Speaker Contribution */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-bold text-gray-900 font-neue-haas mb-3">What the Speaker Provided:</h4>
-                  <p className="text-gray-700 font-montserrat leading-relaxed">
-                    {study.speakerContribution}
-                  </p>
+        {/* Dots Indicator */}
+        {caseStudies.length > 2 && (
+          <div className="flex justify-center gap-2 mt-8">
+            {Array.from({ length: Math.ceil(caseStudies.length / 2) }).map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx * 2)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  currentIndex === idx * 2
+                    ? 'bg-[#1E68C6] w-12'
+                    : 'bg-gray-300 hover:bg-gray-400 w-2'
+                }`}
+                aria-label={`Go to page ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+
+      {/* Speaker Detail Modal */}
+      {expandedSpeaker && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
+          onClick={() => {
+            setExpandedSpeaker(null)
+            setSpeakerDetails(null)
+          }}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative animate-in zoom-in duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setExpandedSpeaker(null)
+                setSpeakerDetails(null)
+              }}
+              className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {loadingSpeaker ? (
+              <div className="p-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-[#1E68C6]"></div>
+                <p className="mt-4 text-gray-600 font-montserrat">Loading speaker details...</p>
+              </div>
+            ) : speakerDetails ? (
+              <div>
+                {/* Header with gradient background */}
+                <div className="bg-gradient-to-r from-[#1E68C6] to-blue-700 p-8 text-white">
+                  <div className="flex items-start gap-6">
+                    <img
+                      src={speakerDetails.image}
+                      alt={speakerDetails.name}
+                      className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-2xl"
+                    />
+                    <div className="flex-1">
+                      <h3 className="text-3xl font-bold font-neue-haas mb-2">{speakerDetails.name}</h3>
+                      <p className="text-xl text-blue-100 font-montserrat mb-4">{speakerDetails.title}</p>
+                      {speakerDetails.feeRange && (
+                        <div className="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold">
+                          Speaking Fee: {speakerDetails.feeRange}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Testimonial */}
-                {study.testimonial && (
-                  <div className="mb-6 relative">
-                    <Quote className="absolute -top-2 -left-2 w-8 h-8 text-[#1E68C6] opacity-20" />
-                    <p className="text-gray-700 font-montserrat leading-relaxed pl-6 italic mb-3">
-                      "{study.testimonial}"
-                    </p>
-                    {study.testimonialAuthor && (
-                      <div className="pl-6 mt-3">
-                        <p className="text-gray-900 font-bold font-neue-haas text-sm">
-                          — {study.testimonialAuthor}
-                        </p>
-                        {study.testimonialTitle && (
-                          <p className="text-gray-600 font-montserrat text-xs mt-0.5">
-                            {study.testimonialTitle}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Impact Points */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-bold text-gray-900 font-neue-haas mb-3">Key Impact:</h4>
-                  {study.impact.map((point, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5">
-                      <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[#1E68C6] mt-2"></span>
-                      <span className="text-sm text-gray-600 font-montserrat leading-relaxed">{point}</span>
+                {/* Content */}
+                <div className="p-8">
+                  {/* Bio */}
+                  {speakerDetails.bio && (
+                    <div className="mb-8">
+                      <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">Biography</h4>
+                      <p className="text-gray-700 font-montserrat leading-relaxed whitespace-pre-line">
+                        {speakerDetails.bio}
+                      </p>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Topics */}
+                  {speakerDetails.topics && speakerDetails.topics.length > 0 && (
+                    <div className="mb-8">
+                      <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">Speaking Topics</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {speakerDetails.topics.map((topic: string, idx: number) => (
+                          <span
+                            key={idx}
+                            className="px-4 py-2 bg-blue-100 text-[#1E68C6] rounded-full text-sm font-semibold font-montserrat"
+                          >
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Programs */}
+                  {speakerDetails.programs && speakerDetails.programs.length > 0 && (
+                    <div className="mb-8">
+                      <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">Signature Programs</h4>
+                      <div className="grid gap-4">
+                        {speakerDetails.programs.map((program: any, idx: number) => (
+                          <div key={idx} className="p-4 bg-gradient-to-r from-blue-50 to-white rounded-lg border border-blue-200">
+                            <h5 className="font-bold text-gray-900 font-neue-haas mb-2">{program.title}</h5>
+                            <p className="text-gray-700 font-montserrat text-sm">{program.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Videos */}
+                  {speakerDetails.videos && speakerDetails.videos.length > 0 && (
+                    <div className="mb-8">
+                      <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">Videos</h4>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {speakerDetails.videos.map((video: any, idx: number) => (
+                          <div key={idx} className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
+                            <iframe
+                              src={video.url}
+                              className="w-full h-full"
+                              allowFullScreen
+                              title={video.title || `Video ${idx + 1}`}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CTA */}
+                  <div className="flex gap-4 pt-6 border-t border-gray-200">
+                    <Button
+                      asChild
+                      variant="gold"
+                      size="lg"
+                      className="flex-1 font-montserrat font-bold text-lg"
+                    >
+                      <Link href={`/contact?source=case_study_modal&speakerName=${encodeURIComponent(expandedSpeaker.speaker.name)}`}>
+                        Book {expandedSpeaker.speaker.name}
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="lg"
+                      className="font-montserrat font-bold"
+                    >
+                      <Link href={`/speakers/${expandedSpeaker.speaker.slug}`}>
+                        View Full Profile
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-12 text-center">
+                <p className="text-gray-600 font-montserrat">Unable to load speaker details.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Full Case Study Modal */}
+      {expandedCaseStudy && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
+          onClick={() => setExpandedCaseStudy(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto relative animate-in zoom-in duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setExpandedCaseStudy(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Header with gradient background */}
+            <div className="bg-gradient-to-r from-[#1E68C6] to-blue-700 p-8 text-white">
+              <div className="flex items-center gap-6">
+                <img
+                  src={expandedCaseStudy.logo_url}
+                  alt={expandedCaseStudy.company}
+                  className="h-20 w-auto object-contain bg-white rounded-lg p-4"
+                />
+                <div className="flex-1">
+                  <h3 className="text-3xl font-bold font-neue-haas mb-2">{expandedCaseStudy.company}</h3>
+                  <div className="flex gap-3 flex-wrap">
+                    <span className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold">
+                      {expandedCaseStudy.event_type}
+                    </span>
+                    <span className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      {expandedCaseStudy.location}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          ))}
+
+            {/* Content */}
+            <div className="p-8">
+              {/* Event Image */}
+              {expandedCaseStudy.image_url && (
+                <div className="mb-8 rounded-xl overflow-hidden">
+                  <img
+                    src={expandedCaseStudy.image_url}
+                    alt={expandedCaseStudy.image_alt}
+                    className="w-full h-96 object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Video Embed */}
+              {expandedCaseStudy.video_url && getYouTubeEmbedUrl(expandedCaseStudy.video_url) && (
+                <div className="mb-8">
+                  <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">
+                    Watch Highlights
+                  </h4>
+                  <div className="relative w-full rounded-xl overflow-hidden shadow-2xl" style={{ paddingBottom: '56.25%' }}>
+                    <iframe
+                      src={getYouTubeEmbedUrl(expandedCaseStudy.video_url) || ''}
+                      title={`${expandedCaseStudy.company} Video`}
+                      className="absolute top-0 left-0 w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* All Featured Speakers */}
+              {expandedCaseStudy.speakers && expandedCaseStudy.speakers.length > 0 && (
+                <div className="mb-8">
+                  <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">
+                    Featured Speaker{expandedCaseStudy.speakers.length > 1 ? 's' : ''}
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {expandedCaseStudy.speakers.map((speaker, idx) => (
+                      <div
+                        key={idx}
+                        className="relative flex items-center gap-4 p-4 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 rounded-xl border-2 border-blue-700 cursor-pointer hover:border-[#D4AF37] hover:shadow-2xl transition-all duration-300 overflow-hidden group/speaker"
+                        onClick={() => handleExpandSpeaker(speaker, expandedCaseStudy.id)}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover/speaker:opacity-100 transition-opacity duration-500"></div>
+                        <img
+                          src={speaker.headshot}
+                          alt={speaker.name}
+                          className="relative z-10 w-14 h-14 rounded-full object-cover border-3 border-white shadow-xl group-hover/speaker:scale-110 transition-transform duration-300"
+                        />
+                        <div className="relative z-10 flex-1 min-w-0">
+                          <p className="text-sm font-bold text-white font-neue-haas drop-shadow-lg">
+                            {speaker.name}
+                          </p>
+                          <p className="text-xs text-blue-100 font-montserrat line-clamp-1">
+                            {speaker.title}
+                          </p>
+                        </div>
+                        <div className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover/speaker:bg-[#D4AF37] transition-colors">
+                          <ChevronRight className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Full Testimonial */}
+              {expandedCaseStudy.testimonial && (
+                <div className="mb-8 bg-blue-50 rounded-xl p-6 relative">
+                  <Quote className="absolute top-4 left-4 w-10 h-10 text-[#1E68C6] opacity-20" />
+                  <p className="text-gray-800 font-montserrat leading-relaxed text-lg italic pl-8 mb-4">
+                    "{expandedCaseStudy.testimonial}"
+                  </p>
+                  {expandedCaseStudy.testimonial_author && (
+                    <div className="pl-8 border-l-4 border-[#1E68C6]">
+                      <p className="text-gray-900 font-bold font-neue-haas">
+                        {expandedCaseStudy.testimonial_author}
+                      </p>
+                      {expandedCaseStudy.testimonial_title && (
+                        <p className="text-gray-600 font-montserrat text-sm">
+                          {expandedCaseStudy.testimonial_title}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Speaker Contribution */}
+              {expandedCaseStudy.speaker_contribution && (
+                <div className="mb-8">
+                  <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">
+                    What the Speaker Provided
+                  </h4>
+                  <p className="text-gray-700 font-montserrat leading-relaxed text-lg">
+                    {expandedCaseStudy.speaker_contribution}
+                  </p>
+                </div>
+              )}
+
+              {/* All Impact Points */}
+              {expandedCaseStudy.impact_points && expandedCaseStudy.impact_points.length > 0 && (
+                <div className="mb-8">
+                  <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">
+                    Key Impact
+                  </h4>
+                  <div className="grid gap-4">
+                    {expandedCaseStudy.impact_points.map((point, idx) => (
+                      <div key={idx} className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#1E68C6] flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">{idx + 1}</span>
+                        </div>
+                        <span className="text-gray-700 font-montserrat leading-relaxed flex-1 text-lg">
+                          {point}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* CTA */}
+              <div className="flex gap-4 pt-6 border-t border-gray-200">
+                <Button
+                  asChild
+                  variant="gold"
+                  size="lg"
+                  className="flex-1 font-montserrat font-bold text-lg"
+                >
+                  <Link href={`/contact?source=case_study_${expandedCaseStudy.id}`}>
+                    Book a Speaker Like This
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </section>
   )
 }

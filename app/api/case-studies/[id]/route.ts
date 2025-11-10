@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query } from '@/lib/db'
+import { neon } from '@neondatabase/serverless'
 
 // GET /api/case-studies/[id] - Fetch a single case study
 export async function GET(
@@ -7,9 +7,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const sql = neon(process.env.DATABASE_URL!)
     const { id } = params
 
-    const result = await query(`
+    const result = await sql`
       SELECT
         cs.*,
         json_agg(
@@ -24,18 +25,18 @@ export async function GET(
       FROM case_studies cs
       LEFT JOIN case_study_speakers css ON cs.id = css.case_study_id
       LEFT JOIN speakers s ON css.speaker_id = s.id
-      WHERE cs.id = $1
+      WHERE cs.id = ${id}
       GROUP BY cs.id
-    `, [id])
+    `
 
-    if (result.rows.length === 0) {
+    if (result.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Case study not found' },
         { status: 404 }
       )
     }
 
-    return NextResponse.json({ success: true, data: result.rows[0] })
+    return NextResponse.json({ success: true, data: result[0] })
   } catch (error) {
     console.error('Error fetching case study:', error)
     return NextResponse.json(
@@ -51,6 +52,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    const sql = neon(process.env.DATABASE_URL!)
     const { id } = params
     const body = await request.json()
     const {
@@ -60,7 +62,10 @@ export async function PUT(
       event_type,
       image_url,
       image_alt,
+      speaker_contribution,
       testimonial,
+      testimonial_author,
+      testimonial_title,
       impact_points,
       speaker_ids,
       display_order,
@@ -69,17 +74,17 @@ export async function PUT(
     } = body
 
     // Update case study
-    const result = await query(
-      `UPDATE case_studies
-       SET company = $1, logo_url = $2, location = $3, event_type = $4,
-           image_url = $5, image_alt = $6, testimonial = $7, impact_points = $8,
-           display_order = $9, active = $10, featured = $11
-       WHERE id = $12
-       RETURNING *`,
-      [company, logo_url, location, event_type, image_url, image_alt, testimonial, impact_points, display_order, active, featured, id]
-    )
+    const result = await sql`
+      UPDATE case_studies
+      SET company = ${company}, logo_url = ${logo_url}, location = ${location}, event_type = ${event_type},
+          image_url = ${image_url}, image_alt = ${image_alt}, speaker_contribution = ${speaker_contribution},
+          testimonial = ${testimonial}, testimonial_author = ${testimonial_author}, testimonial_title = ${testimonial_title},
+          impact_points = ${impact_points}, display_order = ${display_order}, active = ${active}, featured = ${featured}
+      WHERE id = ${id}
+      RETURNING *
+    `
 
-    if (result.rows.length === 0) {
+    if (result.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Case study not found' },
         { status: 404 }
@@ -87,19 +92,18 @@ export async function PUT(
     }
 
     // Update speaker associations
-    await query('DELETE FROM case_study_speakers WHERE case_study_id = $1', [id])
+    await sql`DELETE FROM case_study_speakers WHERE case_study_id = ${id}`
 
     if (speaker_ids && speaker_ids.length > 0) {
       for (let i = 0; i < speaker_ids.length; i++) {
-        await query(
-          `INSERT INTO case_study_speakers (case_study_id, speaker_id, display_order)
-           VALUES ($1, $2, $3)`,
-          [id, speaker_ids[i], i]
-        )
+        await sql`
+          INSERT INTO case_study_speakers (case_study_id, speaker_id, display_order)
+          VALUES (${id}, ${speaker_ids[i]}, ${i})
+        `
       }
     }
 
-    return NextResponse.json({ success: true, data: result.rows[0] })
+    return NextResponse.json({ success: true, data: result[0] })
   } catch (error) {
     console.error('Error updating case study:', error)
     return NextResponse.json(
@@ -115,11 +119,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const sql = neon(process.env.DATABASE_URL!)
     const { id } = params
 
-    const result = await query('DELETE FROM case_studies WHERE id = $1 RETURNING *', [id])
+    const result = await sql`DELETE FROM case_studies WHERE id = ${id} RETURNING *`
 
-    if (result.rows.length === 0) {
+    if (result.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Case study not found' },
         { status: 404 }

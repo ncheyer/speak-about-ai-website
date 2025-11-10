@@ -1,16 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query } from '@/lib/db'
+import { neon } from '@neondatabase/serverless'
 
 // GET /api/case-studies - Fetch all case studies
 export async function GET() {
   try {
-    const result = await query(`
+    const sql = neon(process.env.DATABASE_URL!)
+    const result = await sql`
       SELECT
-        cs.*,
+        cs.id,
+        cs.company,
+        cs.logo_url,
+        cs.location,
+        cs.event_type,
+        cs.image_url,
+        cs.image_alt,
+        cs.speaker_contribution,
+        cs.testimonial,
+        cs.testimonial_author,
+        cs.testimonial_title,
+        cs.video_url,
+        cs.impact_points,
+        cs.display_order,
+        cs.active,
+        cs.featured,
         json_agg(
           json_build_object(
             'name', s.name,
-            'slug', s.slug,
+            'slug', LOWER(REPLACE(s.name, ' ', '-')),
             'title', s.one_liner,
             'headshot', s.headshot_url
           ) ORDER BY css.display_order
@@ -19,11 +35,11 @@ export async function GET() {
       LEFT JOIN case_study_speakers css ON cs.id = css.case_study_id
       LEFT JOIN speakers s ON css.speaker_id = s.id
       WHERE cs.active = true
-      GROUP BY cs.id
+      GROUP BY cs.id, cs.company, cs.logo_url, cs.location, cs.event_type, cs.image_url, cs.image_alt, cs.speaker_contribution, cs.testimonial, cs.testimonial_author, cs.testimonial_title, cs.video_url, cs.impact_points, cs.display_order, cs.active, cs.featured
       ORDER BY cs.display_order, cs.created_at DESC
-    `)
+    `
 
-    return NextResponse.json({ success: true, data: result.rows })
+    return NextResponse.json({ success: true, data: result })
   } catch (error) {
     console.error('Error fetching case studies:', error)
     return NextResponse.json(
@@ -36,6 +52,7 @@ export async function GET() {
 // POST /api/case-studies - Create a new case study
 export async function POST(request: NextRequest) {
   try {
+    const sql = neon(process.env.DATABASE_URL!)
     const body = await request.json()
     const {
       company,
@@ -61,28 +78,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert case study
-    const result = await query(
-      `INSERT INTO case_studies
+    const result = await sql`
+      INSERT INTO case_studies
         (company, logo_url, location, event_type, image_url, image_alt, testimonial, impact_points, display_order, active, featured)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-       RETURNING *`,
-      [company, logo_url, location, event_type, image_url, image_alt, testimonial, impact_points, display_order, active, featured]
-    )
+      VALUES (${company}, ${logo_url}, ${location}, ${event_type}, ${image_url}, ${image_alt}, ${testimonial}, ${impact_points}, ${display_order}, ${active}, ${featured})
+      RETURNING *
+    `
 
-    const caseStudyId = result.rows[0].id
+    const caseStudyId = result[0].id
 
     // Insert speaker associations
     if (speaker_ids && speaker_ids.length > 0) {
       for (let i = 0; i < speaker_ids.length; i++) {
-        await query(
-          `INSERT INTO case_study_speakers (case_study_id, speaker_id, display_order)
-           VALUES ($1, $2, $3)`,
-          [caseStudyId, speaker_ids[i], i]
-        )
+        await sql`
+          INSERT INTO case_study_speakers (case_study_id, speaker_id, display_order)
+          VALUES (${caseStudyId}, ${speaker_ids[i]}, ${i})
+        `
       }
     }
 
-    return NextResponse.json({ success: true, data: result.rows[0] })
+    return NextResponse.json({ success: true, data: result[0] })
   } catch (error) {
     console.error('Error creating case study:', error)
     return NextResponse.json(
