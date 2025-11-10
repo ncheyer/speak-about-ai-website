@@ -245,6 +245,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           bgColor: "bg-blue-50"
         },
         {
+          title: "Conference Directory",
+          href: "/admin/conferences",
+          icon: Calendar,
+          description: "Event Industry Conferences",
+          color: "text-indigo-600",
+          bgColor: "bg-indigo-50"
+        },
+        {
           title: "Landing Resources",
           href: "/admin/landing-resources",
           icon: Send,
