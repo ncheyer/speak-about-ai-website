@@ -236,53 +236,6 @@ export default function ConferenceDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Main Info */}
           <div className="lg:col-span-2 space-y-6">
-            {/* CFP Status Alert */}
-            {conference.cfp_open ? (
-              <Card className="border-green-200 bg-green-50">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0 mt-1" />
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-green-900 mb-2">
-                        Call for Proposals is Open!
-                      </h3>
-                      {conference.cfp_deadline_display && (
-                        <p className="text-green-800 text-sm mb-3">
-                          <Clock className="h-4 w-4 inline mr-1" />
-                          Deadline: {conference.cfp_deadline_display}
-                        </p>
-                      )}
-                      {conference.cfp_link && (
-                        <Button
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                          onClick={() => window.open(conference.cfp_link, '_blank')}
-                        >
-                          Submit Your Proposal
-                          <ExternalLink className="ml-2 h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="border-gray-200 bg-gray-50">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <AlertCircle className="h-6 w-6 text-gray-600 flex-shrink-0 mt-1" />
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">
-                        Call for Proposals is Currently Closed
-                      </h3>
-                      <p className="text-gray-600 text-sm">
-                        Check back later or contact the organizers for more information.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             {/* Description */}
             {conference.description && (
               <Card>
@@ -291,36 +244,6 @@ export default function ConferenceDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-700 whitespace-pre-wrap">{conference.description}</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Speaker Benefits */}
-            {conference.speaker_benefits && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="h-5 w-5 text-blue-600" />
-                    Speaker Benefits
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700 whitespace-pre-wrap">{conference.speaker_benefits}</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* CFP Notes */}
-            {conference.cfp_notes && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-blue-600" />
-                    CFP Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700 whitespace-pre-wrap">{conference.cfp_notes}</p>
                 </CardContent>
               </Card>
             )}
