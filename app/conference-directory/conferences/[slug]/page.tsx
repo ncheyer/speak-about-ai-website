@@ -211,6 +211,20 @@ export default function ConferenceDetailPage() {
                     )}
                   </div>
                 </div>
+
+                {conference.website_url && (
+                  <div className="mt-4">
+                    <Button
+                      size="lg"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={() => window.open(conference.website_url, '_blank')}
+                    >
+                      <Globe className="h-5 w-5 mr-2" />
+                      Visit Official Website
+                      <ExternalLink className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

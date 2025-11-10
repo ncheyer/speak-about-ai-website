@@ -367,7 +367,16 @@ export default function AdminConferencesPage() {
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => router.push(`/admin/conferences/${conference.id}/edit`)}
+                              title="Edit conference"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => router.push(`/conference-directory/conferences/${conference.slug}`)}
+                              title="View conference"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -376,6 +385,7 @@ export default function AdminConferencesPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => window.open(conference.website_url, '_blank')}
+                                title="Visit website"
                               >
                                 <ExternalLink className="h-4 w-4" />
                               </Button>
@@ -385,6 +395,7 @@ export default function AdminConferencesPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => window.location.href = `mailto:${conference.contact_email}`}
+                                title="Email contact"
                               >
                                 <Mail className="h-4 w-4" />
                               </Button>

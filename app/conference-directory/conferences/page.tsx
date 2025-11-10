@@ -62,7 +62,6 @@ export default function ConferenceListingPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [locationSearch, setLocationSearch] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
-  const [cfpFilter, setCfpFilter] = useState("all") // 'all', 'open', 'closed'
   const [sortBy, setSortBy] = useState("date")
   const [subscriber, setSubscriber] = useState<any>(null)
 
@@ -85,7 +84,6 @@ export default function ConferenceListingPage() {
       if (selectedCategory !== "all") params.append("category", selectedCategory)
       if (searchTerm) params.append("search", searchTerm)
       if (locationSearch) params.append("location", locationSearch)
-      if (cfpFilter === "open") params.append("cfp_open", "true")
 
       const response = await fetch(`/api/conferences?${params}`)
       const data = await response.json()
@@ -129,7 +127,7 @@ export default function ConferenceListingPage() {
       loadConferences()
     }, 300)
     return () => clearTimeout(debounce)
-  }, [searchTerm, locationSearch, selectedCategory, cfpFilter])
+  }, [searchTerm, locationSearch, selectedCategory])
 
   const sortedConferences = [...conferences].sort((a, b) => {
     switch (sortBy) {
@@ -140,8 +138,6 @@ export default function ConferenceListingPage() {
         return new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
       case "name":
         return a.name.localeCompare(b.name)
-      case "cfp":
-        return (b.cfp_open ? 1 : 0) - (a.cfp_open ? 1 : 0)
       default:
         return (b.featured ? 1 : 0) - (a.featured ? 1 : 0)
     }
@@ -227,17 +223,6 @@ export default function ConferenceListingPage() {
               </SelectContent>
             </Select>
 
-            <Select value={cfpFilter} onValueChange={setCfpFilter}>
-              <SelectTrigger className="w-full md:w-[150px]">
-                <SelectValue placeholder="CFP Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All CFP Status</SelectItem>
-                <SelectItem value="open">CFP Open</SelectItem>
-                <SelectItem value="closed">CFP Closed</SelectItem>
-              </SelectContent>
-            </Select>
-
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full md:w-[150px]">
                 <SelectValue placeholder="Sort by" />
@@ -245,7 +230,6 @@ export default function ConferenceListingPage() {
               <SelectContent>
                 <SelectItem value="date">By Date</SelectItem>
                 <SelectItem value="name">By Name</SelectItem>
-                <SelectItem value="cfp">CFP Open First</SelectItem>
                 <SelectItem value="featured">Featured</SelectItem>
               </SelectContent>
             </Select>
@@ -269,7 +253,6 @@ export default function ConferenceListingPage() {
                 onClick={() => {
                   setSearchTerm("")
                   setSelectedCategory("all")
-                  setCfpFilter("all")
                 }}
                 className="mt-2"
               >
@@ -290,12 +273,6 @@ export default function ConferenceListingPage() {
                 {conference.featured && (
                   <div className="absolute top-2 right-2 z-10">
                     <Badge className="bg-yellow-500 text-white">Featured</Badge>
-                  </div>
-                )}
-
-                {conference.cfp_open && (
-                  <div className="absolute top-2 left-2 z-10">
-                    <Badge className="bg-green-600 text-white">CFP Open</Badge>
                   </div>
                 )}
 
@@ -391,6 +368,24 @@ export default function ConferenceListingPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Website Link */}
+                  {conference.website_url && (
+                    <div className="pt-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          window.open(conference.website_url, '_blank')
+                        }}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Visit Website
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
