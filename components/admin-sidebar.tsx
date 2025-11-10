@@ -299,7 +299,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 
   return (
     <div className={cn(
-      "flex flex-col h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl transition-all duration-300 ease-in-out",
+      "flex flex-col h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl transition-all duration-300 ease-in-out sticky top-0",
       collapsed ? "w-16" : "w-72",
       className
     )}>
