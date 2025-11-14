@@ -1,24 +1,22 @@
 "use client"
 
 import type React from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, Building, Award, Calendar, CheckCircle, BookOpen, Trophy, Download, Mic, Users, Clock, Briefcase, Star, MessageSquare } from "lucide-react"
+import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, Building, Award, Calendar, CheckCircle, BookOpen, Trophy, Download, Mic, Users, Clock, Briefcase, Star } from "lucide-react"
 import type { Speaker } from "@/lib/speakers-data"
-import { SpeakerRelatedBlogPosts } from "@/components/speaker-related-blog-posts"
-import { SpeakerSimilarSpeakers } from "@/components/speaker-similar-speakers"
 
 interface OptimizedSpeakerProfileProps {
   speaker: Speaker
-  similarSpeakers?: Speaker[]
 }
 
-const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speaker, similarSpeakers }) => {
+const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speaker }) => {
   const imageUrl = speaker.image || "/placeholder.svg"
-
+  
   // Format bio with proper paragraphs
   const formatBio = (bio: string) => {
     if (!bio) return null
@@ -29,8 +27,6 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
       </p>
     ))
   }
-
-  // We'll always show 2 tabs: About and Speaking
 
   // Generate breadcrumb schema
   const breadcrumbSchema = {
@@ -85,7 +81,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left: Image and Quick Info */}
               <div className="lg:col-span-1">
-                <div className="lg:sticky lg:top-24" suppressHydrationWarning>
+                <div className="lg:sticky lg:top-24">
                   <Card className="shadow-lg border border-gray-200">
                     <div className="relative aspect-square overflow-hidden rounded-t-lg">
                       <img
@@ -173,20 +169,19 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
               {/* Right: Main Content with Proper H Tags */}
               <div className="lg:col-span-2">
                 {/* H1 - Main Title */}
-                <div className="mb-8 text-center">
-                  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
-                    {speaker.name}
-                  </h1>
-                  {speaker.title && (
-                    <p className="text-xl text-gray-600">
-                      {speaker.title}
-                    </p>
-                  )}
-                </div>
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                  {speaker.name} - {speaker.title || 'AI Keynote Speaker'}
+                </h1>
+                
+                {/* Subtitle with keywords */}
+                <p className="text-xl text-gray-600 mb-8">
+                  Book {speaker.name} for inspiring keynote speeches on{' '}
+                  {speaker.expertise?.slice(0, 3).join(', ') || 'artificial intelligence and innovation'}
+                </p>
 
                 {/* Tabs for Content Organization */}
                 <Tabs defaultValue="about" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100">
+                  <TabsList className="grid w-full grid-cols-4 mb-8 bg-gray-100">
                     <TabsTrigger
                       value="about"
                       className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
@@ -194,10 +189,22 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                       About
                     </TabsTrigger>
                     <TabsTrigger
-                      value="speaking"
+                      value="programs"
                       className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
                     >
-                      Speaking & Experience
+                      Programs
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="experience"
+                      className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
+                    >
+                      Experience
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="media"
+                      className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
+                    >
+                      Media
                     </TabsTrigger>
                   </TabsList>
 
@@ -248,84 +255,10 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                     )}
                   </TabsContent>
 
-                  {/* Speaking & Experience Tab - Combines Programs, Experience, and Media */}
-                  <TabsContent value="speaking" className="space-y-8">
+                  {/* Programs Tab */}
+                  <TabsContent value="programs" className="space-y-8">
 
-                    {/* Videos */}
-                {speaker.videos && speaker.videos.length > 0 && (
-                  <section className="mb-12 p-8 rounded-xl bg-gradient-to-br from-blue-50 via-slate-50 to-blue-50 border border-blue-100">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                      <Play className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                      Speaker Videos & Media
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {speaker.videos.map((video, index) => {
-                        // Function to extract YouTube video ID
-                        const getYouTubeId = (url: string) => {
-                          const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
-                          const match = url?.match(regExp)
-                          return (match && match[2].length === 11) ? match[2] : null
-                        }
-
-                        const getYouTubeThumbnail = (url: string) => {
-                          const videoId = getYouTubeId(url)
-                          if (videoId) {
-                            return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
-                          }
-                          return null
-                        }
-
-                        const thumbnail = video.thumbnail || getYouTubeThumbnail(video.url) || "/placeholder.svg"
-
-                        return (
-                          <a
-                            key={index}
-                            href={video.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group block"
-                          >
-                            <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
-                              <div className="aspect-video bg-gray-100 relative">
-                                <img
-                                  src={thumbnail}
-                                  alt={video.title}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement
-                                    if (thumbnail.includes('maxresdefault')) {
-                                      target.src = thumbnail.replace('maxresdefault', 'hqdefault')
-                                    }
-                                  }}
-                                />
-                                <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
-                                  <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                    <Play className="w-8 h-8 text-[#1E68C6] ml-1" />
-                                  </div>
-                                </div>
-                                {video.duration && (
-                                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
-                                    {video.duration}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="p-4 bg-white">
-                                <h3 className="font-semibold text-gray-900 group-hover:text-[#1E68C6] transition-colors duration-300">
-                                  {video.title}
-                                </h3>
-                                {video.source && (
-                                  <p className="text-sm text-gray-500 mt-1">{video.source}</p>
-                                )}
-                              </div>
-                            </div>
-                          </a>
-                        )
-                      })}
-                    </div>
-                  </section>
-                    )}
-
-                    {/* Speaking Programs */}
+                    {/* Speaking Programs - MOVED TO TOP */}
                     {speaker.programs && speaker.programs.length > 0 && (
                   <section className="mb-12">
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">
@@ -365,52 +298,6 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         )
                       })}
                     </div>
-                      </section>
-                    )}
-
-                    {/* Testimonials */}
-                    {speaker.testimonials && speaker.testimonials.length > 0 && (
-                      <section className="p-8 rounded-xl bg-gradient-to-br from-blue-50 via-slate-50 to-blue-50 border border-blue-100">
-                        <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                          <MessageSquare className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                          Testimonials
-                        </h2>
-                        <div className="space-y-6">
-                          {speaker.testimonials.map((testimonial, index) => (
-                            <div key={index} className="bg-white p-6 rounded-lg border-l-4 border-[#1E68C6] relative shadow-sm">
-                              <Quote className="absolute top-4 right-4 w-8 h-8 text-slate-200" />
-                              <p className="text-gray-700 italic mb-4 relative z-10 text-lg">
-                                "{testimonial.quote}"
-                              </p>
-                              <div className="space-y-1">
-                                <p className="font-semibold text-gray-900">{testimonial.author}</p>
-                                {(testimonial.position || testimonial.company) && (
-                                  <p className="text-sm text-gray-600">
-                                    {testimonial.position}
-                                    {testimonial.position && testimonial.company ? ", " : ""}
-                                    {testimonial.company}
-                                  </p>
-                                )}
-                                {testimonial.event && (
-                                  <p className="text-xs text-gray-500 flex items-center">
-                                    <Building className="w-3 h-3 mr-1.5 text-gray-400" />
-                                    {testimonial.event}
-                                  </p>
-                                )}
-                                {testimonial.date && (
-                                  <p className="text-xs text-gray-500 flex items-center">
-                                    <Calendar className="w-3 h-3 mr-1.5 text-gray-400" />
-                                    {new Date(testimonial.date).toLocaleDateString("en-US", {
-                                      year: "numeric",
-                                      month: "long",
-                                      day: "numeric",
-                                    })}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
                       </section>
                     )}
 
@@ -490,7 +377,10 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         </div>
                       </section>
                     )}
+                  </TabsContent>
 
+                  {/* Experience Tab */}
+                  <TabsContent value="experience" className="space-y-8">
                     {/* Past Speaking Engagements */}
                     {speaker.pastEvents && speaker.pastEvents.length > 0 && (
                       <section>
@@ -597,6 +487,83 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         </div>
                       </section>
                     )}
+                  </TabsContent>
+
+                  {/* Media Tab */}
+                  <TabsContent value="media" className="space-y-8">
+                    {/* Videos */}
+                {speaker.videos && speaker.videos.length > 0 && (
+                  <section className="mb-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                      <Play className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                      Speaker Videos & Media
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {speaker.videos.map((video, index) => {
+                        // Function to extract YouTube video ID
+                        const getYouTubeId = (url: string) => {
+                          const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+                          const match = url?.match(regExp)
+                          return (match && match[2].length === 11) ? match[2] : null
+                        }
+                        
+                        const getYouTubeThumbnail = (url: string) => {
+                          const videoId = getYouTubeId(url)
+                          if (videoId) {
+                            return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+                          }
+                          return null
+                        }
+                        
+                        const thumbnail = video.thumbnail || getYouTubeThumbnail(video.url) || "/placeholder.svg"
+                        
+                        return (
+                          <a
+                            key={index}
+                            href={video.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group block"
+                          >
+                            <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
+                              <div className="aspect-video bg-gray-100 relative">
+                                <img
+                                  src={thumbnail}
+                                  alt={video.title}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement
+                                    if (thumbnail.includes('maxresdefault')) {
+                                      target.src = thumbnail.replace('maxresdefault', 'hqdefault')
+                                    }
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
+                                  <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                    <Play className="w-8 h-8 text-[#1E68C6] ml-1" />
+                                  </div>
+                                </div>
+                                {video.duration && (
+                                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                                    {video.duration}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="p-4 bg-white">
+                                <h3 className="font-semibold text-gray-900 group-hover:text-[#1E68C6] transition-colors duration-300">
+                                  {video.title}
+                                </h3>
+                                {video.source && (
+                                  <p className="text-sm text-gray-500 mt-1">{video.source}</p>
+                                )}
+                              </div>
+                            </div>
+                          </a>
+                        )
+                      })}
+                    </div>
+                  </section>
+                    )}
 
                     {/* Podcast & Media Appearances */}
                     {speaker.mediaAppearances && speaker.mediaAppearances.length > 0 && (
@@ -629,15 +596,72 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         </div>
                       </section>
                     )}
+
+                    {/* Testimonials */}
+                    {speaker.testimonials && speaker.testimonials.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6">Testimonials</h2>
+                        <div className="space-y-6">
+                          {speaker.testimonials.map((testimonial, index) => (
+                            <div key={index} className="bg-gray-50 p-6 rounded-lg border-l-4 border-[#1E68C6] relative">
+                              <Quote className="absolute top-4 right-4 w-8 h-8 text-gray-200" />
+                              <p className="text-gray-700 italic mb-4 relative z-10">
+                                "{testimonial.quote}"
+                              </p>
+                              <div className="space-y-1">
+                                <p className="font-semibold text-gray-900">{testimonial.author}</p>
+                                {(testimonial.position || testimonial.company) && (
+                                  <p className="text-sm text-gray-600">
+                                    {testimonial.position}
+                                    {testimonial.position && testimonial.company ? ", " : ""}
+                                    {testimonial.company}
+                                  </p>
+                                )}
+                                {testimonial.event && (
+                                  <p className="text-xs text-gray-500 flex items-center">
+                                    <Building className="w-3 h-3 mr-1.5 text-gray-400" />
+                                    {testimonial.event}
+                                  </p>
+                                )}
+                                {testimonial.date && (
+                                  <p className="text-xs text-gray-500 flex items-center">
+                                    <Calendar className="w-3 h-3 mr-1.5 text-gray-400" />
+                                    {new Date(testimonial.date).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                    })}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
                   </TabsContent>
                 </Tabs>
 
-                {/* Related Blog Posts - Show articles featuring this speaker */}
-                <SpeakerRelatedBlogPosts
-                  speakerName={speaker.name}
-                  speakerSlug={speaker.slug}
-                  limit={3}
-                />
+                {/* Similar Speakers - Outside tabs for better visibility */}
+                {speaker.similarSpeakers && speaker.similarSpeakers.length > 0 && (
+                  <section className="mb-12 mt-12">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                      <Users className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                      You May Also Like
+                    </h2>
+                    <div className="grid md:grid-cols-3 gap-6">
+                      {speaker.similarSpeakers.slice(0, 3).map((slug, index) => (
+                        <Card key={index} className="hover:shadow-lg transition-shadow">
+                          <CardContent className="p-4">
+                            <Link href={`/speakers/${slug}`} className="text-[#1E68C6] hover:underline">
+                              View Speaker →
+                            </Link>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </section>
+                )}
 
                 {/* Book This Speaker CTA - Always show */}
                 <section className="bg-gradient-to-r from-[#1E68C6] to-[#5084C6] rounded-xl p-8 text-white mt-12">
@@ -711,18 +735,6 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
             </div>
           </div>
         </section>
-
-        {/* Similar Speakers - Automatically generated based on similarity algorithm */}
-        {similarSpeakers && similarSpeakers.length > 0 && (
-          <section className="py-16 bg-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <SpeakerSimilarSpeakers
-                similarSpeakers={similarSpeakers}
-                currentSpeakerName={speaker.name}
-              />
-            </div>
-          </section>
-        )}
       </div>
     </>
   )
