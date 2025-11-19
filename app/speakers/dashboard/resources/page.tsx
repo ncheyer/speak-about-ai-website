@@ -29,7 +29,8 @@ import {
   Megaphone,
   Lightbulb,
   Target,
-  Zap
+  Zap,
+  Calendar
 } from "lucide-react"
 import Link from "next/link"
 
