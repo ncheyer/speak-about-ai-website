@@ -66,34 +66,49 @@ export default function ConferenceListingPage() {
   const [subscriber, setSubscriber] = useState<any>(null)
 
   useEffect(() => {
-    // Check if user is logged in
+    // Check if user is logged in (optional - allow anonymous browsing)
     const subscriberData = sessionStorage.getItem("conferenceSubscriber")
-    if (!subscriberData) {
-      router.push("/conference-directory")
-      return
+    if (subscriberData) {
+      try {
+        setSubscriber(JSON.parse(subscriberData))
+      } catch (e) {
+        console.error("Error parsing subscriber data:", e)
+      }
     }
-    setSubscriber(JSON.parse(subscriberData))
 
-    loadConferences()
     loadCategories()
   }, [router])
 
+  // Separate effect for loading conferences
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      loadConferences()
+    }, 300)
+    return () => clearTimeout(debounce)
+  }, [searchTerm, locationSearch, selectedCategory])
+
   const loadConferences = async () => {
+    setLoading(true)
     try {
       const params = new URLSearchParams()
       if (selectedCategory !== "all") params.append("category", selectedCategory)
-      if (searchTerm) params.append("search", searchTerm)
-      if (locationSearch) params.append("location", locationSearch)
+      if (searchTerm.trim()) params.append("search", searchTerm.trim())
+      if (locationSearch.trim()) params.append("location", locationSearch.trim())
+
+      console.log("Fetching conferences with params:", params.toString())
 
       const response = await fetch(`/api/conferences?${params}`)
       const data = await response.json()
 
+      console.log("Conferences response:", data)
+
       if (response.ok) {
         setConferences(data.conferences || [])
       } else {
+        console.error("Failed to load conferences:", data)
         toast({
           title: "Error",
-          description: "Failed to load conferences",
+          description: data.error || "Failed to load conferences",
           variant: "destructive"
         })
       }
@@ -101,7 +116,7 @@ export default function ConferenceListingPage() {
       console.error("Error loading conferences:", error)
       toast({
         title: "Error",
-        description: "Failed to load conferences",
+        description: "Failed to load conferences. Please try again.",
         variant: "destructive"
       })
     } finally {
@@ -121,13 +136,6 @@ export default function ConferenceListingPage() {
       console.error("Error loading categories:", error)
     }
   }
-
-  useEffect(() => {
-    const debounce = setTimeout(() => {
-      loadConferences()
-    }, 300)
-    return () => clearTimeout(debounce)
-  }, [searchTerm, locationSearch, selectedCategory])
 
   const sortedConferences = [...conferences].sort((a, b) => {
     switch (sortBy) {
@@ -252,6 +260,7 @@ export default function ConferenceListingPage() {
                 variant="link"
                 onClick={() => {
                   setSearchTerm("")
+                  setLocationSearch("")
                   setSelectedCategory("all")
                 }}
                 className="mt-2"
