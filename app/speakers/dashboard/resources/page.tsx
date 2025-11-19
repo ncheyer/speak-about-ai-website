@@ -479,6 +479,32 @@ export default function SpeakerResources() {
           )}
         </div>
 
+        {/* Conference Directory CTA */}
+        <Card className="border-0 shadow-md bg-gradient-to-r from-purple-50 to-blue-50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-purple-600" />
+                  Find Speaking Opportunities
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Browse our event industry conference directory to discover speaking opportunities, track call for proposals, and connect with conference organizers.
+                </p>
+                <Link href="/conference-directory">
+                  <Button variant="default" className="bg-purple-600 hover:bg-purple-700">
+                    Browse Conference Directory
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="hidden md:block">
+                <Calendar className="h-24 w-24 text-purple-300" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Help Section */}
         <Card className="border-0 shadow-md bg-gradient-to-r from-blue-50 to-indigo-50">
           <CardContent className="p-6">
