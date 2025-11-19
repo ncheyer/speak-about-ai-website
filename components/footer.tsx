@@ -128,6 +128,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/conference-directory" className="text-[#EAEAEE] hover:text-white">
+                  Conference Directory
+                </Link>
+              </li>
+              <li>
                 <Link href="/event-professionals-whatsapp" className="text-[#EAEAEE] hover:text-white">
                   Event Professionals Group
                 </Link>
