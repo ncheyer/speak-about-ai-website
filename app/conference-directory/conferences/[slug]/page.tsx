@@ -9,9 +9,17 @@ import { Separator } from "@/components/ui/separator"
 import {
   MapPin, Globe, Mail, Phone, Calendar, Clock, ArrowLeft,
   ExternalLink, Users, Building2, CheckCircle, AlertCircle,
-  FileText, Award, TrendingUp, Linkedin
+  FileText, Award, TrendingUp, Linkedin, Image as ImageIcon
 } from "lucide-react"
 import { format, parseISO } from "date-fns"
+
+interface ConferenceImage {
+  url: string
+  caption?: string
+  year?: number
+  order: number
+  featured?: boolean
+}
 
 interface Conference {
   id: number
@@ -52,6 +60,7 @@ interface Conference {
   typical_speaker_count?: number
   logo_url?: string
   banner_url?: string
+  images?: ConferenceImage[]
   tags?: string[]
   topics?: string[]
   target_audience?: string
@@ -244,6 +253,62 @@ export default function ConferenceDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-700 whitespace-pre-wrap">{conference.description}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Event Photos Gallery */}
+            {conference.images && conference.images.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5" />
+                    Event Photos from Previous Years
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {conference.images
+                      .sort((a, b) => a.order - b.order)
+                      .map((image, index) => (
+                        <div
+                          key={index}
+                          className="relative group overflow-hidden rounded-lg bg-gray-100 aspect-video"
+                        >
+                          <img
+                            src={image.url}
+                            alt={image.caption || `Conference photo ${index + 1}`}
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                          />
+                          {(image.caption || image.year) && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                              {image.caption && (
+                                <p className="text-white text-sm font-medium mb-1">
+                                  {image.caption}
+                                </p>
+                              )}
+                              {image.year && (
+                                <p className="text-white/80 text-xs">
+                                  {image.year}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          {image.featured && (
+                            <div className="absolute top-2 right-2">
+                              <Badge className="bg-yellow-500 text-white text-xs">
+                                Featured
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                  {conference.images.length > 4 && (
+                    <p className="text-sm text-gray-500 mt-4 text-center">
+                      Showing {Math.min(4, conference.images.length)} of {conference.images.length} photos
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             )}

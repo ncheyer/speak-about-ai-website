@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { ConferenceImageUploader } from "@/components/conference-image-uploader"
 import { ArrowLeft, Save, Trash2, Loader2 } from "lucide-react"
 import {
   AlertDialog,
@@ -24,6 +25,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+interface ConferenceImage {
+  url: string
+  caption?: string
+  year?: number
+  order: number
+  featured?: boolean
+}
+
 interface Conference {
   id: number
   name: string
@@ -33,6 +42,10 @@ interface Conference {
   location?: string
   city?: string
   country?: string
+  description?: string
+  logo_url?: string
+  banner_url?: string
+  images?: ConferenceImage[]
   status: string
   contact_name?: string
   contact_role?: string
@@ -335,6 +348,82 @@ export default function EditConferencePage() {
                       placeholder="Country"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={conference.description || ''}
+                    onChange={(e) => setConference({ ...conference, description: e.target.value })}
+                    placeholder="Brief description of the conference for public display..."
+                    rows={4}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Media & Images */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Media & Images</CardTitle>
+                <CardDescription>Upload conference logos and photos from previous years</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Logo & Banner URLs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="logo_url">Logo URL</Label>
+                    <Input
+                      id="logo_url"
+                      type="url"
+                      value={conference.logo_url || ''}
+                      onChange={(e) => setConference({ ...conference, logo_url: e.target.value })}
+                      placeholder="https://example.com/logo.png"
+                    />
+                    {conference.logo_url && (
+                      <div className="mt-2 p-2 bg-gray-50 rounded border">
+                        <img
+                          src={conference.logo_url}
+                          alt="Conference logo"
+                          className="h-16 object-contain"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="banner_url">Banner URL</Label>
+                    <Input
+                      id="banner_url"
+                      type="url"
+                      value={conference.banner_url || ''}
+                      onChange={(e) => setConference({ ...conference, banner_url: e.target.value })}
+                      placeholder="https://example.com/banner.png"
+                    />
+                    {conference.banner_url && (
+                      <div className="mt-2 p-2 bg-gray-50 rounded border">
+                        <img
+                          src={conference.banner_url}
+                          alt="Conference banner"
+                          className="w-full h-24 object-cover rounded"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Event Photos */}
+                <div className="space-y-2">
+                  <Label>Event Photos (Previous Years)</Label>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Upload photos from previous conference years to showcase the event atmosphere and attract speakers
+                  </p>
+                  <ConferenceImageUploader
+                    images={conference.images || []}
+                    onChange={(images) => setConference({ ...conference, images })}
+                    conferenceId={conference.id}
+                  />
                 </div>
               </CardContent>
             </Card>
