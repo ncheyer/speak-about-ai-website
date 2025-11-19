@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { upload } from '@vercel/blob/client'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -59,22 +60,14 @@ export function ConferenceImageUploader({ images, onChange, conferenceId }: Conf
           continue
         }
 
-        const formData = new FormData()
-        formData.append('file', file)
-
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
+        // Use Vercel Blob client upload
+        const blob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/upload',
         })
 
-        if (!response.ok) {
-          throw new Error(`Failed to upload ${file.name}`)
-        }
-
-        const data = await response.json()
-
         newImages.push({
-          url: data.url,
+          url: blob.url,
           caption: '',
           year: new Date().getFullYear(),
           order: images.length + newImages.length,
@@ -93,7 +86,7 @@ export function ConferenceImageUploader({ images, onChange, conferenceId }: Conf
       console.error('Upload error:', error)
       toast({
         title: "Upload failed",
-        description: "Failed to upload one or more images",
+        description: error instanceof Error ? error.message : "Failed to upload one or more images",
         variant: "destructive"
       })
     } finally {

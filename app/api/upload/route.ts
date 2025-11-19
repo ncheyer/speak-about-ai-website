@@ -30,7 +30,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
         return {
           allowedContentTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
-          maximumSizeInBytes: 500 * 1024, // 500KB limit
+          maximumSizeInBytes: 10 * 1024 * 1024, // 10MB limit for conference photos
         }
       },
       onUploadCompleted: async ({ blob }) => {
