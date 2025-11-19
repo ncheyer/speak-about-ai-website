@@ -3,8 +3,46 @@ import {
   getPublishedConferences,
   getAllConferences,
   getConferenceCategories,
-  searchConferences
+  searchConferences,
+  createConference
 } from '@/lib/conferences-db'
+
+// POST /api/conferences - Create new conference
+export async function POST(request: NextRequest) {
+  try {
+    // Check if user is admin
+    const isAdmin = request.cookies.get('adminLoggedIn')?.value === 'true'
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+
+    // Generate slug from name if not provided
+    if (!body.slug && body.name) {
+      body.slug = body.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+    }
+
+    const conference = await createConference(body)
+
+    return NextResponse.json({
+      success: true,
+      conference
+    }, { status: 201 })
+  } catch (error) {
+    console.error('Error creating conference:', error)
+    return NextResponse.json(
+      { error: 'Failed to create conference' },
+      { status: 500 }
+    )
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {

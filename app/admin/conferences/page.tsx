@@ -33,6 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { format } from "date-fns"
+import { AddConferenceDialog } from "@/components/add-conference-dialog"
 
 interface Conference {
   id: number
@@ -166,10 +167,7 @@ export default function AdminConferencesPage() {
                 <Eye className="h-4 w-4 mr-2" />
                 View Directory
               </Button>
-              <Button onClick={() => toast({ title: "Coming soon", description: "Conference creation coming soon!" })}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Conference
-              </Button>
+              <AddConferenceDialog onSuccess={loadConferences} />
             </div>
           </div>
 
