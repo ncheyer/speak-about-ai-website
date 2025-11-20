@@ -2,6 +2,14 @@ import { neon } from "@neondatabase/serverless"
 
 const sql = neon(process.env.DATABASE_URL!)
 
+export interface Testimonial {
+  name: string
+  role: string
+  company: string
+  quote: string
+  photo_url?: string
+}
+
 export interface Workshop {
   id: number
   title: string
@@ -21,7 +29,7 @@ export interface Workshop {
   key_takeaways: string[] | null
   topics: string[] | null
   thumbnail_url: string | null
-  video_url: string | null
+  video_urls: string[] | null
   image_urls: string[] | null
   customizable: boolean
   custom_options: string | null
@@ -35,6 +43,8 @@ export interface Workshop {
   display_order: number
   badge_text: string | null
   roi_stats: Record<string, string> | null
+  testimonials: Testimonial[] | null
+  client_logos: string[] | null
   created_at: string
   updated_at: string
 }
@@ -43,6 +53,7 @@ export interface WorkshopWithSpeaker extends Workshop {
   speaker_name?: string
   speaker_slug?: string
   speaker_headshot?: string
+  speaker_location?: string
 }
 
 export interface CreateWorkshopInput {
@@ -63,7 +74,7 @@ export interface CreateWorkshopInput {
   key_takeaways?: string[]
   topics?: string[]
   thumbnail_url?: string
-  video_url?: string
+  video_urls?: string[]
   image_urls?: string[]
   customizable?: boolean
   custom_options?: string
@@ -73,6 +84,12 @@ export interface CreateWorkshopInput {
   active?: boolean
   featured?: boolean
   popularity_score?: number
+  category?: string | null
+  display_order?: number
+  badge_text?: string | null
+  roi_stats?: Record<string, string> | null
+  testimonials?: Testimonial[] | null
+  client_logos?: string[] | null
 }
 
 export type UpdateWorkshopInput = Partial<CreateWorkshopInput>
@@ -87,7 +104,8 @@ export async function getAllWorkshops(): Promise<WorkshopWithSpeaker[]> {
         w.*,
         s.name as speaker_name,
         s.slug as speaker_slug,
-        s.headshot_url as speaker_headshot
+        s.headshot_url as speaker_headshot,
+        s.location as speaker_location
       FROM workshops w
       LEFT JOIN speakers s ON w.speaker_id = s.id
       ORDER BY w.featured DESC, w.popularity_score DESC, w.created_at DESC
@@ -109,7 +127,8 @@ export async function getActiveWorkshops(): Promise<WorkshopWithSpeaker[]> {
         w.*,
         s.name as speaker_name,
         s.slug as speaker_slug,
-        s.headshot_url as speaker_headshot
+        s.headshot_url as speaker_headshot,
+        s.location as speaker_location
       FROM workshops w
       LEFT JOIN speakers s ON w.speaker_id = s.id
       WHERE w.active = true
@@ -133,6 +152,7 @@ export async function getWorkshopById(id: number): Promise<WorkshopWithSpeaker |
         s.name as speaker_name,
         s.slug as speaker_slug,
         s.headshot_url as speaker_headshot,
+        s.location as speaker_location,
         s.bio as speaker_bio,
         s.one_liner as speaker_one_liner
       FROM workshops w
@@ -157,6 +177,7 @@ export async function getWorkshopBySlug(slug: string): Promise<WorkshopWithSpeak
         s.name as speaker_name,
         s.slug as speaker_slug,
         s.headshot_url as speaker_headshot,
+        s.location as speaker_location,
         s.bio as speaker_bio,
         s.one_liner as speaker_one_liner
       FROM workshops w
@@ -226,7 +247,8 @@ export async function searchWorkshops(query: string): Promise<WorkshopWithSpeake
         w.*,
         s.name as speaker_name,
         s.slug as speaker_slug,
-        s.headshot_url as speaker_headshot
+        s.headshot_url as speaker_headshot,
+        s.location as speaker_location
       FROM workshops w
       LEFT JOIN speakers s ON w.speaker_id = s.id
       WHERE w.active = true
@@ -258,10 +280,12 @@ export async function createWorkshop(input: CreateWorkshopInput): Promise<Worksh
         duration_minutes, format, max_participants, price_range,
         learning_objectives, target_audience, prerequisites, materials_included,
         agenda, key_takeaways, topics,
-        thumbnail_url, video_url, image_urls,
+        thumbnail_url, video_urls, image_urls,
         customizable, custom_options,
         meta_title, meta_description, keywords,
-        active, featured, popularity_score
+        active, featured, popularity_score,
+        category, display_order, badge_text, roi_stats,
+        testimonials, client_logos
       ) VALUES (
         ${input.title},
         ${input.slug},
@@ -280,7 +304,7 @@ export async function createWorkshop(input: CreateWorkshopInput): Promise<Worksh
         ${input.key_takeaways ?? null},
         ${input.topics ?? null},
         ${input.thumbnail_url ?? null},
-        ${input.video_url ?? null},
+        ${input.video_urls ?? null},
         ${input.image_urls ?? null},
         ${input.customizable ?? true},
         ${input.custom_options ?? null},
@@ -289,7 +313,13 @@ export async function createWorkshop(input: CreateWorkshopInput): Promise<Worksh
         ${input.keywords ?? null},
         ${input.active ?? true},
         ${input.featured ?? false},
-        ${input.popularity_score ?? 0}
+        ${input.popularity_score ?? 0},
+        ${input.category ?? null},
+        ${input.display_order ?? 0},
+        ${input.badge_text ?? null},
+        ${input.roi_stats ?? null},
+        ${JSON.stringify(input.testimonials ?? [])},
+        ${input.client_logos ?? null}
       )
       RETURNING *
     `
@@ -361,7 +391,8 @@ export async function getFeaturedWorkshops(limit: number = 6): Promise<WorkshopW
         w.*,
         s.name as speaker_name,
         s.slug as speaker_slug,
-        s.headshot_url as speaker_headshot
+        s.headshot_url as speaker_headshot,
+        s.location as speaker_location
       FROM workshops w
       LEFT JOIN speakers s ON w.speaker_id = s.id
       WHERE w.active = true AND w.featured = true

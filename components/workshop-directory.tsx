@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Search, Clock, Users, ChevronRight, Loader2 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Search, Clock, Users, ChevronRight, Loader2, MapPin, Filter } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -17,6 +18,7 @@ interface Workshop {
   speaker_name?: string
   speaker_slug?: string
   speaker_headshot?: string
+  speaker_location?: string
   short_description: string | null
   duration_minutes: number | null
   format: string | null
@@ -34,6 +36,10 @@ export default function WorkshopDirectory() {
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedFormat, setSelectedFormat] = useState<string>("all")
+  const [selectedDuration, setSelectedDuration] = useState<string>("all")
+  const [selectedLocation, setSelectedLocation] = useState<string>("all")
+  const [selectedAudience, setSelectedAudience] = useState<string>("all")
+  const [showFilters, setShowFilters] = useState(false)
 
   const loadWorkshops = useCallback(async () => {
     setLoading(true)
@@ -59,6 +65,7 @@ export default function WorkshopDirectory() {
   const filterWorkshops = useCallback(() => {
     let filtered = workshops
 
+    // Search query filter
     if (searchQuery) {
       filtered = filtered.filter(
         (w) =>
@@ -70,19 +77,54 @@ export default function WorkshopDirectory() {
       )
     }
 
+    // Format filter
     if (selectedFormat !== "all") {
       filtered = filtered.filter((w) => w.format === selectedFormat)
     }
 
+    // Duration filter
+    if (selectedDuration !== "all") {
+      filtered = filtered.filter((w) => {
+        if (!w.duration_minutes) return false
+        switch (selectedDuration) {
+          case "short": // Under 1 hour
+            return w.duration_minutes <= 60
+          case "medium": // 1-2 hours
+            return w.duration_minutes > 60 && w.duration_minutes <= 120
+          case "long": // Over 2 hours
+            return w.duration_minutes > 120
+          default:
+            return true
+        }
+      })
+    }
+
+    // Location filter
+    if (selectedLocation !== "all") {
+      filtered = filtered.filter((w) =>
+        w.speaker_location?.toLowerCase().includes(selectedLocation.toLowerCase())
+      )
+    }
+
+    // Audience filter
+    if (selectedAudience !== "all") {
+      filtered = filtered.filter((w) =>
+        w.target_audience?.toLowerCase().includes(selectedAudience.toLowerCase())
+      )
+    }
+
     setFilteredWorkshops(filtered)
-  }, [workshops, searchQuery, selectedFormat])
+  }, [workshops, searchQuery, selectedFormat, selectedDuration, selectedLocation, selectedAudience])
 
   // Filter workshops when search/format changes
   useEffect(() => {
     filterWorkshops()
   }, [filterWorkshops])
 
+  // Extract unique values for filters
   const formats = ["all", ...Array.from(new Set(workshops.map((w) => w.format).filter(Boolean)))]
+  const locations = ["all", ...Array.from(new Set(workshops.map((w) => w.speaker_location).filter(Boolean)))]
+  const audiences = ["all", ...Array.from(new Set(workshops.map((w) => w.target_audience).filter(Boolean)))]
 
   return (
     <div className="min-h-screen bg-white">
@@ -99,9 +141,10 @@ export default function WorkshopDirectory() {
           </div>
 
           {/* Search and Filters */}
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex flex-col md:flex-row gap-4">
+              {/* Search Bar */}
+              <div className="flex flex-col md:flex-row gap-4 mb-4">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <Input
@@ -112,21 +155,120 @@ export default function WorkshopDirectory() {
                     className="pl-10 font-montserrat"
                   />
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                  {formats.map((format) => (
-                    <Button
-                      key={format}
-                      variant={selectedFormat === format ? "default" : "outline"}
-                      onClick={() => setSelectedFormat(format)}
-                      className="capitalize font-montserrat"
-                    >
-                      {format === "all" ? "All Formats" : format}
-                    </Button>
-                  ))}
-                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="font-montserrat flex items-center gap-2"
+                >
+                  <Filter className="w-4 h-4" />
+                  {showFilters ? "Hide Filters" : "Show Filters"}
+                </Button>
               </div>
-              <div className="mt-4 text-sm text-gray-600 font-montserrat">
-                Showing {filteredWorkshops.length} of {workshops.length} workshops
+
+              {/* Advanced Filters */}
+              {showFilters && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
+                  {/* Format Filter */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block font-montserrat">
+                      Format
+                    </label>
+                    <Select value={selectedFormat} onValueChange={setSelectedFormat}>
+                      <SelectTrigger className="font-montserrat">
+                        <SelectValue placeholder="All Formats" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Formats</SelectItem>
+                        {formats.filter(f => f !== "all").map((format) => (
+                          <SelectItem key={format} value={format} className="capitalize">
+                            {format}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Duration Filter */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block font-montserrat">
+                      Length
+                    </label>
+                    <Select value={selectedDuration} onValueChange={setSelectedDuration}>
+                      <SelectTrigger className="font-montserrat">
+                        <SelectValue placeholder="All Lengths" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Lengths</SelectItem>
+                        <SelectItem value="short">Short (&lt; 1 hour)</SelectItem>
+                        <SelectItem value="medium">Medium (1-2 hours)</SelectItem>
+                        <SelectItem value="long">Long (&gt; 2 hours)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Location Filter */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block font-montserrat">
+                      Instructor Location
+                    </label>
+                    <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                      <SelectTrigger className="font-montserrat">
+                        <SelectValue placeholder="All Locations" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Locations</SelectItem>
+                        {locations.filter(l => l !== "all").map((location) => (
+                          <SelectItem key={location} value={location}>
+                            {location}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Audience Filter */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block font-montserrat">
+                      Target Audience
+                    </label>
+                    <Select value={selectedAudience} onValueChange={setSelectedAudience}>
+                      <SelectTrigger className="font-montserrat">
+                        <SelectValue placeholder="All Audiences" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Audiences</SelectItem>
+                        {audiences.filter(a => a !== "all").map((audience) => (
+                          <SelectItem key={audience} value={audience}>
+                            {audience}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
+              {/* Results Count and Clear Filters */}
+              <div className="mt-4 flex items-center justify-between">
+                <div className="text-sm text-gray-600 font-montserrat">
+                  Showing {filteredWorkshops.length} of {workshops.length} workshops
+                </div>
+                {(selectedFormat !== "all" || selectedDuration !== "all" || selectedLocation !== "all" || selectedAudience !== "all" || searchQuery) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery("")
+                      setSelectedFormat("all")
+                      setSelectedDuration("all")
+                      setSelectedLocation("all")
+                      setSelectedAudience("all")
+                    }}
+                    className="font-montserrat text-[#1E68C6] hover:text-blue-700"
+                  >
+                    Clear All Filters
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -161,6 +303,12 @@ export default function WorkshopDirectory() {
                       <CardDescription className="flex items-center gap-2 mt-2 font-montserrat">
                         <Users className="w-4 h-4" />
                         Led by {workshop.speaker_name}
+                        {workshop.speaker_location && (
+                          <span className="flex items-center gap-1 text-xs text-gray-500">
+                            <MapPin className="w-3 h-3" />
+                            {workshop.speaker_location}
+                          </span>
+                        )}
                       </CardDescription>
                     )}
                   </CardHeader>
@@ -193,12 +341,19 @@ export default function WorkshopDirectory() {
                       </div>
                     )}
 
-                    <Link href={`/ai-workshops/${workshop.slug}`}>
-                      <Button className="w-full mt-4 font-montserrat" variant="default">
-                        Learn More
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </Link>
+                    <div className="space-y-3 mt-4">
+                      <Link href={`/contact?workshop=${workshop.id}`}>
+                        <Button className="w-full font-montserrat" variant="default">
+                          Inquire About Workshop
+                        </Button>
+                      </Link>
+                      <Link href={`/ai-workshops/${workshop.slug}`}>
+                        <Button className="w-full font-montserrat" variant="outline">
+                          View Details
+                          <ChevronRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </Link>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

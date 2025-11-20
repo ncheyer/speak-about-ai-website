@@ -39,7 +39,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
       )}
 
       {/* Hero Section */}
-      <section className={workshop.thumbnail_url ? "py-12 -mt-32 relative z-10" : "bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12"}>
+      <section className={workshop.thumbnail_url ? "py-12 -mt-32 relative z-10" : "bg-gradient-to-br from-[#EAEAEE] to-white py-12"}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
@@ -97,26 +97,39 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {workshop.speaker_name ? (
-                    <Link href={`/speakers/${workshop.speaker_slug}`} className="block group">
-                      <div className="flex items-center gap-4 mb-4">
-                        {workshop.speaker_headshot && (
-                          <div className="relative w-20 h-20 rounded-full overflow-hidden ring-2 ring-blue-100 group-hover:ring-blue-300 transition-all">
-                            <Image
-                              src={workshop.speaker_headshot}
-                              alt={workshop.speaker_name}
-                              fill
-                              className="object-cover"
-                            />
+                    <>
+                      <Link href={`/speakers/${workshop.speaker_slug}`} className="block group">
+                        <div className="flex items-center gap-4 mb-4">
+                          {workshop.speaker_headshot && (
+                            <div className="relative w-20 h-20 rounded-full overflow-hidden ring-2 ring-blue-100 group-hover:ring-blue-300 transition-all">
+                              <Image
+                                src={workshop.speaker_headshot}
+                                alt={workshop.speaker_name}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                          <div>
+                            <h3 className="font-bold text-lg group-hover:text-blue-600 transition-colors">
+                              {workshop.speaker_name}
+                            </h3>
+                            <p className="text-sm text-gray-600">Expert Instructor</p>
+                            {workshop.speaker_location && (
+                              <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                                <MapPin className="h-3 w-3" />
+                                {workshop.speaker_location}
+                              </p>
+                            )}
                           </div>
-                        )}
-                        <div>
-                          <h3 className="font-bold text-lg group-hover:text-blue-600 transition-colors">
-                            {workshop.speaker_name}
-                          </h3>
-                          <p className="text-sm text-gray-600">Expert Instructor</p>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
+                      <Link href={`/speakers/${workshop.speaker_slug}`}>
+                        <Button variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50">
+                          View Speaker Profile
+                        </Button>
+                      </Link>
+                    </>
                   ) : (
                     <p className="text-gray-500">Instructor to be assigned</p>
                   )}
@@ -162,6 +175,41 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                 </div>
               )}
 
+              {/* Highlight Videos */}
+              {workshop.video_urls && workshop.video_urls.length > 0 && (
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-6">Workshop Highlights</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {workshop.video_urls.map((videoUrl, index) => {
+                      // Extract video ID from YouTube or Vimeo URLs
+                      let embedUrl = ""
+                      if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
+                        const videoId = videoUrl.includes("youtu.be")
+                          ? videoUrl.split("youtu.be/")[1]?.split("?")[0]
+                          : videoUrl.split("v=")[1]?.split("&")[0]
+                        embedUrl = `https://www.youtube.com/embed/${videoId}`
+                      } else if (videoUrl.includes("vimeo.com")) {
+                        const videoId = videoUrl.split("vimeo.com/")[1]?.split("?")[0]
+                        embedUrl = `https://player.vimeo.com/video/${videoId}`
+                      } else {
+                        embedUrl = videoUrl
+                      }
+
+                      return (
+                        <div key={index} className="relative w-full pb-[56.25%] rounded-xl overflow-hidden shadow-lg">
+                          <iframe
+                            src={embedUrl}
+                            className="absolute top-0 left-0 w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Learning Objectives */}
               {workshop.learning_objectives && workshop.learning_objectives.length > 0 && (
                 <div>
@@ -184,14 +232,14 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
               {workshop.key_takeaways && workshop.key_takeaways.length > 0 && (
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                    <Award className="h-8 w-8 mr-3 text-purple-600" />
+                    <Award className="h-8 w-8 mr-3 text-amber-600" />
                     Key Takeaways
                   </h2>
                   <ul className="space-y-3">
                     {workshop.key_takeaways.map((takeaway, index) => (
                       <li key={index} className="flex items-start gap-3">
-                        <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                          <span className="text-purple-600 font-bold text-sm">{index + 1}</span>
+                        <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                          <span className="text-amber-600 font-bold text-sm">{index + 1}</span>
                         </div>
                         <p className="text-gray-800 text-lg">{takeaway}</p>
                       </li>
@@ -204,7 +252,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
               {workshop.agenda && (
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                    <BookOpen className="h-8 w-8 mr-3 text-green-600" />
+                    <BookOpen className="h-8 w-8 mr-3 text-[#1E68C6]" />
                     Workshop Formats & Options
                   </h2>
 
@@ -239,11 +287,11 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                           key={sectionIndex}
                           className={`${
                             isFeatured
-                              ? 'border-2 border-blue-500 shadow-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 hover:shadow-blue-200 transition-all duration-300'
+                              ? 'border-2 border-[#1E68C6] shadow-2xl bg-gradient-to-br from-blue-50 via-white to-amber-50 hover:shadow-blue-200 transition-all duration-300'
                               : 'border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300'
                           }`}
                         >
-                          <CardHeader className={`${isFeatured ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' : 'bg-gray-50'} relative overflow-hidden`}>
+                          <CardHeader className={`${isFeatured ? 'bg-gradient-to-r from-[#1E68C6] to-blue-700 text-white' : 'bg-gray-50'} relative overflow-hidden`}>
                             {isFeatured && (
                               <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
                             )}
@@ -354,9 +402,9 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
 
               {/* Customization */}
               {workshop.customizable && (
-                <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+                <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-white">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-purple-900">
+                    <CardTitle className="flex items-center gap-2 text-amber-900">
                       <Target className="h-5 w-5" />
                       Fully Customizable
                     </CardTitle>
@@ -364,27 +412,49 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                   <CardContent>
                     <ul className="space-y-2 text-sm text-gray-700 mb-4">
                       <li className="flex items-start gap-2">
-                        <CheckCircle className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
                         <span>Tailored to your industry</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <CheckCircle className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
                         <span>Scaled for team size</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <CheckCircle className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
                         <span>Adjusted for skill level</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <CheckCircle className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
                         <span>Flexible scheduling</span>
                       </li>
                     </ul>
                     <Link href={`/contact?workshop=${workshop.id}`} className="block">
-                      <Button variant="outline" className="w-full border-purple-300 text-purple-700 hover:bg-purple-100">
+                      <Button variant="outline" className="w-full border-amber-300 text-amber-700 hover:bg-amber-100">
                         Discuss Customization
                       </Button>
                     </Link>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* ROI Stats */}
+              {workshop.roi_stats && Object.keys(workshop.roi_stats).length > 0 && (
+                <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-900">
+                      <Award className="h-5 w-5" />
+                      Return on Investment
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {Object.entries(workshop.roi_stats).map(([key, value], index) => (
+                        <div key={index} className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                          <p className="text-sm text-gray-600 mb-1">{key}</p>
+                          <p className="text-2xl font-bold text-green-700">{value}</p>
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -393,106 +463,124 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
         </div>
       </section>
 
+      {/* Workshop Images Gallery */}
+      {workshop.image_urls && workshop.image_urls.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Workshop Gallery
+              </h2>
+              <p className="text-xl text-gray-600">
+                See the workshop in action
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {workshop.image_urls.map((imageUrl, index) => (
+                <div key={index} className="relative w-full h-64 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <Image
+                    src={imageUrl}
+                    alt={`Workshop image ${index + 1}`}
+                    fill
+                    className="object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Testimonials Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Employee & Participant Testimonials
-            </h2>
-            <p className="text-xl text-gray-600">
-              Don't take our word for it. Wall of testimonials
-            </p>
+      {workshop.testimonials && workshop.testimonials.length > 0 && (
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Employee & Participant Testimonials
+              </h2>
+              <p className="text-xl text-gray-600">
+                Hear from past workshop participants
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {workshop.testimonials.map((testimonial, index) => (
+                <Card key={index} className="bg-white">
+                  <CardContent className="pt-6">
+                    <div className="mb-4">
+                      <div className="flex text-yellow-400 mb-3">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="h-5 w-5 fill-current" />
+                        ))}
+                      </div>
+                      <p className="text-gray-700 italic mb-4">
+                        "{testimonial.quote}"
+                      </p>
+                      <div className="flex items-center gap-3 mt-4">
+                        {testimonial.photo_url && (
+                          <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                            <Image
+                              src={testimonial.photo_url}
+                              alt={testimonial.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-gray-900 font-semibold">{testimonial.name}</p>
+                          {testimonial.role && (
+                            <p className="text-sm text-gray-600">
+                              {testimonial.role}
+                              {testimonial.company && ` at ${testimonial.company}`}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
+        </section>
+      )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Testimonial 1 */}
-            <Card className="bg-white">
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <div className="flex text-yellow-400 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-gray-700 italic mb-4">
-                    "I wish we had more time with her."
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Client Logos Section */}
+      {workshop.client_logos && workshop.client_logos.length > 0 && (
+        <section className="py-16 bg-white border-t border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Trusted by Leading Organizations
+              </h2>
+              <p className="text-xl text-gray-600">
+                Companies that have chosen this workshop
+              </p>
+            </div>
 
-            {/* Testimonial 2 */}
-            <Card className="bg-white">
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <div className="flex text-yellow-400 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-current" />
-                    ))}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center">
+              {workshop.client_logos.map((logoUrl, index) => (
+                <div key={index} className="flex items-center justify-center p-6 grayscale hover:grayscale-0 transition-all">
+                  <div className="relative w-full h-20">
+                    <Image
+                      src={logoUrl}
+                      alt={`Client logo ${index + 1}`}
+                      fill
+                      className="object-contain"
+                    />
                   </div>
-                  <p className="text-gray-700 italic mb-4">
-                    "She was funny, kind, and incredibly intelligent."
-                  </p>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Testimonial 3 */}
-            <Card className="bg-white">
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <div className="flex text-yellow-400 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-gray-700 italic mb-4">
-                    "Clear in her words and spoke in a way that a whole room of people would understand."
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Testimonial 4 */}
-            <Card className="bg-white md:col-span-2 lg:col-span-1">
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <div className="flex text-yellow-400 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-gray-700 italic mb-4">
-                    "Joan was a great instructor. I learned so much about ChatGPT from her! Her interactive exercises were fun and informative."
-                  </p>
-                  <p className="text-gray-900 font-semibold">- Nidhi B.</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Testimonial 5 - Featured Large */}
-            <Card className="bg-white md:col-span-2">
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <div className="flex text-yellow-400 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-gray-700 italic mb-4 text-lg">
-                    "I highly recommend Joan Palmiter Bajorek's "AI ChatGPT for Beginners" workshop to anyone interested in harnessing the benefits of ChatGPT. Joan's expertise, her energetic presentation style, and hands-on approach made it an engaging—and fun—learning experience."
-                  </p>
-                  <p className="text-gray-900 font-semibold">- Shana C.</p>
-                </div>
-              </CardContent>
-            </Card>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+      <section className="py-20 bg-gradient-to-r from-[#1E68C6] to-blue-700 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Team?</h2>
           <p className="text-xl mb-8 opacity-90">
@@ -505,7 +593,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
               </Button>
             </Link>
             <Link href="/ai-workshops">
-              <Button size="lg" variant="outline" className="font-semibold bg-transparent text-white border-white hover:bg-white hover:text-blue-600">
+              <Button size="lg" variant="outline" className="font-semibold bg-transparent text-white border-white hover:bg-white hover:text-[#1E68C6]">
                 Browse All Workshops
               </Button>
             </Link>
