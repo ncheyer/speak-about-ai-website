@@ -103,7 +103,7 @@ export default function ConferenceDirectoryPage() {
             "@context": "https://schema.org",
             "@type": "WebPage",
             "name": "Event Industry Conference Directory",
-            "description": "Browse event industry conferences and find speaking opportunities. Track call for proposals, deadlines, and connect with conference organizers.",
+            "description": "Discover event industry conferences to network with peers, meet other professionals, and grow your career. Find conferences, track opportunities, and connect with the community.",
             "url": "https://speakabout.ai/conference-directory",
             "breadcrumb": {
               "@type": "BreadcrumbList",
@@ -136,15 +136,15 @@ export default function ConferenceDirectoryPage() {
               </div>
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Event Industry Conference Directory
+              Connect With Event Industry Professionals In Person
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
-              Discover speaking opportunities at top event industry conferences.
-              Find call for proposals, track deadlines, and connect with organizers - completely free.
+              Find conferences to meet your peers, network with industry leaders, and grow your career.
+              Discover events in MICE, event tech, marketing, and more - completely free.
             </p>
             <p className="text-lg text-gray-500 max-w-3xl mx-auto">
-              Whether you're an AI expert, event planner, or industry thought leader, our conference directory
-              connects you with the best speaking opportunities in MICE, event technology, marketing, and more.
+              Whether you're looking to learn from experts, explore new trends, or build meaningful connections,
+              our directory connects you with the best in-person events where event professionals gather.
             </p>
           </div>
 
@@ -163,29 +163,29 @@ export default function ConferenceDirectoryPage() {
                   <div className="flex items-start gap-3">
                     <div className="h-2 w-2 bg-green-600 rounded-full mt-1.5 flex-shrink-0" />
                     <div>
-                      <p className="font-medium text-gray-900">Instant Access</p>
-                      <p className="text-sm text-gray-600">Browse our full conference directory immediately after signup</p>
+                      <p className="font-medium text-gray-900">Networking Opportunities</p>
+                      <p className="text-sm text-gray-600">Find events where event professionals gather to connect and learn</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="h-2 w-2 bg-green-600 rounded-full mt-1.5 flex-shrink-0" />
                     <div>
-                      <p className="font-medium text-gray-900">CFP Tracking</p>
-                      <p className="text-sm text-gray-600">See which conferences have open calls for proposals</p>
+                      <p className="font-medium text-gray-900">Industry Insights</p>
+                      <p className="text-sm text-gray-600">Discover trends, tools, and best practices from peers at in-person events</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="h-2 w-2 bg-green-600 rounded-full mt-1.5 flex-shrink-0" />
                     <div>
-                      <p className="font-medium text-gray-900">Direct Contact Info</p>
-                      <p className="text-sm text-gray-600">Connect directly with conference organizers</p>
+                      <p className="font-medium text-gray-900">Conference Details</p>
+                      <p className="text-sm text-gray-600">See dates, locations, attendee counts, and organizer contact info</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="h-2 w-2 bg-green-600 rounded-full mt-1.5 flex-shrink-0" />
                     <div>
-                      <p className="font-medium text-gray-900">Deadline Alerts</p>
-                      <p className="text-sm text-gray-600">Never miss an important submission deadline</p>
+                      <p className="font-medium text-gray-900">Speaking Opportunities (Bonus)</p>
+                      <p className="text-sm text-gray-600">Track open CFPs if you're interested in speaking at events</p>
                     </div>
                   </div>
                 </CardContent>
@@ -368,52 +368,53 @@ export default function ConferenceDirectoryPage() {
           {/* SEO Content Section */}
           <div className="mt-16 max-w-4xl mx-auto">
             <h2 className="text-3xl font-semibold text-gray-900 mb-6 text-center">
-              Your Complete Event Conference Directory
+              Network With Event Professionals At Industry Conferences
             </h2>
 
             <div className="prose prose-lg text-gray-600 mb-12">
               <p className="mb-4">
-                Finding the right speaking opportunities shouldn't be overwhelming. Our comprehensive event conference
-                directory simplifies the process by connecting you with verified conferences actively seeking speakers
-                in AI, event technology, MICE, marketing, and more.
+                Finding the right conferences to attend shouldn't be overwhelming. Our comprehensive event conference
+                directory connects you with the best in-person events where event professionals gather to network, learn,
+                and grow their careers in MICE, event technology, marketing, and more.
               </p>
 
               <h3 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">
-                Speaking Opportunities at Top Industry Events
+                Connect With Peers at Top Industry Events
               </h3>
               <p className="mb-4">
-                Whether you're an AI keynote speaker, event technology expert, or industry thought leader, our event
-                conference directory features opportunities at premier conferences like IMEX, PCMA Convening Leaders,
-                Event Tech Live, and dozens more. Track open calls for proposals, submission deadlines, and speaker
-                benefits all in one place.
+                Whether you're an event planner, MICE professional, event technology specialist, or venue manager, our event
+                conference directory features premier networking opportunities at conferences like IMEX, PCMA Convening Leaders,
+                Event Tech Live, and dozens more. Find the perfect events to meet industry leaders, explore new trends,
+                and build lasting professional relationships.
               </p>
 
               <h3 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">
-                Never Miss a Deadline
+                Stay Informed About Industry Events
               </h3>
               <p className="mb-4">
-                Stay ahead with our event conference directory's deadline tracking system. Filter by CFP status,
-                conference date, location, and category to find opportunities that match your expertise. Get direct
-                access to conference organizer contact information and submission guidelines.
+                Our event conference directory helps you plan your conference attendance throughout the year. Filter by
+                conference date, location, and category to find events that fit your schedule. See estimated attendance,
+                venue information, and organizer contact details - all in one convenient place.
               </p>
 
               <h3 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">
-                Why Choose Our Event Conference Directory?
+                Why Use Our Event Conference Directory?
               </h3>
               <p className="mb-4">
                 Complete transparency. No hidden fees. Every conference in our event conference directory includes
-                detailed information about speaker benefits, compensation, travel coverage, and audience demographics.
-                Make informed decisions about which speaking opportunities align with your goals.
+                detailed information about dates, locations, attendance figures, and networking opportunities.
+                Make informed decisions about which events align with your professional development goals. Plus,
+                if you're interested in speaking, track open calls for proposals as a bonus benefit.
               </p>
 
               <div className="bg-blue-50 p-6 rounded-lg mt-8">
                 <h4 className="text-xl font-semibold text-blue-900 mb-3">
-                  Start Building Your Speaking Portfolio Today
+                  Expand Your Professional Network Today
                 </h4>
                 <p className="text-blue-800">
-                  Join our growing event conference directory to connect with conference organizers actively
-                  seeking expert speakers. From MICE and event planning to AI and technology conferences,
-                  we have the opportunities you need to grow your speaking career and share your expertise.
+                  Join our growing event conference directory to discover in-person networking opportunities across
+                  the event industry. From MICE and event planning to technology and marketing conferences,
+                  connect with thousands of event professionals and grow your career through meaningful industry connections.
                 </p>
               </div>
             </div>

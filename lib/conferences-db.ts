@@ -452,7 +452,8 @@ export async function searchConferences(filters: {
       ORDER BY c.featured DESC, c.start_date ASC, c.name
     `
 
-    const conferences = await db(query, params)
+    const result = await db.query(query, params)
+    const conferences = Array.isArray(result) ? result : result.rows || []
     return conferences.map((c: any) => ({
       ...c,
       category: c.category_name ? {

@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { ConferenceImageUploader } from "@/components/conference-image-uploader"
+import { SingleImageUploader } from "@/components/single-image-uploader"
 import { ArrowLeft, Save, Trash2, Loader2 } from "lucide-react"
 import {
   AlertDialog,
@@ -42,6 +43,7 @@ interface Conference {
   location?: string
   city?: string
   country?: string
+  venue?: string
   description?: string
   logo_url?: string
   banner_url?: string
@@ -348,6 +350,16 @@ export default function EditConferencePage() {
                       placeholder="Country"
                     />
                   </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="venue">Venue</Label>
+                    <Input
+                      id="venue"
+                      value={conference.venue || ''}
+                      onChange={(e) => setConference({ ...conference, venue: e.target.value })}
+                      placeholder="Convention Center Name, Hotel, etc."
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -370,47 +382,23 @@ export default function EditConferencePage() {
                 <CardDescription>Upload conference logos and photos from previous years</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Logo & Banner URLs */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="logo_url">Logo URL</Label>
-                    <Input
-                      id="logo_url"
-                      type="url"
-                      value={conference.logo_url || ''}
-                      onChange={(e) => setConference({ ...conference, logo_url: e.target.value })}
-                      placeholder="https://example.com/logo.png"
-                    />
-                    {conference.logo_url && (
-                      <div className="mt-2 p-2 bg-gray-50 rounded border">
-                        <img
-                          src={conference.logo_url}
-                          alt="Conference logo"
-                          className="h-16 object-contain"
-                        />
-                      </div>
-                    )}
-                  </div>
+                {/* Logo & Banner Uploads */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <SingleImageUploader
+                    imageUrl={conference.logo_url}
+                    onChange={(url) => setConference({ ...conference, logo_url: url })}
+                    label="Conference Logo"
+                    description="Square logo for conference branding"
+                    aspectRatio="square"
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="banner_url">Banner URL</Label>
-                    <Input
-                      id="banner_url"
-                      type="url"
-                      value={conference.banner_url || ''}
-                      onChange={(e) => setConference({ ...conference, banner_url: e.target.value })}
-                      placeholder="https://example.com/banner.png"
-                    />
-                    {conference.banner_url && (
-                      <div className="mt-2 p-2 bg-gray-50 rounded border">
-                        <img
-                          src={conference.banner_url}
-                          alt="Conference banner"
-                          className="w-full h-24 object-cover rounded"
-                        />
-                      </div>
-                    )}
-                  </div>
+                  <SingleImageUploader
+                    imageUrl={conference.banner_url}
+                    onChange={(url) => setConference({ ...conference, banner_url: url })}
+                    label="Conference Banner"
+                    description="Wide banner image for headers"
+                    aspectRatio="wide"
+                  />
                 </div>
 
                 {/* Event Photos */}

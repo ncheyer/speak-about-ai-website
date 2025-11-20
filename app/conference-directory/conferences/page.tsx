@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import {
   Search, Filter, MapPin, Calendar, ChevronLeft, ExternalLink,
-  CheckCircle, Clock, Users, Building2
+  CheckCircle, Clock, Users, Building2, ChevronRight
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { format, parseISO } from "date-fns"
@@ -29,6 +29,7 @@ interface Conference {
   location?: string
   city?: string
   country?: string
+  venue?: string
   start_date?: string
   end_date?: string
   date_display?: string
@@ -159,6 +160,29 @@ export default function ConferenceListingPage() {
     } catch {
       return dateStr
     }
+  }
+
+  const formatLocation = (conference: Conference) => {
+    const parts = []
+
+    // Add venue if available
+    if (conference.venue) {
+      parts.push(conference.venue)
+    }
+
+    // Add city and country
+    if (conference.city && conference.country) {
+      parts.push(`${conference.city}, ${conference.country}`)
+    } else if (conference.city) {
+      parts.push(conference.city)
+    } else if (conference.country) {
+      parts.push(conference.country)
+    } else if (conference.location && !conference.venue) {
+      // Fallback to generic location if no specific fields
+      parts.push(conference.location)
+    }
+
+    return parts.length > 0 ? parts.join(' • ') : null
   }
 
   return (
@@ -339,10 +363,10 @@ export default function ConferenceListingPage() {
                         {formatDate(conference.start_date, conference.date_display)}
                       </div>
                     )}
-                    {conference.location && (
+                    {formatLocation(conference) && (
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
-                        {conference.location}
+                        {formatLocation(conference)}
                       </div>
                     )}
                   </div>
@@ -378,23 +402,32 @@ export default function ConferenceListingPage() {
                     )}
                   </div>
 
-                  {/* Website Link */}
-                  {conference.website_url && (
-                    <div className="pt-3">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          window.open(conference.website_url, '_blank')
-                        }}
+                  {/* Action Buttons */}
+                  <div className="pt-3 space-y-2">
+                    <Button
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        router.push(`/conference-directory/conferences/${conference.slug}`)
+                      }}
+                    >
+                      View More Info
+                      <ChevronRight className="h-4 w-4 ml-2" />
+                    </Button>
+                    {conference.website_url && (
+                      <a
+                        href={conference.website_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-blue-600 transition-colors"
                       >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Visit Website
-                      </Button>
-                    </div>
-                  )}
+                        <ExternalLink className="h-3 w-3" />
+                        View Event Website
+                      </a>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
