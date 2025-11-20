@@ -11,9 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { WorkshopMediaManager } from "@/components/workshop-media-manager"
 import { Plus, Edit, Trash2, Search, Eye, Star, Users, Clock, Loader2, CheckCircle, XCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
+import { Testimonial } from "@/lib/workshops-db"
 
 interface Workshop {
   id: number
@@ -29,6 +31,11 @@ interface Workshop {
   active: boolean
   featured: boolean
   created_at: string
+  thumbnail_url?: string | null
+  video_urls?: string[] | null
+  image_urls?: string[] | null
+  testimonials?: Testimonial[] | null
+  client_logos?: string[] | null
 }
 
 interface Speaker {
@@ -50,11 +57,11 @@ export default function AdminWorkshopsPage() {
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
-    speaker_id: "",
+    speaker_id: "none",
     short_description: "",
     description: "",
     duration_minutes: "",
-    format: "virtual",
+    formats: [] as string[],
     max_participants: "",
     price_range: "",
     target_audience: "",
@@ -62,7 +69,12 @@ export default function AdminWorkshopsPage() {
     key_takeaways: "",
     topics: "",
     active: true,
-    featured: false
+    featured: false,
+    thumbnail_url: "",
+    video_urls: [] as string[],
+    image_urls: [] as string[],
+    testimonials: [] as Testimonial[],
+    client_logos: [] as string[]
   })
 
   useEffect(() => {
@@ -122,12 +134,18 @@ export default function AdminWorkshopsPage() {
       const token = localStorage.getItem("adminSessionToken")
       const payload = {
         ...formData,
-        speaker_id: formData.speaker_id ? parseInt(formData.speaker_id) : null,
+        speaker_id: formData.speaker_id && formData.speaker_id !== "none" ? parseInt(formData.speaker_id) : null,
         duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : null,
         max_participants: formData.max_participants ? parseInt(formData.max_participants) : null,
+        format: formData.formats.join(", ") || null,
         learning_objectives: formData.learning_objectives.split("\n").filter(Boolean),
         key_takeaways: formData.key_takeaways.split("\n").filter(Boolean),
-        topics: formData.topics.split(",").map(t => t.trim()).filter(Boolean)
+        topics: formData.topics.split(",").map(t => t.trim()).filter(Boolean),
+        thumbnail_url: formData.thumbnail_url || null,
+        video_urls: formData.video_urls.length > 0 ? formData.video_urls : null,
+        image_urls: formData.image_urls.length > 0 ? formData.image_urls : null,
+        testimonials: formData.testimonials.length > 0 ? formData.testimonials : null,
+        client_logos: formData.client_logos.length > 0 ? formData.client_logos : null
       }
 
       const url = editingWorkshop
@@ -168,26 +186,61 @@ export default function AdminWorkshopsPage() {
     }
   }
 
-  const handleEdit = (workshop: Workshop) => {
-    setEditingWorkshop(workshop)
-    setFormData({
-      title: workshop.title,
-      slug: workshop.slug,
-      speaker_id: workshop.speaker_id?.toString() || "",
-      short_description: workshop.short_description || "",
-      description: "", // Load from full workshop data if needed
-      duration_minutes: workshop.duration_minutes?.toString() || "",
-      format: workshop.format || "virtual",
-      max_participants: "",
-      price_range: workshop.price_range || "",
-      target_audience: workshop.target_audience || "",
-      learning_objectives: "",
-      key_takeaways: "",
-      topics: "",
-      active: workshop.active,
-      featured: workshop.featured
-    })
-    setShowCreateForm(true)
+  const handleEdit = async (workshop: Workshop) => {
+    try {
+      // Fetch full workshop data including all fields
+      const token = localStorage.getItem("adminSessionToken")
+      const response = await fetch(`/api/workshops/${workshop.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "x-dev-admin-bypass": "dev-admin-access"
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to load workshop details")
+      }
+
+      const fullWorkshop = await response.json()
+
+      setEditingWorkshop(fullWorkshop)
+      setFormData({
+        title: fullWorkshop.title,
+        slug: fullWorkshop.slug,
+        speaker_id: fullWorkshop.speaker_id?.toString() || "none",
+        short_description: fullWorkshop.short_description || "",
+        description: fullWorkshop.description || "",
+        duration_minutes: fullWorkshop.duration_minutes?.toString() || "",
+        formats: fullWorkshop.format ? fullWorkshop.format.split(", ").map((f: string) => f.trim()) : [],
+        max_participants: fullWorkshop.max_participants?.toString() || "",
+        price_range: fullWorkshop.price_range || "",
+        target_audience: fullWorkshop.target_audience || "",
+        learning_objectives: Array.isArray(fullWorkshop.learning_objectives)
+          ? fullWorkshop.learning_objectives.join("\n")
+          : "",
+        key_takeaways: Array.isArray(fullWorkshop.key_takeaways)
+          ? fullWorkshop.key_takeaways.join("\n")
+          : "",
+        topics: Array.isArray(fullWorkshop.topics)
+          ? fullWorkshop.topics.join(", ")
+          : "",
+        active: fullWorkshop.active,
+        featured: fullWorkshop.featured,
+        thumbnail_url: fullWorkshop.thumbnail_url || "",
+        video_urls: fullWorkshop.video_urls || [],
+        image_urls: fullWorkshop.image_urls || [],
+        testimonials: fullWorkshop.testimonials || [],
+        client_logos: fullWorkshop.client_logos || []
+      })
+      setShowCreateForm(true)
+    } catch (error) {
+      console.error("Error loading workshop for edit:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load workshop details",
+        variant: "destructive"
+      })
+    }
   }
 
   const handleDelete = async (id: number) => {
@@ -224,11 +277,11 @@ export default function AdminWorkshopsPage() {
     setFormData({
       title: "",
       slug: "",
-      speaker_id: "",
+      speaker_id: "none",
       short_description: "",
       description: "",
       duration_minutes: "",
-      format: "virtual",
+      formats: [],
       max_participants: "",
       price_range: "",
       target_audience: "",
@@ -236,8 +289,22 @@ export default function AdminWorkshopsPage() {
       key_takeaways: "",
       topics: "",
       active: true,
-      featured: false
+      featured: false,
+      thumbnail_url: "",
+      video_urls: [],
+      image_urls: [],
+      testimonials: [],
+      client_logos: []
     })
+  }
+
+  const toggleFormat = (format: string) => {
+    setFormData(prev => ({
+      ...prev,
+      formats: prev.formats.includes(format)
+        ? prev.formats.filter(f => f !== format)
+        : [...prev.formats, format]
+    }))
   }
 
   const filteredWorkshops = workshops.filter(workshop =>
@@ -304,7 +371,7 @@ export default function AdminWorkshopsPage() {
                           <SelectValue placeholder="Select a speaker" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No speaker assigned</SelectItem>
+                          <SelectItem value="none">No speaker assigned</SelectItem>
                           {speakers.map((speaker) => (
                             <SelectItem key={speaker.id} value={speaker.id.toString()}>
                               {speaker.name}
@@ -315,17 +382,36 @@ export default function AdminWorkshopsPage() {
                     </div>
 
                     <div>
-                      <Label htmlFor="format">Format</Label>
-                      <Select value={formData.format} onValueChange={(value) => setFormData({ ...formData, format: value })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="virtual">Virtual</SelectItem>
-                          <SelectItem value="in-person">In-Person</SelectItem>
-                          <SelectItem value="hybrid">Hybrid</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label>Format (select all that apply)</Label>
+                      <div className="flex flex-col gap-2 mt-2">
+                        <label className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.formats.includes("Virtual")}
+                            onChange={() => toggleFormat("Virtual")}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Virtual</span>
+                        </label>
+                        <label className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.formats.includes("In-Person")}
+                            onChange={() => toggleFormat("In-Person")}
+                            className="rounded"
+                          />
+                          <span className="text-sm">In-Person</span>
+                        </label>
+                        <label className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.formats.includes("Hybrid")}
+                            onChange={() => toggleFormat("Hybrid")}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Hybrid</span>
+                        </label>
+                      </div>
                     </div>
 
                     <div>
@@ -410,6 +496,22 @@ export default function AdminWorkshopsPage() {
                       value={formData.topics}
                       onChange={(e) => setFormData({ ...formData, topics: e.target.value })}
                       placeholder="AI, Machine Learning, Strategy, Leadership"
+                    />
+                  </div>
+
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold mb-4">Media & Testimonials</h3>
+                    <WorkshopMediaManager
+                      thumbnailUrl={formData.thumbnail_url}
+                      videoUrls={formData.video_urls}
+                      imageUrls={formData.image_urls}
+                      testimonials={formData.testimonials}
+                      clientLogos={formData.client_logos}
+                      onThumbnailChange={(url) => setFormData({ ...formData, thumbnail_url: url })}
+                      onVideoUrlsChange={(urls) => setFormData({ ...formData, video_urls: urls })}
+                      onImagesChange={(urls) => setFormData({ ...formData, image_urls: urls })}
+                      onTestimonialsChange={(testimonials) => setFormData({ ...formData, testimonials })}
+                      onClientLogosChange={(logos) => setFormData({ ...formData, client_logos: logos })}
                     />
                   </div>
 
