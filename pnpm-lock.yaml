@@ -207,7 +207,7 @@ importers:
         specifier: latest
         version: 0.12.7
       react:
-        specifier: ^19
+        specifier: 19.0.0
         version: 19.0.0
       react-day-picker:
         specifier: latest
