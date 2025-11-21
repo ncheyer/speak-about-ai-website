@@ -335,33 +335,53 @@ export async function createWorkshop(input: CreateWorkshopInput): Promise<Worksh
  */
 export async function updateWorkshop(id: number, input: UpdateWorkshopInput): Promise<Workshop | null> {
   try {
-    // Build dynamic update query
-    const updates: string[] = []
-    const values: any[] = []
-    let paramCount = 1
-
-    Object.entries(input).forEach(([key, value]) => {
-      updates.push(`${key} = $${paramCount}`)
-      values.push(value)
-      paramCount++
-    })
-
-    if (updates.length === 0) {
+    if (Object.keys(input).length === 0) {
       // No updates to perform
       return getWorkshopById(id) as Promise<Workshop | null>
     }
 
-    values.push(id) // Add id as last parameter
-
-    const query = `
+    // Use tagged template literal with explicit field updates
+    const workshops = await sql`
       UPDATE workshops
-      SET ${updates.join(', ')}
-      WHERE id = $${paramCount}
+      SET
+        title = COALESCE(${input.title ?? null}, title),
+        slug = COALESCE(${input.slug ?? null}, slug),
+        speaker_id = ${input.speaker_id !== undefined ? input.speaker_id : sql`speaker_id`},
+        description = ${input.description !== undefined ? input.description : sql`description`},
+        short_description = ${input.short_description !== undefined ? input.short_description : sql`short_description`},
+        duration_minutes = ${input.duration_minutes !== undefined ? input.duration_minutes : sql`duration_minutes`},
+        format = ${input.format !== undefined ? input.format : sql`format`},
+        max_participants = ${input.max_participants !== undefined ? input.max_participants : sql`max_participants`},
+        price_range = ${input.price_range !== undefined ? input.price_range : sql`price_range`},
+        learning_objectives = ${input.learning_objectives !== undefined ? input.learning_objectives : sql`learning_objectives`},
+        target_audience = ${input.target_audience !== undefined ? input.target_audience : sql`target_audience`},
+        prerequisites = ${input.prerequisites !== undefined ? input.prerequisites : sql`prerequisites`},
+        materials_included = ${input.materials_included !== undefined ? input.materials_included : sql`materials_included`},
+        agenda = ${input.agenda !== undefined ? input.agenda : sql`agenda`},
+        key_takeaways = ${input.key_takeaways !== undefined ? input.key_takeaways : sql`key_takeaways`},
+        topics = ${input.topics !== undefined ? input.topics : sql`topics`},
+        thumbnail_url = ${input.thumbnail_url !== undefined ? input.thumbnail_url : sql`thumbnail_url`},
+        video_urls = ${input.video_urls !== undefined ? input.video_urls : sql`video_urls`},
+        image_urls = ${input.image_urls !== undefined ? input.image_urls : sql`image_urls`},
+        customizable = ${input.customizable !== undefined ? input.customizable : sql`customizable`},
+        custom_options = ${input.custom_options !== undefined ? input.custom_options : sql`custom_options`},
+        meta_title = ${input.meta_title !== undefined ? input.meta_title : sql`meta_title`},
+        meta_description = ${input.meta_description !== undefined ? input.meta_description : sql`meta_description`},
+        keywords = ${input.keywords !== undefined ? input.keywords : sql`keywords`},
+        active = ${input.active !== undefined ? input.active : sql`active`},
+        featured = ${input.featured !== undefined ? input.featured : sql`featured`},
+        popularity_score = ${input.popularity_score !== undefined ? input.popularity_score : sql`popularity_score`},
+        category = ${input.category !== undefined ? input.category : sql`category`},
+        display_order = ${input.display_order !== undefined ? input.display_order : sql`display_order`},
+        badge_text = ${input.badge_text !== undefined ? input.badge_text : sql`badge_text`},
+        roi_stats = ${input.roi_stats !== undefined ? input.roi_stats : sql`roi_stats`},
+        testimonials = ${input.testimonials !== undefined ? JSON.stringify(input.testimonials) : sql`testimonials`},
+        client_logos = ${input.client_logos !== undefined ? input.client_logos : sql`client_logos`},
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${id}
       RETURNING *
     `
-
-    const result = await sql(query, values)
-    return result[0] as Workshop || null
+    return workshops[0] as Workshop || null
   } catch (error) {
     console.error("Error updating workshop:", error)
     throw error
