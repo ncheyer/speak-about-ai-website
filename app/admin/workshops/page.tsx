@@ -207,11 +207,11 @@ export default function AdminWorkshopsPage() {
       setFormData({
         title: fullWorkshop.title,
         slug: fullWorkshop.slug,
-        speaker_id: fullWorkshop.speaker_id?.toString() || "none",
+        speaker_id: fullWorkshop.speaker_id ? fullWorkshop.speaker_id.toString() : "none",
         short_description: fullWorkshop.short_description || "",
         description: fullWorkshop.description || "",
         duration_minutes: fullWorkshop.duration_minutes?.toString() || "",
-        formats: fullWorkshop.format ? fullWorkshop.format.split(", ").map((f: string) => f.trim()) : [],
+        formats: fullWorkshop.format ? fullWorkshop.format.split(", ").map((f: string) => f.trim()).filter(Boolean) : [],
         max_participants: fullWorkshop.max_participants?.toString() || "",
         price_range: fullWorkshop.price_range || "",
         target_audience: fullWorkshop.target_audience || "",
@@ -372,7 +372,7 @@ export default function AdminWorkshopsPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">No speaker assigned</SelectItem>
-                          {speakers.map((speaker) => (
+                          {speakers.filter(speaker => speaker.id && speaker.name).map((speaker) => (
                             <SelectItem key={speaker.id} value={speaker.id.toString()}>
                               {speaker.name}
                             </SelectItem>
