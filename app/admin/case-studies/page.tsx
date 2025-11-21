@@ -387,7 +387,7 @@ export default function CaseStudiesManagementPage() {
                         <TableCell className="text-gray-400">
                           {study.speakers && study.speakers.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
-                              {study.speakers.map(speaker => (
+                              {study.speakers.filter(speaker => speaker && speaker.id && speaker.name).map(speaker => (
                                 <Badge key={speaker.id} variant="secondary" className="text-xs">
                                   {speaker.name}
                                 </Badge>

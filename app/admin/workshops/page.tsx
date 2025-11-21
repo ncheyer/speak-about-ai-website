@@ -65,9 +65,21 @@ export default function AdminWorkshopsPage() {
     max_participants: "",
     price_range: "",
     target_audience: "",
+    prerequisites: "",
     learning_objectives: "",
+    materials_included: "",
     key_takeaways: "",
+    agenda: "",
     topics: "",
+    customizable: true,
+    custom_options: "",
+    category: "",
+    display_order: "",
+    badge_text: "",
+    roi_stats: "",
+    meta_title: "",
+    meta_description: "",
+    keywords: "",
     active: true,
     featured: false,
     thumbnail_url: "",
@@ -120,7 +132,13 @@ export default function AdminWorkshopsPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setSpeakers(data.speakers || [])
+        // Filter out speakers with invalid IDs before setting state
+        const validSpeakers = (data.speakers || []).filter((speaker: Speaker) => {
+          if (!speaker.id || !speaker.name) return false
+          const idStr = speaker.id.toString().trim()
+          return idStr !== ""
+        })
+        setSpeakers(validSpeakers)
       }
     } catch (error) {
       console.error("Error loading speakers:", error)
@@ -132,15 +150,45 @@ export default function AdminWorkshopsPage() {
 
     try {
       const token = localStorage.getItem("adminSessionToken")
+
+      // Parse ROI stats if it's a JSON string
+      let roiStats = null
+      if (formData.roi_stats && formData.roi_stats.trim()) {
+        try {
+          roiStats = JSON.parse(formData.roi_stats)
+        } catch (e) {
+          console.error("Invalid ROI stats JSON:", e)
+        }
+      }
+
       const payload = {
-        ...formData,
+        title: formData.title,
+        slug: formData.slug,
         speaker_id: formData.speaker_id && formData.speaker_id !== "none" ? parseInt(formData.speaker_id) : null,
+        short_description: formData.short_description || null,
+        description: formData.description || null,
         duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : null,
-        max_participants: formData.max_participants ? parseInt(formData.max_participants) : null,
         format: formData.formats.join(", ") || null,
+        max_participants: formData.max_participants ? parseInt(formData.max_participants) : null,
+        price_range: formData.price_range || null,
+        target_audience: formData.target_audience || null,
+        prerequisites: formData.prerequisites || null,
         learning_objectives: formData.learning_objectives.split("\n").filter(Boolean),
+        materials_included: formData.materials_included.split("\n").filter(Boolean),
         key_takeaways: formData.key_takeaways.split("\n").filter(Boolean),
+        agenda: formData.agenda || null,
         topics: formData.topics.split(",").map(t => t.trim()).filter(Boolean),
+        customizable: formData.customizable,
+        custom_options: formData.custom_options || null,
+        category: formData.category || null,
+        display_order: formData.display_order ? parseInt(formData.display_order) : null,
+        badge_text: formData.badge_text || null,
+        roi_stats: roiStats,
+        meta_title: formData.meta_title || null,
+        meta_description: formData.meta_description || null,
+        keywords: formData.keywords.split(",").map(k => k.trim()).filter(Boolean),
+        active: formData.active,
+        featured: formData.featured,
         thumbnail_url: formData.thumbnail_url || null,
         video_urls: formData.video_urls.length > 0 ? formData.video_urls : null,
         image_urls: formData.image_urls.length > 0 ? formData.image_urls : null,
@@ -215,14 +263,30 @@ export default function AdminWorkshopsPage() {
         max_participants: fullWorkshop.max_participants?.toString() || "",
         price_range: fullWorkshop.price_range || "",
         target_audience: fullWorkshop.target_audience || "",
+        prerequisites: fullWorkshop.prerequisites || "",
         learning_objectives: Array.isArray(fullWorkshop.learning_objectives)
           ? fullWorkshop.learning_objectives.join("\n")
+          : "",
+        materials_included: Array.isArray(fullWorkshop.materials_included)
+          ? fullWorkshop.materials_included.join("\n")
           : "",
         key_takeaways: Array.isArray(fullWorkshop.key_takeaways)
           ? fullWorkshop.key_takeaways.join("\n")
           : "",
+        agenda: fullWorkshop.agenda || "",
         topics: Array.isArray(fullWorkshop.topics)
           ? fullWorkshop.topics.join(", ")
+          : "",
+        customizable: fullWorkshop.customizable ?? true,
+        custom_options: fullWorkshop.custom_options || "",
+        category: fullWorkshop.category || "",
+        display_order: fullWorkshop.display_order?.toString() || "",
+        badge_text: fullWorkshop.badge_text || "",
+        roi_stats: fullWorkshop.roi_stats ? JSON.stringify(fullWorkshop.roi_stats, null, 2) : "",
+        meta_title: fullWorkshop.meta_title || "",
+        meta_description: fullWorkshop.meta_description || "",
+        keywords: Array.isArray(fullWorkshop.keywords)
+          ? fullWorkshop.keywords.join(", ")
           : "",
         active: fullWorkshop.active,
         featured: fullWorkshop.featured,
@@ -285,9 +349,21 @@ export default function AdminWorkshopsPage() {
       max_participants: "",
       price_range: "",
       target_audience: "",
+      prerequisites: "",
       learning_objectives: "",
+      materials_included: "",
       key_takeaways: "",
+      agenda: "",
       topics: "",
+      customizable: true,
+      custom_options: "",
+      category: "",
+      display_order: "",
+      badge_text: "",
+      roi_stats: "",
+      meta_title: "",
+      meta_description: "",
+      keywords: "",
       active: true,
       featured: false,
       thumbnail_url: "",
@@ -366,13 +442,21 @@ export default function AdminWorkshopsPage() {
 
                     <div>
                       <Label htmlFor="speaker">Speaker</Label>
-                      <Select value={formData.speaker_id} onValueChange={(value) => setFormData({ ...formData, speaker_id: value })}>
+                      <Select
+                        value={formData.speaker_id || "none"}
+                        onValueChange={(value) => setFormData({ ...formData, speaker_id: value })}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select a speaker" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">No speaker assigned</SelectItem>
-                          {speakers.filter(speaker => speaker.id && speaker.name).map((speaker) => (
+                          {speakers.filter(speaker => {
+                            // Filter out speakers with invalid IDs
+                            if (!speaker.id || !speaker.name) return false
+                            const idStr = speaker.id.toString().trim()
+                            return idStr !== ""
+                          }).map((speaker) => (
                             <SelectItem key={speaker.id} value={speaker.id.toString()}>
                               {speaker.name}
                             </SelectItem>
