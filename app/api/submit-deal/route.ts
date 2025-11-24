@@ -3,6 +3,7 @@ import { createDeal, getDealById } from '@/lib/deals-utils'
 import { sendNewInquiryEmail } from '@/lib/email-service-new'
 // import { getWishlist, clearWishlist, transferWishlistToVisitor } from '@/lib/wishlist-utils'
 import { recordEvent } from '@/lib/analytics-db'
+import { verifyTurnstileToken, getClientIP } from '@/lib/turnstile'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +14,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Name and email are required' },
         { status: 400 }
+      )
+    }
+
+    // Verify Turnstile token (spam protection)
+    const turnstileToken = formData.turnstileToken
+    if (!turnstileToken) {
+      return NextResponse.json(
+        { error: 'CAPTCHA verification required. Please complete the CAPTCHA.' },
+        { status: 400 }
+      )
+    }
+
+    const clientIP = getClientIP(request)
+    const verification = await verifyTurnstileToken(turnstileToken, clientIP)
+
+    if (!verification.success) {
+      return NextResponse.json(
+        { error: verification.error || 'CAPTCHA verification failed. Please try again.' },
+        { status: 403 }
       )
     }
 

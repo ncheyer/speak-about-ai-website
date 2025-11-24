@@ -9,15 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { 
-  Calendar, 
-  Mail, 
-  MapPin, 
-  Building, 
-  User, 
-  Phone, 
-  DollarSign, 
-  MessageSquare, 
+import {
+  Calendar,
+  Mail,
+  MapPin,
+  Building,
+  User,
+  Phone,
+  DollarSign,
+  MessageSquare,
   CheckCircle,
   Users,
   Sparkles,
@@ -32,6 +32,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { Turnstile } from '@marsidev/react-turnstile'
 
 interface Speaker {
   id: number
@@ -53,7 +54,8 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
   const [eventDates, setEventDates] = useState<string[]>([''])
   const [hasNoSpeakerInMind, setHasNoSpeakerInMind] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  
+  const [turnstileToken, setTurnstileToken] = useState<string>('')
+
   const [formData, setFormData] = useState({
     clientName: '',
     clientEmail: '',
@@ -155,11 +157,20 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.clientName || !formData.clientEmail || !formData.organizationName) {
       toast({
         title: "Required fields missing",
         description: "Please fill in your name, email address, and organization.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!turnstileToken) {
+      toast({
+        title: "CAPTCHA required",
+        description: "Please complete the CAPTCHA verification to continue.",
         variant: "destructive"
       })
       return
@@ -178,7 +189,8 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
           ...formData,
           eventDates: eventDates.filter(date => date !== ''),
           specificSpeaker: hasNoSpeakerInMind ? 'No specific speaker in mind' : selectedSpeakers.map(s => s.name).join(', '),
-          hasNoSpeakerInMind
+          hasNoSpeakerInMind,
+          turnstileToken
         })
       })
 
@@ -211,7 +223,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
           title: "Request submitted successfully!",
           description: result.message || "We'll be in touch within 24 hours."
         })
-        
+
         // Reset form
         setFormData({
           clientName: '',
@@ -225,6 +237,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
         })
         setSelectedSpeakers([])
         setEventDates([''])
+        setTurnstileToken('')
       } else {
         throw new Error(result.error || 'Failed to submit')
       }
@@ -600,9 +613,23 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
               </div>
             </div>
 
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
+            {/* CAPTCHA Verification */}
+            <div className="flex justify-center py-4">
+              <Turnstile
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
+                onSuccess={(token) => setTurnstileToken(token)}
+                onError={() => setTurnstileToken('')}
+                onExpire={() => setTurnstileToken('')}
+                options={{
+                  theme: 'light',
+                  size: 'normal'
+                }}
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isSubmitting || !turnstileToken}
               className="w-full"
               size="lg"
             >
