@@ -353,14 +353,89 @@ export async function PUT(request: NextRequest) {
           <p>You will receive your login credentials in a separate email shortly.</p>
         `
         
-        // Convert to vendor
+        // Convert to vendor - use SQL approach to handle arrays properly
         try {
+          console.log(`Converting application ${id} to vendor...`)
+
+          // Use raw SQL to insert vendor directly from application data
+          // This avoids JavaScript array conversion issues with Neon client
           const vendorResult = await sql`
-            SELECT convert_application_to_vendor(${id}, ${reviewerEmail || 'admin'})
+            WITH new_vendor AS (
+              INSERT INTO vendors (
+                company_name,
+                contact_name,
+                contact_email,
+                contact_phone,
+                website,
+                description,
+                location,
+                services,
+                pricing_range,
+                minimum_budget,
+                years_in_business,
+                tags,
+                logo_url,
+                status,
+                approved_at,
+                approved_by,
+                slug
+              )
+              SELECT
+                company_name,
+                primary_contact_name,
+                business_email,
+                business_phone,
+                company_website,
+                business_description,
+                headquarters_location,
+                COALESCE(secondary_services, ARRAY[]::text[]),
+                CASE
+                  WHEN budget_minimum < 5000 THEN '$'
+                  WHEN budget_minimum < 25000 THEN '$$'
+                  WHEN budget_minimum < 75000 THEN '$$$'
+                  ELSE '$$$$'
+                END,
+                budget_minimum,
+                years_in_business,
+                COALESCE(languages, ARRAY[]::text[]),
+                logo_url,
+                'approved',
+                NOW(),
+                ${reviewerEmail || 'admin'},
+                CASE
+                  WHEN EXISTS (
+                    SELECT 1 FROM vendors v2
+                    WHERE v2.slug = LOWER(REGEXP_REPLACE(va.company_name, '[^a-zA-Z0-9]+', '-', 'g'))
+                  )
+                  THEN LOWER(REGEXP_REPLACE(va.company_name, '[^a-zA-Z0-9]+', '-', 'g')) || '-' || va.id::text
+                  ELSE LOWER(REGEXP_REPLACE(va.company_name, '[^a-zA-Z0-9]+', '-', 'g'))
+                END
+              FROM vendor_applications va
+              WHERE va.id = ${id}
+              RETURNING id, company_name
+            )
+            SELECT id FROM new_vendor
           `
-          console.log("Created vendor ID:", vendorResult[0])
+
+          const newVendorId = vendorResult[0].id
+          console.log(`Successfully created vendor with ID: ${newVendorId}`)
+
+          // Update application metadata with vendor ID
+          await sql`
+            UPDATE vendor_applications
+            SET application_metadata =
+              COALESCE(application_metadata, '{}'::jsonb) ||
+              jsonb_build_object(
+                'vendor_id', ${newVendorId},
+                'converted_at', NOW()
+              )
+            WHERE id = ${id}
+          `
+
         } catch (conversionError) {
           console.error("Failed to convert application to vendor:", conversionError)
+          // Don't fail the entire request, but log the error
+          // The application is still marked as approved
         }
         break
         
