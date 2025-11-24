@@ -120,6 +120,7 @@ export default function HelenLiangPage() {
       valuation: "$2.1B",
       founder: "Dileep Thazhmon",
       founderTitle: "CEO & Founder (YC S20 & G21)",
+      founderImage: "/speakers/dileep-thazhmon.png",
       founderBio: "Serial entrepreneur and Stanford GSB MBA (Arbuckle Fellow). Previously Co-Founder & COO at Jeeng/PowerInbox with $100M+ exit. Led company to #2 in Software on Inc Top 30, #3 on Deloitte Fast50. Started college at 16, honors graduate with M.S./B.S. in Computer Engineering (magna cum laude). Built Jeeves to power smarter finance teams across 20+ countries.",
       achievements: [
         "Raised $380M+ in equity and venture debt",
