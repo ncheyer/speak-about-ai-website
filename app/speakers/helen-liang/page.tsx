@@ -21,7 +21,7 @@ import {
 
 export const metadata = {
   title: "Helen H. Liang, PhD - AI & VC Speaker | FoundersX Ventures | Speak About AI",
-  description: "Book Helen Liang for keynotes on GenAI in Cybersecurity, Fintech, Healthcare, Robotics & more. Managing Partner at FoundersX Ventures with 8 unicorns. Featured on WSJ & Business Insider.",
+  description: "Book Helen Liang for keynotes on GenAI in Cybersecurity, Fintech, Healthcare, Robotics & more. Managing Partner at FoundersX Ventures with 9 unicorns. Featured on WSJ & Business Insider.",
   keywords: "Helen Liang speaker, AI speaker, venture capital speaker, GenAI speaker, fintech AI, cybersecurity AI, healthcare AI, robotics AI",
   robots: {
     index: false,
@@ -199,7 +199,7 @@ export default function HelenLiangPage() {
               </p>
               <p className="text-xl text-gray-600 mb-8 font-montserrat leading-relaxed">
                 Silicon Valley venture capitalist and AI thought leader. Managing Partner at FoundersX Ventures
-                with 8 unicorns and 25+ portfolio companies valued over $100M. Board Director, Guest Lecturer at
+                with 9 unicorns and 30+ portfolio companies valued over $100M. Board Director, Guest Lecturer at
                 Stanford, and Invited Speaker at TechCrunch. NVIDIA VC Alliance Partner.
               </p>
 
@@ -240,11 +240,11 @@ export default function HelenLiangPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-4xl font-bold mb-2">8</div>
+              <div className="text-4xl font-bold mb-2">9</div>
               <div className="text-blue-100">Unicorn Investments</div>
             </div>
             <div>
-              <div className="text-4xl font-bold mb-2">25+</div>
+              <div className="text-4xl font-bold mb-2">30+</div>
               <div className="text-blue-100">Companies &gt; $100M</div>
             </div>
             <div>
@@ -305,7 +305,7 @@ export default function HelenLiangPage() {
                           </p>
                           <p>
                             Helen is a Guest Lecturer at Stanford University Graduate School of Business, an Invited Speaker at
-                            TechCrunch, and an NVIDIA VC Alliance Partner. Her portfolio includes 8 unicorns, 25+ companies
+                            TechCrunch, and an NVIDIA VC Alliance Partner. Her portfolio includes 9 unicorns, 30+ companies
                             valued over $100M, and 10 successful acquisitions, including investments in SpaceX, Salt Security,
                             Jeeves, Kapital, Universal Quantum, Cognito Therapeutics, and many others.
                           </p>
