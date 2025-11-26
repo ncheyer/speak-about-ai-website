@@ -26,7 +26,7 @@ export default function Hero() {
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row gap-6 mb-8">
               {/* "Book Speaker Today" button using the Button component with 'gold' variant */}
               <Button
                 asChild // Use asChild to render the Link component as the button's child

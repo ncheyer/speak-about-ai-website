@@ -102,15 +102,15 @@ export default function WhyChooseUs() {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-blue-100"
+              className="group bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border-2 border-gray-200 hover:border-[#1E68C6]"
             >
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4 group-hover:bg-blue-200 group-hover:scale-110 transition-all duration-300">
-                  <feature.icon className="w-6 h-6 text-blue-600 group-hover:text-[#1E68C6] transition-colors duration-300" />
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#1E68C6] to-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                  <feature.icon className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 font-neue-haas">{feature.title}</h3>
+                <h3 className="text-xl font-bold text-gray-900 font-neue-haas group-hover:text-[#1E68C6] transition-colors">{feature.title}</h3>
               </div>
-              <p className="text-gray-700 leading-relaxed font-montserrat mb-4 font-medium">{feature.description}</p>
+              <p className="text-gray-700 leading-relaxed font-montserrat mb-6 font-medium">{feature.description}</p>
               {feature.highlights && feature.highlights.length > 0 && (
                 <ul className="space-y-2.5">
                   {feature.highlights.map((highlight, idx) => {

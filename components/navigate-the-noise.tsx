@@ -15,12 +15,12 @@ export default function NavigateTheNoise() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Budget Ranges */}
-          <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-xl shadow-lg border border-blue-100">
-            <div className="flex items-center mb-6">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                <DollarSign className="w-6 h-6 text-blue-600" />
+          <div className="group bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border-2 border-blue-200 hover:border-[#1E68C6]">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#1E68C6] to-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                <DollarSign className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 font-neue-haas">Budget Guidance</h3>
+              <h3 className="text-2xl font-bold text-gray-900 font-neue-haas group-hover:text-[#1E68C6] transition-colors">Budget Guidance</h3>
             </div>
             <div className="space-y-4">
               <div className="border-l-4 border-blue-600 pl-4">
@@ -42,12 +42,12 @@ export default function NavigateTheNoise() {
           </div>
 
           {/* Audience Types */}
-          <div className="bg-gradient-to-br from-amber-50 to-white p-8 rounded-xl shadow-lg border border-amber-100">
-            <div className="flex items-center mb-6">
-              <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mr-4">
-                <Users className="w-6 h-6 text-amber-600" />
+          <div className="group bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border-2 border-amber-200 hover:border-amber-500">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 font-neue-haas">Audience Types</h3>
+              <h3 className="text-2xl font-bold text-gray-900 font-neue-haas group-hover:text-amber-600 transition-colors">Audience Types</h3>
             </div>
             <div className="space-y-3">
               {[
@@ -68,12 +68,12 @@ export default function NavigateTheNoise() {
           </div>
 
           {/* Geographic Delivery */}
-          <div className="bg-gradient-to-br from-green-50 to-white p-8 rounded-xl shadow-lg border border-green-100">
-            <div className="flex items-center mb-6">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-                <Globe2 className="w-6 h-6 text-green-600" />
+          <div className="group bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border-2 border-green-200 hover:border-green-600">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-700 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                <Globe2 className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 font-neue-haas">Global Delivery</h3>
+              <h3 className="text-2xl font-bold text-gray-900 font-neue-haas group-hover:text-green-600 transition-colors">Global Delivery</h3>
             </div>
             <div className="space-y-4">
               <div>
@@ -82,7 +82,7 @@ export default function NavigateTheNoise() {
                   In-Person Events
                 </h4>
                 <p className="text-sm text-gray-600 font-montserrat ml-7">
-                  Worldwide coverage with expert travel logistics and on-ground support
+                  Worldwide coverage with speaker coordination and booking support
                 </p>
               </div>
               <div>
@@ -91,7 +91,7 @@ export default function NavigateTheNoise() {
                   Virtual Events
                 </h4>
                 <p className="text-sm text-gray-600 font-montserrat ml-7">
-                  Professional virtual keynotes with premium A/V setup and tech support
+                  Professional virtual keynotes optimized for online engagement
                 </p>
               </div>
               <div>

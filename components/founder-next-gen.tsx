@@ -1,16 +1,9 @@
-import { Users, Brain, Building2, BookOpen, Rocket, Sparkles } from "lucide-react"
+import { Brain, Building2, BookOpen, Rocket, Users } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 export default function FounderNextGen() {
   const resources = [
-    {
-      icon: Users,
-      title: "WhatsApp Community",
-      description: "Join 500+ event professionals sharing insights, vendors, and best practices",
-      link: "/event-professionals-whatsapp",
-      status: "Join Now",
-    },
     {
       icon: Brain,
       title: "Free AI GPTs for Events",
@@ -32,6 +25,13 @@ export default function FounderNextGen() {
       link: "/blog",
       status: "Explore",
     },
+    {
+      icon: Users,
+      title: "AI-Focused Community",
+      description: "Connect with event planners leveraging AI and stay ahead of the latest trends",
+      link: "/event-professionals-whatsapp",
+      status: "Join Now",
+    },
   ]
 
   return (
@@ -47,62 +47,35 @@ export default function FounderNextGen() {
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat">
             We're building more than a speaker bureau—we're creating a community and toolkit to help event
-            professionals succeed
+            professionals thrive in this age of AI
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {resources.map((resource, index) => (
             <Link
               key={index}
               href={resource.link}
-              className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 hover:shadow-xl hover:border-[#1E68C6] transition-all duration-300 group block"
+              className="bg-white p-8 rounded-2xl shadow-xl border-2 border-gray-200 hover:shadow-2xl hover:border-[#1E68C6] hover:-translate-y-1 transition-all duration-300 group block"
             >
               <div className="flex flex-col h-full">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-amber-100 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <resource.icon className="w-6 h-6 text-[#1E68C6]" />
+                <div className="w-16 h-16 bg-gradient-to-br from-[#1E68C6] to-blue-600 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-all shadow-lg">
+                  <resource.icon className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2 font-neue-haas">{resource.title}</h3>
-                <p className="text-sm text-gray-600 mb-4 flex-grow font-montserrat">{resource.description}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3 font-neue-haas group-hover:text-[#1E68C6] transition-colors">{resource.title}</h3>
+                <p className="text-sm text-gray-600 mb-6 flex-grow font-montserrat leading-relaxed">{resource.description}</p>
                 <div className="mt-auto">
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-[#1E68C6] group-hover:bg-[#1E68C6] group-hover:text-white transition-colors">
+                  <Button
+                    variant="gold"
+                    size="lg"
+                    className="font-montserrat font-bold shadow-xl hover:shadow-2xl transition-all duration-300 pointer-events-none w-full"
+                  >
                     {resource.status} →
-                  </span>
+                  </Button>
                 </div>
               </div>
             </Link>
           ))}
-        </div>
-
-        <div className="bg-gradient-to-r from-[#1E68C6] to-blue-700 rounded-2xl p-8 md:p-12 text-white">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-6 md:mb-0 md:mr-8">
-              <h3 className="text-2xl md:text-3xl font-bold mb-3 font-neue-haas">
-                Join Our Event Professionals Community
-              </h3>
-              <p className="text-lg text-blue-100 font-montserrat">
-                Get exclusive access to resources, connect with other event planners, and stay ahead with the latest
-                AI trends in events
-              </p>
-            </div>
-            <Button
-              asChild
-              variant="gold"
-              size="lg"
-              className="flex-shrink-0 font-montserrat font-bold text-lg whitespace-nowrap"
-            >
-              <Link href="/event-professionals-whatsapp">Join WhatsApp Group</Link>
-            </Button>
-          </div>
-        </div>
-
-        <div className="mt-12 text-center">
-          <div className="inline-flex items-center gap-2 text-gray-600">
-            <Sparkles className="w-5 h-5 text-[#1E68C6]" />
-            <span className="font-montserrat">
-              <strong className="text-gray-900">Built by event professionals,</strong> for event professionals
-            </span>
-          </div>
         </div>
       </div>
     </section>
