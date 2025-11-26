@@ -24,6 +24,7 @@ export interface Workshop {
   learning_objectives: string[] | null
   target_audience: string | null
   prerequisites: string | null
+  technical_experience_needed: string | null
   materials_included: string[] | null
   agenda: string | null
   key_takeaways: string[] | null
@@ -69,6 +70,7 @@ export interface CreateWorkshopInput {
   learning_objectives?: string[]
   target_audience?: string
   prerequisites?: string
+  technical_experience_needed?: string
   materials_included?: string[]
   agenda?: string
   key_takeaways?: string[]
@@ -278,8 +280,8 @@ export async function createWorkshop(input: CreateWorkshopInput): Promise<Worksh
       INSERT INTO workshops (
         title, slug, speaker_id, description, short_description,
         duration_minutes, format, max_participants, price_range,
-        learning_objectives, target_audience, prerequisites, materials_included,
-        agenda, key_takeaways, topics,
+        learning_objectives, target_audience, prerequisites, technical_experience_needed,
+        materials_included, agenda, key_takeaways, topics,
         thumbnail_url, video_urls, image_urls,
         customizable, custom_options,
         meta_title, meta_description, keywords,
@@ -299,6 +301,7 @@ export async function createWorkshop(input: CreateWorkshopInput): Promise<Worksh
         ${input.learning_objectives ?? null},
         ${input.target_audience ?? null},
         ${input.prerequisites ?? null},
+        ${input.technical_experience_needed ?? null},
         ${input.materials_included ?? null},
         ${input.agenda ?? null},
         ${input.key_takeaways ?? null},
@@ -356,6 +359,7 @@ export async function updateWorkshop(id: number, input: UpdateWorkshopInput): Pr
         learning_objectives = ${input.learning_objectives !== undefined ? input.learning_objectives : sql`learning_objectives`},
         target_audience = ${input.target_audience !== undefined ? input.target_audience : sql`target_audience`},
         prerequisites = ${input.prerequisites !== undefined ? input.prerequisites : sql`prerequisites`},
+        technical_experience_needed = ${input.technical_experience_needed !== undefined ? input.technical_experience_needed : sql`technical_experience_needed`},
         materials_included = ${input.materials_included !== undefined ? input.materials_included : sql`materials_included`},
         agenda = ${input.agenda !== undefined ? input.agenda : sql`agenda`},
         key_takeaways = ${input.key_takeaways !== undefined ? input.key_takeaways : sql`key_takeaways`},

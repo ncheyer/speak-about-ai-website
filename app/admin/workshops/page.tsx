@@ -28,6 +28,7 @@ interface Workshop {
   format: string | null
   target_audience: string | null
   price_range: string | null
+  technical_experience_needed?: string | null
   active: boolean
   featured: boolean
   created_at: string
@@ -66,6 +67,7 @@ export default function AdminWorkshopsPage() {
     price_range: "",
     target_audience: "",
     prerequisites: "",
+    technical_experience_needed: "",
     learning_objectives: "",
     materials_included: "",
     key_takeaways: "",
@@ -173,6 +175,7 @@ export default function AdminWorkshopsPage() {
         price_range: formData.price_range || null,
         target_audience: formData.target_audience || null,
         prerequisites: formData.prerequisites || null,
+        technical_experience_needed: formData.technical_experience_needed || null,
         learning_objectives: formData.learning_objectives.split("\n").filter(Boolean),
         materials_included: formData.materials_included.split("\n").filter(Boolean),
         key_takeaways: formData.key_takeaways.split("\n").filter(Boolean),
@@ -264,6 +267,7 @@ export default function AdminWorkshopsPage() {
         price_range: fullWorkshop.price_range || "",
         target_audience: fullWorkshop.target_audience || "",
         prerequisites: fullWorkshop.prerequisites || "",
+        technical_experience_needed: fullWorkshop.technical_experience_needed || "",
         learning_objectives: Array.isArray(fullWorkshop.learning_objectives)
           ? fullWorkshop.learning_objectives.join("\n")
           : "",
@@ -350,6 +354,7 @@ export default function AdminWorkshopsPage() {
       price_range: "",
       target_audience: "",
       prerequisites: "",
+      technical_experience_needed: "",
       learning_objectives: "",
       materials_included: "",
       key_takeaways: "",
@@ -559,6 +564,16 @@ export default function AdminWorkshopsPage() {
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       rows={4}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="technical_experience_needed">Technical Experience Needed</Label>
+                    <Input
+                      id="technical_experience_needed"
+                      value={formData.technical_experience_needed}
+                      onChange={(e) => setFormData({ ...formData, technical_experience_needed: e.target.value })}
+                      placeholder="e.g., Beginner, Intermediate, Advanced, or None Required"
                     />
                   </div>
 
