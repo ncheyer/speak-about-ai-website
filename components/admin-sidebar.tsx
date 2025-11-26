@@ -35,7 +35,10 @@ import {
   Globe,
   Megaphone,
   Building2,
-  Linkedin
+  Linkedin,
+  Wrench,
+  Bot,
+  Sparkles
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -44,7 +47,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ className }: AdminSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
-  const [expandedSections, setExpandedSections] = useState<string[]>(['sales', 'operations', 'website', 'marketing'])
+  const [expandedSections, setExpandedSections] = useState<string[]>(['sales', 'operations', 'website', 'marketing', 'tools'])
   const pathname = usePathname()
   const router = useRouter()
 
@@ -267,6 +270,23 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Event Pro Community",
           color: "text-green-600",
           bgColor: "bg-green-50"
+        }
+      ]
+    },
+    {
+      title: "Tools",
+      icon: Wrench,
+      sectionKey: "tools",
+      color: "text-amber-600",
+      bgColor: "bg-amber-50",
+      items: [
+        {
+          title: "AI Content Studio",
+          href: "/admin/tools/speaker-chat",
+          icon: Sparkles,
+          description: "Chat & Blog Writer",
+          color: "text-purple-600",
+          bgColor: "bg-purple-50"
         }
       ]
     },
