@@ -341,7 +341,7 @@ export default function WorkshopDirectory() {
                       </div>
                     )}
 
-                    <div className="space-y-3 mt-4">
+                    <div className="flex flex-col gap-3 mt-4">
                       <Link href={`/contact?workshop=${workshop.id}`}>
                         <Button className="w-full font-montserrat" variant="default">
                           Inquire About Workshop

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from 'next/cache'
 import { getWorkshopById, updateWorkshop, deleteWorkshop } from "@/lib/workshops-db"
 import { requireAdminAuth } from "@/lib/auth-middleware"
 
@@ -56,6 +57,18 @@ export async function PUT(
       return NextResponse.json({ error: "Workshop not found" }, { status: 404 })
     }
 
+    // Revalidate the public workshop pages cache
+    try {
+      if (workshop.slug) {
+        revalidatePath(`/ai-workshops/${workshop.slug}`)
+        revalidatePath('/ai-workshops') // Also revalidate the workshops list
+        console.log(`Revalidated cache for /ai-workshops/${workshop.slug}`)
+      }
+    } catch (revalidateError) {
+      console.error('Failed to revalidate cache:', revalidateError)
+      // Don't fail the update if revalidation fails
+    }
+
     return NextResponse.json(workshop)
   } catch (error) {
     console.error("Error in PUT /api/workshops/[id]:", error)
@@ -85,10 +98,25 @@ export async function DELETE(
       return NextResponse.json({ error: "Invalid workshop ID" }, { status: 400 })
     }
 
+    // Get workshop details before deleting (for revalidation)
+    const workshop = await getWorkshopById(id)
+
     const success = await deleteWorkshop(id)
 
     if (!success) {
       return NextResponse.json({ error: "Failed to delete workshop" }, { status: 404 })
+    }
+
+    // Revalidate the public workshop pages cache
+    try {
+      if (workshop?.slug) {
+        revalidatePath(`/ai-workshops/${workshop.slug}`)
+        console.log(`Revalidated cache for deleted workshop /ai-workshops/${workshop.slug}`)
+      }
+      revalidatePath('/ai-workshops') // Always revalidate the workshops list
+    } catch (revalidateError) {
+      console.error('Failed to revalidate cache:', revalidateError)
+      // Don't fail the delete if revalidation fails
     }
 
     return NextResponse.json({ message: "Workshop deleted successfully" })

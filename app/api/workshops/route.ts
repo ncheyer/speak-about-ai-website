@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from 'next/cache'
 import { getAllWorkshops, getActiveWorkshops, createWorkshop, searchWorkshops } from "@/lib/workshops-db"
 import { requireAdminAuth } from "@/lib/auth-middleware"
 
@@ -47,6 +48,18 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const workshop = await createWorkshop(body)
+
+    // Revalidate the public workshop pages cache
+    try {
+      if (workshop.slug) {
+        revalidatePath(`/ai-workshops/${workshop.slug}`)
+        console.log(`Revalidated cache for new workshop /ai-workshops/${workshop.slug}`)
+      }
+      revalidatePath('/ai-workshops') // Always revalidate the workshops list
+    } catch (revalidateError) {
+      console.error('Failed to revalidate cache:', revalidateError)
+      // Don't fail the create if revalidation fails
+    }
 
     return NextResponse.json(workshop, { status: 201 })
   } catch (error) {
