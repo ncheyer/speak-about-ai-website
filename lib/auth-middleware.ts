@@ -5,19 +5,10 @@ import { verifyToken, isAdminToken } from './jwt-utils'
  * Authentication middleware for admin routes
  */
 export function requireAdminAuth(request: NextRequest): NextResponse | null {
-  // Development mode bypass - check for development environment
-  if (process.env.NODE_ENV === 'development') {
-    // Allow bypass if a special development token is provided
-    const devToken = request.headers.get('x-dev-admin-bypass')
-    if (devToken === 'dev-admin-access') {
-      return null // Allow access in development
-    }
-  }
-  
   // Check Authorization header first
   const authHeader = request.headers.get('authorization')
   let token: string | null = null
-  
+
   if (authHeader && authHeader.startsWith('Bearer ')) {
     token = authHeader.substring(7)
   } else {
@@ -27,21 +18,21 @@ export function requireAdminAuth(request: NextRequest): NextResponse | null {
       token = cookieToken
     }
   }
-  
+
   if (!token) {
     return NextResponse.json(
-      { error: 'Authentication required', code: 'NO_TOKEN' }, 
+      { error: 'Authentication required', code: 'NO_TOKEN' },
       { status: 401 }
     )
   }
-  
+
   if (!isAdminToken(token)) {
     return NextResponse.json(
-      { error: 'Invalid or expired token', code: 'INVALID_TOKEN' }, 
+      { error: 'Invalid or expired token', code: 'INVALID_TOKEN' },
       { status: 401 }
     )
   }
-  
+
   return null // No error, auth successful
 }
 
