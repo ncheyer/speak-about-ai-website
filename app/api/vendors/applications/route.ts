@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
 import { Resend } from "resend"
+import { requireAdminAuth } from "@/lib/auth-middleware"
 
 const sql = neon(process.env.DATABASE_URL!)
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if admin request
-    const isAdmin = request.headers.get("x-admin-request") === "true"
-    
-    if (!isAdmin) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
+    // Check for admin authentication
+    const authError = requireAdminAuth(request)
+    if (authError) {
+      return authError
     }
 
     const { searchParams } = new URL(request.url)
@@ -284,13 +281,10 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const isAdmin = request.headers.get("x-admin-request") === "true"
-    
-    if (!isAdmin) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
+    // Check for admin authentication
+    const authError = requireAdminAuth(request)
+    if (authError) {
+      return authError
     }
     
     const { id, status, notes, reviewerEmail } = await request.json()

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
+import { requireAdminAuth } from "@/lib/auth-middleware"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -123,13 +124,10 @@ export async function POST(request: NextRequest) {
 // Admin endpoint to get all applications (requires auth)
 export async function GET(request: NextRequest) {
   try {
-    // Check for admin auth
-    const authHeader = request.headers.get('x-admin-request')
-    if (authHeader !== 'true') {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
+    // Check for admin authentication
+    const authError = requireAdminAuth(request)
+    if (authError) {
+      return authError
     }
 
     const { searchParams } = new URL(request.url)
