@@ -305,7 +305,7 @@ export default function AdminSpeakersPage() {
     try {
       const response = await authPost('/api/speaker-invitations', {
           speaker_id: selectedSpeaker.id,
-          first_name: selectedSpeaker?.name ? selectedSpeaker.name.split(' ')
+          first_name: selectedSpeaker?.name ? selectedSpeaker.name.split(' ')[0] : ''
       })
 
       if (response.ok) {

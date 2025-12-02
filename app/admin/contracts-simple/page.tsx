@@ -107,7 +107,7 @@ export default function SimpleContractsPage() {
     try {
       const response = await authPost("/api/contracts", {
           ...formData,
-          deal_id: formData.deal_id ? parseInt(formData.deal_id)
+          deal_id: formData.deal_id ? parseInt(formData.deal_id) : null
       })
       
       if (response.ok) {

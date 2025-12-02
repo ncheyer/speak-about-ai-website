@@ -11,11 +11,11 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
-import { 
 import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
-  Shield, 
-  Save, 
-  AlertTriangle, 
+import {
+  Shield,
+  Save,
+  AlertTriangle,
   Lock,
   Eye,
   EyeOff,

@@ -677,7 +677,7 @@ export default function EnhancedProjectManagementPage() {
     try {
       const response = await authPatch(`/api/invoices/${invoiceId}`, {
           status: newStatus,
-          payment_date: newStatus === "paid" ? new Date()
+          payment_date: newStatus === "paid" ? new Date() : null
       })
 
       if (response.ok) {
