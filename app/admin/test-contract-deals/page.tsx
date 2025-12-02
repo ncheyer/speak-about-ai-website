@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
 
 export default function TestContractDealsPage() {
   const [deals, setDeals] = useState<any[]>([])
@@ -13,11 +14,7 @@ export default function TestContractDealsPage() {
   
   const loadDeals = async () => {
     try {
-      const response = await fetch("/api/deals", {
-        headers: {
-          "x-dev-admin-bypass": "dev-admin-access"
-        }
-      })
+      const response = await authGet("/api/deals")
       if (response.ok) {
         const data = await response.json()
         const availableDeals = data.filter((deal: any) => 

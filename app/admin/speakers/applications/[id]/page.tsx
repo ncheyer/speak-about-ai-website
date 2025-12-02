@@ -34,6 +34,7 @@ import {
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
 
 interface SpeakerApplication {
   id: number
@@ -90,11 +91,7 @@ export default function ApplicationDetailPage() {
   const loadApplication = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/speaker-applications/${params.id}`, {
-        headers: {
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
+      const response = await authGet(`/api/speaker-applications/${params.id}`)
 
       if (response.ok) {
         const data = await response.json()
@@ -124,18 +121,11 @@ export default function ApplicationDetailPage() {
   const handleAction = async (action: 'approve' | 'reject' | 'invite' | 'update_notes') => {
     setProcessingAction(true)
     try {
-      const response = await fetch(`/api/speaker-applications/${params.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        body: JSON.stringify({
+      const response = await authPatch(`/api/speaker-applications/${params.id}`, {
           action,
           admin_notes: adminNotes,
           rejection_reason: action === 'reject' ? rejectionReason : undefined
         })
-      })
 
       if (response.ok) {
         const data = await response.json()

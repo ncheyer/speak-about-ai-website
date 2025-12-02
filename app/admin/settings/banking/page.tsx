@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
 import { 
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
   Shield, 
   Save, 
   AlertTriangle, 
@@ -72,11 +73,7 @@ export default function BankingSettingsPage() {
   const loadBankingConfig = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/admin/banking-config', {
-        headers: {
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
+      const response = await authGet('/api/admin/banking-config')
 
       if (response.ok) {
         const data = await response.json()
@@ -99,14 +96,7 @@ export default function BankingSettingsPage() {
     try {
       setSaving(true)
       
-      const response = await fetch('/api/admin/banking-config', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        body: JSON.stringify({ config })
-      })
+      const response = await authPut('/api/admin/banking-config', { config })
 
       if (response.ok) {
         toast({

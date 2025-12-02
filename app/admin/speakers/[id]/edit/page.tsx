@@ -30,6 +30,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import { authGet, authPut } from "@/lib/auth-fetch"
 
 interface Video {
   id: string
@@ -243,23 +244,8 @@ export default function AdminSpeakerEditPage() {
   const loadSpeaker = async () => {
     try {
       setLoading(true)
-      
-      // Get the admin token from localStorage
-      const token = localStorage.getItem("adminSessionToken")
-      
-      const headers: HeadersInit = {
-        "x-dev-admin-bypass": "dev-admin-access", // Always include for compatibility
-      }
-      
-      // Add authentication header if token exists
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`
-      }
-      
-      const response = await fetch(`/api/admin/speakers/${params.id}`, {
-        headers,
-        credentials: 'include', // Include cookies
-      })
+
+      const response = await authGet(`/api/admin/speakers/${params.id}`)
 
       if (response.ok) {
         const data = await response.json()
@@ -325,26 +311,8 @@ export default function AdminSpeakerEditPage() {
   const handleSave = async () => {
     try {
       setSaving(true)
-      
-      // Get the admin token from localStorage
-      const token = localStorage.getItem("adminSessionToken")
-      
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-        "x-dev-admin-bypass": "dev-admin-access", // Always include for compatibility
-      }
-      
-      // Add authentication header if token exists
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`
-      }
-      
-      const response = await fetch(`/api/admin/speakers/${params.id}`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify(formData),
-        credentials: 'include', // Include cookies
-      })
+
+      const response = await authPut(`/api/admin/speakers/${params.id}`, formData)
 
       if (response.ok) {
         toast({

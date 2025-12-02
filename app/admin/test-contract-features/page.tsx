@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
 
 export default function TestContractFeaturesPage() {
   const [results, setResults] = useState<string[]>([])
@@ -13,9 +14,7 @@ export default function TestContractFeaturesPage() {
   
   const testView = async () => {
     try {
-      const response = await fetch(`/api/contracts/${contractId}`, {
-        headers: { "x-dev-admin-bypass": "dev-admin-access" }
-      })
+      const response = await authGet(`/api/contracts/${contractId}`)
       const data = await response.json()
       addResult(`View Contract: ${data.title} (Status: ${data.status})`)
     } catch (error) {
@@ -25,17 +24,10 @@ export default function TestContractFeaturesPage() {
   
   const testEdit = async () => {
     try {
-      const response = await fetch(`/api/contracts/${contractId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-dev-admin-bypass": "dev-admin-access"
-        },
-        body: JSON.stringify({
-          title: `Edited at ${new Date().toLocaleTimeString()}`,
-          type: "speaker",
-          status: "draft"
-        })
+      const response = await authPut(`/api/contracts/${contractId}`, {
+        title: `Edited at ${new Date().toLocaleTimeString()}`,
+        type: "speaker",
+        status: "draft"
       })
       const data = await response.json()
       addResult(`Edit Contract: ${data.title}`)
@@ -46,13 +38,7 @@ export default function TestContractFeaturesPage() {
   
   const testStatusUpdate = async () => {
     try {
-      const response = await fetch(`/api/contracts/${contractId}/send`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-dev-admin-bypass": "dev-admin-access"
-        }
-      })
+      const response = await authFetch(`/api/contracts/${contractId}/send`, { method: "POST" })
       const data = await response.json()
       addResult(`Status Update: Contract marked as ${data.contract?.status || 'sent'}`)
     } catch (error) {
@@ -62,18 +48,11 @@ export default function TestContractFeaturesPage() {
   
   const testSign = async () => {
     try {
-      const response = await fetch(`/api/contracts/${contractId}/sign`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-dev-admin-bypass": "dev-admin-access"
-        },
-        body: JSON.stringify({
+      const response = await authPost(`/api/contracts/${contractId}/sign`, {
           signer_name: "Test Signer",
           signer_email: "test@example.com",
           signer_role: "client"
         })
-      })
       const data = await response.json()
       addResult(`Sign Contract: ${data.signatures?.length || 0} signatures`)
     } catch (error) {
@@ -83,9 +62,7 @@ export default function TestContractFeaturesPage() {
   
   const testTemplates = async () => {
     try {
-      const response = await fetch("/api/contracts/templates", {
-        headers: { "x-dev-admin-bypass": "dev-admin-access" }
-      })
+      const response = await authGet("/api/contracts/templates")
       const data = await response.json()
       addResult(`Templates: Found ${data.length} templates`)
     } catch (error) {

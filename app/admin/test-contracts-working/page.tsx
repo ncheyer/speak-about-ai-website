@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
 
 export default function TestContractsWorkingPage() {
   const [testResults, setTestResults] = useState<string[]>([])
@@ -18,9 +19,7 @@ export default function TestContractsWorkingPage() {
     // Test 1: Fetch contracts
     try {
       addResult("Testing: Fetch contracts...")
-      const response = await fetch("/api/contracts", {
-        headers: { "x-dev-admin-bypass": "dev-admin-access" }
-      })
+      const response = await authGet("/api/contracts")
       const data = await response.json()
       setContracts(data)
       addResult(`✅ SUCCESS: Fetched ${data.length} contracts`)
@@ -31,26 +30,17 @@ export default function TestContractsWorkingPage() {
     // Test 2: Create a contract
     try {
       addResult("Testing: Create new contract...")
-      const response = await fetch("/api/contracts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-dev-admin-bypass": "dev-admin-access"
-        },
-        body: JSON.stringify({
-          title: `Test Contract ${Date.now()}`,
-          type: "speaker",
-          client_name: "Test Client",
-          speaker_name: "Test Speaker"
-        })
+      const response = await authPost("/api/contracts", {
+        title: `Test Contract ${Date.now()}`,
+        type: "speaker",
+        client_name: "Test Client",
+        speaker_name: "Test Speaker"
       })
       const data = await response.json()
       addResult(`✅ SUCCESS: Created contract ${data.contract_number}`)
       
       // Reload contracts
-      const fetchResponse = await fetch("/api/contracts", {
-        headers: { "x-dev-admin-bypass": "dev-admin-access" }
-      })
+      const fetchResponse = await authGet("/api/contracts")
       const updatedData = await fetchResponse.json()
       setContracts(updatedData)
     } catch (error: any) {

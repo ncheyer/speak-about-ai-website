@@ -32,6 +32,7 @@ import {
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
 
 export default function AdminAddSpeakerPage() {
   const router = useRouter()
@@ -233,18 +234,11 @@ export default function AdminAddSpeakerPage() {
       // Generate slug if not provided
       const slug = formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
       
-      const response = await fetch("/api/admin/speakers", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        body: JSON.stringify({
+      const response = await authPost("/api/admin/speakers", {
           ...formData,
           slug,
           social_media: formData.social_media
-        }),
-      })
+        })
 
       if (response.ok) {
         const data = await response.json()

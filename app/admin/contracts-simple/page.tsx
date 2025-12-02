@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
 
 export default function SimpleContractsPage() {
   const router = useRouter()
@@ -39,11 +40,7 @@ export default function SimpleContractsPage() {
     try {
       console.log("Loading deals...")
       setError("")
-      const response = await fetch("/api/deals", {
-        headers: {
-          "x-dev-admin-bypass": "dev-admin-access"
-        }
-      })
+      const response = await authGet("/api/deals")
       
       if (!response.ok) {
         throw new Error(`Failed to load deals: ${response.status}`)
@@ -67,11 +64,7 @@ export default function SimpleContractsPage() {
 
   const loadContracts = async () => {
     try {
-      const response = await fetch("/api/contracts", {
-        headers: {
-          "x-dev-admin-bypass": "dev-admin-access"
-        }
-      })
+      const response = await authGet("/api/contracts")
       if (response.ok) {
         const data = await response.json()
         setContracts(data)
@@ -112,16 +105,9 @@ export default function SimpleContractsPage() {
     setLoading(true)
     
     try {
-      const response = await fetch("/api/contracts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-dev-admin-bypass": "dev-admin-access"
-        },
-        body: JSON.stringify({
+      const response = await authPost("/api/contracts", {
           ...formData,
-          deal_id: formData.deal_id ? parseInt(formData.deal_id) : null
-        })
+          deal_id: formData.deal_id ? parseInt(formData.deal_id)
       })
       
       if (response.ok) {

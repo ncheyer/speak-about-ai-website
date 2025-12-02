@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { InvoicePDFDialog } from "@/components/invoice-pdf-viewer"
 import { 
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
   FileText, 
   DollarSign, 
   Calendar, 
@@ -54,14 +55,7 @@ export function InvoiceDualManagement({
   const handleGenerateInvoices = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/invoices/generate-pair', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        body: JSON.stringify({ projectId })
-      })
+      const response = await authPost('/api/invoices/generate-pair', { projectId })
 
       if (!response.ok) {
         throw new Error('Failed to generate invoices')
@@ -90,16 +84,9 @@ export function InvoiceDualManagement({
 
   const handleMarkAsPaid = async (invoiceId: number, invoiceType: string) => {
     try {
-      const response = await fetch(`/api/invoices/${invoiceId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        body: JSON.stringify({ 
+      const response = await authPatch(`/api/invoices/${invoiceId}`, { 
           status: 'paid',
-          payment_date: new Date().toISOString()
-        })
+          payment_date: new Date()
       })
 
       if (!response.ok) {

@@ -32,7 +32,7 @@ import {
   Users,
   TrendingUp
 } from "lucide-react"
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -41,6 +41,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { formatCurrency } from "@/lib/utils"
+import { authGet } from "@/lib/auth-fetch"
 
 interface Speaker {
   id: number
@@ -128,11 +129,7 @@ export default function SpeakerApplicationsPage() {
 
   const fetchSpeakers = async () => {
     try {
-      const response = await fetch("/api/speaker-applications", {
-        headers: {
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
+      const response = await authGet("/api/speaker-applications")
       if (response.ok) {
         const data = await response.json()
         setSpeakers(data.applications || data)

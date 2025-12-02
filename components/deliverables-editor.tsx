@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { CheckCircle, FileText, Loader2, Plus, Trash2 } from "lucide-react"
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
 
 interface DeliverablesEditorProps {
   projectId: number
@@ -83,17 +84,10 @@ export function DeliverablesEditor({
   const handleSave = async () => {
     try {
       setSaving(true)
-      const response = await fetch('/api/projects/set-deliverables', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        body: JSON.stringify({
+      const response = await authPost('/api/projects/set-deliverables', {
           projectId,
           deliverables: deliverables
         })
-      })
 
       if (response.ok) {
         const data = await response.json()

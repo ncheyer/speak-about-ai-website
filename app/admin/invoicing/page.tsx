@@ -37,6 +37,7 @@ import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
 import { InvoicePDFDialog } from "@/components/invoice-pdf-viewer"
 import { InvoiceEditorModal } from "@/components/invoice-editor-modal"
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
 
 interface Project {
   id: number
@@ -137,18 +138,8 @@ export default function InvoicingPage() {
       setLoading(true)
       
       const [projectsResponse, invoicesResponse] = await Promise.all([
-        fetch("/api/projects", { 
-          credentials: 'include',
-          headers: {
-            'x-dev-admin-bypass': 'dev-admin-access'
-          }
-        }),
-        fetch("/api/invoices", { 
-          credentials: 'include',
-          headers: {
-            'x-dev-admin-bypass': 'dev-admin-access'
-          }
-        })
+        authGet("/api/projects"),
+        authGet("/api/invoices")
       ])
 
       if (projectsResponse.ok) {
@@ -243,19 +234,8 @@ export default function InvoicingPage() {
 
   const handleCreateInvoice = async () => {
     try {
-      const response = await fetch("/api/invoices", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          project_id: parseInt(invoiceFormData.project_id),
-          amount: parseFloat(invoiceFormData.amount),
-          due_date: invoiceFormData.due_date,
-          notes: invoiceFormData.notes
-        })
+      const response = await authPost("/api/invoices", {
+          project_id: parseInt(invoiceFormData.project_id)
       })
       
       if (response.ok) {
@@ -292,15 +272,7 @@ export default function InvoicingPage() {
 
   const handleUpdateInvoiceStatus = async (invoiceId: number, newStatus: string) => {
     try {
-      const response = await fetch(`/api/invoices/${invoiceId}`, {
-        method: "PATCH",
-        headers: { 
-          "Content-Type": "application/json",
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ status: newStatus })
-      })
+      const response = await authPatch(`/api/invoices/${invoiceId}`, { status: newStatus })
       
       if (response.ok) {
         toast({
@@ -330,13 +302,7 @@ export default function InvoicingPage() {
     if (!confirm("Are you sure you want to delete this invoice?")) return
     
     try {
-      const response = await fetch(`/api/invoices/${invoiceId}`, {
-        method: "DELETE",
-        headers: { 
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include'
-      })
+      const response = await authDelete(`/api/invoices/${invoiceId}`)
       
       if (response.ok) {
         toast({

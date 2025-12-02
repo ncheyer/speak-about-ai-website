@@ -25,6 +25,7 @@ import {
   Sparkles
 } from "lucide-react"
 import { generateDeliverablesFromProject, formatDeliverablesForStorage } from "@/lib/generate-deliverables"
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
 
 interface InvoiceData {
   id: number
@@ -88,11 +89,7 @@ export function InvoiceEditorModal({
       console.log('Fetching invoice data for ID:', invoiceId)
       
       // Fetch invoice with project details
-      const response = await fetch(`/api/invoices/${invoiceId}/full`, {
-        headers: {
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
+      const response = await authGet(`/api/invoices/${invoiceId}/full`)
 
       if (response.ok) {
         const data = await response.json()
@@ -142,13 +139,7 @@ export function InvoiceEditorModal({
       })
       
       // Save edited data to invoice
-      const response = await fetch(`/api/invoices/${invoiceId}/update-details`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        body: JSON.stringify({
+      const response = await authPatch(`/api/invoices/${invoiceId}/update-details`, {
           description: editedData.description,
           notes: editedData.notes,
           // Save overrides as JSON in notes or separate field
@@ -163,7 +154,6 @@ export function InvoiceEditorModal({
             deliverables: editedData.deliverables
           }
         })
-      })
 
       if (response.ok) {
         const result = await response.json()

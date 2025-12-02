@@ -87,6 +87,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import type { Proposal } from "@/lib/proposals-db"
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
 
 // Type definitions
 interface Speaker {
@@ -242,14 +243,8 @@ export default function MasterAdminPanel() {
   const loadDeals = async () => {
     try {
       setDealsLoading(true)
-      const token = localStorage.getItem("adminSessionToken")
-      
-      const response = await fetch("/api/deals", {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
+
+      const response = await authGet("/api/deals")
       
       if (response.ok) {
         const data = await response.json()
@@ -272,14 +267,8 @@ export default function MasterAdminPanel() {
   const loadSpeakers = async () => {
     try {
       setSpeakersLoading(true)
-      const token = localStorage.getItem("adminSessionToken")
-      
-      const headers: HeadersInit = {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'x-dev-admin-bypass': 'dev-admin-access'
-      }
-      
-      const response = await fetch("/api/admin/speakers", { headers })
+
+      const response = await authGet("/api/admin/speakers")
       
       if (response.ok) {
         const data = await response.json()
@@ -295,14 +284,8 @@ export default function MasterAdminPanel() {
   const loadProjects = async () => {
     try {
       setProjectsLoading(true)
-      const token = localStorage.getItem("adminSessionToken")
-      
-      const response = await fetch("/api/projects", {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
+
+      const response = await authGet("/api/projects")
       
       if (response.ok) {
         const data = await response.json()
@@ -323,14 +306,8 @@ export default function MasterAdminPanel() {
   const loadProposals = async () => {
     try {
       setProposalsLoading(true)
-      const token = localStorage.getItem("adminSessionToken")
-      
-      const response = await fetch("/api/proposals", {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
+
+      const response = await authGet("/api/proposals")
       
       if (response.ok) {
         const data = await response.json()
@@ -346,14 +323,8 @@ export default function MasterAdminPanel() {
   const loadInvoices = async () => {
     try {
       setInvoicesLoading(true)
-      const token = localStorage.getItem("adminSessionToken")
-      
-      const response = await fetch("/api/invoices", {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
+
+      const response = await authGet("/api/invoices")
       
       if (response.ok) {
         const data = await response.json()
@@ -402,14 +373,7 @@ export default function MasterAdminPanel() {
     
     try {
       // First sync finance-project data
-      const token = localStorage.getItem("adminSessionToken")
-      const syncResponse = await fetch("/api/admin/sync-finance", {
-        method: "POST",
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
+      const syncResponse = await authPost("/api/admin/sync-finance", {})
       
       if (syncResponse.ok) {
         const syncResult = await syncResponse.json()

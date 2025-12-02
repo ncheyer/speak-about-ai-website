@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Download, Eye, Loader2, Mail, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
 
 interface InvoicePDFViewerProps {
   invoiceId: number
@@ -25,12 +26,10 @@ export function InvoicePDFViewer({ invoiceId, invoiceNumber, onClose }: InvoiceP
     try {
       setLoading(true)
       // Add cache-busting to ensure fresh data
-      const response = await fetch(`/api/invoices/${invoiceId}/pdf?t=${Date.now()}`, {
+      const response = await authFetch(`/api/invoices/${invoiceId}/pdf?t=${Date.now()}`, {
         headers: {
-          'x-dev-admin-bypass': 'dev-admin-access',
           'Cache-Control': 'no-cache'
         },
-        credentials: 'include',
         cache: 'no-store'
       })
 

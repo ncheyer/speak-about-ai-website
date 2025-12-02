@@ -69,6 +69,7 @@ import { InvoiceEditorModal } from "@/components/invoice-editor-modal"
 import { TASK_DEFINITIONS, calculateTaskUrgency, getTaskOwnerLabel, getPriorityColor } from "@/lib/task-definitions"
 import { ProjectDetailsManager } from "@/components/project-details-manager"
 import { ProjectDetails } from "@/lib/project-details-schema"
+import { authGet, authPost, authPut, authDelete, authFetch } from "@/lib/auth-fetch"
 
 interface Project {
   id: number
@@ -275,20 +276,10 @@ export default function EnhancedProjectManagementPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      
+
       const [projectsResponse, invoicesResponse] = await Promise.all([
-        fetch("/api/projects", { 
-          credentials: 'include',
-          headers: {
-            'x-dev-admin-bypass': 'dev-admin-access'
-          }
-        }),
-        fetch("/api/invoices", { 
-          credentials: 'include',
-          headers: {
-            'x-dev-admin-bypass': 'dev-admin-access'
-          }
-        })
+        authGet("/api/projects"),
+        authGet("/api/invoices")
       ])
 
       if (projectsResponse.ok) {
@@ -299,12 +290,7 @@ export default function EnhancedProjectManagementPage() {
         const allCustomTasks = []
         for (const project of projectsData) {
           try {
-            const tasksRes = await fetch(`/api/projects/${project.id}/tasks`, {
-              headers: { 
-                'x-dev-admin-bypass': 'dev-admin-access'
-              },
-              credentials: 'include',
-            })
+            const tasksRes = await authGet(`/api/projects/${project.id}/tasks`)
             if (tasksRes.ok) {
               const tasks = await tasksRes.json()
               allCustomTasks.push(...tasks.map(task => ({
@@ -436,13 +422,8 @@ export default function EnhancedProjectManagementPage() {
 
   const handleUpdateStageCompletion = async (projectId: number, stage: string, task: string, completed: boolean) => {
     try {
-      const response = await fetch(`/api/projects/${projectId}/stage-completion`, {
+      const response = await authFetch(`/api/projects/${projectId}/stage-completion`, {
         method: "PATCH",
-        headers: { 
-          "Content-Type": "application/json",
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include',
         body: JSON.stringify({
           stage,
           task,
@@ -479,18 +460,10 @@ export default function EnhancedProjectManagementPage() {
 
   const handleCreateInvoice = async (projectId: number, amount: number) => {
     try {
-      const response = await fetch("/api/invoices", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          project_id: projectId,
-          amount: amount,
-          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
-        })
+      const response = await authPost("/api/invoices", {
+        project_id: projectId,
+        amount: amount,
+        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
       })
 
       if (response.ok) {
@@ -532,38 +505,13 @@ export default function EnhancedProjectManagementPage() {
         return
       }
 
-      const response = await fetch("/api/projects", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
+      const response = await authPost("/api/projects", {
           project_name: newProjectData.project_name,
           event_date: newProjectData.event_date,
           client_name: newProjectData.client_name,
           client_email: newProjectData.client_email,
           company: newProjectData.company,
-          speaker_fee: parseFloat(newProjectData.speaker_fee),
-          budget: parseFloat(newProjectData.speaker_fee), // Set budget same as speaker fee
-          event_location: newProjectData.event_location,
-          event_type: newProjectData.event_type,
-          event_classification: newProjectData.event_classification,
-          description: newProjectData.description,
-          project_type: newProjectData.event_type,
-          status: "invoicing", // Will be set automatically by backend
-          priority: "medium",
-          start_date: new Date().toISOString(),
-          spent: 0,
-          completion_percentage: 0,
-          travel_required: newProjectData.travel_required,
-          travel_expenses_amount: parseFloat(newProjectData.travel_stipend) || 0,
-          flight_required: newProjectData.flight_required,
-          accommodation_required: newProjectData.hotel_required,
-          additional_notes: newProjectData.travel_notes,
-          contract_signed: true // Assuming contract is signed when creating project
-        })
+          speaker_fee: parseFloat(newProjectData.speaker_fee)
       })
 
       if (response.ok) {
@@ -571,16 +519,8 @@ export default function EnhancedProjectManagementPage() {
         
         // Auto-generate deposit and final invoices
         try {
-          const invoiceResponse = await fetch("/api/invoices/generate-pair", {
-            method: "POST",
-            headers: { 
-              "Content-Type": "application/json",
-              'x-dev-admin-bypass': 'dev-admin-access'
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              projectId: newProject.id
-            })
+          const invoiceResponse = await authPost("/api/invoices/generate-pair", {
+            projectId: newProject.id
           })
           
           if (invoiceResponse.ok) {
@@ -653,20 +593,12 @@ export default function EnhancedProjectManagementPage() {
         return
       }
 
-      const response = await fetch("/api/invoices", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          project_id: parseInt(invoiceFormData.project_id),
-          amount: parseFloat(invoiceFormData.amount),
-          due_date: invoiceFormData.due_date,
-          notes: invoiceFormData.notes || `Payment terms: ${invoiceFormData.payment_terms}`,
-          status: "sent" // Automatically mark as sent
-        })
+      const response = await authPost("/api/invoices", {
+        project_id: parseInt(invoiceFormData.project_id),
+        amount: parseFloat(invoiceFormData.amount),
+        due_date: invoiceFormData.due_date,
+        notes: invoiceFormData.notes || `Payment terms: ${invoiceFormData.payment_terms}`,
+        status: "sent" // Automatically mark as sent
       })
 
       if (response.ok) {
@@ -743,17 +675,9 @@ export default function EnhancedProjectManagementPage() {
 
   const handleUpdateInvoiceStatus = async (invoiceId: number, newStatus: string) => {
     try {
-      const response = await fetch(`/api/invoices/${invoiceId}`, {
-        method: "PATCH",
-        headers: { 
-          "Content-Type": "application/json",
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
+      const response = await authPatch(`/api/invoices/${invoiceId}`, {
           status: newStatus,
-          payment_date: newStatus === "paid" ? new Date().toISOString() : null
-        })
+          payment_date: newStatus === "paid" ? new Date()
       })
 
       if (response.ok) {
@@ -784,13 +708,7 @@ export default function EnhancedProjectManagementPage() {
     if (!confirm("Are you sure you want to delete this invoice?")) return
     
     try {
-      const response = await fetch(`/api/invoices/${invoiceId}`, {
-        method: "DELETE",
-        headers: { 
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include'
-      })
+      const response = await authDelete(`/api/invoices/${invoiceId}`)
 
       if (response.ok) {
         toast({
@@ -820,13 +738,7 @@ export default function EnhancedProjectManagementPage() {
     if (!confirm("Are you sure you want to delete this project? This action cannot be undone.")) return
     
     try {
-      const response = await fetch(`/api/projects/${projectId}`, {
-        method: "DELETE",
-        headers: { 
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include'
-      })
+      const response = await authDelete(`/api/projects/${projectId}`)
 
       if (response.ok) {
         toast({
@@ -1498,15 +1410,7 @@ export default function EnhancedProjectManagementPage() {
                               value={project.status} 
                               onValueChange={async (newStatus) => {
                                 try {
-                                  const response = await fetch(`/api/projects/${project.id}`, {
-                                    method: "PATCH",
-                                    headers: { 
-                                      "Content-Type": "application/json",
-                                      'x-dev-admin-bypass': 'dev-admin-access'
-                                    },
-                                    credentials: 'include',
-                                    body: JSON.stringify({ status: newStatus })
-                                  })
+                                  const response = await authPatch(`/api/projects/${project.id}`, { status: newStatus })
                                   
                                   if (response.ok) {
                                     toast({
@@ -1581,15 +1485,7 @@ export default function EnhancedProjectManagementPage() {
                                       className="h-7 text-xs"
                                       onClick={async () => {
                                         try {
-                                          const response = await fetch("/api/invoices/generate-pair", {
-                                            method: "POST",
-                                            headers: { 
-                                              "Content-Type": "application/json",
-                                              'x-dev-admin-bypass': 'dev-admin-access'
-                                            },
-                                            credentials: 'include',
-                                            body: JSON.stringify({ projectId: project.id })
-                                          })
+                                          const response = await authPost("/api/invoices/generate-pair", { projectId: project.id })
                                           
                                           if (response.ok) {
                                             toast({
@@ -1991,19 +1887,11 @@ export default function EnhancedProjectManagementPage() {
                                     if (task.isCustom) {
                                       // Handle custom task completion
                                       try {
-                                        const response = await fetch(`/api/projects/${task.projectId}/tasks`, {
-                                          method: 'PATCH',
-                                          headers: { 
-                                            'Content-Type': 'application/json',
-                                            'x-dev-admin-bypass': 'dev-admin-access'
-                                          },
-                                          credentials: 'include',
-                                          body: JSON.stringify({
+                                        const response = await authPatch(`/api/projects/${task.projectId}/tasks`, {
                                             taskId: task.customTaskId,
                                             completed: true,
                                             status: 'completed'
                                           })
-                                        })
                                         
                                         if (response.ok) {
                                           toast({
@@ -2255,17 +2143,9 @@ export default function EnhancedProjectManagementPage() {
                           })
                           
                           // Create tasks via API
-                          const response = await fetch(`/api/projects/${selectedProjectForDetails.id}/tasks`, {
-                            method: 'POST',
-                            headers: { 
-                              'Content-Type': 'application/json',
-                              'x-dev-admin-bypass': 'dev-admin-access'
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify({
+                          const response = await authPost(`/api/projects/${selectedProjectForDetails.id}/tasks`, {
                               tasks: tasksWithStages
                             })
-                          })
                           
                           if (response.ok) {
                             const result = await response.json()

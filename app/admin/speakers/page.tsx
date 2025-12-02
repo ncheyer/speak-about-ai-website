@@ -61,6 +61,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { authGet, authPost, authPatch, authDelete } from "@/lib/auth-fetch"
 
 interface Speaker {
   id: number
@@ -184,13 +185,7 @@ export default function AdminSpeakersPage() {
     }
 
     try {
-      const response = await fetch(`/api/admin/speakers/${speakerId}`, {
-        method: 'DELETE',
-        headers: {
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        credentials: 'include'
-      })
+      const response = await authDelete(`/api/admin/speakers/${speakerId}`)
 
       if (response.ok) {
         toast({
@@ -220,11 +215,7 @@ export default function AdminSpeakersPage() {
   const loadApplications = async () => {
     try {
       setLoadingApplications(true)
-      const response = await fetch("/api/speaker-applications", {
-        headers: {
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
+      const response = await authGet("/api/speaker-applications")
 
       if (response.ok) {
         const data = await response.json()
@@ -257,18 +248,11 @@ export default function AdminSpeakersPage() {
 
     setProcessingAction(true)
     try {
-      const response = await fetch(`/api/speaker-applications/${selectedApplication.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        body: JSON.stringify({
+      const response = await authPatch(`/api/speaker-applications/${selectedApplication.id}`, {
           action: actionType,
           admin_notes: adminNotes,
           rejection_reason: actionType === 'reject' ? rejectionReason : undefined
         })
-      })
 
       if (response.ok) {
         const data = await response.json()
@@ -319,20 +303,9 @@ export default function AdminSpeakersPage() {
 
     setSendingInvite(true)
     try {
-      const response = await fetch('/api/speaker-invitations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        },
-        body: JSON.stringify({
+      const response = await authPost('/api/speaker-invitations', {
           speaker_id: selectedSpeaker.id,
-          first_name: selectedSpeaker?.name ? selectedSpeaker.name.split(' ')[0] : '',
-          last_name: selectedSpeaker?.name ? selectedSpeaker.name.split(' ').slice(1).join(' ') : '',
-          email: selectedSpeaker.email,
-          personal_message: inviteFormData.personal_message,
-          type: 'account_creation'
-        })
+          first_name: selectedSpeaker?.name ? selectedSpeaker.name.split(' ')
       })
 
       if (response.ok) {
@@ -372,14 +345,7 @@ export default function AdminSpeakersPage() {
   const loadSpeakerAnalytics = async () => {
     try {
       setLoadingAnalytics(true)
-      const token = localStorage.getItem("adminSessionToken")
-      
-      const response = await fetch("/api/analytics/speaker-views?days=30", {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
+      const response = await authGet("/api/analytics/speaker-views?days=30")
 
       if (response.ok) {
         const data = await response.json()
@@ -395,14 +361,8 @@ export default function AdminSpeakersPage() {
   const loadSpeakers = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem("adminSessionToken")
-      
-      const response = await fetch("/api/admin/speakers", {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'x-dev-admin-bypass': 'dev-admin-access'
-        }
-      })
+
+      const response = await authGet("/api/admin/speakers")
 
       if (response.ok) {
         const speakersData = await response.json()
