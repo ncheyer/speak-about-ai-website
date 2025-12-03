@@ -56,21 +56,6 @@ export default function Header() {
 
           {/* CTA Button - Desktop */}
           <div className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 flex-shrink-0">
-            <Link
-              href="/portal"
-              className="flex items-center text-gray-600 hover:text-[#1E68C6] transition-colors"
-            >
-              <Users className="w-4 h-4 lg:mr-2" />
-              <span className="text-sm font-medium hidden lg:inline">Portal</span>
-            </Link>
-            <a
-              href="tel:+1-510-435-3947"
-              className="hidden lg:flex items-center text-gray-600 hover:text-[#1E68C6] transition-colors"
-              style={{ textDecoration: "none" }}
-            >
-              <Phone className="w-4 h-4 mr-2" />
-              <span className="text-sm font-medium">Call Now</span>
-            </a>
             <Button
               asChild
               variant="gold"
@@ -125,14 +110,6 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Blog
-              </Link>
-              <Link
-                href="/portal"
-                className="text-gray-700 hover:text-[#1E68C6] font-medium flex items-center"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Portal
               </Link>
               <div className="pt-4 border-t border-gray-100 space-y-3">
                 <Button
