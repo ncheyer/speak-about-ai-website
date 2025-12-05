@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     // Initialize Neon client
     const sql = neon(process.env.DATABASE_URL)
-    // Get all active and listed speakers with existing columns only
+    // Get all listed speakers (listed controls public visibility)
     const speakers = await sql`
       SELECT
         id, name, slug, email,
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         listed, industries, ranking, image_position, image_offset,
         videos, testimonials, created_at, updated_at
       FROM speakers
-      WHERE active = true
+      WHERE listed = true
       ORDER BY ranking DESC NULLS LAST, name ASC
     `
 

@@ -105,6 +105,9 @@ export interface Speaker {
   
   // Metadata
   active: boolean
+  listed?: boolean
+  featured?: boolean
+  ranking?: number
   created_at: string
   updated_at: string
   last_login?: string
@@ -309,9 +312,9 @@ export async function getSpeakerBySlug(slug: string): Promise<Speaker | null> {
   try {
     // First try with slug column if it exists
     const [speaker] = await sql`
-      SELECT * FROM speakers 
+      SELECT * FROM speakers
       WHERE slug = ${slug}
-      AND active = true
+      AND listed = true
       LIMIT 1
     `
     
@@ -338,9 +341,9 @@ export async function getSpeakerBySlug(slug: string): Promise<Speaker | null> {
         ).join(' ')
         
         const [speaker] = await sql`
-          SELECT * FROM speakers 
+          SELECT * FROM speakers
           WHERE LOWER(name) = ${name.toLowerCase()}
-          AND active = true
+          AND listed = true
           LIMIT 1
         `
         

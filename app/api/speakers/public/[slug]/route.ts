@@ -19,6 +19,7 @@ export async function GET(
       .join(' ')
 
     // Query for speaker by slug column first, then fall back to name matching
+    // Only return speakers that are listed (public visibility control)
     const speakers = await sql`
       SELECT
         id, email, name, slug, bio, short_bio, one_liner,
@@ -31,10 +32,13 @@ export async function GET(
         created_at, updated_at
       FROM speakers
       WHERE
-        slug = ${slug}
-        OR LOWER(REPLACE(name, ' ', '-')) = ${slug}
-        OR LOWER(name) = ${possibleName.toLowerCase()}
-        OR name = ${possibleNameTitleCase}
+        listed = true
+        AND (
+          slug = ${slug}
+          OR LOWER(REPLACE(name, ' ', '-')) = ${slug}
+          OR LOWER(name) = ${possibleName.toLowerCase()}
+          OR name = ${possibleNameTitleCase}
+        )
       LIMIT 1
     `
     
