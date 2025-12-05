@@ -282,9 +282,17 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       items: [
         {
           title: "AI Content Studio",
-          href: "/admin/tools/speaker-chat",
+          href: "/admin/tools/content-studio",
           icon: Sparkles,
-          description: "Chat & Blog Writer",
+          description: "Semrush Blog Enhancer",
+          color: "text-amber-600",
+          bgColor: "bg-amber-50"
+        },
+        {
+          title: "Speaker Chat",
+          href: "/admin/tools/speaker-chat",
+          icon: Bot,
+          description: "Query Speaker Database",
           color: "text-purple-600",
           bgColor: "bg-purple-50"
         }
@@ -461,9 +469,11 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
               {!collapsed && isExpanded && section.items && (
                 <div className="ml-4 space-y-1 mt-1">
                   {section.items.map((item) => {
-                    const isActive = pathname === item.href || 
+                    const isActive = pathname === item.href ||
                       (item.href === "/admin/contracts-hub" && pathname.startsWith("/admin/contracts-hub")) ||
-                      (item.href === "/admin/invoicing" && pathname.startsWith("/admin/invoicing"))
+                      (item.href === "/admin/invoicing" && pathname.startsWith("/admin/invoicing")) ||
+                      (item.href === "/admin/tools/content-studio" && pathname.startsWith("/admin/tools/content-studio")) ||
+                      (item.href === "/admin/tools/speaker-chat" && pathname.startsWith("/admin/tools/speaker-chat"))
                     
                     return (
                       <Link key={item.href} href={item.href}>
