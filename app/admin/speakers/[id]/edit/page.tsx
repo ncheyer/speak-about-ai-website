@@ -281,9 +281,9 @@ export default function AdminSpeakerEditPage() {
           travel_preferences: speakerData.travel_preferences || "",
           technical_requirements: speakerData.technical_requirements || "",
           dietary_restrictions: speakerData.dietary_restrictions || "",
-          featured: speakerData.featured || false,
-          active: speakerData.active || true,
-          listed: speakerData.listed || true,
+          featured: speakerData.featured ?? false,
+          active: speakerData.active ?? true,
+          listed: speakerData.listed ?? true,
           ranking: speakerData.ranking || 0,
         })
       } else {
