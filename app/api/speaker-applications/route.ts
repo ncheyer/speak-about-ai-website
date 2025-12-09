@@ -1,7 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
+import { sendEmail } from "@/lib/email"
 
 const sql = neon(process.env.DATABASE_URL!)
+
+const ADMIN_EMAIL = 'noah@speakabout.ai'
 
 // Public endpoint for submitting applications
 export async function POST(request: NextRequest) {
@@ -89,7 +92,80 @@ export async function POST(request: NextRequest) {
       RETURNING id, email, first_name, last_name
     `
 
-    // TODO: Send notification email to admin about new application
+    // Send notification email to admin about new application
+    try {
+      const adminHtml = `
+        <!DOCTYPE html>
+        <html>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2>🎤 New Speaker Application Received</h2>
+              <p>A new speaker has applied to join the Speak About AI roster.</p>
+
+              <h3>Applicant Details:</h3>
+              <ul>
+                <li><strong>Name:</strong> ${body.first_name} ${body.last_name}</li>
+                <li><strong>Email:</strong> ${body.email}</li>
+                <li><strong>Title:</strong> ${body.title}</li>
+                <li><strong>Company:</strong> ${body.company}</li>
+                <li><strong>Location:</strong> ${body.location}</li>
+                ${body.phone ? `<li><strong>Phone:</strong> ${body.phone}</li>` : ''}
+                ${body.website ? `<li><strong>Website:</strong> <a href="${body.website}">${body.website}</a></li>` : ''}
+                ${body.linkedin_url ? `<li><strong>LinkedIn:</strong> <a href="${body.linkedin_url}">${body.linkedin_url}</a></li>` : ''}
+              </ul>
+
+              <h3>Speaking Topics:</h3>
+              <p>${body.speaking_topics}</p>
+
+              <h3>Bio:</h3>
+              <p>${body.bio}</p>
+
+              ${body.years_speaking ? `<p><strong>Years Speaking:</strong> ${body.years_speaking}</p>` : ''}
+              ${body.speaking_fee_range ? `<p><strong>Fee Range:</strong> ${body.speaking_fee_range}</p>` : ''}
+
+              <div style="margin-top: 20px; padding: 15px; background: #f3f4f6; border-radius: 8px;">
+                <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://speakabout.ai'}/admin/speakers"
+                   style="color: #3b82f6; text-decoration: none; font-weight: bold;">
+                  Review Application in Admin Panel →
+                </a>
+              </div>
+            </div>
+          </body>
+        </html>
+      `
+
+      const adminText = `
+New Speaker Application Received
+
+Name: ${body.first_name} ${body.last_name}
+Email: ${body.email}
+Title: ${body.title}
+Company: ${body.company}
+Location: ${body.location}
+${body.phone ? `Phone: ${body.phone}` : ''}
+${body.website ? `Website: ${body.website}` : ''}
+${body.linkedin_url ? `LinkedIn: ${body.linkedin_url}` : ''}
+
+Speaking Topics: ${body.speaking_topics}
+
+Bio: ${body.bio}
+
+${body.years_speaking ? `Years Speaking: ${body.years_speaking}` : ''}
+${body.speaking_fee_range ? `Fee Range: ${body.speaking_fee_range}` : ''}
+
+Review Application: ${process.env.NEXT_PUBLIC_BASE_URL || 'https://speakabout.ai'}/admin/speakers
+      `.trim()
+
+      await sendEmail({
+        to: ADMIN_EMAIL,
+        subject: `🎤 New Speaker Application: ${body.first_name} ${body.last_name}`,
+        html: adminHtml,
+        text: adminText
+      })
+    } catch (emailError) {
+      // Log but don't fail the application submission if email fails
+      console.error('Failed to send admin notification email:', emailError)
+    }
 
     return NextResponse.json({
       success: true,
