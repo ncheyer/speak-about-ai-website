@@ -1,8 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
 import { requireAdminAuth } from "@/lib/auth-middleware"
+import { sendEmail } from "@/lib/email"
 
 const sql = neon(process.env.DATABASE_URL!)
+
+const ADMIN_EMAIL = 'noah@speakabout.ai'
 
 // Public endpoint for submitting applications
 export async function POST(request: NextRequest) {
@@ -188,7 +191,93 @@ export async function POST(request: NextRequest) {
       RETURNING id, email, first_name, last_name
     `
 
-    // TODO: Send notification email to admin about new application
+    // Send notification email to admin about new application
+    try {
+      const adminHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #1a1a2e;">🎤 New Speaker Application</h1>
+          <p>A new speaker application has been submitted:</p>
+
+          <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h2 style="margin-top: 0; color: #333;">${body.first_name} ${body.last_name}</h2>
+            <p><strong>Title:</strong> ${body.title}</p>
+            <p><strong>Company:</strong> ${body.company}</p>
+            <p><strong>Email:</strong> <a href="mailto:${body.email}">${body.email}</a></p>
+            <p><strong>Location:</strong> ${body.location}</p>
+            ${body.phone ? `<p><strong>Phone:</strong> ${body.phone}</p>` : ''}
+            ${body.linkedin_url ? `<p><strong>LinkedIn:</strong> <a href="${body.linkedin_url}">${body.linkedin_url}</a></p>` : ''}
+            ${body.website ? `<p><strong>Website:</strong> <a href="${body.website}">${body.website}</a></p>` : ''}
+          </div>
+
+          <div style="margin: 20px 0;">
+            <h3 style="color: #333;">Bio</h3>
+            <p style="white-space: pre-wrap;">${body.bio}</p>
+          </div>
+
+          <div style="margin: 20px 0;">
+            <h3 style="color: #333;">Speaking Topics</h3>
+            <p style="white-space: pre-wrap;">${body.speaking_topics}</p>
+          </div>
+
+          ${body.ai_expertise ? `
+          <div style="margin: 20px 0;">
+            <h3 style="color: #333;">AI Expertise</h3>
+            <p style="white-space: pre-wrap;">${body.ai_expertise}</p>
+          </div>
+          ` : ''}
+
+          ${body.years_speaking ? `<p><strong>Years Speaking:</strong> ${body.years_speaking}</p>` : ''}
+          ${body.speaking_fee_range ? `<p><strong>Fee Range:</strong> ${body.speaking_fee_range}</p>` : ''}
+
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <p><strong>Application ID:</strong> ${application.id}</p>
+            <p>
+              <a href="https://speakabout.ai/admin/speaker-applications"
+                 style="background: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Review Application
+              </a>
+            </p>
+          </div>
+        </div>
+      `
+
+      const adminText = `
+New Speaker Application
+
+Name: ${body.first_name} ${body.last_name}
+Title: ${body.title}
+Company: ${body.company}
+Email: ${body.email}
+Location: ${body.location}
+${body.phone ? `Phone: ${body.phone}` : ''}
+${body.linkedin_url ? `LinkedIn: ${body.linkedin_url}` : ''}
+${body.website ? `Website: ${body.website}` : ''}
+
+Bio:
+${body.bio}
+
+Speaking Topics:
+${body.speaking_topics}
+
+${body.ai_expertise ? `AI Expertise:\n${body.ai_expertise}` : ''}
+
+${body.years_speaking ? `Years Speaking: ${body.years_speaking}` : ''}
+${body.speaking_fee_range ? `Fee Range: ${body.speaking_fee_range}` : ''}
+
+Application ID: ${application.id}
+Review at: https://speakabout.ai/admin/speaker-applications
+      `.trim()
+
+      await sendEmail({
+        to: ADMIN_EMAIL,
+        subject: `🎤 New Speaker Application: ${body.first_name} ${body.last_name}`,
+        html: adminHtml,
+        text: adminText
+      })
+    } catch (emailError) {
+      console.error('Failed to send admin notification email:', emailError)
+      // Don't fail the request if email fails - application was still saved
+    }
 
     return NextResponse.json({
       success: true,
