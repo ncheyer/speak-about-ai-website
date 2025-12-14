@@ -23,14 +23,28 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const { searchParams } = new URL(request.url)
     const prefix = searchParams.get("prefix") || ""
     const cursor = searchParams.get("cursor") || undefined
-    const limit = parseInt(searchParams.get("limit") || "100", 10)
+    const limit = parseInt(searchParams.get("limit") || "1000", 10)
 
-    // List blobs from Vercel Blob storage
-    const { blobs, cursor: nextCursor, hasMore } = await list({
-      prefix,
-      cursor,
-      limit,
-    })
+    // List blobs from Vercel Blob storage - get all images by paginating
+    let allBlobs: Awaited<ReturnType<typeof list>>["blobs"] = []
+    let currentCursor = cursor
+    let iterations = 0
+    const maxIterations = 10 // Safety limit
+
+    do {
+      const result = await list({
+        prefix,
+        cursor: currentCursor,
+        limit: Math.min(limit, 1000),
+      })
+      allBlobs = [...allBlobs, ...result.blobs]
+      currentCursor = result.cursor
+      iterations++
+    } while (currentCursor && iterations < maxIterations && allBlobs.length < limit)
+
+    const blobs = allBlobs
+    const nextCursor = currentCursor
+    const hasMore = !!currentCursor
 
     // Filter to only image types
     const imageBlobs = blobs.filter((blob) =>

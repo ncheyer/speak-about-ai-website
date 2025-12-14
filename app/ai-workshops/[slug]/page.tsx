@@ -46,6 +46,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
             alt={workshop.title}
             fill
             className="object-cover"
+            style={{ objectPosition: workshop.thumbnail_position || 'center' }}
             priority
             sizes="100vw"
             quality={85}

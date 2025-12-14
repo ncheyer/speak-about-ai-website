@@ -26,6 +26,7 @@ interface Workshop {
   price_range: string | null
   topics: string[] | null
   thumbnail_url: string | null
+  thumbnail_position: string | null
   featured: boolean
   active: boolean
 }

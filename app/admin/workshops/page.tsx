@@ -86,6 +86,7 @@ export default function AdminWorkshopsPage() {
     active: true,
     featured: false,
     thumbnail_url: "",
+    thumbnail_position: "center",
     video_urls: [] as string[],
     image_urls: [] as string[],
     testimonials: [] as Testimonial[],
@@ -195,6 +196,7 @@ export default function AdminWorkshopsPage() {
         active: formData.active,
         featured: formData.featured,
         thumbnail_url: formData.thumbnail_url || null,
+        thumbnail_position: formData.thumbnail_position || "center",
         video_urls: formData.video_urls.length > 0 ? formData.video_urls : null,
         image_urls: formData.image_urls.length > 0 ? formData.image_urls : null,
         testimonials: formData.testimonials.length > 0 ? formData.testimonials : null,
@@ -307,6 +309,7 @@ export default function AdminWorkshopsPage() {
         active: fullWorkshop.active,
         featured: fullWorkshop.featured,
         thumbnail_url: fullWorkshop.thumbnail_url || "",
+        thumbnail_position: fullWorkshop.thumbnail_position || "center",
         video_urls: fullWorkshop.video_urls || [],
         image_urls: fullWorkshop.image_urls || [],
         testimonials: fullWorkshop.testimonials || [],
@@ -387,6 +390,7 @@ export default function AdminWorkshopsPage() {
       active: true,
       featured: false,
       thumbnail_url: "",
+      thumbnail_position: "center",
       video_urls: [],
       image_urls: [],
       testimonials: [],
@@ -717,6 +721,58 @@ export default function AdminWorkshopsPage() {
                       onTestimonialsChange={(testimonials) => setFormData({ ...formData, testimonials })}
                       onClientLogosChange={(logos) => setFormData({ ...formData, client_logos: logos })}
                     />
+
+                    {/* Thumbnail Position Selector */}
+                    {formData.thumbnail_url && (
+                      <div className="mt-6 border rounded-lg p-4 bg-gray-50">
+                        <Label className="text-base font-medium">Thumbnail Focal Point</Label>
+                        <p className="text-sm text-gray-600 mb-4">Select where the image should focus when cropped</p>
+
+                        <div className="flex flex-col md:flex-row gap-6">
+                          {/* Preview */}
+                          <div className="relative w-full md:w-64 h-32 rounded-lg overflow-hidden border bg-gray-200">
+                            <img
+                              src={formData.thumbnail_url}
+                              alt="Thumbnail preview"
+                              className="w-full h-full object-cover"
+                              style={{ objectPosition: formData.thumbnail_position }}
+                            />
+                          </div>
+
+                          {/* Position Grid */}
+                          <div className="flex-1">
+                            <div className="grid grid-cols-3 gap-2 max-w-[200px]">
+                              {[
+                                { label: "↖", value: "top left" },
+                                { label: "↑", value: "top center" },
+                                { label: "↗", value: "top right" },
+                                { label: "←", value: "center left" },
+                                { label: "●", value: "center" },
+                                { label: "→", value: "center right" },
+                                { label: "↙", value: "bottom left" },
+                                { label: "↓", value: "bottom center" },
+                                { label: "↘", value: "bottom right" },
+                              ].map((pos) => (
+                                <button
+                                  key={pos.value}
+                                  type="button"
+                                  onClick={() => setFormData({ ...formData, thumbnail_position: pos.value })}
+                                  className={`p-2 text-sm rounded border transition-colors ${
+                                    formData.thumbnail_position === pos.value
+                                      ? "bg-blue-600 text-white border-blue-600"
+                                      : "bg-white hover:bg-gray-100 border-gray-300"
+                                  }`}
+                                  title={pos.value}
+                                >
+                                  {pos.label}
+                                </button>
+                              ))}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">Current: {formData.thumbnail_position}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center space-x-4">

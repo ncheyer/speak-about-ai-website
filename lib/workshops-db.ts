@@ -37,6 +37,7 @@ export interface Workshop {
   key_takeaways: string[] | null
   topics: string[] | null
   thumbnail_url: string | null
+  thumbnail_position: string | null  // CSS object-position value (e.g., "center", "top", "bottom")
   video_urls: string[] | null
   image_urls: string[] | null
   customizable: boolean
@@ -84,6 +85,7 @@ export interface CreateWorkshopInput {
   key_takeaways?: string[]
   topics?: string[]
   thumbnail_url?: string
+  thumbnail_position?: string
   video_urls?: string[]
   image_urls?: string[]
   customizable?: boolean
@@ -291,7 +293,7 @@ export async function createWorkshop(input: CreateWorkshopInput): Promise<Worksh
         duration_minutes, format, max_participants, price_range,
         learning_objectives, target_audience, prerequisites, technical_experience_needed,
         materials_included, agenda, key_takeaways, topics,
-        thumbnail_url, video_urls, image_urls,
+        thumbnail_url, thumbnail_position, video_urls, image_urls,
         customizable, custom_options,
         meta_title, meta_description, keywords,
         active, featured, popularity_score,
@@ -316,6 +318,7 @@ export async function createWorkshop(input: CreateWorkshopInput): Promise<Worksh
         ${input.key_takeaways ?? null},
         ${input.topics ?? null},
         ${input.thumbnail_url ?? null},
+        ${input.thumbnail_position ?? 'center'},
         ${input.video_urls ?? null},
         ${input.image_urls ?? null},
         ${input.customizable ?? true},
@@ -375,6 +378,7 @@ export async function updateWorkshop(id: number, input: UpdateWorkshopInput): Pr
         key_takeaways = ${input.key_takeaways !== undefined ? input.key_takeaways : sql`key_takeaways`},
         topics = ${input.topics !== undefined ? input.topics : sql`topics`},
         thumbnail_url = ${input.thumbnail_url !== undefined ? input.thumbnail_url : sql`thumbnail_url`},
+        thumbnail_position = ${input.thumbnail_position !== undefined ? input.thumbnail_position : sql`thumbnail_position`},
         video_urls = ${input.video_urls !== undefined ? input.video_urls : sql`video_urls`},
         image_urls = ${input.image_urls !== undefined ? input.image_urls : sql`image_urls`},
         customizable = ${input.customizable !== undefined ? input.customizable : sql`customizable`},
