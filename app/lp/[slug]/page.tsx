@@ -20,7 +20,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
   const page = await getLandingPageBySlug(slug)
-  
+
   if (!page) {
     return {
       title: "Page Not Found",
@@ -30,6 +30,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: page.pageTitle,
     description: page.metaDescription,
+    alternates: {
+      canonical: `https://speakabout.ai/lp/${slug}`,
+    },
     robots: {
       index: true,
       follow: true,

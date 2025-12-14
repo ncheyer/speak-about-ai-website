@@ -20,7 +20,9 @@ import {
   ArrowRight,
   Eye,
   RefreshCw,
-  X
+  X,
+  Clock,
+  Edit3
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -53,6 +55,16 @@ interface PreviewData {
   images: string[]
 }
 
+interface ContentfulDraft {
+  id: string
+  title: string
+  body: string
+  createdAt: string
+  updatedAt: string
+  status: 'draft' | 'changed'
+  url: string
+}
+
 type Step = 'input' | 'preview' | 'generate' | 'review'
 
 export default function AIContentStudioPage() {
@@ -79,6 +91,29 @@ export default function AIContentStudioPage() {
   const [isPushingToContentful, setIsPushingToContentful] = useState(false)
   const [copied, setCopied] = useState(false)
 
+  // Drafts states
+  const [drafts, setDrafts] = useState<ContentfulDraft[]>([])
+  const [isLoadingDrafts, setIsLoadingDrafts] = useState(false)
+
+  const fetchDrafts = async () => {
+    setIsLoadingDrafts(true)
+    try {
+      const response = await fetch("/api/admin/tools/contentful-drafts", {
+        headers: {
+          "x-dev-admin-bypass": "dev-admin-access"
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setDrafts(data.drafts || [])
+      }
+    } catch (error) {
+      console.error("Error fetching drafts:", error)
+    } finally {
+      setIsLoadingDrafts(false)
+    }
+  }
+
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
     if (!isAdminLoggedIn) {
@@ -86,6 +121,7 @@ export default function AIContentStudioPage() {
       return
     }
     setIsLoggedIn(true)
+    fetchDrafts()
   }, [router])
 
   const handleFetchPreview = async () => {
@@ -371,6 +407,68 @@ export default function AIContentStudioPage() {
                     </>
                   )}
                 </Button>
+              </CardContent>
+            </Card>
+
+            {/* Contentful Drafts Section */}
+            <Card className="mt-6">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Edit3 className="h-5 w-5 text-blue-600" />
+                      Contentful Drafts
+                    </CardTitle>
+                    <CardDescription>
+                      Unpublished blog posts saved in Contentful
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={fetchDrafts} disabled={isLoadingDrafts}>
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingDrafts ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {isLoadingDrafts ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                    <span className="ml-2 text-gray-500">Loading drafts...</span>
+                  </div>
+                ) : drafts.length === 0 ? (
+                  <p className="text-gray-500 text-sm text-center py-4">No drafts found in Contentful.</p>
+                ) : (
+                  <div className="space-y-3 max-h-80 overflow-y-auto">
+                    {drafts.map((draft) => (
+                      <div
+                        key={draft.id}
+                        className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-gray-900 truncate">{draft.title}</span>
+                            <Badge variant={draft.status === 'draft' ? 'secondary' : 'outline'} className="text-xs">
+                              {draft.status === 'draft' ? 'Draft' : 'Changed'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-500 line-clamp-2">{draft.body}...</p>
+                          <div className="flex items-center gap-1 mt-2 text-xs text-gray-400">
+                            <Clock className="h-3 w-3" />
+                            Updated {new Date(draft.updatedAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <a
+                          href={draft.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-shrink-0 p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded-lg transition-colors"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
