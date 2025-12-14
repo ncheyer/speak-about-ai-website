@@ -18,10 +18,11 @@ export function generateSpeakerStructuredData(speaker: any, url: string) {
       speaker.website
     ].filter(Boolean),
     "knowsAbout": speaker.topics || ["Artificial Intelligence", "Machine Learning", "Technology"],
-    "performerIn": {
-      "@type": "Event",
-      "name": "AI Keynote Speaking",
-      "description": "Professional keynote speaking on AI and technology topics"
+    "hasOccupation": {
+      "@type": "Occupation",
+      "name": "Keynote Speaker",
+      "description": "Professional keynote speaking on AI and technology topics",
+      "occupationalCategory": "27-3099.00"
     }
   }
 }
