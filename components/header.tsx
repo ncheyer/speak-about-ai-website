@@ -33,9 +33,6 @@ export default function Header() {
             <Link href="/speakers" className="text-gray-700 hover:text-[#1E68C6] font-medium">
               Speakers
             </Link>
-            <Link href="/ai-workshops" className="text-gray-700 hover:text-[#1E68C6] font-medium">
-              Workshops
-            </Link>
             <Link href="/our-services" className="text-gray-700 hover:text-[#1E68C6] font-medium">
               Services
             </Link>
@@ -82,13 +79,6 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Speakers
-              </Link>
-              <Link
-                href="/ai-workshops"
-                className="text-gray-700 hover:text-[#1E68C6] font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Workshops
               </Link>
               <Link
                 href="/our-services"

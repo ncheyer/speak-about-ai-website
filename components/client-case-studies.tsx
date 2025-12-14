@@ -450,12 +450,23 @@ export default function ClientCaseStudies() {
                     <div className="mb-8">
                       <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">Signature Programs</h4>
                       <div className="grid gap-4">
-                        {speakerDetails.programs.map((program: any, idx: number) => (
-                          <div key={idx} className="p-4 bg-gradient-to-r from-blue-50 to-white rounded-lg border border-blue-200">
-                            <h5 className="font-bold text-gray-900 font-neue-haas mb-2">{program.title}</h5>
-                            <p className="text-gray-700 font-montserrat text-sm">{program.description}</p>
-                          </div>
-                        ))}
+                        {speakerDetails.programs.map((program: any, idx: number) => {
+                          // Handle both string and object formats
+                          const isString = typeof program === 'string'
+                          const title = isString ? program : (program.title || program.name || '')
+                          const description = isString ? '' : (program.description || '')
+
+                          if (!title) return null
+
+                          return (
+                            <div key={idx} className="p-4 bg-gradient-to-r from-blue-50 to-white rounded-lg border border-blue-200">
+                              <h5 className="font-bold text-gray-900 font-neue-haas mb-2">{title}</h5>
+                              {description && (
+                                <p className="text-gray-700 font-montserrat text-sm">{description}</p>
+                              )}
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   )}
@@ -465,16 +476,25 @@ export default function ClientCaseStudies() {
                     <div className="mb-8">
                       <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">Videos</h4>
                       <div className="grid md:grid-cols-2 gap-4">
-                        {speakerDetails.videos.map((video: any, idx: number) => (
-                          <div key={idx} className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
-                            <iframe
-                              src={video.url}
-                              className="w-full h-full"
-                              allowFullScreen
-                              title={video.title || `Video ${idx + 1}`}
-                            />
-                          </div>
-                        ))}
+                        {speakerDetails.videos.map((video: any, idx: number) => {
+                          // Handle both string URLs and object formats
+                          const videoUrl = typeof video === 'string' ? video : (video.url || video.embed_url || '')
+                          const videoTitle = typeof video === 'string' ? `Video ${idx + 1}` : (video.title || `Video ${idx + 1}`)
+                          const embedUrl = getYouTubeEmbedUrl(videoUrl)
+
+                          if (!embedUrl) return null
+
+                          return (
+                            <div key={idx} className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
+                              <iframe
+                                src={embedUrl}
+                                className="w-full h-full"
+                                allowFullScreen
+                                title={videoTitle}
+                              />
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   )}

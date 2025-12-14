@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 
+// Helper to safely parse JSON or comma-separated strings into arrays
+function safeParseArray(value: unknown): string[] {
+  if (!value) return []
+  if (Array.isArray(value)) return value
+  if (typeof value === 'string') {
+    // Try JSON parse first
+    try {
+      const parsed = JSON.parse(value)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      // If not JSON, split by comma (handles "Keynotes, Workshops" format)
+      return value.split(',').map(s => s.trim()).filter(Boolean)
+    }
+  }
+  return []
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Check if DATABASE_URL is configured
@@ -55,10 +72,10 @@ export async function GET(request: NextRequest) {
         instagramUrl: speaker.social_media?.instagram_url || '',
         youtube: speaker.social_media?.youtube_url || '',
         youtubeUrl: speaker.social_media?.youtube_url || '',
-        topics: typeof speaker.topics === 'string' ? JSON.parse(speaker.topics) : (speaker.topics || []),
-        programs: typeof speaker.programs === 'string' ? JSON.parse(speaker.programs) : (speaker.programs || []),
-        industries: typeof speaker.industries === 'string' ? JSON.parse(speaker.industries) : (speaker.industries || []),
-        expertise: typeof speaker.topics === 'string' ? JSON.parse(speaker.topics) : (speaker.topics || []), // Using topics as expertise for compatibility
+        topics: safeParseArray(speaker.topics),
+        programs: safeParseArray(speaker.programs),
+        industries: safeParseArray(speaker.industries),
+        expertise: safeParseArray(speaker.topics), // Using topics as expertise for compatibility
         fee: speaker.speaking_fee_range || 'Please Inquire',
         feeRange: speaker.speaking_fee_range,
         speakingFeeRange: speaker.speaking_fee_range,
@@ -69,8 +86,8 @@ export async function GET(request: NextRequest) {
         featured: speaker.featured || false,
         listed: speaker.listed !== false,
         ranking: speaker.ranking || 0,
-        videos: typeof speaker.videos === 'string' ? JSON.parse(speaker.videos) : (speaker.videos || []),
-        testimonials: typeof speaker.testimonials === 'string' ? JSON.parse(speaker.testimonials) : (speaker.testimonials || []),
+        videos: safeParseArray(speaker.videos),
+        testimonials: safeParseArray(speaker.testimonials),
         active: speaker.active,
         emailVerified: speaker.email_verified,
         createdAt: speaker.created_at,
