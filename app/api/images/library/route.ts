@@ -46,10 +46,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const nextCursor = currentCursor
     const hasMore = !!currentCursor
 
-    // Filter to only image types
-    const imageBlobs = blobs.filter((blob) =>
-      blob.contentType?.startsWith("image/")
-    )
+    // Filter to only image types (use file extension as fallback when contentType is undefined)
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico', '.bmp', '.tiff']
+    const imageBlobs = blobs.filter((blob) => {
+      // Check contentType first
+      if (blob.contentType?.startsWith("image/")) return true
+      // Fallback to file extension check
+      const pathname = blob.pathname.toLowerCase()
+      return imageExtensions.some(ext => pathname.endsWith(ext))
+    })
 
     // Group by folder/prefix for easier browsing
     const grouped: Record<string, typeof imageBlobs> = {}

@@ -62,12 +62,23 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function SpeakersPage() {
   let allSpeakers: Speaker[] = []
   try {
-    allSpeakers = await getAllSpeakers()
-    if (allSpeakers.length === 0) {
+    const fullSpeakers = await getAllSpeakers()
+    if (fullSpeakers.length === 0) {
       console.warn(
         "SpeakersPage: getAllSpeakers returned an empty array. This might be due to a fetch error or no data.",
       )
     }
+    // Strip heavy fields to reduce HTML payload size for SEO
+    // The listing page only needs summary fields, not full bios/videos/testimonials
+    allSpeakers = fullSpeakers.map(({
+      bio, videos, testimonials, pastEvents, publications, awards,
+      clientLogos, mediaAppearances, speakingRequirements,
+      ...lightSpeaker
+    }) => ({
+      ...lightSpeaker,
+      // Keep a truncated version of bio for display
+      bio: bio ? bio.substring(0, 200) + (bio.length > 200 ? '...' : '') : undefined
+    }))
   } catch (error) {
     console.error("SpeakersPage: Failed to load speakers:", error)
   }

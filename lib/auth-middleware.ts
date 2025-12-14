@@ -74,9 +74,15 @@ export function requireSpeakerAuth(request: NextRequest): NextResponse | null {
  * Get the authenticated user from token
  */
 export function getAuthenticatedUser(request: NextRequest) {
+  // Check for dev bypass header in development
+  const devBypass = request.headers.get('x-dev-admin-bypass')
+  if (devBypass === 'dev-admin-access' && process.env.NODE_ENV !== 'production') {
+    return { role: 'admin', email: 'dev@localhost' }
+  }
+
   const authHeader = request.headers.get('authorization')
   let token: string | null = null
-  
+
   if (authHeader && authHeader.startsWith('Bearer ')) {
     token = authHeader.substring(7)
   } else {
@@ -84,12 +90,12 @@ export function getAuthenticatedUser(request: NextRequest) {
     const adminToken = request.cookies.get('adminSessionToken')?.value
     const speakerToken = request.cookies.get('speakerSessionToken')?.value
     const clientToken = request.cookies.get('clientSessionToken')?.value
-    
+
     token = adminToken || speakerToken || clientToken || null
   }
-  
+
   if (!token) return null
-  
+
   return verifyToken(token)
 }
 
