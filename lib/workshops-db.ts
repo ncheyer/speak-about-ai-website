@@ -10,6 +10,13 @@ export interface Testimonial {
   photo_url?: string
 }
 
+export interface PricingTier {
+  name: string        // e.g., "Keynote", "Half-Day Workshop"
+  duration: string    // e.g., "45-60 min", "4 hours"
+  price: string       // e.g., "$10,000 - $15,000"
+  description?: string // optional additional details
+}
+
 export interface Workshop {
   id: number
   title: string
@@ -46,6 +53,7 @@ export interface Workshop {
   roi_stats: Record<string, string> | null
   testimonials: Testimonial[] | null
   client_logos: string[] | null
+  pricing_tiers: PricingTier[] | null
   created_at: string
   updated_at: string
 }
@@ -92,6 +100,7 @@ export interface CreateWorkshopInput {
   roi_stats?: Record<string, string> | null
   testimonials?: Testimonial[] | null
   client_logos?: string[] | null
+  pricing_tiers?: PricingTier[] | null
 }
 
 export type UpdateWorkshopInput = Partial<CreateWorkshopInput>
@@ -287,7 +296,7 @@ export async function createWorkshop(input: CreateWorkshopInput): Promise<Worksh
         meta_title, meta_description, keywords,
         active, featured, popularity_score,
         category, display_order, badge_text, roi_stats,
-        testimonials, client_logos
+        testimonials, client_logos, pricing_tiers
       ) VALUES (
         ${input.title},
         ${input.slug},
@@ -322,7 +331,8 @@ export async function createWorkshop(input: CreateWorkshopInput): Promise<Worksh
         ${input.badge_text ?? null},
         ${input.roi_stats ?? null},
         ${JSON.stringify(input.testimonials ?? [])},
-        ${input.client_logos ?? null}
+        ${input.client_logos ?? null},
+        ${JSON.stringify(input.pricing_tiers ?? [])}
       )
       RETURNING *
     `
@@ -381,6 +391,7 @@ export async function updateWorkshop(id: number, input: UpdateWorkshopInput): Pr
         roi_stats = ${input.roi_stats !== undefined ? input.roi_stats : sql`roi_stats`},
         testimonials = ${input.testimonials !== undefined ? JSON.stringify(input.testimonials) : sql`testimonials`},
         client_logos = ${input.client_logos !== undefined ? input.client_logos : sql`client_logos`},
+        pricing_tiers = ${input.pricing_tiers !== undefined ? JSON.stringify(input.pricing_tiers) : sql`pricing_tiers`},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${id}
       RETURNING *

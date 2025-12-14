@@ -38,28 +38,29 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
 
   return (
     <>
-      {/* Hero Section - Side-by-side layout that works for any image aspect ratio */}
+      {/* Hero Header Image - Full width banner style */}
+      {workshop.thumbnail_url && (
+        <section className="relative w-full h-64 md:h-80 lg:h-96 bg-gray-100">
+          <Image
+            src={workshop.thumbnail_url}
+            alt={workshop.title}
+            fill
+            className="object-cover"
+            priority
+            sizes="100vw"
+            quality={85}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        </section>
+      )}
+
+      {/* Hero Section - Content below header image */}
       <section className="bg-gradient-to-br from-[#EAEAEE] to-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">
               <div className="p-8 rounded-xl bg-white shadow-xl">
-                {/* Workshop Image - Displayed above content on mobile, integrated on desktop */}
-                {workshop.thumbnail_url && (
-                  <div className="relative w-full aspect-[4/3] mb-6 rounded-lg overflow-hidden bg-gray-50">
-                    <Image
-                      src={workshop.thumbnail_url}
-                      alt={workshop.title}
-                      fill
-                      className="object-contain p-2"
-                      priority
-                      sizes="(max-width: 1024px) 100vw, 66vw"
-                      quality={85}
-                    />
-                  </div>
-                )}
-
                 <div className="flex gap-2 mb-4">
                   <Badge variant="default" className="capitalize">
                     {workshop.format}
@@ -149,20 +150,39 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                     <p className="text-gray-500">Instructor to be assigned</p>
                   )}
 
-                  {workshop.price_range && !hasMultipleFormats && (
+                  {/* Pricing Tiers or Legacy Price Range */}
+                  {workshop.pricing_tiers && workshop.pricing_tiers.length > 0 ? (
+                    <div className="py-4 border-t border-b">
+                      <p className="text-sm text-gray-600 mb-3">Investment Options</p>
+                      <div className="space-y-3">
+                        {workshop.pricing_tiers.map((tier, index) => (
+                          <div key={index} className="bg-gray-50 rounded-lg p-3">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-semibold text-gray-900">{tier.name}</p>
+                                <p className="text-xs text-gray-500">{tier.duration}</p>
+                              </div>
+                              <p className="text-lg font-bold text-[#1E68C6]">{tier.price}</p>
+                            </div>
+                            {tier.description && (
+                              <p className="text-xs text-gray-600 mt-1">{tier.description}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : workshop.price_range && !hasMultipleFormats ? (
                     <div className="py-4 border-t border-b">
                       <p className="text-sm text-gray-600 mb-1">Investment</p>
                       <p className="text-2xl font-bold text-gray-900">{workshop.price_range}</p>
                     </div>
-                  )}
-
-                  {hasMultipleFormats && (
+                  ) : hasMultipleFormats ? (
                     <div className="py-4 border-t border-b">
                       <p className="text-sm text-gray-600 mb-1">Investment</p>
                       <p className="text-lg font-semibold text-gray-900">See format options below</p>
                       <p className="text-xs text-gray-500 mt-1">Pricing varies by workshop length</p>
                     </div>
-                  )}
+                  ) : null}
 
                   <div className="space-y-3">
                     <Link href={`/contact?workshop=${workshop.id}`}>

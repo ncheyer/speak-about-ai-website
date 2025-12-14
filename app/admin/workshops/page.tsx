@@ -15,7 +15,7 @@ import { WorkshopMediaManager } from "@/components/workshop-media-manager"
 import { Plus, Edit, Trash2, Search, Eye, Star, Users, Clock, Loader2, CheckCircle, XCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
-import { Testimonial } from "@/lib/workshops-db"
+import { Testimonial, PricingTier } from "@/lib/workshops-db"
 
 interface Workshop {
   id: number
@@ -37,6 +37,7 @@ interface Workshop {
   image_urls?: string[] | null
   testimonials?: Testimonial[] | null
   client_logos?: string[] | null
+  pricing_tiers?: PricingTier[] | null
 }
 
 interface Speaker {
@@ -88,7 +89,8 @@ export default function AdminWorkshopsPage() {
     video_urls: [] as string[],
     image_urls: [] as string[],
     testimonials: [] as Testimonial[],
-    client_logos: [] as string[]
+    client_logos: [] as string[],
+    pricing_tiers: [] as PricingTier[]
   })
 
   useEffect(() => {
@@ -196,7 +198,8 @@ export default function AdminWorkshopsPage() {
         video_urls: formData.video_urls.length > 0 ? formData.video_urls : null,
         image_urls: formData.image_urls.length > 0 ? formData.image_urls : null,
         testimonials: formData.testimonials.length > 0 ? formData.testimonials : null,
-        client_logos: formData.client_logos.length > 0 ? formData.client_logos : null
+        client_logos: formData.client_logos.length > 0 ? formData.client_logos : null,
+        pricing_tiers: formData.pricing_tiers.length > 0 ? formData.pricing_tiers : null
       }
 
       const url = editingWorkshop
@@ -307,7 +310,8 @@ export default function AdminWorkshopsPage() {
         video_urls: fullWorkshop.video_urls || [],
         image_urls: fullWorkshop.image_urls || [],
         testimonials: fullWorkshop.testimonials || [],
-        client_logos: fullWorkshop.client_logos || []
+        client_logos: fullWorkshop.client_logos || [],
+        pricing_tiers: fullWorkshop.pricing_tiers || []
       })
       setShowCreateForm(true)
     } catch (error) {
@@ -386,7 +390,8 @@ export default function AdminWorkshopsPage() {
       video_urls: [],
       image_urls: [],
       testimonials: [],
-      client_logos: []
+      client_logos: [],
+      pricing_tiers: []
     })
   }
 
@@ -607,6 +612,95 @@ export default function AdminWorkshopsPage() {
                       onChange={(e) => setFormData({ ...formData, topics: e.target.value })}
                       placeholder="AI, Machine Learning, Strategy, Leadership"
                     />
+                  </div>
+
+                  {/* Pricing Tiers Section */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold mb-4">Pricing Tiers</h3>
+                    <p className="text-sm text-gray-600 mb-4">Add different pricing options based on workshop duration/format</p>
+
+                    {formData.pricing_tiers.map((tier, index) => (
+                      <div key={index} className="border rounded-lg p-4 mb-4 bg-gray-50">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <div>
+                            <Label>Tier Name</Label>
+                            <Input
+                              value={tier.name}
+                              onChange={(e) => {
+                                const newTiers = [...formData.pricing_tiers]
+                                newTiers[index] = { ...tier, name: e.target.value }
+                                setFormData({ ...formData, pricing_tiers: newTiers })
+                              }}
+                              placeholder="e.g., Keynote, Half-Day"
+                            />
+                          </div>
+                          <div>
+                            <Label>Duration</Label>
+                            <Input
+                              value={tier.duration}
+                              onChange={(e) => {
+                                const newTiers = [...formData.pricing_tiers]
+                                newTiers[index] = { ...tier, duration: e.target.value }
+                                setFormData({ ...formData, pricing_tiers: newTiers })
+                              }}
+                              placeholder="e.g., 45-60 min"
+                            />
+                          </div>
+                          <div>
+                            <Label>Price</Label>
+                            <Input
+                              value={tier.price}
+                              onChange={(e) => {
+                                const newTiers = [...formData.pricing_tiers]
+                                newTiers[index] = { ...tier, price: e.target.value }
+                                setFormData({ ...formData, pricing_tiers: newTiers })
+                              }}
+                              placeholder="e.g., $10,000 - $15,000"
+                            />
+                          </div>
+                          <div className="flex items-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newTiers = formData.pricing_tiers.filter((_, i) => i !== index)
+                                setFormData({ ...formData, pricing_tiers: newTiers })
+                              }}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <Label>Description (optional)</Label>
+                          <Input
+                            value={tier.description || ""}
+                            onChange={(e) => {
+                              const newTiers = [...formData.pricing_tiers]
+                              newTiers[index] = { ...tier, description: e.target.value }
+                              setFormData({ ...formData, pricing_tiers: newTiers })
+                            }}
+                            placeholder="Additional details about this tier"
+                          />
+                        </div>
+                      </div>
+                    ))}
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          pricing_tiers: [...formData.pricing_tiers, { name: "", duration: "", price: "" }]
+                        })
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Pricing Tier
+                    </Button>
                   </div>
 
                   <div className="pt-6 border-t">
