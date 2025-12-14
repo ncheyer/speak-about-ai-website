@@ -11,8 +11,10 @@ import { Upload, X, Loader2, Image as ImageIcon, Video, Award, Building2, Plus, 
 import { useToast } from "@/hooks/use-toast"
 import { Testimonial } from "@/lib/workshops-db"
 import { ImageLibraryPicker } from "@/components/image-library-picker"
+import { createImagePathname, addTimestampSuffix } from "@/lib/image-naming"
 
 interface WorkshopMediaManagerProps {
+  workshopTitle?: string // For standardized image naming
   thumbnailUrl?: string
   videoUrls?: string[]
   imageUrls?: string[]
@@ -26,6 +28,7 @@ interface WorkshopMediaManagerProps {
 }
 
 export function WorkshopMediaManager({
+  workshopTitle,
   thumbnailUrl,
   videoUrls = [],
   imageUrls = [],
@@ -67,7 +70,15 @@ export function WorkshopMediaManager({
 
     setUploadingThumbnail(true)
     try {
-      const blob = await upload(file.name, file, {
+      // Create standardized pathname for SEO
+      const standardizedPath = createImagePathname(
+        file.name.includes('thumbnail') ? file.name : `thumbnail-${file.name}`,
+        'workshops',
+        workshopTitle
+      )
+      const finalPath = addTimestampSuffix(standardizedPath)
+
+      const blob = await upload(finalPath, file, {
         access: 'public',
         handleUploadUrl: '/api/upload',
       })

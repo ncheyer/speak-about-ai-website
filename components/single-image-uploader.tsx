@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { createImagePathname, addTimestampSuffix } from "@/lib/image-naming"
+
+type ImageContext = 'speakers' | 'workshops' | 'conferences' | 'vendors' | 'blog' | 'general'
 
 interface SingleImageUploaderProps {
   imageUrl?: string
@@ -15,6 +18,8 @@ interface SingleImageUploaderProps {
   label: string
   description?: string
   aspectRatio?: "square" | "wide" // square for logos, wide for banners
+  context?: ImageContext // For standardized naming
+  identifier?: string // e.g., speaker name, workshop title
 }
 
 export function SingleImageUploader({
@@ -23,7 +28,9 @@ export function SingleImageUploader({
   onClear,
   label,
   description,
-  aspectRatio = "square"
+  aspectRatio = "square",
+  context = "general",
+  identifier
 }: SingleImageUploaderProps) {
   const { toast } = useToast()
   const [uploading, setUploading] = useState(false)
@@ -54,8 +61,12 @@ export function SingleImageUploader({
 
     setUploading(true)
     try {
-      // Use Vercel Blob client upload
-      const blob = await upload(file.name, file, {
+      // Create a standardized pathname for SEO
+      const standardizedPath = createImagePathname(file.name, context, identifier)
+      const finalPath = addTimestampSuffix(standardizedPath)
+
+      // Use Vercel Blob client upload with standardized naming
+      const blob = await upload(finalPath, file, {
         access: 'public',
         handleUploadUrl: '/api/upload',
       })
