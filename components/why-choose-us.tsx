@@ -52,7 +52,7 @@ export default function WhyChooseUs() {
       description:
         "Cut through the AI hype with our deep industry expertise and transparent guidance:",
       highlights: [
-        "Budget ranges: $10K-$25K (emerging experts) to $50K-$100K+ (pioneers)",
+        "Budget ranges: $5K-$20K (emerging experts) to $20K+ (industry leaders)",
         "Audience types: executives, engineers, entrepreneurs, medical professionals, public sector, academic institutions",
         "Global delivery: worldwide coverage + virtual/hybrid capabilities",
         "Custom recommendations within 24 hours of inquiry",

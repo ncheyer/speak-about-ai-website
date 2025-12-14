@@ -77,9 +77,11 @@ export default function WorkshopDirectory() {
       )
     }
 
-    // Format filter
+    // Format filter (case-insensitive matching)
     if (selectedFormat !== "all") {
-      filtered = filtered.filter((w) => w.format === selectedFormat)
+      filtered = filtered.filter((w) =>
+        w.format?.toLowerCase().replace(/[-_\s]/g, '') === selectedFormat.toLowerCase().replace(/[-_\s]/g, '')
+      )
     }
 
     // Duration filter
@@ -121,8 +123,15 @@ export default function WorkshopDirectory() {
     filterWorkshops()
   }, [filterWorkshops])
 
-  // Extract unique values for filters
-  const formats = ["all", ...Array.from(new Set(workshops.map((w) => w.format).filter(Boolean)))]
+  // Fixed format options
+  const formatOptions = [
+    { value: "all", label: "All Formats" },
+    { value: "virtual", label: "Virtual" },
+    { value: "in-person", label: "In-Person" },
+    { value: "hybrid", label: "Hybrid" }
+  ]
+
+  // Extract unique values for other filters
   const locations = ["all", ...Array.from(new Set(workshops.map((w) => w.speaker_location).filter(Boolean)))]
   const audiences = ["all", ...Array.from(new Set(workshops.map((w) => w.target_audience).filter(Boolean)))]
 
@@ -178,10 +187,9 @@ export default function WorkshopDirectory() {
                         <SelectValue placeholder="All Formats" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Formats</SelectItem>
-                        {formats.filter(f => f !== "all").map((format) => (
-                          <SelectItem key={format} value={format} className="capitalize">
-                            {format}
+                        {formatOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -294,8 +302,14 @@ export default function WorkshopDirectory() {
                 <Card key={workshop.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     {workshop.thumbnail_url && (
-                      <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden">
-                        <Image src={workshop.thumbnail_url} alt={workshop.title} fill className="object-cover" />
+                      <div className="relative w-full aspect-[4/3] mb-4 rounded-lg overflow-hidden bg-gray-50">
+                        <Image
+                          src={workshop.thumbnail_url}
+                          alt={workshop.title}
+                          fill
+                          className="object-contain p-2"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        />
                       </div>
                     )}
                     <CardTitle className="text-xl font-bold font-neue-haas">{workshop.title}</CardTitle>
@@ -343,7 +357,7 @@ export default function WorkshopDirectory() {
 
                     <div className="flex flex-col gap-3 mt-4">
                       <Link href={`/contact?workshop=${workshop.id}`}>
-                        <Button className="w-full font-montserrat" variant="default">
+                        <Button className="w-full font-montserrat font-bold" variant="gold">
                           Inquire About Workshop
                         </Button>
                       </Link>

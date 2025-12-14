@@ -22,29 +22,44 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
   // Increment popularity counter
   await incrementWorkshopPopularity(workshop.id)
 
+  // Count the number of workshop format options in the agenda
+  const agendaSections = workshop.agenda?.split('\n\n') || []
+  const formatOptionsCount = agendaSections.filter(section => {
+    const lines = section.split('\n').filter(line => line.trim())
+    if (lines.length === 0) return false
+    const title = lines[0]
+    // Exclude section headers (all uppercase single lines)
+    const isMainHeading = title === title.toUpperCase() && !title.includes(':') && lines.length === 1
+    return !isMainHeading
+  }).length
+
+  // Determine if we should show sidebar pricing (only when there's 1 or fewer format options)
+  const hasMultipleFormats = formatOptionsCount > 1
+
   return (
     <>
-      {/* Hero Image */}
-      {workshop.thumbnail_url && (
-        <div className="relative w-full h-96 overflow-hidden">
-          <Image
-            src={workshop.thumbnail_url}
-            alt={workshop.title}
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-        </div>
-      )}
-
-      {/* Hero Section */}
-      <section className={workshop.thumbnail_url ? "py-12 -mt-32 relative z-10" : "bg-gradient-to-br from-[#EAEAEE] to-white py-12"}>
+      {/* Hero Section - Side-by-side layout that works for any image aspect ratio */}
+      <section className="bg-gradient-to-br from-[#EAEAEE] to-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">
-              <div className={`p-8 rounded-xl ${workshop.thumbnail_url ? 'bg-white shadow-xl' : ''}`}>
+              <div className="p-8 rounded-xl bg-white shadow-xl">
+                {/* Workshop Image - Displayed above content on mobile, integrated on desktop */}
+                {workshop.thumbnail_url && (
+                  <div className="relative w-full aspect-[4/3] mb-6 rounded-lg overflow-hidden bg-gray-50">
+                    <Image
+                      src={workshop.thumbnail_url}
+                      alt={workshop.title}
+                      fill
+                      className="object-contain p-2"
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 66vw"
+                      quality={85}
+                    />
+                  </div>
+                )}
+
                 <div className="flex gap-2 mb-4">
                   <Badge variant="default" className="capitalize">
                     {workshop.format}
@@ -134,16 +149,24 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                     <p className="text-gray-500">Instructor to be assigned</p>
                   )}
 
-                  {workshop.price_range && (
+                  {workshop.price_range && !hasMultipleFormats && (
                     <div className="py-4 border-t border-b">
                       <p className="text-sm text-gray-600 mb-1">Investment</p>
                       <p className="text-2xl font-bold text-gray-900">{workshop.price_range}</p>
                     </div>
                   )}
 
+                  {hasMultipleFormats && (
+                    <div className="py-4 border-t border-b">
+                      <p className="text-sm text-gray-600 mb-1">Investment</p>
+                      <p className="text-lg font-semibold text-gray-900">See format options below</p>
+                      <p className="text-xs text-gray-500 mt-1">Pricing varies by workshop length</p>
+                    </div>
+                  )}
+
                   <div className="space-y-3">
                     <Link href={`/contact?workshop=${workshop.id}`}>
-                      <Button className="w-full" size="lg">
+                      <Button className="w-full font-bold" size="lg" variant="gold">
                         Request This Workshop
                       </Button>
                     </Link>
@@ -478,12 +501,12 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {workshop.image_urls.map((imageUrl, index) => (
-                <div key={index} className="relative w-full h-64 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div key={index} className="relative w-full aspect-[4/3] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-gray-50">
                   <Image
                     src={imageUrl}
                     alt={`Workshop image ${index + 1}`}
                     fill
-                    className="object-cover hover:scale-105 transition-transform duration-300"
+                    className="object-contain p-2 hover:scale-105 transition-transform duration-300"
                   />
                 </div>
               ))}
@@ -492,91 +515,169 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
         </section>
       )}
 
-      {/* Testimonials Section */}
-      {workshop.testimonials && workshop.testimonials.length > 0 && (
+      {/* Combined Testimonials & Logos Section - Side by side when both have < 3 items */}
+      {workshop.testimonials && workshop.testimonials.length > 0 &&
+       workshop.client_logos && workshop.client_logos.length > 0 &&
+       workshop.testimonials.length < 3 && workshop.client_logos.length < 3 ? (
         <section className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Employee & Participant Testimonials
-              </h2>
-              <p className="text-xl text-gray-600">
-                Hear from past workshop participants
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {workshop.testimonials.map((testimonial, index) => (
-                <Card key={index} className="bg-white">
-                  <CardContent className="pt-6">
-                    <div className="mb-4">
-                      <div className="flex text-yellow-400 mb-3">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="h-5 w-5 fill-current" />
-                        ))}
-                      </div>
-                      <p className="text-gray-700 italic mb-4">
-                        "{testimonial.quote}"
-                      </p>
-                      <div className="flex items-center gap-3 mt-4">
-                        {testimonial.photo_url && (
-                          <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                            <Image
-                              src={testimonial.photo_url}
-                              alt={testimonial.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-gray-900 font-semibold">{testimonial.name}</p>
-                          {testimonial.role && (
-                            <p className="text-sm text-gray-600">
-                              {testimonial.role}
-                              {testimonial.company && ` at ${testimonial.company}`}
-                            </p>
-                          )}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              {/* Testimonials Column */}
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+                  What Participants Say
+                </h2>
+                <div className="space-y-4">
+                  {workshop.testimonials.map((testimonial, index) => (
+                    <Card key={index} className="bg-white">
+                      <CardContent className="pt-6">
+                        <div className="flex text-yellow-400 mb-3">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="h-4 w-4 fill-current" />
+                          ))}
                         </div>
+                        <p className="text-gray-700 italic mb-4 text-sm">
+                          "{testimonial.quote}"
+                        </p>
+                        <div className="flex items-center gap-3">
+                          {testimonial.photo_url && (
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                              <Image
+                                src={testimonial.photo_url}
+                                alt={testimonial.name}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-gray-900 font-semibold text-sm">{testimonial.name}</p>
+                            {testimonial.role && (
+                              <p className="text-xs text-gray-600">
+                                {testimonial.role}
+                                {testimonial.company && ` at ${testimonial.company}`}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Client Logos Column */}
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+                  Trusted By
+                </h2>
+                <div className="grid grid-cols-2 gap-6">
+                  {workshop.client_logos.map((logoUrl, index) => (
+                    <div key={index} className="flex items-center justify-center p-6 bg-white rounded-lg shadow-sm grayscale hover:grayscale-0 transition-all">
+                      <div className="relative w-full h-16">
+                        <Image
+                          src={logoUrl}
+                          alt={`Client logo ${index + 1}`}
+                          fill
+                          className="object-contain"
+                        />
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Client Logos Section */}
-      {workshop.client_logos && workshop.client_logos.length > 0 && (
-        <section className="py-16 bg-white border-t border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Trusted by Leading Organizations
-              </h2>
-              <p className="text-xl text-gray-600">
-                Companies that have chosen this workshop
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center">
-              {workshop.client_logos.map((logoUrl, index) => (
-                <div key={index} className="flex items-center justify-center p-6 grayscale hover:grayscale-0 transition-all">
-                  <div className="relative w-full h-20">
-                    <Image
-                      src={logoUrl}
-                      alt={`Client logo ${index + 1}`}
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </section>
+      ) : (
+        <>
+          {/* Testimonials Section - Full width when 3+ items or logos missing */}
+          {workshop.testimonials && workshop.testimonials.length > 0 && (
+            <section className="py-16 bg-gray-50">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-12">
+                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Employee & Participant Testimonials
+                  </h2>
+                  <p className="text-xl text-gray-600">
+                    Hear from past workshop participants
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {workshop.testimonials.map((testimonial, index) => (
+                    <Card key={index} className="bg-white">
+                      <CardContent className="pt-6">
+                        <div className="mb-4">
+                          <div className="flex text-yellow-400 mb-3">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className="h-5 w-5 fill-current" />
+                            ))}
+                          </div>
+                          <p className="text-gray-700 italic mb-4">
+                            "{testimonial.quote}"
+                          </p>
+                          <div className="flex items-center gap-3 mt-4">
+                            {testimonial.photo_url && (
+                              <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                                <Image
+                                  src={testimonial.photo_url}
+                                  alt={testimonial.name}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-gray-900 font-semibold">{testimonial.name}</p>
+                              {testimonial.role && (
+                                <p className="text-sm text-gray-600">
+                                  {testimonial.role}
+                                  {testimonial.company && ` at ${testimonial.company}`}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Client Logos Section - Full width when 3+ items or testimonials missing */}
+          {workshop.client_logos && workshop.client_logos.length > 0 && (
+            <section className="py-16 bg-white border-t border-gray-100">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-12">
+                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Trusted by Leading Organizations
+                  </h2>
+                  <p className="text-xl text-gray-600">
+                    Companies that have chosen this workshop
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center">
+                  {workshop.client_logos.map((logoUrl, index) => (
+                    <div key={index} className="flex items-center justify-center p-6 grayscale hover:grayscale-0 transition-all">
+                      <div className="relative w-full h-20">
+                        <Image
+                          src={logoUrl}
+                          alt={`Client logo ${index + 1}`}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+        </>
       )}
 
       {/* CTA Section */}
@@ -588,7 +689,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href={`/contact?workshop=${workshop.id}`}>
-              <Button size="lg" variant="secondary" className="font-semibold">
+              <Button size="lg" variant="gold" className="font-bold">
                 Request This Workshop
               </Button>
             </Link>

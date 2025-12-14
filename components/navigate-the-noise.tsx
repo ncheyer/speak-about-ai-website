@@ -24,11 +24,11 @@ export default function NavigateTheNoise() {
             </div>
             <div className="space-y-4">
               <div className="border-l-4 border-blue-600 pl-4">
-                <div className="font-bold text-gray-900 font-montserrat mb-1">$10k - $25k</div>
+                <div className="font-bold text-gray-900 font-montserrat mb-1">$5k - $20k</div>
                 <div className="text-sm text-gray-600 font-montserrat">Rising AI experts, academics, and tech consultants</div>
               </div>
               <div className="border-l-4 border-blue-600 pl-4">
-                <div className="font-bold text-gray-900 font-montserrat mb-1">$25k - $50k</div>
+                <div className="font-bold text-gray-900 font-montserrat mb-1">$20k - $50k</div>
                 <div className="text-sm text-gray-600 font-montserrat">Industry leaders, published authors, and proven speakers</div>
               </div>
               <div className="border-l-4 border-blue-600 pl-4">

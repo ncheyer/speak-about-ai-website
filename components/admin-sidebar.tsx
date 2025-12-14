@@ -267,7 +267,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           title: "WhatsApp Group",
           href: "/admin/whatsapp-applications",
           icon: MessageSquare,
-          description: "Event Pro Community",
+          description: "AI Focused Community",
           color: "text-green-600",
           bgColor: "bg-green-50"
         }
