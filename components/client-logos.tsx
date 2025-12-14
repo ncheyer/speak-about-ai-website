@@ -143,7 +143,7 @@ export default function ClientLogos() {
       {/* View Past Clients & Events Link */}
       <div className="text-center mt-8 pb-4">
         <Button asChild variant="gold" size="lg" className="font-montserrat font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300">
-          <Link href="/case-studies" className="flex items-center">
+          <Link href="/our-services#testimonials" className="flex items-center">
             View Past Clients & Events
             <ArrowRight className="w-4 h-4 ml-2" />
           </Link>
