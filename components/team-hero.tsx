@@ -4,7 +4,7 @@ export default function TeamHero() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 font-neue-haas">Meet Our Team</h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 font-montserrat">
-          The experts behind the world's only AI-exclusive speaker bureau
+          The experts behind the world's leading AI-exclusive speaker bureau
         </p>
         <div className="max-w-3xl mx-auto">
           <p className="text-lg text-gray-600 font-montserrat">

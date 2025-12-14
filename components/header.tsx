@@ -10,7 +10,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
+    <header className="bg-[#1E68C6] shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -37,19 +37,19 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 xl:space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-[#1E68C6] font-medium">
+            <Link href="/" className="text-white/90 hover:text-white font-medium transition-colors">
               Home
             </Link>
-            <Link href="/speakers" className="text-gray-700 hover:text-[#1E68C6] font-medium">
+            <Link href="/speakers" className="text-white/90 hover:text-white font-medium transition-colors">
               Speakers
             </Link>
-            <Link href="/our-services" className="text-gray-700 hover:text-[#1E68C6] font-medium">
+            <Link href="/our-services" className="text-white/90 hover:text-white font-medium transition-colors">
               Services
             </Link>
-            <Link href="/our-team" className="text-gray-700 hover:text-[#1E68C6] font-medium">
+            <Link href="/our-team" className="text-white/90 hover:text-white font-medium transition-colors">
               About Us
             </Link>
-            <Link href="/blog" className="text-gray-700 hover:text-[#1E68C6] font-medium">
+            <Link href="/blog" className="text-white/90 hover:text-white font-medium transition-colors">
               Resources
             </Link>
           </nav>
@@ -67,51 +67,51 @@ export default function Header() {
           </div>
 
           {/* Mobile menu button */}
-          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <button className="md:hidden text-white" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-100">
+          <div className="md:hidden py-4 border-t border-white/20">
             <nav className="flex flex-col space-y-4">
               <Link
                 href="/"
-                className="text-gray-700 hover:text-[#1E68C6] font-medium"
+                className="text-white/90 hover:text-white font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
               <Link
                 href="/speakers"
-                className="text-gray-700 hover:text-[#1E68C6] font-medium"
+                className="text-white/90 hover:text-white font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Speakers
               </Link>
               <Link
                 href="/our-services"
-                className="text-gray-700 hover:text-[#1E68C6] font-medium"
+                className="text-white/90 hover:text-white font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Services
               </Link>
               <Link
                 href="/our-team"
-                className="text-gray-700 hover:text-[#1E68C6] font-medium"
+                className="text-white/90 hover:text-white font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 About Us
               </Link>
               <Link
                 href="/blog"
-                className="text-gray-700 hover:text-[#1E68C6] font-medium"
+                className="text-white/90 hover:text-white font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Resources
               </Link>
-              <div className="pt-4 border-t border-gray-100 space-y-3">
+              <div className="pt-4 border-t border-white/20 space-y-3">
                 <Button
                   asChild
                   variant="gold"
