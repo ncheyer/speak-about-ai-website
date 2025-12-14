@@ -707,12 +707,18 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
 
 // Generate static params for all workshop slugs
 export async function generateStaticParams() {
-  const { getActiveWorkshops } = await import("@/lib/workshops-db")
-  const workshops = await getActiveWorkshops()
+  try {
+    const { getActiveWorkshops } = await import("@/lib/workshops-db")
+    const workshops = await getActiveWorkshops()
 
-  return workshops.map((workshop) => ({
-    slug: workshop.slug,
-  }))
+    return workshops.map((workshop) => ({
+      slug: workshop.slug,
+    }))
+  } catch (error) {
+    console.error("Error generating static params for workshops:", error)
+    // Return empty array to allow dynamic rendering as fallback
+    return []
+  }
 }
 
 // Generate metadata for SEO
