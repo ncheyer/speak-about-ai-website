@@ -35,7 +35,11 @@ import {
   Globe,
   Megaphone,
   Building2,
-  Linkedin
+  Linkedin,
+  Presentation,
+  PenTool,
+  Bot,
+  Sparkles
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -153,6 +157,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Client Access",
           color: "text-cyan-600",
           bgColor: "bg-cyan-50"
+        },
+        {
+          title: "Workshops",
+          href: "/admin/workshops",
+          icon: Presentation,
+          description: "Workshop Management",
+          color: "text-amber-600",
+          bgColor: "bg-amber-50"
         }
       ]
     },
@@ -186,6 +198,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Website Insights",
           color: "text-purple-600",
           bgColor: "bg-purple-50"
+        },
+        {
+          title: "Speaker Chat",
+          href: "/admin/tools/speaker-chat",
+          icon: Bot,
+          description: "AI Speaker Assistant",
+          color: "text-emerald-600",
+          bgColor: "bg-emerald-50"
         }
       ]
     },
@@ -219,6 +239,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Content & Outrank",
           color: "text-purple-600",
           bgColor: "bg-purple-50"
+        },
+        {
+          title: "Content Studio",
+          href: "/admin/tools/content-studio",
+          icon: PenTool,
+          description: "AI Blog Writer",
+          color: "text-violet-600",
+          bgColor: "bg-violet-50"
         },
         {
           title: "Vendor Directory",
