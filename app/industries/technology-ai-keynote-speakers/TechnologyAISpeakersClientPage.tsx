@@ -178,9 +178,9 @@ export default function TechnologyAISpeakersClientPage({ speakers }: TechnologyA
             <div className="inline-flex items-center px-4 py-2 bg-[#1E68C6] bg-opacity-10 text-[#1E68C6] rounded-full text-sm font-medium mb-6 font-montserrat">
               Top Technology Keynote Speakers
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-6">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-6">
               Top Technology Keynote Speakers for Executive Teams
-            </h1>
+            </h2>
             <p className="text-lg md:text-xl text-black mb-10 max-w-4xl mx-auto">
               Transform your executive conference with leading technology keynote speakers specializing in artificial
               intelligence and digital transformation. Our experts make advanced technology approachable for any

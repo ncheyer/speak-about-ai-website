@@ -22,7 +22,7 @@ const richTextOptions = {
       <p className="mb-4 text-gray-700 leading-relaxed">{children}</p>
     ),
     [BLOCKS.HEADING_1]: (node: any, children: any) => (
-      <h1 className="text-4xl font-bold mb-6 text-gray-900">{children}</h1>
+      <h2 className="text-4xl font-bold mb-6 text-gray-900">{children}</h2>
     ),
     [BLOCKS.HEADING_2]: (node: any, children: any) => (
       <h2 className="text-3xl font-semibold mb-4 text-gray-900">{children}</h2>
