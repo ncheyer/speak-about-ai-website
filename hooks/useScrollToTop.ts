@@ -7,7 +7,20 @@ export function useScrollToTop() {
   const pathname = usePathname()
 
   useEffect(() => {
-    // Scroll to top whenever the pathname changes
+    // Check if there's a hash in the URL
+    const hash = window.location.hash
+    if (hash) {
+      // If there's a hash, scroll to that element
+      const element = document.querySelector(hash)
+      if (element) {
+        // Small delay to ensure the page has rendered
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth" })
+        }, 100)
+        return
+      }
+    }
+    // Otherwise scroll to top
     window.scrollTo(0, 0)
   }, [pathname])
 }
