@@ -10,17 +10,23 @@ export function useScrollToTop() {
     // Check if there's a hash in the URL
     const hash = window.location.hash
     if (hash) {
-      // If there's a hash, scroll to that element
-      const element = document.querySelector(hash)
-      if (element) {
-        // Small delay to ensure the page has rendered
-        setTimeout(() => {
+      // Poll for the element since it might load asynchronously
+      let attempts = 0
+      const maxAttempts = 20 // Try for up to 2 seconds
+      const interval = setInterval(() => {
+        const element = document.querySelector(hash)
+        if (element) {
+          clearInterval(interval)
           element.scrollIntoView({ behavior: "smooth" })
-        }, 100)
-        return
-      }
+        } else if (++attempts >= maxAttempts) {
+          clearInterval(interval)
+          // Element not found after timeout, scroll to top
+          window.scrollTo(0, 0)
+        }
+      }, 100)
+      return () => clearInterval(interval)
     }
-    // Otherwise scroll to top
+    // No hash, scroll to top
     window.scrollTo(0, 0)
   }, [pathname])
 }
