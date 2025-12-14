@@ -120,6 +120,11 @@ export function ImageLibraryPicker({
 
   const folders = Object.keys(grouped).sort()
 
+  // Filter for workshop-related images
+  const workshopImages = filteredImages.filter((image) =>
+    image.pathname.toLowerCase().includes("workshop")
+  )
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -155,8 +160,14 @@ export function ImageLibraryPicker({
             </div>
           ) : (
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="mb-4">
+              <TabsList className="mb-4 flex-wrap">
                 <TabsTrigger value="all">All ({filteredImages.length})</TabsTrigger>
+                {workshopImages.length > 0 && (
+                  <TabsTrigger value="workshops">
+                    <FolderOpen className="h-3 w-3 mr-1" />
+                    Workshops ({workshopImages.length})
+                  </TabsTrigger>
+                )}
                 {folders.map((folder) => (
                   <TabsTrigger key={folder} value={folder}>
                     <FolderOpen className="h-3 w-3 mr-1" />
@@ -175,6 +186,29 @@ export function ImageLibraryPicker({
                   ) : (
                     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                       {filteredImages.map((image) => (
+                        <ImageCard
+                          key={image.url}
+                          image={image}
+                          isSelected={selectedImages.includes(image.url)}
+                          onClick={() => handleImageSelect(image.url)}
+                          formatFileSize={formatFileSize}
+                          getFilename={getFilename}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Workshops Tab */}
+                <TabsContent value="workshops" className="mt-0">
+                  {workshopImages.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                      <ImageIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No workshop images found</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {workshopImages.map((image) => (
                         <ImageCard
                           key={image.url}
                           image={image}
