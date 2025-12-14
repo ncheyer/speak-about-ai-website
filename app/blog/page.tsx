@@ -13,13 +13,12 @@ export const metadata: Metadata = {
 
 export default async function BlogPage() {
   // Fetch combined content (blog posts + landing pages) on the server.
-  const initialContent = await getCombinedContent()
-  
-  // Debug: log content on server side
-  console.log('Server: Total content items:', initialContent.length)
-  console.log('Server: Blog posts:', initialContent.filter(item => item.type === 'blog').length)
-  console.log('Server: Landing pages:', initialContent.filter(item => item.type === 'landing').length)
+  const fullContent = await getCombinedContent()
 
-  // Render the client component, passing the initial data as a prop.
+  // Strip out originalData to reduce HTML payload size
+  // The listing page only needs summary fields, not full article content
+  const initialContent = fullContent.map(({ originalData, ...item }) => item)
+
+  // Render the client component, passing the lightweight data as a prop.
   return <BlogClientPage initialContent={initialContent} />
 }

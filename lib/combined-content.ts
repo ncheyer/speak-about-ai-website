@@ -22,8 +22,8 @@ export interface ContentItem {
     name: string
   }
   featured?: boolean
-  // Original data for type-specific rendering
-  originalData: BlogPost | LandingPage
+  // Original data for type-specific rendering (optional - stripped for listing pages)
+  originalData?: BlogPost | LandingPage
 }
 
 // Convert blog post to unified content item
