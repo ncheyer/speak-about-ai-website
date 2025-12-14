@@ -64,6 +64,8 @@ export interface WorkshopWithSpeaker extends Workshop {
   speaker_slug?: string
   speaker_headshot?: string
   speaker_location?: string
+  speaker_one_liner?: string
+  speaker_bio?: string
 }
 
 export interface CreateWorkshopInput {

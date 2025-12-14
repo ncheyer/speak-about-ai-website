@@ -110,7 +110,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
             <div className="lg:col-span-1">
               <Card className="sticky top-24">
                 <CardHeader>
-                  <CardTitle>Workshop Instructor</CardTitle>
+                  <CardTitle>Workshop Facilitator</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {workshop.speaker_name ? (
@@ -131,7 +131,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                             <h3 className="font-bold text-lg group-hover:text-blue-600 transition-colors">
                               {workshop.speaker_name}
                             </h3>
-                            <p className="text-sm text-gray-600">Expert Instructor</p>
+                            <p className="text-sm text-gray-600">{workshop.speaker_one_liner || "Workshop Facilitator"}</p>
                             {workshop.speaker_location && (
                               <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                                 <MapPin className="h-3 w-3" />
@@ -154,7 +154,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                   {/* Pricing Tiers or Legacy Price Range */}
                   {workshop.pricing_tiers && workshop.pricing_tiers.length > 0 ? (
                     <div className="py-4 border-t border-b">
-                      <p className="text-sm text-gray-600 mb-3">Investment Options</p>
+                      <p className="text-sm text-gray-600 mb-3">Fee Options</p>
                       <div className="space-y-3">
                         {workshop.pricing_tiers.map((tier, index) => (
                           <div key={index} className="bg-gray-50 rounded-lg p-3">
@@ -174,12 +174,12 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                     </div>
                   ) : workshop.price_range && !hasMultipleFormats ? (
                     <div className="py-4 border-t border-b">
-                      <p className="text-sm text-gray-600 mb-1">Investment</p>
+                      <p className="text-sm text-gray-600 mb-1">Fee</p>
                       <p className="text-2xl font-bold text-gray-900">{workshop.price_range}</p>
                     </div>
                   ) : hasMultipleFormats ? (
                     <div className="py-4 border-t border-b">
-                      <p className="text-sm text-gray-600 mb-1">Investment</p>
+                      <p className="text-sm text-gray-600 mb-1">Fee</p>
                       <p className="text-lg font-semibold text-gray-900">See format options below</p>
                       <p className="text-xs text-gray-500 mt-1">Pricing varies by workshop length</p>
                     </div>
@@ -203,10 +203,10 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
       </section>
 
       {/* Main Content */}
-      <section className="py-16 bg-white">
+      <section className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-2 space-y-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-10">
               {/* Description */}
               {workshop.description && (
                 <div>

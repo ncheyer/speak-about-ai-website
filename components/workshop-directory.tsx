@@ -156,13 +156,13 @@ export default function WorkshopDirectory() {
               {/* Search Bar */}
               <div className="flex flex-col md:flex-row gap-4 mb-4">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1E68C6] w-5 h-5" />
                   <Input
                     type="text"
-                    placeholder="Search workshops..."
+                    placeholder="Search workshops by name, topic, or instructor..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 font-montserrat"
+                    className="pl-10 font-montserrat border-2 border-[#1E68C6]/30 shadow-lg hover:shadow-xl focus:shadow-xl focus:border-[#1E68C6] transition-all"
                   />
                 </div>
                 <Button
@@ -298,76 +298,128 @@ export default function WorkshopDirectory() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredWorkshops.map((workshop) => (
-                <Card key={workshop.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    {workshop.thumbnail_url && (
-                      <div className="relative w-full aspect-[4/3] mb-4 rounded-lg overflow-hidden bg-gray-50">
+                <Card key={workshop.id} className="flex flex-col h-full overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out border-0 bg-white group transform hover:-translate-y-1.5">
+                  <Link href={`/ai-workshops/${workshop.slug}`} className="block">
+                    <div className="relative w-full aspect-[4/3] bg-gray-100 overflow-hidden rounded-t-xl">
+                      <div className="absolute top-0 left-0 w-full h-1.5 bg-[#1E68C6] z-20 group-hover:opacity-100 opacity-75 transition-opacity duration-300"></div>
+                      {workshop.thumbnail_url ? (
                         <Image
                           src={workshop.thumbnail_url}
                           alt={workshop.title}
                           fill
-                          className="object-contain p-2"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          style={{ objectPosition: workshop.thumbnail_position || 'center' }}
                           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
-                      </div>
-                    )}
-                    <CardTitle className="text-xl font-bold font-neue-haas">{workshop.title}</CardTitle>
-                    {workshop.speaker_name && (
-                      <CardDescription className="flex items-center gap-2 mt-2 font-montserrat">
-                        <Users className="w-4 h-4" />
-                        Led by {workshop.speaker_name}
-                        {workshop.speaker_location && (
-                          <span className="flex items-center gap-1 text-xs text-gray-500">
-                            <MapPin className="w-3 h-3" />
-                            {workshop.speaker_location}
-                          </span>
-                        )}
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {workshop.short_description && (
-                      <p className="text-gray-600 text-sm font-montserrat">{workshop.short_description}</p>
-                    )}
-
-                    <div className="flex flex-wrap gap-2">
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100">
+                          <span className="text-gray-400 text-4xl">🎓</span>
+                        </div>
+                      )}
                       {workshop.format && (
-                        <Badge variant="secondary" className="font-montserrat">
+                        <Badge className="absolute top-3 left-3 bg-[#1E68C6] text-white font-montserrat text-xs px-3 py-1.5 rounded-md shadow-md z-10">
                           {workshop.format}
                         </Badge>
                       )}
-                      {workshop.duration_minutes && (
-                        <Badge variant="outline" className="flex items-center gap-1 font-montserrat">
-                          <Clock className="w-3 h-3" />
-                          {workshop.duration_minutes} min
+                      {workshop.price_range && (
+                        <Badge
+                          variant="secondary"
+                          className="absolute top-3 right-3 bg-black/75 text-white backdrop-blur-sm text-xs px-2.5 py-1.5 font-montserrat rounded-md shadow-md z-10"
+                        >
+                          {workshop.price_range}
                         </Badge>
                       )}
                     </div>
+                  </Link>
 
-                    {workshop.topics && workshop.topics.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {workshop.topics.slice(0, 3).map((topic, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs font-montserrat">
-                            {topic}
+                  <CardContent className="p-4 sm:p-5 flex flex-col flex-grow relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-sky-50 via-blue-50 to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-300 rounded-b-xl -z-1"></div>
+                    <div className="relative z-0">
+                      <Link href={`/ai-workshops/${workshop.slug}`} className="block">
+                        <h2 className="text-lg sm:text-xl font-bold text-gray-900 font-neue-haas leading-tight mb-2 group-hover:text-[#1E68C6] transition-colors duration-300">
+                          {workshop.title}
+                        </h2>
+                      </Link>
+
+                      {/* Speaker info with mini headshot */}
+                      {workshop.speaker_name && (
+                        <Link href={workshop.speaker_slug ? `/speakers/${workshop.speaker_slug}` : '#'} className="flex items-center gap-3 mb-3 group/speaker">
+                          {workshop.speaker_headshot ? (
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-blue-100 group-hover/speaker:ring-blue-300 transition-all flex-shrink-0">
+                              <Image
+                                src={workshop.speaker_headshot}
+                                alt={workshop.speaker_name}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                              <Users className="w-5 h-5 text-blue-600" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-800 group-hover/speaker:text-[#1E68C6] transition-colors truncate">
+                              {workshop.speaker_name}
+                            </p>
+                            {workshop.speaker_location && (
+                              <p className="text-xs text-gray-500 flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {workshop.speaker_location}
+                              </p>
+                            )}
+                          </div>
+                        </Link>
+                      )}
+
+                      {workshop.short_description && (
+                        <p className="text-gray-600 text-sm font-montserrat mb-3 line-clamp-2">{workshop.short_description}</p>
+                      )}
+
+                      {/* Duration badge */}
+                      {workshop.duration_minutes && (
+                        <div className="flex items-center gap-2 mb-3">
+                          <Badge variant="outline" className="flex items-center gap-1 font-montserrat text-gray-600 border-gray-300">
+                            <Clock className="w-3 h-3" />
+                            {workshop.duration_minutes} min
                           </Badge>
-                        ))}
-                      </div>
-                    )}
+                        </div>
+                      )}
 
-                    <div className="flex flex-col gap-3 mt-4">
-                      <Link href={`/contact?workshop=${workshop.id}`}>
-                        <Button className="w-full font-montserrat font-bold" variant="gold">
-                          Inquire About Workshop
-                        </Button>
-                      </Link>
-                      <Link href={`/ai-workshops/${workshop.slug}`}>
-                        <Button className="w-full font-montserrat" variant="outline">
-                          View Details
-                          <ChevronRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      </Link>
+                      {/* Topics with enhanced styling */}
+                      {workshop.topics && workshop.topics.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {workshop.topics.slice(0, 3).map((topic, idx) => (
+                            <Badge
+                              key={idx}
+                              className="text-xs font-montserrat bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
+                            >
+                              {topic}
+                            </Badge>
+                          ))}
+                          {workshop.topics.length > 3 && (
+                            <Badge className="text-xs font-montserrat bg-gray-100 text-gray-600">
+                              +{workshop.topics.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="mt-auto pt-3 space-y-2">
+                        <Link href={`/contact?workshop=${workshop.id}`}>
+                          <Button className="w-full font-montserrat font-bold text-sm" variant="gold">
+                            Inquire About Workshop
+                          </Button>
+                        </Link>
+                        <Link href={`/ai-workshops/${workshop.slug}`}>
+                          <Button className="w-full font-montserrat text-sm" variant="outline">
+                            View Details
+                            <ChevronRight className="w-4 h-4 ml-1" />
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
