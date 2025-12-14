@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Menu, X, Phone, Users } from "lucide-react"
+import { Menu, X, Phone, Users, Mail, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button" // Import the Button component
 
 export default function Header() {
@@ -18,7 +18,7 @@ export default function Header() {
             {/* Full Logo - Mobile and Large Desktop */}
             <Image
               src="/speak-about-ai-logo.png"
-              alt="Speak About AI"
+              alt="Speak About AI - AI Keynote Speaker Bureau Logo"
               width={200}
               height={60}
               priority
@@ -41,16 +41,16 @@ export default function Header() {
               Home
             </Link>
             <Link href="/speakers" className="text-gray-700 hover:text-[#1E68C6] font-medium">
-              All Speakers
+              Speakers
             </Link>
             <Link href="/our-services" className="text-gray-700 hover:text-[#1E68C6] font-medium">
-              Our Services
+              Services
             </Link>
             <Link href="/our-team" className="text-gray-700 hover:text-[#1E68C6] font-medium">
-              Our Team
+              About Us
             </Link>
             <Link href="/blog" className="text-gray-700 hover:text-[#1E68C6] font-medium">
-              Blog
+              Resources
             </Link>
           </nav>
 
@@ -88,28 +88,28 @@ export default function Header() {
                 className="text-gray-700 hover:text-[#1E68C6] font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                All Speakers
+                Speakers
               </Link>
               <Link
                 href="/our-services"
                 className="text-gray-700 hover:text-[#1E68C6] font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Our Services
+                Services
               </Link>
               <Link
                 href="/our-team"
                 className="text-gray-700 hover:text-[#1E68C6] font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Our Team
+                About Us
               </Link>
               <Link
                 href="/blog"
                 className="text-gray-700 hover:text-[#1E68C6] font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Blog
+                Resources
               </Link>
               <div className="pt-4 border-t border-gray-100 space-y-3">
                 <Button

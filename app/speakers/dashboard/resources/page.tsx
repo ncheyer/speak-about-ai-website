@@ -29,7 +29,8 @@ import {
   Megaphone,
   Lightbulb,
   Target,
-  Zap
+  Zap,
+  Calendar
 } from "lucide-react"
 import Link from "next/link"
 
@@ -478,6 +479,49 @@ export default function SpeakerResources() {
             </Card>
           )}
         </div>
+
+        {/* Conference Directory CTA */}
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-600 via-purple-700 to-blue-800 overflow-hidden relative">
+          <div className="absolute top-0 right-0 opacity-10">
+            <Calendar className="h-64 w-64" />
+          </div>
+          <CardContent className="p-8 relative z-10">
+            <div className="max-w-3xl">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
+                  <Calendar className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-white">
+                  Resources for Event Professionals
+                </h3>
+              </div>
+              <p className="text-white/90 text-lg mb-6 leading-relaxed">
+                Planning an event and looking for AI speakers? Browse our comprehensive event industry conference directory to discover speaking opportunities, track call for proposals (CFPs), and connect with conference organizers worldwide.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link href="/conference-directory">
+                  <Button
+                    size="lg"
+                    className="bg-white text-purple-700 hover:bg-gray-100 font-semibold shadow-lg"
+                  >
+                    Browse Conference Directory
+                    <ChevronRight className="h-5 w-5 ml-2" />
+                  </Button>
+                </Link>
+                <Link href="/conference-directory/conferences">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="border-2 border-white text-white hover:bg-white/10 font-semibold"
+                  >
+                    View All Conferences
+                    <ExternalLink className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Help Section */}
         <Card className="border-0 shadow-md bg-gradient-to-r from-blue-50 to-indigo-50">

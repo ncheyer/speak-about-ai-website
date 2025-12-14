@@ -384,8 +384,16 @@ export async function generateMetadata({ params }: BlogPostPageProps, parent: Re
     description = description.substring(0, 157) + "..."
   }
 
+  // Ensure title doesn't exceed 60 characters (SEO best practice)
+  const suffix = " | Speak About AI Blog"
+  const maxTitleLength = 60 - suffix.length // 36 characters for post title
+  let pageTitle = post.title
+  if ((post.title + suffix).length > 60) {
+    pageTitle = post.title.substring(0, maxTitleLength - 3) + "..."
+  }
+
   return {
-    title: `${post.title} | Speak About AI Blog`,
+    title: `${pageTitle}${suffix}`,
     description: description,
     keywords: post.categories?.map((cat) => cat.name).join(", "),
     alternates: {

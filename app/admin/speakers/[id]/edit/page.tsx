@@ -32,6 +32,13 @@ import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { authGet, authPut } from "@/lib/auth-fetch"
 
+interface Program {
+  title: string
+  format?: string
+  duration?: string
+  description?: string
+}
+
 interface Video {
   id: string
   title: string
@@ -97,7 +104,7 @@ interface Speaker {
   instagram_url?: string
   youtube_url?: string
   location: string
-  programs: string[]
+  programs: (string | Program)[]
   topics: string[]
   industries: string[]
   videos: Video[]
@@ -854,7 +861,7 @@ export default function AdminSpeakerEditPage() {
                     <div className="flex flex-wrap gap-2">
                       {formData.programs.map((program, index) => (
                         <Badge key={index} variant="outline" className="flex items-center gap-2">
-                          {program}
+                          {typeof program === 'string' ? program : program.title}
                           <button
                             onClick={() => removeProgram(index)}
                             className="ml-1 hover:text-red-600"

@@ -9,24 +9,24 @@ export default function Hero() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           {/* Left Column - Content */}
-          <div>
+          <div className="animate-fade-in">
             {/* Badge */}
             <div className="inline-flex items-center px-4 py-2 bg-[#1E68C6] bg-opacity-10 text-[#1E68C6] rounded-full text-sm font-medium mb-6 font-montserrat">
               <Award className="w-4 h-4 mr-2" />
               #1 AI-Exclusive Speaker Bureau
             </div>
 
-            {/* Main Headline - Optimized for SEO */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-6 leading-tight font-neue-haas">
-              AI Keynote Speakers for Your Event
+            {/* Main Headline - Optimized for SEO with bolder hierarchy and modern gradient */}
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-black mb-4 leading-[1.1] font-neue-haas tracking-tight">
+              Book an <span className="bg-gradient-to-r from-[#1E68C6] via-blue-600 to-[#1E68C6] bg-clip-text text-transparent">AI Speaker</span> for Your Event
             </h1>
 
-            <p className="text-xl text-black mb-8 font-montserrat font-semibold">
-              <span className="text-[#1E68C6]">Book from 70+ artificial intelligence experts</span> including Siri Co-Founders, OpenAI Technical Staff, Stanford AI Researchers, and Fortune 500 AI Leaders
+            <p className="text-xl md:text-2xl text-gray-800 mb-6 font-montserrat font-semibold leading-tight">
+              The #1 AI speaker bureau with exclusive access to 70+ AI pioneers including Siri Co-Founders, OpenAI Staff, and Stanford Researchers
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row gap-6 mb-8">
               {/* "Book Speaker Today" button using the Button component with 'gold' variant */}
               <Button
                 asChild // Use asChild to render the Link component as the button's child

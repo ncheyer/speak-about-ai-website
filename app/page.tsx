@@ -1,17 +1,21 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import Hero from "@/components/hero"
 import ClientLogos from "@/components/client-logos"
 import FeaturedSpeakers from "@/components/featured-speakers"
 import WhyChooseUs from "@/components/why-choose-us"
+import NavigateTheNoise from "@/components/navigate-the-noise"
+import FounderNextGen from "@/components/founder-next-gen"
 import BookingCTA from "@/components/booking-cta"
+import { Button } from "@/components/ui/button"
 import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
 
 export const metadata: Metadata = {
-  title: "AI Keynote Speakers - Book Top AI Experts for Your Event | Speak About AI",
+  title: "AI Speaker Bureau - Book Top AI Keynote Speakers | Speak About AI",
   description:
-    "Book AI keynote speakers from the #1 AI-exclusive speaker bureau. 70+ artificial intelligence experts including Siri founders, OpenAI staff & Stanford researchers. Get pricing & availability.",
+    "Book an AI speaker from the #1 AI-exclusive speaker bureau. 70+ experts including Siri founders, OpenAI staff & Stanford researchers for your event.",
   keywords:
-    "AI keynote speakers, AI keynote speaker, artificial intelligence speakers, AI speakers, AI speaker bureau, book AI speaker, AI conference speakers, machine learning speakers, AI expert speakers, generative AI speakers, ChatGPT speakers, AI motivational speakers",
+    "AI speaker, AI speaker bureau, book AI speaker, AI keynote speakers, AI keynote speaker, artificial intelligence speakers, AI speakers, AI conference speakers, machine learning speakers, AI expert speakers, generative AI speakers, ChatGPT speakers, AI motivational speakers",
   openGraph: {
     title: "AI Keynote Speakers | Book Top AI Speakers for 2025",
     description:
@@ -88,7 +92,7 @@ const faqSchema = {
       name: "How much does it cost to book an AI keynote speaker?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "AI keynote speaker fees typically range from $10,000 to $100,000+ depending on the speaker's expertise, event type, and location. Contact us for specific pricing."
+        text: "AI keynote speaker fees typically range from $5K-$20K for emerging experts to $20K+ for industry leaders. Final pricing depends on format, location, date, and speaker requirements."
       }
     },
     {
@@ -181,7 +185,8 @@ export default async function HomePage() {
         <ClientLogos />
         <FeaturedSpeakers initialSpeakers={featuredSpeakers} />
         <WhyChooseUs />
-        
+        <NavigateTheNoise />
+
         {/* SEO Content Section - Essential for Rankings */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -200,7 +205,7 @@ export default async function HomePage() {
                 Why Choose Our AI Speakers Bureau?
               </h3>
               <p className="text-lg text-gray-700 mb-4">
-                As the only speaker bureau focused exclusively on artificial intelligence, we provide
+                As a speaker bureau focused exclusively on artificial intelligence, we provide
                 unparalleled expertise in matching your event with the perfect <strong>AI keynote speaker</strong>. Whether
                 you need a generative AI expert, machine learning pioneer, or AI ethics thought leader,
                 our curated selection of <a href="/speakers" className="text-[#1E68C6] hover:underline font-semibold">AI speakers</a> delivers transformative insights that resonate with
@@ -246,9 +251,22 @@ export default async function HomePage() {
                 to every engagement. Each speaker is carefully vetted for their expertise, presentation
                 skills, and ability to translate complex AI concepts into actionable business strategies.
               </p>
-              
+
+              <div className="flex justify-center my-8">
+                <Button
+                  asChild
+                  variant="gold"
+                  size="lg"
+                  className="font-montserrat font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300"
+                >
+                  <Link href="/contact?source=book_ai_speaker_seo_section">
+                    Book an AI Speaker Today
+                  </Link>
+                </Button>
+              </div>
+
               <p className="text-lg text-gray-700 mb-4">
-                Our clients include Microsoft, Google, Amazon, Fortune 500 companies, leading universities,
+                Our clients include provincial governments, international conferences, Fortune 500 companies, leading universities,
                 and innovative startups. When you book an AI keynote speaker through Speak About AI,
                 you're partnering with the trusted leader in AI thought leadership.
               </p>
@@ -294,15 +312,15 @@ export default async function HomePage() {
                 <h3 className="text-xl font-semibold text-black mb-3">
                   What's the typical fee for an AI speaker?
                 </h3>
-                <p className="text-gray-700">
-                  Speaker fees vary based on expertise, event type, and location. Contact us for a
-                  customized quote based on your specific requirements and budget.
+                <p className="text-gray-700 mb-3">
+                  AI speaker fees typically range from <strong>$5K-$20K</strong> for emerging experts to <strong>$20K+</strong> for industry leaders. Final pricing depends on format, location, date, and speaker requirements. Contact us for a precise quote tailored to your event.
                 </p>
               </div>
             </div>
           </div>
         </section>
-        
+
+        <FounderNextGen />
         <BookingCTA />
       </main>
     </>

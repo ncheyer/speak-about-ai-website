@@ -1,31 +1,40 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { ArrowRight } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export default function ClientLogos() {
   const clients = [
     {
       name: "Stanford University",
       src: "/logos/stanford-university-logo-1024x335-1.png",
-      alt: "Stanford University logo",
+      alt: "Stanford University - Academic institution partnering with AI speaker bureau for tech conferences",
       size: "small",
     },
     {
       name: "Google",
       src: "/logos/Google_2015_logo.svg.png",
-      alt: "Google logo",
+      alt: "Google - Technology leader using AI keynote speakers for corporate events",
       size: "small",
     },
     {
       name: "Amazon",
       src: "/logos/Amazon-Logo-2000.png",
-      alt: "Amazon logo",
+      alt: "Amazon - E-commerce and cloud computing company booking AI expert speakers",
       size: "default",
     },
     {
       name: "Visa",
       src: "/logos/Visa_Inc._logo.svg",
-      alt: "Visa Inc. logo",
+      alt: "Visa - Global payments company using AI speakers for fintech conferences",
       size: "small",
     },
     {
@@ -61,7 +70,7 @@ export default function ClientLogos() {
     {
       name: "KPMG",
       src: "/logos/KPMG_logo.svg.png",
-      alt: "KPMG logo",
+      alt: "KPMG - Professional services firm booking AI speakers for business conferences",
       size: "default",
     },
   ]
@@ -79,49 +88,66 @@ export default function ClientLogos() {
           </p>
         </div>
       </div>
-      <div className="relative w-full overflow-hidden py-1">
-        {/* Added gap-x-16 for spacing between logos */}
-        <div className="flex animate-marquee gap-x-16">
-          {allClients.map((client, index) => (
-            // Removed px-8 from here
-            <div key={index} className="flex-shrink-0 flex items-center justify-center py-2">
-              <Image
-                src={client.src || "/placeholder.svg"}
-                alt={client.alt}
-                // Increased width and height for larger logos
-                width={
-                  client.size === "super-large"
-                    ? 800 // Increased from 600
-                    : client.size === "extra-large"
-                      ? 500 // Increased from 400
-                      : client.size === "small"
-                        ? 250 // Increased from 200
-                        : 400 // Increased from 320
-                }
-                height={
-                  client.size === "super-large"
-                    ? 400 // Increased from 300
-                    : client.size === "extra-large"
-                      ? 250 // Increased from 200
-                      : client.size === "small"
-                        ? 120 // Increased from 100
-                        : 200 // Increased from 160
-                }
-                className={`w-auto object-contain opacity-80 hover:opacity-100 transition-opacity duration-300 ${
-                  // Increased h-* classes for larger logos
-                  client.size === "super-large"
-                    ? "h-64" // Increased from h-48
-                    : client.size === "extra-large"
-                      ? "h-40" // Increased from h-32
-                      : client.size === "small"
-                        ? "h-24" // Increased from h-16
-                        : "h-32" // Increased from h-24
-                }`}
-                loading="lazy"
-              />
-            </div>
-          ))}
+      <TooltipProvider>
+        <div className="relative w-full overflow-hidden py-1">
+          {/* Added gap-x-16 for spacing between logos - faster animation */}
+          <div className="flex animate-marquee-fast gap-x-16">
+            {allClients.map((client, index) => (
+              // Removed px-8 from here
+              <Tooltip key={index}>
+                <TooltipTrigger asChild>
+                  <div className="flex-shrink-0 flex items-center justify-center py-2 cursor-pointer">
+                    <Image
+                      src={client.src || "/placeholder.svg"}
+                      alt={client.alt}
+                      width={
+                        client.size === "super-large"
+                          ? 800
+                          : client.size === "extra-large"
+                            ? 500
+                            : client.size === "small"
+                              ? 250
+                              : 400
+                      }
+                      height={
+                        client.size === "super-large"
+                          ? 400
+                          : client.size === "extra-large"
+                            ? 250
+                            : client.size === "small"
+                              ? 120
+                              : 200
+                      }
+                      className={`w-auto object-contain opacity-80 hover:opacity-100 transition-opacity duration-300 ${
+                        client.size === "super-large"
+                          ? "h-64"
+                          : client.size === "extra-large"
+                            ? "h-40"
+                            : client.size === "small"
+                              ? "h-24"
+                              : "h-32"
+                      }`}
+                      loading="lazy"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-semibold">{client.name}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
         </div>
+      </TooltipProvider>
+
+      {/* View Past Clients & Events Link */}
+      <div className="text-center mt-8 pb-4">
+        <Button asChild variant="gold" size="lg" className="font-montserrat font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Link href="/case-studies" className="flex items-center">
+            View Past Clients & Events
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Link>
+        </Button>
       </div>
     </section>
   )

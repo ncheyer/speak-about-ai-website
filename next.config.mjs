@@ -69,6 +69,21 @@ const nextConfig = {
       },
     ]
   },
+  // SEO redirects for workshops
+  async redirects() {
+    return [
+      {
+        source: '/workshops',
+        destination: '/ai-workshops',
+        permanent: true,
+      },
+      {
+        source: '/workshops/:slug',
+        destination: '/ai-workshops/:slug',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default nextConfig

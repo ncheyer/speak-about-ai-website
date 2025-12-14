@@ -25,8 +25,8 @@ export default function TeamMembers() {
       name: "Noah Cheyer",
       title: "Head of Marketing & Operations",
       image: "/team/noah-cheyer-headshot.png",
-      bio: "Noah Cheyer is a co-founder and leads marketing and operations at Speak About AI. Since it's founding, Noah has had the chance to work with clients ranging from Fortune 100 to 150,000 person international conferences and government provinces. Previously, he's worked in a wide range of industries including e-commerce, sports, and technology and graduated from Chapman University with a BA in Communication and Entrepreneurship. Having grown up alongside AI as the son of Siri Co-Founder Adam Cheyer, he's had a front-row seat to watching the current climate develop.",
-      linkedin: "https://linkedin.com/in/noahcheyer",
+      bio: "Noah Cheyer is a co-founder and leads marketing and operations at Speak About AI. Since it's founding, Noah has had the chance to work with clients ranging from Fortune 100 to 150,000 person international conferences and provincial governments. Previously, he's worked in a wide range of industries including e-commerce, sports, and technology and graduated from Chapman University with a BA in Communication and Entrepreneurship. Having grown up alongside AI as the son of Siri Co-Founder Adam Cheyer, he's had a front-row seat to watching the current climate develop.",
+      linkedin: "https://linkedin.com/in/noah-cheyer",
     },
   ]
 
@@ -46,7 +46,7 @@ export default function TeamMembers() {
                   priority
                 />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-1 font-neue-haas text-center">{member.name}</h3>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1 font-neue-haas text-center">{member.name}</h2>
               <p className="text-[#1E68C6] font-semibold mb-4 font-montserrat text-center">{member.title}</p>
               <p className="text-gray-600 text-center mb-4 font-montserrat leading-relaxed">{member.bio}</p>
 

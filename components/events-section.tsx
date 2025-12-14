@@ -68,7 +68,7 @@ export default function EventsSection() {
                 <div className="mb-6">
                   <Image
                     src="/events/robert-strong-on-stage-at-microsoft.jpg"
-                    alt="Robert Strong presenting on stage at Microsoft HQ event"
+                    alt="AI speaker Robert Strong delivering keynote presentation at Microsoft HQ - Speak About AI bureau event"
                     width={400}
                     height={300}
                     className="w-full h-48 object-cover rounded-lg"

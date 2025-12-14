@@ -25,14 +25,19 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
   // Generate comprehensive structured data for Google
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "Person",
+    "@type": ["Person", "PublicFigure"],
     "name": speaker.name,
+    "alternateName": speaker.title || "AI Keynote Speaker",
     "jobTitle": speaker.title || "AI Keynote Speaker",
     "description": speaker.bio || speaker.title || "",
-    "image": speaker.image?.startsWith('http') 
-      ? speaker.image 
+    "image": speaker.image?.startsWith('http')
+      ? speaker.image
       : `https://speakabout.ai${speaker.image || '/placeholder.jpg'}`,
     "url": `https://speakabout.ai/speakers/${slug}`,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://speakabout.ai/speakers/${slug}`
+    },
     "sameAs": [
       speaker.linkedin && `https://linkedin.com/in/${speaker.linkedin}`,
       speaker.twitter && `https://twitter.com/${speaker.twitter}`,
@@ -43,7 +48,20 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
       "name": "Speak About AI Speaker Bureau",
       "url": "https://speakabout.ai"
     },
-    "knowsAbout": [...(speaker.topics || []), ...(speaker.expertise || []), "Artificial Intelligence", "Machine Learning", "AI Strategy"].filter(Boolean),
+    "hasOccupation": {
+      "@type": "Occupation",
+      "name": "AI Keynote Speaker",
+      "occupationLocation": {
+        "@type": "Place",
+        "address": {
+          "@type": "PostalAddress",
+          "addressRegion": "Global"
+        }
+      },
+      "skills": [...(speaker.topics || []), ...(speaker.expertise || [])].filter(Boolean).slice(0, 10)
+    },
+    "knowsAbout": [...(speaker.topics || []), ...(speaker.expertise || []), "Artificial Intelligence", "Machine Learning", "AI Strategy", "Keynote Speaking"].filter(Boolean),
+    "knowsLanguage": ["en"],
     "alumniOf": speaker.education || undefined,
     "award": speaker.awards || undefined,
     "memberOf": {
@@ -54,7 +72,19 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
     "performerIn": {
       "@type": "Event",
       "name": "AI Keynote Speaking Engagements",
-      "description": `Book ${speaker.name} for keynote speeches on AI and technology`
+      "description": `Book ${speaker.name} for keynote speeches on AI and technology`,
+      "eventAttendanceMode": "https://schema.org/MixedEventAttendanceMode",
+      "eventStatus": "https://schema.org/EventScheduled"
+    },
+    "offers": {
+      "@type": "Offer",
+      "description": `Book ${speaker.name} for keynote speaking engagements on AI and technology topics`,
+      "availability": "https://schema.org/InStock",
+      "seller": {
+        "@type": "Organization",
+        "name": "Speak About AI",
+        "url": "https://speakabout.ai"
+      }
     }
   }
   

@@ -161,7 +161,7 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
             </Badge>
           )}
           {safeIndustries.length > 0 && safeIndustries[0] && (
-            <Badge className="absolute top-3 left-3 bg-[#1E68C6] text-white font-montserrat text-xs px-2.5 py-1.5 rounded-md shadow-md max-w-[40%] break-words whitespace-normal">
+            <Badge className="absolute top-3 left-3 bg-[#1E68C6] text-white font-montserrat text-xs px-3 py-1.5 rounded-md shadow-md whitespace-nowrap z-10">
               {safeIndustries[0]}
             </Badge>
           )}
@@ -172,9 +172,9 @@ export function SpeakerCard({ speaker, contactSource, maxTopicsToShow = 2 }: Uni
         <div className="absolute inset-0 bg-gradient-to-br from-sky-50 via-blue-50 to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-300 rounded-b-xl -z-1"></div>
         <div className="relative z-0">
           <Link href={profileLink} className="block">
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 font-neue-haas leading-tight mb-1 group-hover:text-[#1E68C6] transition-colors duration-300">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 font-neue-haas leading-tight mb-1 group-hover:text-[#1E68C6] transition-colors duration-300">
               {name}
-            </h3>
+            </h2>
             <p className="text-xs sm:text-sm text-gray-600 font-medium font-montserrat leading-snug">{title}</p>
           </Link>
           <div className="mb-4"></div>

@@ -36,13 +36,23 @@ export default function BookingCTA() {
           </Button>
         </div>
         <p className="mt-8 text-sm text-blue-200 font-montserrat">
-          Or call us directly:{" "}
+          Text or call us at{" "}
           <a
-            href="tel:+1-510-435-3947"
-            className="font-semibold hover:underline flex items-center justify-center sm:inline-flex"
+            href="https://wa.me/15104353947"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold hover:underline"
           >
-            <Phone className="w-4 h-4 mr-1" /> (510) 435-3947
-          </a>
+            +1 (510) 435-3947 on WhatsApp
+          </a>{" "}
+          or reach out to{" "}
+          <a
+            href="mailto:human@speakabout.ai"
+            className="font-semibold hover:underline"
+          >
+            human@speakabout.ai
+          </a>{" "}
+          by email
         </p>
       </div>
     </section>

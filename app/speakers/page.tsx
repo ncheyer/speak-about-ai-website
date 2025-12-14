@@ -17,23 +17,23 @@ export async function generateMetadata(): Promise<Metadata> {
     .map(s => s.name)
     .filter(Boolean)
     .join(", ")
-  
+
   const description = speakerNames
-    ? `Browse 50+ AI keynote speakers including ${speakerNames}. Book artificial intelligence experts and technology leaders for your event.`
-    : "Browse our directory of 50+ top AI keynote speakers. Find artificial intelligence experts and technology leaders for your event."
+    ? `Browse 70+ AI speakers including ${speakerNames}. Our expert AI speakers directory helps you find the perfect artificial intelligence keynote speaker for your event.`
+    : "Browse our directory of 70+ expert AI speakers. Find top artificial intelligence keynote speakers and technology experts for your event."
 
   // Use the first featured speaker's image if available
-  const ogImage = featuredSpeakers[0]?.image 
-    ? (featuredSpeakers[0].image.startsWith('http') 
-        ? featuredSpeakers[0].image 
+  const ogImage = featuredSpeakers[0]?.image
+    ? (featuredSpeakers[0].image.startsWith('http')
+        ? featuredSpeakers[0].image
         : `https://speakabout.ai${featuredSpeakers[0].image}`)
     : "/hero-image.jpg"
 
   return {
-    title: "AI Keynote Speakers Directory | 50+ Expert Speakers | Speak About AI",
+    title: "AI Speakers Directory - 70+ Expert AI Keynote Speakers",
     description,
     keywords:
-      "AI speakers directory, keynote speakers, artificial intelligence experts, machine learning speakers, technology speakers, AI conference speakers, book AI speaker",
+      "AI speakers, AI speakers directory, AI keynote speakers, artificial intelligence speakers, machine learning speakers, technology speakers, AI conference speakers, expert AI speakers",
     openGraph: {
       title: "AI Keynote Speakers Directory | Speak About AI",
       description,
@@ -87,8 +87,8 @@ export default async function SpeakersPage() {
         "name": speaker.name,
         "jobTitle": speaker.title || "AI Keynote Speaker",
         "url": `https://speakabout.ai/speakers/${speaker.slug}`,
-        "image": speaker.image?.startsWith('http') 
-          ? speaker.image 
+        "image": speaker.image?.startsWith('http')
+          ? speaker.image
           : `https://speakabout.ai${speaker.image || '/placeholder.jpg'}`,
         "description": speaker.short_bio || speaker.bio || "",
       }
@@ -101,9 +101,7 @@ export default async function SpeakersPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <div className="min-h-screen bg-white">
-        <SpeakerDirectory initialSpeakers={allSpeakers} />
-      </div>
+      <SpeakerDirectory initialSpeakers={allSpeakers} />
     </>
   )
 }
