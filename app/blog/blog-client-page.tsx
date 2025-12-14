@@ -97,19 +97,30 @@ export default function BlogClientPage({ initialContent }: BlogClientPageProps) 
   return (
     <div className="min-h-screen bg-slate-50/50">
       {/* Hero Header */}
-      <header className="bg-[#1E68C6] py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-8 font-neue-haas">
+      <header className="relative bg-gradient-to-b from-gray-50 to-white py-20 overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#1E68C6]/5 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#1E68C6]/5 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-block mb-6">
+            <span className="px-4 py-2 bg-[#1E68C6]/10 rounded-full text-[#1E68C6] text-sm font-montserrat font-medium">
+              Resources
+            </span>
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-8 font-neue-haas">
             AI Insights & Tools
           </h1>
-          <p className="text-xl text-white text-opacity-90 max-w-4xl mx-auto leading-relaxed font-montserrat">
+          <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed font-montserrat">
             Discover expert articles, cutting-edge tools, and premium resources for AI-powered events and speaker management
           </p>
-          
-          
+
+
           {/* Enhanced Search */}
           <div className="max-w-2xl mx-auto relative mt-8">
-            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-500" />
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-[#1E68C6]" />
             <Input
               type="search"
               placeholder="Search articles, tools, and resources..."
@@ -118,7 +129,7 @@ export default function BlogClientPage({ initialContent }: BlogClientPageProps) 
                 setSearchTerm(e.target.value)
                 setCurrentPage(1)
               }}
-              className="pl-12 pr-4 py-4 text-lg bg-white border-gray-300 text-black placeholder:text-gray-500 rounded-xl shadow-sm focus:shadow-md focus:border-white transition-all font-montserrat"
+              className="pl-12 pr-4 py-4 text-lg bg-white border-2 border-[#1E68C6]/30 text-black placeholder:text-gray-500 rounded-xl shadow-lg hover:shadow-xl focus:shadow-xl focus:border-[#1E68C6] transition-all font-montserrat"
               aria-label="Search content"
             />
           </div>

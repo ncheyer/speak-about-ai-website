@@ -1,29 +1,31 @@
 export default function TeamHero() {
   return (
-    <section className="relative bg-gradient-to-br from-[#1E68C6] via-[#1a5aa8] to-[#0f3d6e] py-24 overflow-hidden">
+    <section className="relative bg-gradient-to-b from-gray-50 to-white py-24 overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-amber-500/10 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#1E68C6]/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#1E68C6]/5 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="inline-block mb-6">
-          <span className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm font-montserrat font-medium border border-white/20">
-            Your AI Speaker Experts
-          </span>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <div className="inline-block mb-6">
+            <span className="px-4 py-2 bg-[#1E68C6]/10 rounded-full text-[#1E68C6] text-sm font-montserrat font-medium">
+              Our Story
+            </span>
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 font-neue-haas">How It All Started</h1>
         </div>
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 font-neue-haas">Meet Our Team</h1>
-        <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8 font-montserrat">
-          The experts behind the world's leading AI-exclusive speaker bureau
-        </p>
-        <div className="max-w-3xl mx-auto">
-          <p className="text-lg text-white/80 font-montserrat leading-relaxed">
-            At Speak About AI, we combine decades of entertainment industry experience with deep AI expertise to connect
-            you with the world's leading artificial intelligence speakers. Our unique background in both speaker
-            management and technology gives us unparalleled insight into what makes a truly exceptional keynote
-            experience.
+
+        <div className="max-w-4xl mx-auto space-y-6">
+          <p className="text-lg text-gray-600 font-montserrat leading-relaxed">
+            Robert Strong has been booking himself and other talent for 30+ years, and has called Silicon Valley home for 20 of them. Over the decades, he built deep relationships with pioneers in the AI space—people like Daniel Kraft—and ended up living down the street from Peter Norvig in Palo Alto, where they'd walk their Taiwanese street dogs together.
+          </p>
+          <p className="text-lg text-gray-600 font-montserrat leading-relaxed">
+            After ChatGPT launched and his friends in the AI space started getting flooded with speaking requests, Robert decided to turn it into an agency. He knew he needed the right partner, so he reached out to Noah Cheyer to help with marketing and operations. Noah had grown up immersed in the AI world—his father, Adam Cheyer, is a co-founder of Siri and a sought-after keynote speaker himself. The connection was instant, and the rest was history.
+          </p>
+          <p className="text-lg text-gray-600 font-montserrat leading-relaxed">
+            Noah joined full-time as a co-founder, and after two years of building together, Speak About AI has booked speakers everywhere from Silicon Valley to Singapore—helping organizations around the world bring the brightest minds and best speakers in artificial intelligence to their stages.
           </p>
         </div>
       </div>

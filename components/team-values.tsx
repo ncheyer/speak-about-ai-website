@@ -64,7 +64,7 @@ export default function TeamValues() {
 
               <div className="relative">
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#1E68C6] to-blue-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <div className="w-12 h-12 bg-[#1E68C6] rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
                     <value.icon className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 font-neue-haas pt-2 group-hover:text-[#1E68C6] transition-colors duration-300">

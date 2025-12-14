@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import TeamHero from "@/components/team-hero"
 import TeamMembers from "@/components/team-members"
-import TeamValues from "@/components/team-values"
 import JoinTeam from "@/components/join-team"
 
 export const metadata: Metadata = {
@@ -20,7 +19,6 @@ export default function OurTeamPage() {
     <div className="min-h-screen bg-white">
       <TeamHero />
       <TeamMembers />
-      <TeamValues />
       <JoinTeam />
     </div>
   )

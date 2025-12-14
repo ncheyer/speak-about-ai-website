@@ -280,17 +280,17 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
             <div className="bg-white rounded-lg shadow-lg p-6">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1E68C6] w-5 h-5" />
                   <Input
                     type="text"
                     placeholder="Search speakers by name, expertise, or industry..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 font-montserrat"
+                    className="pl-10 font-montserrat border-2 border-[#1E68C6]/30 shadow-lg hover:shadow-xl focus:shadow-xl focus:border-[#1E68C6] transition-all"
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <Filter className="text-gray-400 w-5 h-5" />
+                  <Filter className="text-[#1E68C6] w-5 h-5" />
                   <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
                     <SelectTrigger className="w-full md:w-48 font-montserrat">
                       <SelectValue placeholder="Filter by industry" />
