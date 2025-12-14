@@ -407,7 +407,7 @@ export default function WorkshopDirectory() {
                         </div>
                       )}
 
-                      <div className="mt-auto pt-3 space-y-2">
+                      <div className="mt-auto pt-3 space-y-3">
                         <Link href={`/contact?workshop=${workshop.id}`}>
                           <Button className="w-full font-montserrat font-bold text-sm" variant="gold">
                             Inquire About Workshop
