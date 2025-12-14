@@ -237,10 +237,14 @@ export default function AdminWorkshopsPage() {
     }
   }
 
+  const [editLoading, setEditLoading] = useState(false)
+
   const handleEdit = async (workshop: Workshop) => {
+    setEditLoading(true)
     try {
       // Fetch full workshop data including all fields
       const token = localStorage.getItem("adminSessionToken")
+      console.log("Fetching workshop:", workshop.id)
       const response = await fetch(`/api/workshops/${workshop.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -248,11 +252,16 @@ export default function AdminWorkshopsPage() {
         }
       })
 
+      console.log("Response status:", response.status)
+
       if (!response.ok) {
-        throw new Error("Failed to load workshop details")
+        const errorData = await response.json().catch(() => ({}))
+        console.error("Error response:", errorData)
+        throw new Error(errorData.details || errorData.error || "Failed to load workshop details")
       }
 
       const fullWorkshop = await response.json()
+      console.log("Loaded workshop:", fullWorkshop)
 
       setEditingWorkshop(fullWorkshop)
       setFormData({
@@ -305,9 +314,11 @@ export default function AdminWorkshopsPage() {
       console.error("Error loading workshop for edit:", error)
       toast({
         title: "Error",
-        description: "Failed to load workshop details",
+        description: error instanceof Error ? error.message : "Failed to load workshop details",
         variant: "destructive"
       })
+    } finally {
+      setEditLoading(false)
     }
   }
 
@@ -725,10 +736,10 @@ export default function AdminWorkshopsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleEdit(workshop)}>
-                              <Edit className="h-4 w-4" />
+                            <Button size="sm" variant="outline" onClick={() => handleEdit(workshop)} disabled={editLoading}>
+                              {editLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Edit className="h-4 w-4" />}
                             </Button>
-                            <Link href={`/workshops/${workshop.slug}`} target="_blank">
+                            <Link href={`/ai-workshops/${workshop.slug}`} target="_blank">
                               <Button size="sm" variant="outline">
                                 <Eye className="h-4 w-4" />
                               </Button>
