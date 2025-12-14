@@ -48,7 +48,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ className }: AdminSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
-  const [expandedSections, setExpandedSections] = useState<string[]>(['sales', 'operations', 'website', 'marketing'])
+  const [expandedSections, setExpandedSections] = useState<string[]>(['sales', 'operations', 'website', 'marketing', 'tools'])
   const pathname = usePathname()
   const router = useRouter()
 
@@ -157,14 +157,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Client Access",
           color: "text-cyan-600",
           bgColor: "bg-cyan-50"
-        },
-        {
-          title: "Workshops",
-          href: "/admin/workshops",
-          icon: Presentation,
-          description: "Workshop Management",
-          color: "text-amber-600",
-          bgColor: "bg-amber-50"
         }
       ]
     },
@@ -200,12 +192,12 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           bgColor: "bg-purple-50"
         },
         {
-          title: "Speaker Chat",
-          href: "/admin/tools/speaker-chat",
-          icon: Bot,
-          description: "AI Speaker Assistant",
-          color: "text-emerald-600",
-          bgColor: "bg-emerald-50"
+          title: "Workshops",
+          href: "/admin/workshops",
+          icon: Presentation,
+          description: "Workshop Management",
+          color: "text-amber-600",
+          bgColor: "bg-amber-50"
         }
       ]
     },
@@ -241,14 +233,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           bgColor: "bg-purple-50"
         },
         {
-          title: "Content Studio",
-          href: "/admin/tools/content-studio",
-          icon: PenTool,
-          description: "AI Blog Writer",
-          color: "text-violet-600",
-          bgColor: "bg-violet-50"
-        },
-        {
           title: "Vendor Directory",
           href: "/admin/directory",
           icon: Building2,
@@ -271,6 +255,31 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Event Pro Community",
           color: "text-green-600",
           bgColor: "bg-green-50"
+        }
+      ]
+    },
+    {
+      title: "Tools",
+      icon: Sparkles,
+      sectionKey: "tools",
+      color: "text-violet-600",
+      bgColor: "bg-violet-50",
+      items: [
+        {
+          title: "Content Studio",
+          href: "/admin/tools/content-studio",
+          icon: PenTool,
+          description: "AI Blog Writer",
+          color: "text-violet-600",
+          bgColor: "bg-violet-50"
+        },
+        {
+          title: "Speaker Chat",
+          href: "/admin/tools/speaker-chat",
+          icon: Bot,
+          description: "AI Speaker Assistant",
+          color: "text-emerald-600",
+          bgColor: "bg-emerald-50"
         }
       ]
     },
