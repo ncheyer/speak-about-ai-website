@@ -545,7 +545,7 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               {/* Testimonials Column */}
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center lg:text-left">
                   What Participants Say
                 </h2>
                 <div className="space-y-4">
@@ -589,12 +589,12 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
 
               {/* Client Logos Column */}
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center lg:text-left">
                   Trusted By
                 </h2>
                 <div className="grid grid-cols-2 gap-6">
                   {workshop.client_logos.map((logoUrl, index) => (
-                    <div key={index} className="flex items-center justify-center p-6 bg-white rounded-lg shadow-sm grayscale hover:grayscale-0 transition-all">
+                    <div key={index} className="flex items-center justify-center p-6 bg-white rounded-lg shadow-sm">
                       <div className="relative w-full h-16">
                         <Image
                           src={logoUrl}
@@ -681,9 +681,9 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
                   {workshop.client_logos.map((logoUrl, index) => (
-                    <div key={index} className="flex items-center justify-center p-6 grayscale hover:grayscale-0 transition-all">
+                    <div key={index} className="flex items-center justify-center p-6">
                       <div className="relative w-full h-20">
                         <Image
                           src={logoUrl}
