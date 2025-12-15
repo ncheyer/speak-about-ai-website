@@ -111,7 +111,9 @@ export default function AdminWorkshopsPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setWorkshops(data)
+        // Handle both response formats: { workshops: [...] } or direct array
+        const workshopsData = Array.isArray(data) ? data : (data.workshops || [])
+        setWorkshops(workshopsData)
       }
     } catch (error) {
       console.error("Error loading workshops:", error)
