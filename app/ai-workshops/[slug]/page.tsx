@@ -681,13 +681,13 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
+                <div className="flex flex-wrap justify-center gap-8 items-center">
                   {workshop.client_logos.map((logoUrl, index) => (
-                    <div key={index} className="flex items-center justify-center p-6 w-full">
+                    <div key={index} className="flex items-center justify-center p-6">
                       <img
                         src={logoUrl}
                         alt={`Client logo ${index + 1}`}
-                        className="max-h-20 max-w-full object-contain"
+                        className="max-h-20 w-auto object-contain"
                       />
                     </div>
                   ))}
