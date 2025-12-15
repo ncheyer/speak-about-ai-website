@@ -256,33 +256,27 @@ SPEAK ABOUT AI:
 - Contact: https://speakabout.ai/contact
 
 YOUR TASK:
-1. **Keep original content intact** - Only add links and mentions where natural
-2. **${userSelectedSpeakers ? 'REQUIRED: Include ALL user-selected speakers' : 'Speaker mentions'}**:
-   ${userSelectedSpeakers
-     ? `- The user has specifically chosen ${speakersContext.length} speaker(s) - YOU MUST mention each one
-   - Find natural places to mention their expertise and link to their profiles
-   - Create a brief mention or quote using their bio information`
-     : `- Only mention speakers whose expertise DIRECTLY matches the article
-   - Use 0-2 speaker mentions maximum`}
-   - NEVER make up names or invent quotes
-   - Only use information from their actual bio
-3. **${userSelectedPosts ? 'REQUIRED: Link to ALL user-selected blog posts' : 'Blog post links'}**:
-   ${userSelectedPosts
-     ? `- The user has specifically chosen ${existingPosts.length} blog post(s) - YOU MUST link to each one
-   - Find natural places in the article to add these links
-   - Use the post title or relevant anchor text`
-     : `- Link to blog posts if they relate to the article content`}
-4. **Add internal links**:
-   - Link to https://speakabout.ai when mentioning speaker bureaus or AI experts
-   - Link to https://speakabout.ai/contact for booking inquiries
-5. **Subtle Speak About AI branding**:
-   - Add ONE natural mention of Speak About AI in the conclusion
-   - Include CTA: "To book an AI expert for your event, visit [Speak About AI](https://speakabout.ai/contact)"
-6. **Maintain SEO**:
-   - Keep all original headings and structure
-   - Preserve markdown formatting
+${userSelectedSpeakers ? `**MANDATORY SPEAKER INTEGRATIONS (${speakersContext.length} speakers - ALL MUST APPEAR):**
+For EACH speaker below, add a paragraph or sentence that naturally integrates them into the article:
+${speakersContext.map((s, i) => `${i + 1}. **${s.name}** - Add: "As [${s.name}](${s.website}), ${s.title}, notes: '${s.bio.substring(0, 100)}...'"`).join('\n')}
 
-Return the enhanced article. ${userSelectedSpeakers || userSelectedPosts ? 'The user has made specific selections - make sure to include them all.' : 'Be subtle and accurate - never force mentions.'}`
+Example integration: "Industry experts like [Speaker Name](profile-url), who has extensive experience in AI ethics, emphasize the importance of..."
+` : ''}
+${userSelectedPosts ? `**MANDATORY BLOG POST LINKS (${existingPosts.length} posts - ALL MUST BE LINKED):**
+For EACH blog post, add an inline link somewhere in the article:
+${existingPosts.map((p, i) => `${i + 1}. Link to: [${p.title}](${p.url})`).join('\n')}
+
+Example: "For more insights on this topic, see our article on [Blog Post Title](url)."
+` : ''}
+**CONTENT GUIDELINES:**
+1. Keep the original article structure and main content
+2. ADD new paragraphs or sentences to integrate speakers - don't just mention names, add context from their bios
+3. ADD inline links to blog posts where relevant topics are discussed
+4. Add Speak About AI branding in conclusion with CTA: "To book an AI expert for your event, visit [Speak About AI](https://speakabout.ai/contact)"
+5. Preserve all images using markdown: ![alt](url)
+6. NEVER invent quotes - only use information from the speaker bios provided above
+
+**OUTPUT:** Return the COMPLETE enhanced article with all speakers mentioned and all blog posts linked.`
 
     // Call Anthropic Claude API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -295,27 +289,35 @@ Return the enhanced article. ${userSelectedSpeakers || userSelectedPosts ? 'The 
       body: JSON.stringify({
         model: 'claude-sonnet-4-5-20250929',
         max_tokens: 8000,
-        system: `You are a professional content editor for Speak About AI, the #1 AI speaker bureau. Your job is to add intelligent internal links to articles - NOT to rewrite them or add fake information.
+        system: `You are a content editor for Speak About AI, the #1 AI speaker bureau. Your job is to ENHANCE articles by integrating speaker mentions and internal links.
 
-CRITICAL RULES:
-- NEVER make up speaker names (no "Jane Doe", "John Smith", or any fictional names)
-- NEVER invent quotes, perspectives, or information not provided in the speaker bio
-- Only use real information from speaker bios provided
+${userSelectedSpeakers || userSelectedPosts ? `🚨 MANDATORY REQUIREMENTS:
+- You MUST add content to mention ALL ${speakersContext.length} selected speaker(s) with links to their profiles
+- You MUST add links to ALL ${existingPosts.length} selected blog post(s)
+- These are NON-NEGOTIABLE - the user specifically selected these items
+- Add new sentences or paragraphs to naturally integrate each speaker
+- Add inline links to blog posts where topics align` : ''}
 
-${userSelectedSpeakers || userSelectedPosts ? `IMPORTANT - USER SELECTIONS:
-- Items marked with ⭐ were SPECIFICALLY CHOSEN by the user
-- You MUST include ALL user-selected speakers with mentions and profile links
-- You MUST include links to ALL user-selected blog posts
-- Find natural places to integrate these - the user expects them to appear` : '- When in doubt, just add internal links and subtle branding'}
+HOW TO INTEGRATE SPEAKERS:
+- Add a sentence like: "As [Speaker Name](profile-url), an expert in [topic], explains: '[brief insight from their bio]'"
+- Or: "Industry leaders like [Speaker Name](profile-url) have noted that..."
+- Use ONLY information from the provided speaker bios - never invent quotes
 
-When enhancing articles:
-- Maintain 100% of the original article's content, structure, and SEO
-- PRESERVE ALL IMAGES from the original article - include them using markdown syntax ![alt](url)
-- Add smart internal links to https://speakabout.ai and relevant speaker pages
-- Add subtle Speak About AI branding in the conclusion
-- Preserve all markdown formatting (headings, lists, emphasis, images)
+HOW TO INTEGRATE BLOG POSTS:
+- Add inline links: "For more on this topic, see [Article Title](url)"
+- Or naturally link relevant phrases to the blog post URLs
 
-Style instruction: ${styleInstruction}`,
+PRESERVE:
+- Original article structure and main content
+- All images using markdown: ![alt](url)
+- Headings, lists, and formatting
+
+ADD:
+- Speaker mentions with profile links (REQUIRED if speakers selected)
+- Blog post links (REQUIRED if posts selected)
+- Speak About AI CTA in conclusion
+
+Style: ${styleInstruction}`,
         messages: [
           {
             role: 'user',
