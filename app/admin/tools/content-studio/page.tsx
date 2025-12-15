@@ -93,6 +93,7 @@ export default function AIContentStudioPage() {
   // Review states
   const [isPushingToContentful, setIsPushingToContentful] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [featuredImageUrl, setFeaturedImageUrl] = useState("")
 
   // Drafts states
   const [drafts, setDrafts] = useState<AIDraft[]>([])
@@ -275,7 +276,10 @@ export default function AIContentStudioPage() {
           "Content-Type": "application/json",
           "x-dev-admin-bypass": "dev-admin-access"
         },
-        body: JSON.stringify({ content: generatedContent })
+        body: JSON.stringify({
+          content: generatedContent,
+          imageUrl: featuredImageUrl || undefined
+        })
       })
 
       if (!response.ok) {
@@ -738,7 +742,21 @@ export default function AIContentStudioPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  {/* Featured Image URL */}
+                  <div className="flex gap-2 items-center">
+                    <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Featured Image URL:</label>
+                    <input
+                      type="url"
+                      value={featuredImageUrl}
+                      onChange={(e) => setFeaturedImageUrl(e.target.value)}
+                      placeholder="https://example.com/image.jpg"
+                      className="flex-1 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {featuredImageUrl && (
+                      <img src={featuredImageUrl} alt="Preview" className="h-10 w-10 object-cover rounded" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                    )}
+                  </div>
                   <Textarea
                     value={generatedContent}
                     onChange={(e) => setGeneratedContent(e.target.value)}

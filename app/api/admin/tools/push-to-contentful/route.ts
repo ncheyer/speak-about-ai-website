@@ -315,7 +315,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json()
-    const { content } = body
+    const { content, imageUrl } = body
 
     if (!content) {
       return NextResponse.json({
@@ -395,6 +395,72 @@ export async function POST(request: NextRequest) {
             id: noahAuthorId
           }
         }
+      }
+    }
+
+    // Add featured image if provided
+    if (imageUrl) {
+      console.log(`Creating image asset for: ${imageUrl}`)
+      try {
+        // Determine content type from URL
+        const extension = imageUrl.split('.').pop()?.toLowerCase().split('?')[0] || 'jpg'
+        const contentTypeMap: Record<string, string> = {
+          'jpg': 'image/jpeg',
+          'jpeg': 'image/jpeg',
+          'png': 'image/png',
+          'gif': 'image/gif',
+          'webp': 'image/webp'
+        }
+        const contentType = contentTypeMap[extension] || 'image/jpeg'
+
+        const asset = await environment.createAsset({
+          fields: {
+            title: {
+              'en-US': title
+            },
+            description: {
+              'en-US': excerpt
+            },
+            file: {
+              'en-US': {
+                contentType,
+                fileName: slug + '.' + extension,
+                upload: imageUrl
+              }
+            }
+          }
+        })
+
+        // Process the asset
+        await asset.processForAllLocales()
+
+        // Wait for processing to complete
+        let processedAsset = await environment.getAsset(asset.sys.id)
+        let attempts = 0
+        while (processedAsset.fields.file?.['en-US']?.url === undefined && attempts < 10) {
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          processedAsset = await environment.getAsset(asset.sys.id)
+          attempts++
+        }
+
+        // Publish the asset
+        await processedAsset.publish()
+
+        // Add reference to the asset in the blog post
+        entryData.fields.featuredImage = {
+          'en-US': {
+            sys: {
+              type: 'Link',
+              linkType: 'Asset',
+              id: asset.sys.id
+            }
+          }
+        }
+
+        console.log(`Image asset created and linked: ${asset.sys.id}`)
+      } catch (imageError) {
+        console.error(`Failed to create image asset for ${imageUrl}:`, imageError)
+        // Continue without image if it fails
       }
     }
 

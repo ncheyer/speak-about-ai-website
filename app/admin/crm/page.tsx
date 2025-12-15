@@ -665,8 +665,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
     try {
       const response = await fetch(`/api/contracts/${contractId}/send`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        headers: getAuthHeaders()
       })
 
       if (response.ok) {
@@ -701,8 +700,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
     try {
       const response = await fetch(`/api/deals/${deal.id}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        headers: getAuthHeaders()
       })
 
       if (response.ok) {
@@ -741,8 +739,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
     try {
       const response = await fetch(`/api/deals/${dealId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status: newStatus })
       })
 
@@ -783,8 +780,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
 
       const response = await fetch(`/api/deals/${lostDealInfo.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           status: 'lost',
           notes: updatedNotes,
@@ -856,8 +852,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
     try {
       const response = await fetch(`/api/deals/${deal.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           status: 'lead',
           notes: deal.notes + '\n\n--- REACTIVATED ---\nReactivated on: ' + new Date().toLocaleDateString()
