@@ -167,6 +167,30 @@ export async function POST(request: NextRequest) {
       website: `https://speakabout.ai/speakers/${s.slug}` || s.website || ''
     }))
 
+    // Fetch ALL speaker names from roster for cross-referencing
+    let rosterSpeakers: { name: string; slug: string }[] = []
+    try {
+      const rosterResult = await sql`
+        SELECT name, slug FROM speakers WHERE active = true OR listed = true
+      `
+      rosterSpeakers = rosterResult.map((s: any) => ({ name: s.name, slug: s.slug }))
+      console.log(`Fetched ${rosterSpeakers.length} roster speakers for cross-referencing`)
+    } catch (error) {
+      console.error('Error fetching roster speakers:', error)
+    }
+
+    // Famous AI figures who can be mentioned even if not on roster
+    const famousAIFigures = [
+      'Sam Altman', 'Elon Musk', 'Fei-Fei Li', 'Andrew Ng', 'Yann LeCun',
+      'Geoffrey Hinton', 'Demis Hassabis', 'Ilya Sutskever', 'Dario Amodei',
+      'Satya Nadella', 'Sundar Pichai', 'Jensen Huang', 'Mark Zuckerberg',
+      'Jeff Dean', 'Andrej Karpathy', 'Ian Goodfellow', 'Yoshua Bengio',
+      'Stuart Russell', 'Nick Bostrom', 'Max Tegmark', 'Gary Marcus',
+      'Timnit Gebru', 'Joy Buolamwini', 'Kate Crawford', 'Cathy O\'Neil',
+      'Kai-Fu Lee', 'Mustafa Suleyman', 'Reid Hoffman', 'Peter Thiel',
+      'Eric Schmidt', 'Larry Page', 'Sergey Brin', 'Bill Gates'
+    ]
+
     // Fetch blog posts from Contentful - prioritize user selections
     let existingPosts: any[] = []
     try {
@@ -250,6 +274,21 @@ ${speakersContext.map((s, i) => `${i + 1}. ${s.name} - ${s.title}
 ${userSelectedPosts ? '⭐ USER-SELECTED BLOG POSTS (MUST LINK TO THESE):' : 'EXISTING BLOG POSTS (link to if relevant):'}
 ${existingPosts.map(p => `- ${p.title}: ${p.url}`).join('\n')}
 
+🔍 SPEAKER CROSS-REFERENCING (CRITICAL):
+The original article may mention speakers/experts. You MUST cross-reference any names against our roster and famous AI figures:
+
+OUR FULL ROSTER (${rosterSpeakers.length} speakers - link to profiles if mentioned):
+${rosterSpeakers.map(s => `- ${s.name}: https://speakabout.ai/speakers/${s.slug}`).join('\n')}
+
+FAMOUS AI FIGURES (okay to mention without links):
+${famousAIFigures.join(', ')}
+
+RULES FOR SPEAKER MENTIONS:
+1. If a person is on OUR ROSTER → LINK to their profile: [Name](https://speakabout.ai/speakers/slug)
+2. If a person is in FAMOUS AI FIGURES list → Keep the mention (no link needed)
+3. If a person is NOT on roster AND NOT famous → REMOVE the mention entirely
+4. Never invent or add speakers that weren't in the original article (unless they're user-selected)
+
 SPEAK ABOUT AI:
 - Main site: https://speakabout.ai
 - Roster: 70+ AI pioneers (Siri Co-Founders, OpenAI Staff, Stanford Researchers)
@@ -298,6 +337,13 @@ ${userSelectedSpeakers || userSelectedPosts ? `🚨 MANDATORY REQUIREMENTS:
 - Add new sentences or paragraphs to naturally integrate each speaker
 - Add inline links to blog posts where topics align` : ''}
 
+🔍 SPEAKER CROSS-REFERENCING (CRITICAL):
+When the original article mentions ANY person/expert by name:
+1. CHECK if they're on our roster (list provided in prompt) → If YES, link to their profile
+2. CHECK if they're a famous AI figure (list provided in prompt) → If YES, keep the mention
+3. If they're NOT on roster AND NOT famous → REMOVE the mention entirely from the article
+This ensures we only promote our speakers or well-known industry figures.
+
 HOW TO INTEGRATE SPEAKERS:
 - Add a sentence like: "As [Speaker Name](profile-url), an expert in [topic], explains: '[brief insight from their bio]'"
 - Or: "Industry leaders like [Speaker Name](profile-url) have noted that..."
@@ -316,6 +362,9 @@ ADD:
 - Speaker mentions with profile links (REQUIRED if speakers selected)
 - Blog post links (REQUIRED if posts selected)
 - Speak About AI CTA in conclusion
+
+REMOVE:
+- Mentions of people who are NOT on our roster AND NOT famous AI figures
 
 Style: ${styleInstruction}`,
         messages: [
