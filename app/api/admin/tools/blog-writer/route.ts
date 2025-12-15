@@ -41,13 +41,20 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json()
-    const { semrush_url, style } = body
+    const { semrush_url, style, selected_speakers, selected_blog_posts } = body
 
     if (!semrush_url) {
       return NextResponse.json({
         error: 'SEMrush URL is required'
       }, { status: 400 })
     }
+
+    console.log('Blog writer received:', {
+      semrush_url,
+      style,
+      selected_speakers: selected_speakers?.length || 0,
+      selected_blog_posts: selected_blog_posts?.length || 0
+    })
 
     // Fetch article from SEMrush URL
     let article = ''
@@ -99,37 +106,57 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Extract keywords from article for speaker search
-    const articleText = article.toLowerCase()
-    const keywords = ['ai', 'artificial intelligence', 'machine learning', 'deep learning', 'neural', 'automation', 'robotics', 'nlp', 'computer vision', 'data science', 'tech', 'innovation', 'digital transformation', 'blockchain', 'crypto', 'web3']
-    const articleKeywords = keywords.filter(kw => articleText.includes(kw))
+    // Get speakers - prioritize user selections, fall back to keyword search
+    let allSpeakers: any[] = []
 
-    // Search for relevant speakers based on article content
-    let relevantSpeakers = []
-    if (articleKeywords.length > 0) {
-      const searchPattern = `%${articleKeywords[0]}%`
-      relevantSpeakers = await sql`
-        SELECT
-          id, name, bio, short_bio, one_liner, title, topics, industries, website, slug
-        FROM speakers
-        WHERE active = true
-          AND (
-            LOWER(bio) LIKE ${searchPattern}
-            OR LOWER(short_bio) LIKE ${searchPattern}
-            OR LOWER(one_liner) LIKE ${searchPattern}
-            OR LOWER(title) LIKE ${searchPattern}
-            OR EXISTS (
-              SELECT 1 FROM jsonb_array_elements_text(topics) topic
-              WHERE LOWER(topic) LIKE ${searchPattern}
-            )
-          )
-        ORDER BY featured DESC, ranking DESC
-        LIMIT 5
-      `
+    // If user selected specific speakers, fetch those
+    if (selected_speakers && selected_speakers.length > 0) {
+      console.log('Fetching user-selected speakers:', selected_speakers)
+      // Convert string IDs to numbers for the query
+      const speakerIds = selected_speakers.map((id: string | number) =>
+        typeof id === 'string' ? parseInt(id, 10) : id
+      ).filter((id: number) => !isNaN(id))
+
+      if (speakerIds.length > 0) {
+        allSpeakers = await sql`
+          SELECT
+            id, name, bio, short_bio, one_liner, title, topics, industries, website, slug
+          FROM speakers
+          WHERE id = ANY(${speakerIds})
+          ORDER BY featured DESC, ranking DESC
+        `
+        console.log(`Found ${allSpeakers.length} selected speakers`)
+      }
     }
 
-    // Use all relevant speakers found from article keywords
-    const allSpeakers = relevantSpeakers
+    // Fall back to keyword search if no speakers selected or found
+    if (allSpeakers.length === 0) {
+      const articleText = article.toLowerCase()
+      const keywords = ['ai', 'artificial intelligence', 'machine learning', 'deep learning', 'neural', 'automation', 'robotics', 'nlp', 'computer vision', 'data science', 'tech', 'innovation', 'digital transformation', 'blockchain', 'crypto', 'web3']
+      const articleKeywords = keywords.filter(kw => articleText.includes(kw))
+
+      if (articleKeywords.length > 0) {
+        const searchPattern = `%${articleKeywords[0]}%`
+        allSpeakers = await sql`
+          SELECT
+            id, name, bio, short_bio, one_liner, title, topics, industries, website, slug
+          FROM speakers
+          WHERE active = true
+            AND (
+              LOWER(bio) LIKE ${searchPattern}
+              OR LOWER(short_bio) LIKE ${searchPattern}
+              OR LOWER(one_liner) LIKE ${searchPattern}
+              OR LOWER(title) LIKE ${searchPattern}
+              OR EXISTS (
+                SELECT 1 FROM jsonb_array_elements_text(topics) topic
+                WHERE LOWER(topic) LIKE ${searchPattern}
+              )
+            )
+          ORDER BY featured DESC, ranking DESC
+          LIMIT 5
+        `
+      }
+    }
 
     // Build speaker context for all relevant speakers
     const speakersContext = allSpeakers.map(s => ({
@@ -140,8 +167,8 @@ export async function POST(request: NextRequest) {
       website: `https://speakabout.ai/speakers/${s.slug}` || s.website || ''
     }))
 
-    // Fetch existing blog posts from Contentful for internal linking
-    let existingPosts = []
+    // Fetch blog posts from Contentful - prioritize user selections
+    let existingPosts: any[] = []
     try {
       const contentful = require('contentful')
       if (process.env.CONTENTFUL_SPACE_ID && process.env.CONTENTFUL_ACCESS_TOKEN) {
@@ -150,17 +177,38 @@ export async function POST(request: NextRequest) {
           accessToken: process.env.CONTENTFUL_ACCESS_TOKEN
         })
 
-        const entries = await client.getEntries({
-          content_type: 'blogPost',
-          limit: 10,
-          order: '-sys.createdAt'
-        })
+        // If user selected specific blog posts, fetch those
+        if (selected_blog_posts && selected_blog_posts.length > 0) {
+          console.log('Fetching user-selected blog posts:', selected_blog_posts)
+          // Fetch entries that match the selected slugs
+          const entries = await client.getEntries({
+            content_type: 'blogPost',
+            'fields.slug[in]': selected_blog_posts.join(','),
+            limit: 20
+          })
 
-        existingPosts = entries.items.map((item: any) => ({
-          title: item.fields.title,
-          slug: item.fields.slug,
-          url: `https://speakabout.ai/blog/${item.fields.slug}`
-        }))
+          existingPosts = entries.items.map((item: any) => ({
+            title: item.fields.title,
+            slug: item.fields.slug,
+            url: `https://speakabout.ai/blog/${item.fields.slug}`
+          }))
+          console.log(`Found ${existingPosts.length} selected blog posts`)
+        }
+
+        // Fall back to recent posts if no selections or none found
+        if (existingPosts.length === 0) {
+          const entries = await client.getEntries({
+            content_type: 'blogPost',
+            limit: 10,
+            order: '-sys.createdAt'
+          })
+
+          existingPosts = entries.items.map((item: any) => ({
+            title: item.fields.title,
+            slug: item.fields.slug,
+            url: `https://speakabout.ai/blog/${item.fields.slug}`
+          }))
+        }
       }
     } catch (error) {
       console.log('Could not fetch Contentful posts:', error)
@@ -177,19 +225,23 @@ export async function POST(request: NextRequest) {
 
     const styleInstruction = styleInstructions[style as keyof typeof styleInstructions] || styleInstructions.professional
 
+    // Determine if user made specific selections
+    const userSelectedSpeakers = selected_speakers && selected_speakers.length > 0
+    const userSelectedPosts = selected_blog_posts && selected_blog_posts.length > 0
+
     // Build the prompt for Claude
-    const userPrompt = `Enhance the following article with relevant internal links to our speakers and blog posts.
+    const userPrompt = `Enhance the following article with internal links to our speakers and blog posts.
 
 ORIGINAL ARTICLE:
 ${article}
 
-RELEVANT SPEAKERS FROM OUR ROSTER (only mention if their expertise matches the article):
+${userSelectedSpeakers ? '⭐ USER-SELECTED SPEAKERS (MUST INCLUDE THESE):' : 'RELEVANT SPEAKERS FROM OUR ROSTER:'}
 ${speakersContext.map((s, i) => `${i + 1}. ${s.name} - ${s.title}
    Bio: ${s.bio}
    Topics: ${s.topics}
    Profile: ${s.website}`).join('\n\n')}
 
-EXISTING BLOG POSTS (link to if relevant):
+${userSelectedPosts ? '⭐ USER-SELECTED BLOG POSTS (MUST LINK TO THESE):' : 'EXISTING BLOG POSTS (link to if relevant):'}
 ${existingPosts.map(p => `- ${p.title}: ${p.url}`).join('\n')}
 
 SPEAK ABOUT AI:
@@ -199,25 +251,32 @@ SPEAK ABOUT AI:
 
 YOUR TASK:
 1. **Keep original content intact** - Only add links and mentions where natural
-2. **Add internal links**:
-   - Link to relevant speaker profiles ONLY if their expertise matches the topic
-   - Link to existing blog posts if they relate to the article content
+2. **${userSelectedSpeakers ? 'REQUIRED: Include ALL user-selected speakers' : 'Speaker mentions'}**:
+   ${userSelectedSpeakers
+     ? `- The user has specifically chosen ${speakersContext.length} speaker(s) - YOU MUST mention each one
+   - Find natural places to mention their expertise and link to their profiles
+   - Create a brief mention or quote using their bio information`
+     : `- Only mention speakers whose expertise DIRECTLY matches the article
+   - Use 0-2 speaker mentions maximum`}
+   - NEVER make up names or invent quotes
+   - Only use information from their actual bio
+3. **${userSelectedPosts ? 'REQUIRED: Link to ALL user-selected blog posts' : 'Blog post links'}**:
+   ${userSelectedPosts
+     ? `- The user has specifically chosen ${existingPosts.length} blog post(s) - YOU MUST link to each one
+   - Find natural places in the article to add these links
+   - Use the post title or relevant anchor text`
+     : `- Link to blog posts if they relate to the article content`}
+4. **Add internal links**:
    - Link to https://speakabout.ai when mentioning speaker bureaus or AI experts
    - Link to https://speakabout.ai/contact for booking inquiries
-3. **Speaker mentions - STRICT RULES**:
-   - ONLY mention speakers from the list above whose expertise DIRECTLY matches the article
-   - NEVER make up names like "Jane Doe", "John Smith", or fictional experts
-   - NEVER invent quotes - only use information from their actual bio
-   - Use 0-2 speaker mentions maximum - quality over quantity
-   - When in doubt, DON'T mention speakers
-4. **Subtle Speak About AI branding**:
+5. **Subtle Speak About AI branding**:
    - Add ONE natural mention of Speak About AI in the conclusion
    - Include CTA: "To book an AI expert for your event, visit [Speak About AI](https://speakabout.ai/contact)"
-5. **Maintain SEO**:
+6. **Maintain SEO**:
    - Keep all original headings and structure
    - Preserve markdown formatting
 
-Return the enhanced article. Be subtle and accurate - never force mentions.`
+Return the enhanced article. ${userSelectedSpeakers || userSelectedPosts ? 'The user has made specific selections - make sure to include them all.' : 'Be subtle and accurate - never force mentions.'}`
 
     // Call Anthropic Claude API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -234,17 +293,20 @@ Return the enhanced article. Be subtle and accurate - never force mentions.`
 
 CRITICAL RULES:
 - NEVER make up speaker names (no "Jane Doe", "John Smith", or any fictional names)
-- ONLY mention real speakers when their expertise directly matches the article topic
 - NEVER invent quotes, perspectives, or information not provided in the speaker bio
-- When in doubt, just add internal links and subtle branding - don't mention speakers
+- Only use real information from speaker bios provided
+
+${userSelectedSpeakers || userSelectedPosts ? `IMPORTANT - USER SELECTIONS:
+- Items marked with ⭐ were SPECIFICALLY CHOSEN by the user
+- You MUST include ALL user-selected speakers with mentions and profile links
+- You MUST include links to ALL user-selected blog posts
+- Find natural places to integrate these - the user expects them to appear` : '- When in doubt, just add internal links and subtle branding'}
 
 When enhancing articles:
 - Maintain 100% of the original article's content, structure, and SEO
 - Add smart internal links to https://speakabout.ai and relevant speaker pages
-- Only mention the provided speaker if their expertise DIRECTLY relates to the article topic
 - Add subtle Speak About AI branding in the conclusion
 - Preserve all markdown formatting (headings, lists, emphasis)
-- Keep content natural - never force speaker mentions where they don't fit
 
 Style instruction: ${styleInstruction}`,
         messages: [

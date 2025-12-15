@@ -54,7 +54,7 @@ export default function AIContentStudioPage() {
     setMessages([
       {
         role: "assistant",
-        content: "Hello! I'm your AI assistant for querying the speaker database. I can help you find speakers based on their expertise, topics, location, background, and more. What would you like to know?",
+        content: "Hello! I'm your AI assistant for managing the speaker database. I can help you:\n\n🔍 **Search** - Find speakers by location, expertise, topics, industries\n➕ **Add** - Add new speakers to the database\n💡 **Recommend** - Get speaker suggestions for events\n\nTry asking about speakers in a specific city, or say \"add a new speaker\" to get started!",
         timestamp: new Date()
       }
     ])
@@ -236,11 +236,11 @@ export default function AIContentStudioPage() {
   }
 
   const suggestedQueries = [
-    "Show me all AI experts in Silicon Valley",
-    "Who are our most experienced keynote speakers?",
-    "Find speakers specializing in machine learning",
-    "Which speakers have the most testimonials?",
-    "List speakers available for virtual events"
+    "Show me AI speakers in New York",
+    "Find speakers in San Francisco",
+    "Who are our speakers in London?",
+    "Find machine learning experts",
+    "Add a new speaker"
   ]
 
   const handleSuggestedQuery = (query: string) => {

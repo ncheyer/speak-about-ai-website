@@ -22,7 +22,11 @@ import {
   RefreshCw,
   X,
   Clock,
-  Edit3
+  Edit3,
+  Search,
+  MapPin,
+  Plus,
+  UserPlus
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -39,6 +43,7 @@ interface Speaker {
   topics: string
   website: string
   slug: string
+  location?: string
 }
 
 interface BlogPost {
@@ -99,6 +104,25 @@ export default function AIContentStudioPage() {
   const [drafts, setDrafts] = useState<AIDraft[]>([])
   const [isLoadingDrafts, setIsLoadingDrafts] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
+
+  // Search states
+  const [speakerSearch, setSpeakerSearch] = useState("")
+  const [locationFilter, setLocationFilter] = useState("")
+  const [articleSearch, setArticleSearch] = useState("")
+  const [searchResults, setSearchResults] = useState<{ speakers: Speaker[], blogPosts: BlogPost[] } | null>(null)
+  const [isSearching, setIsSearching] = useState(false)
+
+  // Add speaker states
+  const [showAddSpeaker, setShowAddSpeaker] = useState(false)
+  const [newSpeaker, setNewSpeaker] = useState({ name: '', title: '', bio: '', location: '', topics: '', email: '' })
+  const [isAddingSpeaker, setIsAddingSpeaker] = useState(false)
+
+  // Available locations for filter
+  const LOCATIONS = [
+    'New York', 'San Francisco', 'Los Angeles', 'Chicago', 'Boston',
+    'Seattle', 'Austin', 'Miami', 'Atlanta', 'Denver',
+    'London', 'Toronto', 'Berlin', 'Paris', 'Dublin', 'Israel', 'India'
+  ]
 
   const fetchDrafts = async () => {
     setIsLoadingDrafts(true)
@@ -332,6 +356,125 @@ export default function AIContentStudioPage() {
     )
   }
 
+  // Search for speakers and articles
+  const handleSearch = async () => {
+    if (!speakerSearch && !locationFilter && !articleSearch) return
+
+    setIsSearching(true)
+    try {
+      const response = await fetch("/api/admin/tools/content-preview", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-dev-admin-bypass": "dev-admin-access"
+        },
+        body: JSON.stringify({
+          location_filter: locationFilter,
+          search_query: speakerSearch || articleSearch
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSearchResults(data)
+      }
+    } catch (error) {
+      console.error("Search error:", error)
+      toast({ title: "Error", description: "Search failed", variant: "destructive" })
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  // Add speaker from search results to selected
+  const addSpeakerFromSearch = (speaker: Speaker) => {
+    if (!previewData) return
+    // Check if already in previewData
+    const exists = previewData.speakers.find(s => s.id === speaker.id)
+    if (!exists) {
+      setPreviewData({
+        ...previewData,
+        speakers: [...previewData.speakers, speaker]
+      })
+    }
+    if (!selectedSpeakers.includes(speaker.id)) {
+      setSelectedSpeakers(prev => [...prev, speaker.id])
+    }
+    toast({ title: "Added", description: `${speaker.name} added to selection` })
+  }
+
+  // Add blog post from search results to selected
+  const addBlogPostFromSearch = (post: BlogPost) => {
+    if (!previewData) return
+    const exists = previewData.blogPosts.find(p => p.slug === post.slug)
+    if (!exists) {
+      setPreviewData({
+        ...previewData,
+        blogPosts: [...previewData.blogPosts, post]
+      })
+    }
+    if (!selectedBlogPosts.includes(post.slug)) {
+      setSelectedBlogPosts(prev => [...prev, post.slug])
+    }
+    toast({ title: "Added", description: `"${post.title}" added to selection` })
+  }
+
+  // Add new speaker to database
+  const handleAddSpeaker = async () => {
+    if (!newSpeaker.name || !newSpeaker.title) {
+      toast({ title: "Error", description: "Name and title are required", variant: "destructive" })
+      return
+    }
+
+    setIsAddingSpeaker(true)
+    try {
+      // Use the speaker chat endpoint to add speakers
+      const response = await fetch("/api/admin/tools/speaker-chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-dev-admin-bypass": "dev-admin-access"
+        },
+        body: JSON.stringify({
+          message: `Add speaker with: name: ${newSpeaker.name}, title: ${newSpeaker.title}, bio: ${newSpeaker.bio || 'AI expert'}, location: ${newSpeaker.location || 'USA'}, topics: ${newSpeaker.topics || 'AI'}, email: ${newSpeaker.email || ''}`
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.addedSpeaker) {
+          toast({ title: "Success", description: `Speaker "${data.addedSpeaker.name}" added!` })
+          setShowAddSpeaker(false)
+          setNewSpeaker({ name: '', title: '', bio: '', location: '', topics: '', email: '' })
+          // Add to current selection
+          if (previewData) {
+            const newSpeakerObj: Speaker = {
+              id: String(data.addedSpeaker.id),
+              name: data.addedSpeaker.name,
+              title: newSpeaker.title,
+              bio: newSpeaker.bio,
+              topics: newSpeaker.topics,
+              website: `https://speakabout.ai/speakers/${data.addedSpeaker.slug}`,
+              slug: data.addedSpeaker.slug
+            }
+            setPreviewData({
+              ...previewData,
+              speakers: [...previewData.speakers, newSpeakerObj]
+            })
+            setSelectedSpeakers(prev => [...prev, String(data.addedSpeaker.id)])
+          }
+        } else {
+          toast({ title: "Info", description: data.response.substring(0, 100) })
+        }
+      }
+    } catch (error) {
+      console.error("Add speaker error:", error)
+      toast({ title: "Error", description: "Failed to add speaker", variant: "destructive" })
+    } finally {
+      setIsAddingSpeaker(false)
+    }
+  }
+
   if (!isLoggedIn) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
@@ -557,13 +700,91 @@ export default function AIContentStudioPage() {
               {/* Matched Speakers */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-purple-600" />
-                    Matched Speakers ({previewData.speakers.length})
-                  </CardTitle>
-                  <CardDescription>Select speakers to mention in the article (max 2 recommended)</CardDescription>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5 text-purple-600" />
+                        Matched Speakers ({previewData.speakers.length})
+                      </CardTitle>
+                      <CardDescription>Select speakers to mention in the article (max 2 recommended)</CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAddSpeaker(true)}
+                      className="border-purple-300 text-purple-600 hover:bg-purple-50"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Add New Speaker
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
+                  {/* Search & Filter Controls */}
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
+                    <div className="flex gap-2">
+                      <Select value={locationFilter || "all"} onValueChange={(val) => setLocationFilter(val === "all" ? "" : val)}>
+                        <SelectTrigger className="w-48">
+                          <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                          <SelectValue placeholder="Filter by location" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Locations</SelectItem>
+                          {LOCATIONS.map(loc => (
+                            <SelectItem key={loc} value={loc.toLowerCase()}>{loc}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex-1 relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search speakers by name, topic, expertise..."
+                          value={speakerSearch}
+                          onChange={(e) => setSpeakerSearch(e.target.value)}
+                          className="pl-10"
+                          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        />
+                      </div>
+                      <Button onClick={handleSearch} disabled={isSearching} variant="secondary">
+                        {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                      </Button>
+                    </div>
+
+                    {/* Search Results */}
+                    {searchResults && searchResults.speakers.length > 0 && (
+                      <div className="mt-3 p-3 bg-white rounded border">
+                        <p className="text-sm font-medium text-gray-700 mb-2">
+                          Search Results ({searchResults.speakers.length} speakers)
+                        </p>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {searchResults.speakers.map((speaker) => (
+                            <div
+                              key={speaker.id}
+                              className="flex items-center justify-between p-2 rounded bg-gray-50 hover:bg-purple-50"
+                            >
+                              <div className="flex-1">
+                                <span className="font-medium text-sm">{speaker.name}</span>
+                                <span className="text-xs text-gray-500 ml-2">{speaker.title}</span>
+                                {speaker.location && (
+                                  <Badge variant="outline" className="ml-2 text-xs">
+                                    <MapPin className="h-3 w-3 mr-1" />{speaker.location}
+                                  </Badge>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => addSpeakerFromSearch(speaker)}
+                                className="text-purple-600 hover:text-purple-700"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {previewData.speakers.length === 0 ? (
                     <p className="text-gray-500 text-sm">No matching speakers found for this content.</p>
                   ) : (
@@ -620,6 +841,51 @@ export default function AIContentStudioPage() {
                   <CardDescription>Select blog posts to link to for internal SEO</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {/* Article Search */}
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search articles by title or keyword..."
+                          value={articleSearch}
+                          onChange={(e) => setArticleSearch(e.target.value)}
+                          className="pl-10"
+                          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        />
+                      </div>
+                      <Button onClick={handleSearch} disabled={isSearching} variant="secondary">
+                        {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                      </Button>
+                    </div>
+
+                    {/* Article Search Results */}
+                    {searchResults && searchResults.blogPosts && searchResults.blogPosts.length > 0 && (
+                      <div className="mt-3 p-3 bg-white rounded border">
+                        <p className="text-sm font-medium text-gray-700 mb-2">
+                          Search Results ({searchResults.blogPosts.length} articles)
+                        </p>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {searchResults.blogPosts.map((post) => (
+                            <div
+                              key={post.slug}
+                              className="flex items-center justify-between p-2 rounded bg-gray-50 hover:bg-green-50"
+                            >
+                              <span className="font-medium text-sm flex-1 truncate">{post.title}</span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => addBlogPostFromSearch(post)}
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {previewData.blogPosts.length === 0 ? (
                     <p className="text-gray-500 text-sm">No related blog posts found.</p>
                   ) : (
@@ -774,7 +1040,17 @@ export default function AIContentStudioPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="prose prose-sm max-w-none bg-white p-6 rounded-lg border">
-                    <ReactMarkdown>{generatedContent}</ReactMarkdown>
+                    <ReactMarkdown
+                      components={{
+                        a: ({ href, children }) => (
+                          <a href={href} target="_blank" rel="noopener noreferrer">
+                            {children}
+                          </a>
+                        )
+                      }}
+                    >
+                      {generatedContent}
+                    </ReactMarkdown>
                   </div>
                 </CardContent>
               </Card>
@@ -782,6 +1058,122 @@ export default function AIContentStudioPage() {
           )}
         </div>
       </div>
+
+      {/* Add Speaker Modal */}
+      {showAddSpeaker && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-lg mx-4">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5 text-purple-600" />
+                  Add New Speaker
+                </CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setShowAddSpeaker(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <CardDescription>Add a new speaker to the database</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-speaker-name">Name *</Label>
+                  <Input
+                    id="new-speaker-name"
+                    placeholder="John Smith"
+                    value={newSpeaker.name}
+                    onChange={(e) => setNewSpeaker({ ...newSpeaker, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-speaker-title">Title *</Label>
+                  <Input
+                    id="new-speaker-title"
+                    placeholder="AI Research Lead"
+                    value={newSpeaker.title}
+                    onChange={(e) => setNewSpeaker({ ...newSpeaker, title: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-speaker-bio">Bio</Label>
+                <Textarea
+                  id="new-speaker-bio"
+                  placeholder="Brief biography..."
+                  value={newSpeaker.bio}
+                  onChange={(e) => setNewSpeaker({ ...newSpeaker, bio: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-speaker-location">Location</Label>
+                  <Select
+                    value={newSpeaker.location || "none"}
+                    onValueChange={(value) => setNewSpeaker({ ...newSpeaker, location: value === "none" ? "" : value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Select location...</SelectItem>
+                      {LOCATIONS.map(loc => (
+                        <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-speaker-email">Email</Label>
+                  <Input
+                    id="new-speaker-email"
+                    type="email"
+                    placeholder="speaker@example.com"
+                    value={newSpeaker.email}
+                    onChange={(e) => setNewSpeaker({ ...newSpeaker, email: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-speaker-topics">Topics (comma-separated)</Label>
+                <Input
+                  id="new-speaker-topics"
+                  placeholder="AI, Machine Learning, Ethics"
+                  value={newSpeaker.topics}
+                  onChange={(e) => setNewSpeaker({ ...newSpeaker, topics: e.target.value })}
+                />
+              </div>
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddSpeaker(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddSpeaker}
+                  disabled={isAddingSpeaker || !newSpeaker.name || !newSpeaker.title}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                >
+                  {isAddingSpeaker ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Speaker
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }
