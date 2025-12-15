@@ -7,8 +7,18 @@ import { Suspense } from "react"
 function ContactFormContent() {
   const searchParams = useSearchParams()
   const speakerName = searchParams.get("speakerName")
-  
-  return <CustomContactForm preselectedSpeaker={speakerName || undefined} />
+  const workshopId = searchParams.get("workshop")
+
+  // Determine initial tab based on URL parameters
+  const initialTab = workshopId ? "workshop" : "keynote"
+
+  return (
+    <CustomContactForm
+      preselectedSpeaker={speakerName || undefined}
+      preselectedWorkshopId={workshopId || undefined}
+      initialTab={initialTab}
+    />
+  )
 }
 
 export function ContactFormWrapper() {

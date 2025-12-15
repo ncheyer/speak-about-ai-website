@@ -17,6 +17,7 @@ export interface DealFormData {
   organizationName?: string
   specificSpeaker?: string
   eventDate?: string
+  eventDates?: string[]
   eventLocation?: string
   eventBudget?: string
   additionalInfo?: string
@@ -24,6 +25,15 @@ export interface DealFormData {
     id: number
     name: string
   }>
+  // Request type (keynote vs workshop)
+  requestType?: 'keynote' | 'workshop'
+  // Workshop-specific fields
+  selectedWorkshop?: string
+  selectedWorkshopId?: number
+  hasNoWorkshopInMind?: boolean
+  numberOfParticipants?: string
+  participantSkillLevel?: string
+  preferredFormat?: string
 }
 
 export interface Deal {
@@ -46,6 +56,13 @@ export interface Deal {
   source: string
   notes?: string
   createdAt: string
+  // Request type and workshop fields
+  requestType?: 'keynote' | 'workshop'
+  selectedWorkshop?: string
+  selectedWorkshopId?: number
+  numberOfParticipants?: string
+  participantSkillLevel?: string
+  preferredFormat?: string
 }
 
 /**
@@ -60,14 +77,39 @@ export async function createDeal(formData: DealFormData, sessionId?: string): Pr
   try {
     // Determine deal value based on budget range
     const dealValue = estimateDealValue(formData.eventBudget)
-    
+
+    // Determine event type and title based on request type
+    const isWorkshop = formData.requestType === 'workshop'
+    const eventType = isWorkshop ? 'Workshop' : 'Keynote'
+    const eventTitle = isWorkshop
+      ? `AI Workshop: ${formData.selectedWorkshop || 'TBD'}`
+      : 'AI Keynote Speaking Engagement'
+
+    // For workshops, include workshop details in additional info
+    let additionalInfo = formData.additionalInfo || ''
+    if (isWorkshop) {
+      const workshopDetails = []
+      if (formData.selectedWorkshop) workshopDetails.push(`Workshop: ${formData.selectedWorkshop}`)
+      if (formData.numberOfParticipants) workshopDetails.push(`Participants: ${formData.numberOfParticipants}`)
+      if (formData.participantSkillLevel) workshopDetails.push(`Skill Level: ${formData.participantSkillLevel}`)
+      if (formData.preferredFormat) workshopDetails.push(`Format: ${formData.preferredFormat}`)
+      if (workshopDetails.length > 0) {
+        additionalInfo = `[WORKSHOP DETAILS]\n${workshopDetails.join('\n')}\n\n${additionalInfo}`.trim()
+      }
+    }
+
+    // For workshops, use selectedWorkshop as the speaker/request field
+    const speakerOrWorkshop = isWorkshop
+      ? formData.selectedWorkshop
+      : formData.specificSpeaker
+
     // Create the main deal record
     const dealResult = await sql`
       INSERT INTO deals (
         client_name, client_email, client_phone, phone, organization_name, company,
         event_title, event_date, event_location, event_type, attendee_count,
         budget_range, deal_value, event_budget,
-        status, priority, specific_speaker, speaker_requested, additional_info, 
+        status, priority, specific_speaker, speaker_requested, additional_info,
         wishlist_speakers, source, created_at, last_contact
       ) VALUES (
         ${formData.clientName},
@@ -76,19 +118,19 @@ export async function createDeal(formData: DealFormData, sessionId?: string): Pr
         ${formData.phone || null},
         ${formData.organizationName || null},
         ${formData.organizationName || 'Unknown'},
-        ${'AI Keynote Speaking Engagement'},
+        ${eventTitle},
         ${formData.eventDate || new Date().toISOString().split('T')[0]},
         ${formData.eventLocation || 'TBD'},
-        ${'Keynote'},
-        ${100},
+        ${eventType},
+        ${isWorkshop ? (parseInt(formData.numberOfParticipants?.split('-')[0] || '0') || 25) : 100},
         ${formData.eventBudget || 'TBD'},
         ${dealValue},
         ${formData.eventBudget || null},
         ${'lead'},
         ${determinePriority(formData)},
-        ${formData.specificSpeaker || null},
-        ${formData.specificSpeaker || null},
-        ${formData.additionalInfo || null},
+        ${speakerOrWorkshop || null},
+        ${speakerOrWorkshop || null},
+        ${additionalInfo || null},
         ${JSON.stringify(formData.wishlistSpeakers || [])},
         ${'website_form'},
         CURRENT_TIMESTAMP,
@@ -166,7 +208,9 @@ export async function getDealById(dealId: number): Promise<Deal | null> {
       wishlistSpeakers: deal.wishlist_speakers,
       source: deal.source,
       notes: deal.notes,
-      createdAt: deal.created_at
+      createdAt: deal.created_at,
+      // Derive request type from event_type
+      requestType: deal.event_type === 'Workshop' ? 'workshop' : 'keynote'
     }
   } catch (error) {
     console.error('Failed to get deal:', error)

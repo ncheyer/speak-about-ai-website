@@ -48,8 +48,10 @@ export default function WorkshopDirectory() {
       const response = await fetch("/api/workshops")
       if (response.ok) {
         const data = await response.json()
-        setWorkshops(data)
-        setFilteredWorkshops(data)
+        // Handle both response formats: { workshops: [...] } or direct array
+        const workshopsData = data.workshops || data || []
+        setWorkshops(workshopsData)
+        setFilteredWorkshops(workshopsData)
       }
     } catch (error) {
       console.error("Error loading workshops:", error)

@@ -28,7 +28,9 @@ import {
   ChevronDown,
   Loader2,
   Send,
-  Newspaper
+  Newspaper,
+  Mic,
+  GraduationCap
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -41,19 +43,53 @@ interface Speaker {
   oneLiner?: string
 }
 
-export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?: string }) {
+interface Workshop {
+  id: number
+  title: string
+  slug: string
+  short_description?: string
+  speaker_name?: string
+  speaker_slug?: string
+  format?: string
+  price_range?: string
+}
+
+interface CustomContactFormProps {
+  preselectedSpeaker?: string
+  preselectedWorkshopId?: string
+  initialTab?: 'keynote' | 'workshop'
+}
+
+export function CustomContactForm({
+  preselectedSpeaker,
+  preselectedWorkshopId,
+  initialTab = 'keynote'
+}: CustomContactFormProps) {
   const { toast } = useToast()
-  
+
+  const [activeTab, setActiveTab] = useState<'keynote' | 'workshop'>(initialTab)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+
+  // Speaker state
   const [speakers, setSpeakers] = useState<Speaker[]>([])
   const [loadingSpeakers, setLoadingSpeakers] = useState(true)
   const [selectedSpeakers, setSelectedSpeakers] = useState<Speaker[]>([])
   const [speakerSearchTerm, setSpeakerSearchTerm] = useState('')
   const [showSpeakerDropdown, setShowSpeakerDropdown] = useState(false)
-  const [eventDates, setEventDates] = useState<string[]>([''])
   const [hasNoSpeakerInMind, setHasNoSpeakerInMind] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const speakerDropdownRef = useRef<HTMLDivElement>(null)
+
+  // Workshop state
+  const [workshops, setWorkshops] = useState<Workshop[]>([])
+  const [loadingWorkshops, setLoadingWorkshops] = useState(true)
+  const [selectedWorkshop, setSelectedWorkshop] = useState<Workshop | null>(null)
+  const [workshopSearchTerm, setWorkshopSearchTerm] = useState('')
+  const [showWorkshopDropdown, setShowWorkshopDropdown] = useState(false)
+  const [hasNoWorkshopInMind, setHasNoWorkshopInMind] = useState(false)
+  const workshopDropdownRef = useRef<HTMLDivElement>(null)
+
+  const [eventDates, setEventDates] = useState<string[]>([''])
   const [turnstileToken, setTurnstileToken] = useState<string>('')
 
   const [formData, setFormData] = useState({
@@ -64,7 +100,11 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
     eventLocation: '',
     eventBudget: '',
     additionalInfo: '',
-    newsletterOptIn: false
+    newsletterOptIn: false,
+    // Workshop-specific fields
+    numberOfParticipants: '',
+    participantSkillLevel: '',
+    preferredFormat: ''
   })
 
   const budgetOptions = [
@@ -76,14 +116,37 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
     { value: 'discuss', label: "Let's discuss" }
   ]
 
+  const participantOptions = [
+    { value: '1-10', label: '1-10 participants' },
+    { value: '11-25', label: '11-25 participants' },
+    { value: '26-50', label: '26-50 participants' },
+    { value: '51-100', label: '51-100 participants' },
+    { value: '100+', label: '100+ participants' }
+  ]
+
+  const skillLevelOptions = [
+    { value: 'beginner', label: 'Beginner - New to AI' },
+    { value: 'intermediate', label: 'Intermediate - Some AI experience' },
+    { value: 'advanced', label: 'Advanced - Experienced with AI' },
+    { value: 'mixed', label: 'Mixed levels' }
+  ]
+
+  const formatOptions = [
+    { value: 'in-person', label: 'In-Person' },
+    { value: 'virtual', label: 'Virtual / Online' },
+    { value: 'hybrid', label: 'Hybrid (In-Person + Virtual)' },
+    { value: 'flexible', label: 'Flexible / To be determined' }
+  ]
+
   useEffect(() => {
     fetchSpeakers()
+    fetchWorkshops()
   }, [])
 
-  // Click outside handler for dropdown
+  // Click outside handler for speaker dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (speakerDropdownRef.current && !speakerDropdownRef.current.contains(event.target as Node)) {
         setShowSpeakerDropdown(false)
       }
     }
@@ -96,6 +159,22 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
     }
   }, [showSpeakerDropdown])
 
+  // Click outside handler for workshop dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (workshopDropdownRef.current && !workshopDropdownRef.current.contains(event.target as Node)) {
+        setShowWorkshopDropdown(false)
+      }
+    }
+
+    if (showWorkshopDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [showWorkshopDropdown])
+
   useEffect(() => {
     // Auto-select speaker if passed as prop
     if (preselectedSpeaker && speakers.length > 0 && selectedSpeakers.length === 0) {
@@ -105,6 +184,16 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
       }
     }
   }, [preselectedSpeaker, speakers])
+
+  useEffect(() => {
+    // Auto-select workshop if passed as prop
+    if (preselectedWorkshopId && workshops.length > 0 && !selectedWorkshop) {
+      const workshop = workshops.find(w => w.id.toString() === preselectedWorkshopId || w.slug === preselectedWorkshopId)
+      if (workshop) {
+        setSelectedWorkshop(workshop)
+      }
+    }
+  }, [preselectedWorkshopId, workshops])
 
   const fetchSpeakers = async () => {
     try {
@@ -117,6 +206,20 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
       console.error('Error fetching speakers:', error)
     } finally {
       setLoadingSpeakers(false)
+    }
+  }
+
+  const fetchWorkshops = async () => {
+    try {
+      const response = await fetch('/api/workshops')
+      const data = await response.json()
+      // Handle both response formats: { workshops: [...] } or direct array
+      const workshopsData = data.workshops || data || []
+      setWorkshops(workshopsData)
+    } catch (error) {
+      console.error('Error fetching workshops:', error)
+    } finally {
+      setLoadingWorkshops(false)
     }
   }
 
@@ -151,8 +254,31 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
     setSelectedSpeakers(prev => prev.filter(s => s.id !== speakerId))
   }
 
+  const selectWorkshop = (workshop: Workshop) => {
+    if (hasNoWorkshopInMind) {
+      setHasNoWorkshopInMind(false)
+    }
+    setSelectedWorkshop(workshop)
+    setShowWorkshopDropdown(false)
+  }
+
+  const handleNoWorkshopInMind = () => {
+    setHasNoWorkshopInMind(true)
+    setSelectedWorkshop(null)
+    setShowWorkshopDropdown(false)
+  }
+
+  const clearWorkshop = () => {
+    setSelectedWorkshop(null)
+  }
+
   const filteredSpeakers = speakers.filter(speaker =>
     speaker.name.toLowerCase().includes(speakerSearchTerm.toLowerCase())
+  )
+
+  const filteredWorkshops = workshops.filter(workshop =>
+    workshop.title.toLowerCase().includes(workshopSearchTerm.toLowerCase()) ||
+    (workshop.speaker_name && workshop.speaker_name.toLowerCase().includes(workshopSearchTerm.toLowerCase()))
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -179,19 +305,35 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
     setIsSubmitting(true)
 
     try {
+      // Build submission data based on active tab
+      const submissionData = {
+        ...formData,
+        eventDates: eventDates.filter(date => date !== ''),
+        requestType: activeTab,
+        turnstileToken,
+        // Keynote-specific
+        specificSpeaker: activeTab === 'keynote'
+          ? (hasNoSpeakerInMind ? 'No specific speaker in mind' : selectedSpeakers.map(s => s.name).join(', '))
+          : undefined,
+        hasNoSpeakerInMind: activeTab === 'keynote' ? hasNoSpeakerInMind : undefined,
+        // Workshop-specific
+        selectedWorkshop: activeTab === 'workshop'
+          ? (hasNoWorkshopInMind ? 'Help me find a workshop' : selectedWorkshop?.title)
+          : undefined,
+        selectedWorkshopId: activeTab === 'workshop' && selectedWorkshop ? selectedWorkshop.id : undefined,
+        hasNoWorkshopInMind: activeTab === 'workshop' ? hasNoWorkshopInMind : undefined,
+        numberOfParticipants: activeTab === 'workshop' ? formData.numberOfParticipants : undefined,
+        participantSkillLevel: activeTab === 'workshop' ? formData.participantSkillLevel : undefined,
+        preferredFormat: activeTab === 'workshop' ? formData.preferredFormat : undefined
+      }
+
       // Submit the main contact form
       const response = await fetch('/api/submit-deal', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          eventDates: eventDates.filter(date => date !== ''),
-          specificSpeaker: hasNoSpeakerInMind ? 'No specific speaker in mind' : selectedSpeakers.map(s => s.name).join(', '),
-          hasNoSpeakerInMind,
-          turnstileToken
-        })
+        body: JSON.stringify(submissionData)
       })
 
       const result = await response.json()
@@ -217,7 +359,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
             // Don't block the form submission if newsletter fails
           }
         }
-        
+
         setIsSuccess(true)
         toast({
           title: "Request submitted successfully!",
@@ -233,11 +375,17 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
           eventLocation: '',
           eventBudget: '',
           additionalInfo: '',
-          newsletterOptIn: false
+          newsletterOptIn: false,
+          numberOfParticipants: '',
+          participantSkillLevel: '',
+          preferredFormat: ''
         })
         setSelectedSpeakers([])
+        setSelectedWorkshop(null)
         setEventDates([''])
         setTurnstileToken('')
+        setHasNoSpeakerInMind(false)
+        setHasNoWorkshopInMind(false)
       } else {
         throw new Error(result.error || 'Failed to submit')
       }
@@ -261,7 +409,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
             <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-3">Request Submitted Successfully!</h2>
             <p className="text-gray-600 mb-6">
-              Thank you for your interest. We'll be in touch within 24 hours with personalized speaker recommendations for your event.
+              Thank you for your interest. We'll be in touch within 24 hours with personalized {activeTab === 'keynote' ? 'speaker' : 'workshop'} recommendations for your event.
             </p>
             <Button onClick={() => setIsSuccess(false)} variant="outline">
               Submit Another Request
@@ -277,18 +425,55 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-gray-900">
-          Book an AI Keynote Speaker
+          {activeTab === 'keynote' ? 'Book an AI Keynote Speaker' : 'Book an AI Workshop'}
         </h1>
         <p className="text-lg text-gray-600">
-          Tell us about your event and we'll match you with the perfect AI expert
+          {activeTab === 'keynote'
+            ? "Tell us about your event and we'll match you with the perfect AI expert"
+            : "Tell us about your training needs and we'll find the perfect AI workshop"
+          }
         </p>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex justify-center">
+        <div className="inline-flex rounded-lg border bg-gray-100 p-1">
+          <button
+            type="button"
+            onClick={() => setActiveTab('keynote')}
+            className={cn(
+              "flex items-center gap-2 px-6 py-3 rounded-md font-medium transition-all",
+              activeTab === 'keynote'
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            )}
+          >
+            <Mic className="h-4 w-4" />
+            Keynote Speaker
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('workshop')}
+            className={cn(
+              "flex items-center gap-2 px-6 py-3 rounded-md font-medium transition-all",
+              activeTab === 'workshop'
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            )}
+          >
+            <GraduationCap className="h-4 w-4" />
+            Workshop
+          </button>
+        </div>
       </div>
 
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl">Event Information</CardTitle>
+          <CardTitle className="text-2xl">
+            {activeTab === 'keynote' ? 'Event Information' : 'Workshop Request'}
+          </CardTitle>
           <CardDescription>
-            Please provide as much detail as possible about your event
+            Please provide as much detail as possible about your {activeTab === 'keynote' ? 'event' : 'training needs'}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-8">
@@ -296,7 +481,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
             {/* Contact Section */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
-              
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="clientName">Your Name *</Label>
@@ -309,7 +494,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                     className="h-12"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="clientEmail">Email Address *</Label>
                   <Input
@@ -334,7 +519,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                     className="h-12"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="organizationName">Organization *</Label>
                   <Input
@@ -349,152 +534,358 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
               </div>
             </div>
 
-            {/* Speaker Selection */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold mb-4">Speaker Preferences</h3>
+            {/* Speaker Selection (Keynote Tab) */}
+            {activeTab === 'keynote' && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold mb-4">Speaker Preferences</h3>
 
-              <div className="space-y-2">
-                <Label>Speakers You're Interested In</Label>
-                <div className="relative" ref={dropdownRef}>
-                  <div 
-                    className={cn(
-                      "min-h-[48px] w-full rounded-lg border bg-white px-3 py-2 cursor-pointer",
-                      "hover:border-gray-400 transition-colors",
-                      showSpeakerDropdown && "border-blue-500 ring-2 ring-blue-100"
-                    )}
-                    onClick={() => setShowSpeakerDropdown(!showSpeakerDropdown)}
-                  >
-                    {hasNoSpeakerInMind ? (
-                      <div className="flex items-center justify-between w-full">
-                        <span className="text-gray-600">No specific speaker in mind</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setHasNoSpeakerInMind(false)
-                          }}
-                          className="text-gray-400 hover:text-gray-600"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : selectedSpeakers.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {selectedSpeakers.map(speaker => (
-                          <Badge 
-                            key={speaker.id}
-                            variant="secondary"
-                            className="bg-blue-100 text-blue-700 hover:bg-blue-200"
+                <div className="space-y-2">
+                  <Label>Speakers You're Interested In</Label>
+                  <div className="relative" ref={speakerDropdownRef}>
+                    <div
+                      className={cn(
+                        "min-h-[48px] w-full rounded-lg border bg-white px-3 py-2 cursor-pointer",
+                        "hover:border-gray-400 transition-colors",
+                        showSpeakerDropdown && "border-blue-500 ring-2 ring-blue-100"
+                      )}
+                      onClick={() => setShowSpeakerDropdown(!showSpeakerDropdown)}
+                    >
+                      {hasNoSpeakerInMind ? (
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-gray-600">No specific speaker in mind</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setHasNoSpeakerInMind(false)
+                            }}
+                            className="text-gray-400 hover:text-gray-600"
                           >
-                            {speaker.name}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                removeSpeaker(speaker.id)
-                              }}
-                              className="ml-1 hover:text-blue-900"
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : selectedSpeakers.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {selectedSpeakers.map(speaker => (
+                            <Badge
+                              key={speaker.id}
+                              variant="secondary"
+                              className="bg-blue-100 text-blue-700 hover:bg-blue-200"
                             >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between text-gray-500">
-                        <span>Select speakers or browse all options</span>
-                        <ChevronDown className="h-4 w-4" />
+                              {speaker.name}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  removeSpeaker(speaker.id)
+                                }}
+                                className="ml-1 hover:text-blue-900"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between text-gray-500">
+                          <span>Select speakers or browse all options</span>
+                          <ChevronDown className="h-4 w-4" />
+                        </div>
+                      )}
+                    </div>
+
+                    {showSpeakerDropdown && (
+                      <div className="absolute z-10 w-full mt-2 bg-white border rounded-lg shadow-xl max-h-80 overflow-hidden">
+                        <div className="sticky top-0 bg-white border-b p-3">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                              type="text"
+                              placeholder="Search speakers..."
+                              value={speakerSearchTerm}
+                              onChange={(e) => setSpeakerSearchTerm(e.target.value)}
+                              className="pl-10"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
+                        <div className="overflow-y-auto max-h-60">
+                          {/* No speaker in mind option */}
+                          <div
+                            className={cn(
+                              "px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b",
+                              hasNoSpeakerInMind && "bg-blue-50"
+                            )}
+                            onClick={handleNoSpeakerInMind}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-medium text-gray-700">No specific speaker in mind</div>
+                                <div className="text-sm text-gray-500">We'll recommend speakers based on your needs</div>
+                              </div>
+                              {hasNoSpeakerInMind && (
+                                <CheckCircle className="h-5 w-5 text-blue-600" />
+                              )}
+                            </div>
+                          </div>
+                          {loadingSpeakers ? (
+                            <div className="p-8 text-center">
+                              <Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" />
+                              <p className="text-sm text-gray-500 mt-2">Loading speakers...</p>
+                            </div>
+                          ) : filteredSpeakers.length > 0 ? (
+                            filteredSpeakers.map(speaker => {
+                              const isSelected = selectedSpeakers.find(s => s.id === speaker.id)
+                              return (
+                                <div
+                                  key={speaker.id}
+                                  className={cn(
+                                    "px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors",
+                                    isSelected && "bg-blue-50"
+                                  )}
+                                  onClick={() => toggleSpeaker(speaker)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <div className="font-medium">{speaker.name}</div>
+                                      {speaker.title && (
+                                        <div className="text-sm text-gray-500">{speaker.title}</div>
+                                      )}
+                                    </div>
+                                    {isSelected && (
+                                      <CheckCircle className="h-5 w-5 text-blue-600" />
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            })
+                          ) : (
+                            <div className="p-8 text-center text-gray-500">
+                              No speakers found matching "{speakerSearchTerm}"
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
+                  <p className="text-sm text-gray-600">
+                    Can't find who you're looking for? Describe your ideal speaker in the additional information section below.
+                  </p>
+                </div>
+              </div>
+            )}
 
-                  {showSpeakerDropdown && (
-                    <div className="absolute z-10 w-full mt-2 bg-white border rounded-lg shadow-xl max-h-80 overflow-hidden">
-                      <div className="sticky top-0 bg-white border-b p-3">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <Input
-                            type="text"
-                            placeholder="Search speakers..."
-                            value={speakerSearchTerm}
-                            onChange={(e) => setSpeakerSearchTerm(e.target.value)}
-                            className="pl-10"
-                            onClick={(e) => e.stopPropagation()}
-                          />
+            {/* Workshop Selection (Workshop Tab) */}
+            {activeTab === 'workshop' && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold mb-4">Workshop Selection</h3>
+
+                <div className="space-y-2">
+                  <Label>Workshop You're Interested In</Label>
+                  <div className="relative" ref={workshopDropdownRef}>
+                    <div
+                      className={cn(
+                        "min-h-[48px] w-full rounded-lg border bg-white px-3 py-2 cursor-pointer",
+                        "hover:border-gray-400 transition-colors",
+                        showWorkshopDropdown && "border-blue-500 ring-2 ring-blue-100"
+                      )}
+                      onClick={() => setShowWorkshopDropdown(!showWorkshopDropdown)}
+                    >
+                      {hasNoWorkshopInMind ? (
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-gray-600">Help me find a workshop</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setHasNoWorkshopInMind(false)
+                            }}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
                         </div>
-                      </div>
-                      <div className="overflow-y-auto max-h-60">
-                        {/* No speaker in mind option */}
-                        <div
-                          className={cn(
-                            "px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b",
-                            hasNoSpeakerInMind && "bg-blue-50"
-                          )}
-                          onClick={handleNoSpeakerInMind}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="font-medium text-gray-700">No specific speaker in mind</div>
-                              <div className="text-sm text-gray-500">We'll recommend speakers based on your needs</div>
-                            </div>
-                            {hasNoSpeakerInMind && (
-                              <CheckCircle className="h-5 w-5 text-blue-600" />
+                      ) : selectedWorkshop ? (
+                        <div className="flex items-center justify-between w-full">
+                          <div>
+                            <div className="font-medium text-gray-900">{selectedWorkshop.title}</div>
+                            {selectedWorkshop.speaker_name && (
+                              <div className="text-sm text-gray-500">by {selectedWorkshop.speaker_name}</div>
                             )}
                           </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              clearWorkshop()
+                            }}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
                         </div>
-                        {loadingSpeakers ? (
-                          <div className="p-8 text-center">
-                            <Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" />
-                            <p className="text-sm text-gray-500 mt-2">Loading speakers...</p>
+                      ) : (
+                        <div className="flex items-center justify-between text-gray-500">
+                          <span>Select a workshop or let us help you find one</span>
+                          <ChevronDown className="h-4 w-4" />
+                        </div>
+                      )}
+                    </div>
+
+                    {showWorkshopDropdown && (
+                      <div className="absolute z-10 w-full mt-2 bg-white border rounded-lg shadow-xl max-h-80 overflow-hidden">
+                        <div className="sticky top-0 bg-white border-b p-3">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                              type="text"
+                              placeholder="Search workshops..."
+                              value={workshopSearchTerm}
+                              onChange={(e) => setWorkshopSearchTerm(e.target.value)}
+                              className="pl-10"
+                              onClick={(e) => e.stopPropagation()}
+                            />
                           </div>
-                        ) : filteredSpeakers.length > 0 ? (
-                          filteredSpeakers.map(speaker => {
-                            const isSelected = selectedSpeakers.find(s => s.id === speaker.id)
-                            return (
-                              <div
-                                key={speaker.id}
-                                className={cn(
-                                  "px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors",
-                                  isSelected && "bg-blue-50"
-                                )}
-                                onClick={() => toggleSpeaker(speaker)}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <div className="font-medium">{speaker.name}</div>
-                                    {speaker.title && (
-                                      <div className="text-sm text-gray-500">{speaker.title}</div>
+                        </div>
+                        <div className="overflow-y-auto max-h-60">
+                          {/* Help me find a workshop option */}
+                          <div
+                            className={cn(
+                              "px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b",
+                              hasNoWorkshopInMind && "bg-blue-50"
+                            )}
+                            onClick={handleNoWorkshopInMind}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-medium text-gray-700">Help me find a workshop</div>
+                                <div className="text-sm text-gray-500">We'll recommend workshops based on your team's needs</div>
+                              </div>
+                              {hasNoWorkshopInMind && (
+                                <CheckCircle className="h-5 w-5 text-blue-600" />
+                              )}
+                            </div>
+                          </div>
+                          {loadingWorkshops ? (
+                            <div className="p-8 text-center">
+                              <Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" />
+                              <p className="text-sm text-gray-500 mt-2">Loading workshops...</p>
+                            </div>
+                          ) : filteredWorkshops.length > 0 ? (
+                            filteredWorkshops.map(workshop => {
+                              const isSelected = selectedWorkshop?.id === workshop.id
+                              return (
+                                <div
+                                  key={workshop.id}
+                                  className={cn(
+                                    "px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors",
+                                    isSelected && "bg-blue-50"
+                                  )}
+                                  onClick={() => selectWorkshop(workshop)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <div className="font-medium">{workshop.title}</div>
+                                      <div className="text-sm text-gray-500">
+                                        {workshop.speaker_name && `by ${workshop.speaker_name}`}
+                                        {workshop.format && workshop.speaker_name && ' • '}
+                                        {workshop.format}
+                                      </div>
+                                    </div>
+                                    {isSelected && (
+                                      <CheckCircle className="h-5 w-5 text-blue-600" />
                                     )}
                                   </div>
-                                  {isSelected && (
-                                    <CheckCircle className="h-5 w-5 text-blue-600" />
-                                  )}
                                 </div>
-                              </div>
-                            )
-                          })
-                        ) : (
-                          <div className="p-8 text-center text-gray-500">
-                            No speakers found matching "{speakerSearchTerm}"
-                          </div>
-                        )}
+                              )
+                            })
+                          ) : (
+                            <div className="p-8 text-center text-gray-500">
+                              No workshops found matching "{workshopSearchTerm}"
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Not sure which workshop is right? Select "Help me find a workshop" and describe your needs below.
+                  </p>
                 </div>
-                <p className="text-sm text-gray-600">
-                  Can't find who you're looking for? Describe your ideal speaker in the additional information section below.
-                </p>
+
+                {/* Workshop-specific fields */}
+                <div className="grid md:grid-cols-2 gap-6 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="numberOfParticipants">Number of Participants</Label>
+                    <Select
+                      value={formData.numberOfParticipants}
+                      onValueChange={(value) => handleInputChange('numberOfParticipants', value)}
+                    >
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Select group size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {participantOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="participantSkillLevel">Participant Skill Level</Label>
+                    <Select
+                      value={formData.participantSkillLevel}
+                      onValueChange={(value) => handleInputChange('participantSkillLevel', value)}
+                    >
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Select skill level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {skillLevelOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="preferredFormat">Preferred Format</Label>
+                    <Select
+                      value={formData.preferredFormat}
+                      onValueChange={(value) => handleInputChange('preferredFormat', value)}
+                    >
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Select format preference" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {formatOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Event Details */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold mb-4">Event Details</h3>
+              <h3 className="text-lg font-semibold mb-4">
+                {activeTab === 'keynote' ? 'Event Details' : 'Workshop Details'}
+              </h3>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="eventDate">Event Date(s)</Label>
+                  <Label htmlFor="eventDate">
+                    {activeTab === 'keynote' ? 'Event Date(s)' : 'Preferred Date(s)'}
+                  </Label>
                   <div className="space-y-2">
                     {eventDates.map((date, index) => (
                       <div key={index} className="flex gap-2">
@@ -537,9 +928,11 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="eventLocation">Event Location</Label>
+                  <Label htmlFor="eventLocation">
+                    {activeTab === 'keynote' ? 'Event Location' : 'Workshop Location'}
+                  </Label>
                   <div className="relative">
                     <Input
                       id="eventLocation"
@@ -554,7 +947,9 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="eventBudget">Speaker Budget Range</Label>
+                <Label htmlFor="eventBudget">
+                  {activeTab === 'keynote' ? 'Speaker Budget Range' : 'Workshop Budget Range'}
+                </Label>
                 <Select value={formData.eventBudget} onValueChange={(value) => handleInputChange('eventBudget', value)}>
                   <SelectTrigger className="h-12">
                     <SelectValue placeholder="Select your budget range" />
@@ -576,13 +971,16 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
 
               <div className="space-y-2">
                 <Label htmlFor="additionalInfo">
-                  Tell us more about your event
+                  Tell us more about your {activeTab === 'keynote' ? 'event' : 'training needs'}
                 </Label>
                 <Textarea
                   id="additionalInfo"
                   value={formData.additionalInfo}
                   onChange={(e) => handleInputChange('additionalInfo', e.target.value)}
-                  placeholder="Share details about your audience, event theme, specific topics of interest, or any special requirements..."
+                  placeholder={activeTab === 'keynote'
+                    ? "Share details about your audience, event theme, specific topics of interest, or any special requirements..."
+                    : "Share details about your team, learning objectives, specific AI tools or technologies you want to focus on, or any special requirements..."
+                  }
                   rows={5}
                   className="resize-none"
                 />
@@ -599,8 +997,8 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                   className="mt-1"
                 />
                 <div className="flex-1">
-                  <Label 
-                    htmlFor="newsletterOptIn" 
+                  <Label
+                    htmlFor="newsletterOptIn"
                     className="text-base font-medium cursor-pointer flex items-center gap-2"
                   >
                     <Newspaper className="h-4 w-4 text-blue-600" />
@@ -639,7 +1037,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                   Submitting...
                 </>
               ) : (
-                'Submit Request'
+                `Submit ${activeTab === 'keynote' ? 'Speaker' : 'Workshop'} Request`
               )}
             </Button>
           </form>
@@ -662,7 +1060,7 @@ export function CustomContactForm({ preselectedSpeaker }: { preselectedSpeaker?:
                 </a>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-3">
               <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
               <div>
