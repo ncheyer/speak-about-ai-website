@@ -598,14 +598,11 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
                 <div className="grid grid-cols-2 gap-6">
                   {workshop.client_logos.map((logoUrl, index) => (
                     <div key={index} className="flex items-center justify-center p-6 bg-white rounded-lg shadow-sm">
-                      <div className="relative w-full h-16">
-                        <Image
-                          src={logoUrl}
-                          alt={`Client logo ${index + 1}`}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
+                      <img
+                        src={logoUrl}
+                        alt={`Client logo ${index + 1}`}
+                        className="max-h-16 max-w-full object-contain"
+                      />
                     </div>
                   ))}
                 </div>
@@ -686,15 +683,12 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
                   {workshop.client_logos.map((logoUrl, index) => (
-                    <div key={index} className="flex items-center justify-center p-6">
-                      <div className="relative w-full h-20">
-                        <Image
-                          src={logoUrl}
-                          alt={`Client logo ${index + 1}`}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
+                    <div key={index} className="flex items-center justify-center p-6 w-full">
+                      <img
+                        src={logoUrl}
+                        alt={`Client logo ${index + 1}`}
+                        className="max-h-20 max-w-full object-contain"
+                      />
                     </div>
                   ))}
                 </div>
