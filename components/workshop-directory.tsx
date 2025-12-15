@@ -49,12 +49,22 @@ export default function WorkshopDirectory() {
       if (response.ok) {
         const data = await response.json()
         // Handle both response formats: { workshops: [...] } or direct array
-        const workshopsData = data.workshops || data || []
+        // Ensure we always get an array
+        let workshopsData = data.workshops || data || []
+        if (!Array.isArray(workshopsData)) {
+          console.error("Workshops data is not an array:", workshopsData)
+          workshopsData = []
+        }
         setWorkshops(workshopsData)
         setFilteredWorkshops(workshopsData)
+      } else {
+        setWorkshops([])
+        setFilteredWorkshops([])
       }
     } catch (error) {
       console.error("Error loading workshops:", error)
+      setWorkshops([])
+      setFilteredWorkshops([])
     } finally {
       setLoading(false)
     }
@@ -66,6 +76,11 @@ export default function WorkshopDirectory() {
   }, [loadWorkshops])
 
   const filterWorkshops = useCallback(() => {
+    // Ensure workshops is always an array
+    if (!Array.isArray(workshops)) {
+      setFilteredWorkshops([])
+      return
+    }
     let filtered = workshops
 
     // Search query filter
@@ -134,9 +149,10 @@ export default function WorkshopDirectory() {
     { value: "hybrid", label: "Hybrid" }
   ]
 
-  // Extract unique values for other filters
-  const locations = ["all", ...Array.from(new Set(workshops.map((w) => w.speaker_location).filter(Boolean)))]
-  const audiences = ["all", ...Array.from(new Set(workshops.map((w) => w.target_audience).filter(Boolean)))]
+  // Extract unique values for other filters (with safety checks)
+  const workshopsArray = Array.isArray(workshops) ? workshops : []
+  const locations = ["all", ...Array.from(new Set(workshopsArray.map((w) => w.speaker_location).filter(Boolean)))]
+  const audiences = ["all", ...Array.from(new Set(workshopsArray.map((w) => w.target_audience).filter(Boolean)))]
 
   return (
     <div className="min-h-screen bg-white">

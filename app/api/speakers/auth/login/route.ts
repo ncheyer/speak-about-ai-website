@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
     `
 
     if (accounts.length === 0) {
+      console.log('❌ Login failed: No account found for email:', email)
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
@@ -51,9 +52,18 @@ export async function POST(request: NextRequest) {
     }
 
     const account = accounts[0]
+    console.log('✅ Account found:', {
+      id: account.id,
+      email: account.speaker_email,
+      hasPassword: !!account.password_hash,
+      isActive: account.is_active,
+      emailVerified: account.email_verified,
+      profileStatus: account.profile_status
+    })
 
     // Check if account has a password
     if (!account.password_hash) {
+      console.log('❌ Login failed: No password set')
       return NextResponse.json(
         { error: "Password not set. Please contact support." },
         { status: 401 }
@@ -62,8 +72,10 @@ export async function POST(request: NextRequest) {
 
     // Verify password
     const isValidPassword = verifyPassword(password, account.password_hash)
-    
+    console.log('🔐 Password verification result:', isValidPassword)
+
     if (!isValidPassword) {
+      console.log('❌ Login failed: Invalid password')
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
@@ -72,6 +84,7 @@ export async function POST(request: NextRequest) {
 
     // Check if account is active
     if (!account.is_active) {
+      console.log('❌ Login failed: Account not active')
       return NextResponse.json(
         { error: "Account is not active. Please contact support." },
         { status: 403 }
@@ -80,6 +93,7 @@ export async function POST(request: NextRequest) {
 
     // Check if email is verified
     if (!account.email_verified) {
+      console.log('❌ Login failed: Email not verified')
       return NextResponse.json(
         { error: "Please verify your email before logging in." },
         { status: 403 }
@@ -88,6 +102,7 @@ export async function POST(request: NextRequest) {
 
     // Check profile status
     if (account.profile_status !== 'approved') {
+      console.log('❌ Login failed: Profile not approved, status:', account.profile_status)
       return NextResponse.json(
         { error: "Your profile is pending approval. Please wait for admin approval." },
         { status: 403 }

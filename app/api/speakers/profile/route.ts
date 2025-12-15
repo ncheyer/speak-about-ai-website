@@ -49,19 +49,35 @@ export async function GET(request: NextRequest) {
     }
 
     const speaker = speakers[0]
-    
+
+    // Also fetch internal info from speaker_accounts
+    let internalInfo: any = {}
+    try {
+      const accountsResult = await sql`
+        SELECT internal_info
+        FROM speaker_accounts
+        WHERE speaker_id = ${speakerId}
+        LIMIT 1
+      `
+      if (accountsResult.length > 0 && accountsResult[0].internal_info) {
+        internalInfo = accountsResult[0].internal_info
+      }
+    } catch (accountError) {
+      console.log('Note: Could not fetch speaker_accounts internal_info:', accountError)
+    }
+
     // Parse name into first and last
     const nameParts = speaker.name ? speaker.name.trim().split(' ') : ['', '']
     const firstName = nameParts[0] || ''
     const lastName = nameParts.slice(1).join(' ') || ''
-    
+
     // Transform data to match frontend expectations
     const profile = {
       id: speaker.id,
       first_name: firstName,
       last_name: lastName,
       email: speaker.email,
-      phone: '', // Not in current database
+      phone: internalInfo.phone || '', // From speaker_accounts
       // Store title and company in one_liner field separated by ' at '
       // Parse them back out for display
       title: speaker.one_liner?.includes(' at ') ? speaker.one_liner.split(' at ')[0] : (speaker.one_liner || ''),
@@ -93,9 +109,35 @@ export async function GET(request: NextRequest) {
       available_formats: ['keynote', 'panel', 'fireside', 'virtual', 'executive'], // Default
       
       travel_preferences: speaker.travel_preferences || '',
-      booking_requirements: '', // Not in current database
+      booking_requirements: internalInfo.booking_requirements || '',
       technical_requirements: speaker.technical_requirements || '',
       dietary_restrictions: speaker.dietary_restrictions || '',
+
+      // Internal info from speaker_accounts
+      emergency_contact: internalInfo.emergency_contact || '',
+      assistant_contact: internalInfo.assistant_contact || '',
+      preferred_airport: internalInfo.preferred_airport || '',
+      alternate_airports: internalInfo.alternate_airports || '',
+      hotel_preferences: internalInfo.hotel_preferences || '',
+      ground_transport: internalInfo.ground_transport || '',
+      av_requirements: internalInfo.av_requirements || '',
+      stage_requirements: internalInfo.stage_requirements || '',
+
+      // Fee structure from speaker_accounts
+      fee_keynote: internalInfo.fee_keynote || '',
+      fee_workshop: internalInfo.fee_workshop || '',
+      fee_panel: internalInfo.fee_panel || '',
+      fee_virtual: internalInfo.fee_virtual || '',
+      fee_local: internalInfo.fee_local || '',
+      fee_domestic: internalInfo.fee_domestic || '',
+      fee_international: internalInfo.fee_international || '',
+      fee_nonprofit: internalInfo.fee_nonprofit || '',
+
+      // Other internal info
+      payment_details: internalInfo.payment_details || '',
+      w9_status: internalInfo.w9_status || '',
+      medical_notes: internalInfo.medical_notes || '',
+      accessibility_needs: internalInfo.accessibility_needs || '',
       
       website: speaker.website || '',
       linkedin_url: speaker.social_media?.linkedin_url || '',
@@ -163,39 +205,75 @@ export async function PUT(request: NextRequest) {
     
     const current = currentData[0]
     
-    // Combine first and last name
-    const fullName = `${data.first_name || ''} ${data.last_name || ''}`.trim()
-    
-    // Prepare social media data
+    // Parse current name into first and last
+    const [currentFirstName, ...currentLastNameParts] = (current.name || '').split(' ')
+    const currentLastName = currentLastNameParts.join(' ')
+
+    // Combine first and last name - use existing values if not provided
+    const firstName = data.first_name !== undefined ? data.first_name : currentFirstName
+    const lastName = data.last_name !== undefined ? data.last_name : currentLastName
+    const fullName = `${firstName} ${lastName}`.trim() || current.name
+
+    // Use existing email if not provided
+    const email = data.email || current.email
+
+    // Prepare social media data - merge with existing
+    const currentSocialMedia = current.social_media || {}
     const socialMedia = {
-      linkedin_url: data.linkedin_url || null,
-      twitter_url: data.twitter_url || null,
-      youtube_url: data.youtube_url || null,
-      instagram_url: data.instagram_url || null
+      linkedin_url: data.linkedin_url !== undefined ? data.linkedin_url : currentSocialMedia.linkedin_url || null,
+      twitter_url: data.twitter_url !== undefined ? data.twitter_url : currentSocialMedia.twitter_url || null,
+      youtube_url: data.youtube_url !== undefined ? data.youtube_url : currentSocialMedia.youtube_url || null,
+      instagram_url: data.instagram_url !== undefined ? data.instagram_url : currentSocialMedia.instagram_url || null
+    }
+
+    // Prepare internal info data (to be stored in speaker_accounts)
+    const internalInfo = {
+      phone: data.phone || null,
+      emergency_contact: data.emergency_contact || null,
+      assistant_contact: data.assistant_contact || null,
+      preferred_airport: data.preferred_airport || null,
+      alternate_airports: data.alternate_airports || null,
+      hotel_preferences: data.hotel_preferences || null,
+      ground_transport: data.ground_transport || null,
+      av_requirements: data.av_requirements || null,
+      stage_requirements: data.stage_requirements || null,
+      fee_keynote: data.fee_keynote || null,
+      fee_workshop: data.fee_workshop || null,
+      fee_panel: data.fee_panel || null,
+      fee_virtual: data.fee_virtual || null,
+      fee_local: data.fee_local || null,
+      fee_domestic: data.fee_domestic || null,
+      fee_international: data.fee_international || null,
+      fee_nonprofit: data.fee_nonprofit || null,
+      booking_requirements: data.booking_requirements || null,
+      payment_details: data.payment_details || null,
+      w9_status: data.w9_status || null,
+      medical_notes: data.medical_notes || null,
+      accessibility_needs: data.accessibility_needs || null
     }
 
     // Update speaker in database - only update columns that exist
     const result = await sql`
       UPDATE speakers
-      SET 
+      SET
         name = ${fullName},
-        email = ${data.email},
-        location = ${data.location || null},
-        bio = ${data.bio || null},
-        short_bio = ${data.short_bio || null},
-        one_liner = ${data.title && data.company ? `${data.title} at ${data.company}` : (data.one_liner || data.title || null)},
-        headshot_url = ${data.headshot_url || null},
-        website = ${data.website || null},
+        email = ${email},
+        location = ${data.location !== undefined ? data.location : current.location},
+        bio = ${data.bio !== undefined ? data.bio : current.bio},
+        short_bio = ${data.short_bio !== undefined ? data.short_bio : current.short_bio},
+        one_liner = ${data.title && data.company ? `${data.title} at ${data.company}` : (data.one_liner !== undefined ? data.one_liner : current.one_liner)},
+        headshot_url = ${data.headshot_url !== undefined ? data.headshot_url : current.headshot_url},
+        website = ${data.website !== undefined ? data.website : current.website},
         social_media = ${JSON.stringify(socialMedia)},
-        topics = ${JSON.stringify(data.speaking_topics || [])},
-        industries = ${JSON.stringify(data.expertise_areas || [])},
-        programs = ${JSON.stringify(data.programs || [])},
-        videos = ${JSON.stringify(data.videos || [])},
-        testimonials = ${JSON.stringify(data.testimonials || [])},
-        speaking_fee_range = ${data.speaking_fee_range || null},
-        travel_preferences = ${data.travel_preferences || null},
-        technical_requirements = ${data.technical_requirements || null},
-        dietary_restrictions = ${data.dietary_restrictions || null},
+        topics = ${data.speaking_topics !== undefined ? JSON.stringify(data.speaking_topics) : JSON.stringify(current.topics || [])},
+        industries = ${data.expertise_areas !== undefined ? JSON.stringify(data.expertise_areas) : JSON.stringify(current.industries || [])},
+        programs = ${data.programs !== undefined ? JSON.stringify(data.programs) : JSON.stringify(current.programs || [])},
+        videos = ${data.videos !== undefined ? JSON.stringify(data.videos) : JSON.stringify(current.videos || [])},
+        testimonials = ${data.testimonials !== undefined ? JSON.stringify(data.testimonials) : JSON.stringify(current.testimonials || [])},
+        speaking_fee_range = ${data.speaking_fee_range !== undefined ? data.speaking_fee_range : current.speaking_fee_range},
+        travel_preferences = ${data.travel_preferences !== undefined ? data.travel_preferences : current.travel_preferences},
+        technical_requirements = ${data.technical_requirements !== undefined ? data.technical_requirements : current.technical_requirements},
+        dietary_restrictions = ${data.dietary_restrictions !== undefined ? data.dietary_restrictions : current.dietary_restrictions},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${speakerId}
       RETURNING id, email, name, updated_at
@@ -203,6 +281,21 @@ export async function PUT(request: NextRequest) {
 
     if (result.length === 0) {
       return NextResponse.json({ error: 'Speaker not found' }, { status: 404 })
+    }
+
+    // Also update internal info in speaker_accounts table
+    try {
+      await sql`
+        UPDATE speaker_accounts
+        SET
+          internal_info = ${JSON.stringify(internalInfo)},
+          updated_at = CURRENT_TIMESTAMP
+        WHERE speaker_id = ${speakerId}
+      `
+      console.log('Updated speaker_accounts internal_info for speaker:', speakerId)
+    } catch (accountError) {
+      // speaker_accounts may not have internal_info column yet
+      console.log('Note: Could not update speaker_accounts internal_info:', accountError)
     }
     
     // Log changes to speaker_updates table

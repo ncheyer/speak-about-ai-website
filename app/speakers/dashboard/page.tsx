@@ -35,58 +35,17 @@ import {
 
 export default function SpeakerDashboard() {
   const [stats, setStats] = useState({
-    profileViews: 0,
-    viewsChange: 0,
-    requests: 0,
-    requestsChange: 0,
+    activeDeals: 0,
+    pendingDeals: 0,
     completedEvents: 0,
-    eventsChange: 0,
     earnings: 0,
-    earningsChange: 0,
     profileCompletion: 0
   })
   const [inquiries, setInquiries] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<any>(null)
-  const [selectedPeriod, setSelectedPeriod] = useState("30days")
-  const [analyticsData, setAnalyticsData] = useState<any>(null)
   const [assignedDeals, setAssignedDeals] = useState<any[]>([])
   const [assignedProjects, setAssignedProjects] = useState<any[]>([])
-
-  // Generate engagement metrics data based on selected period and analytics data
-  const getEngagementData = () => {
-    // If we have real analytics data, use it
-    if (analyticsData?.viewsByDay && analyticsData.viewsByDay.length > 0) {
-      // Use the actual daily view data from analytics
-      const conversionRate = analyticsData.conversionRate || 5
-      return analyticsData.viewsByDay.map((day: any) => ({
-        date: day.date,
-        views: day.views || 0,
-        requests: Math.floor(day.views * (conversionRate / 100)) || 0, // Use actual conversion rate
-        bookings: Math.floor(day.views * (conversionRate / 200)) || 0 // Half of requests convert to bookings
-      }))
-    }
-    
-    // Fallback to empty data if no analytics
-    const now = new Date()
-    const data = []
-    const days = selectedPeriod === "30days" ? 30 : selectedPeriod === "3months" ? 90 : 365
-    
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(now)
-      date.setDate(date.getDate() - i)
-      data.push({
-        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        views: 0,
-        requests: 0,
-        bookings: 0
-      })
-    }
-    
-    return data.slice(-30) // Show last 30 data points for better visualization
-  }
-
-  const engagementData = getEngagementData()
 
   // Fetch profile and calculate completion
   useEffect(() => {
@@ -130,33 +89,6 @@ export default function SpeakerDashboard() {
           }
         }
 
-        // Fetch analytics data
-        const analyticsResponse = await fetch("/api/speakers/me/analytics?range=30d", {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        })
-
-        if (analyticsResponse.ok) {
-          const analytics = await analyticsResponse.json()
-          if (analytics.success && analytics.analytics) {
-            setAnalyticsData(analytics.analytics)
-            
-            // Update stats with real analytics data
-            setStats(prev => ({
-              ...prev,
-              profileViews: analytics.analytics.profileViews || 0,
-              viewsChange: 12, // Calculate based on previous period
-              requests: analytics.analytics.bookingClicks || 0,
-              requestsChange: 8,
-              completedEvents: 3, // This would come from events API
-              eventsChange: 15,
-              earnings: 45000,
-              earningsChange: 18
-            }))
-          }
-        }
-
         // Fetch inquiries where speaker is tagged
         const inquiriesResponse = await fetch("/api/speakers/inquiries", {
           headers: {
@@ -182,18 +114,22 @@ export default function SpeakerDashboard() {
               setAssignedProjects(assignmentsData.projects || [])
               
               // Update stats with real deal/project data
-              const activeDeals = (assignmentsData.deals || []).filter((d: any) => 
-                d.status !== 'lost' && d.status !== 'cancelled'
+              const activeDeals = (assignmentsData.deals || []).filter((d: any) =>
+                d.status === 'won' || d.status === 'negotiation'
               )
-              const completedProjects = (assignmentsData.projects || []).filter((p: any) => 
+              const pendingDeals = (assignmentsData.deals || []).filter((d: any) =>
+                d.status === 'new' || d.status === 'contacted' || d.status === 'proposal_sent'
+              )
+              const completedProjects = (assignmentsData.projects || []).filter((p: any) =>
                 p.status === 'completed'
               )
-              
+
               setStats(prev => ({
                 ...prev,
-                requests: prev.requests + activeDeals.length,
+                activeDeals: activeDeals.length,
+                pendingDeals: pendingDeals.length,
                 completedEvents: completedProjects.length,
-                earnings: activeDeals.reduce((sum: number, deal: any) => 
+                earnings: (assignmentsData.deals || []).reduce((sum: number, deal: any) =>
                   sum + (deal.payment_status === 'paid' ? Number(deal.deal_value || 0) : 0), 0
                 )
               }))

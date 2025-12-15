@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Clock, Users, MapPin, CheckCircle, Target, BookOpen, Award, Star } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import WorkshopAnalyticsTracker from "@/components/workshop-analytics-tracker"
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -41,6 +42,17 @@ export default async function WorkshopDetailPage({ params }: PageProps) {
 
   return (
     <>
+      {/* Analytics Tracker - Tracks workshop page views */}
+      <WorkshopAnalyticsTracker
+        workshopId={workshop.id}
+        workshopTitle={workshop.title}
+        workshopSlug={workshop.slug}
+        speakerName={workshop.speaker_name}
+        speakerSlug={workshop.speaker_slug}
+        format={workshop.format}
+        topics={workshop.topics}
+      />
+
       {/* Hero Header Image - Full width banner style */}
       {workshop.thumbnail_url && (
         <section className="relative w-full h-64 md:h-80 lg:h-96 bg-gray-100">

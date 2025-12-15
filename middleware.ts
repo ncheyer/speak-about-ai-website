@@ -7,6 +7,32 @@ export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   const pathname = url.pathname
 
+  // Bot protection - block suspicious traffic patterns
+  const country = request.geo?.country || request.headers.get('x-vercel-ip-country') || ''
+  const userAgent = request.headers.get('user-agent') || ''
+
+  // Block known bot patterns:
+  // - Singapore + Windows 7 + Chrome (common bot signature)
+  // - Empty or suspicious user agents
+  const isWindows7 = userAgent.includes('Windows NT 6.1')
+  const isSuspiciousBot = (
+    // Block Singapore + Windows 7 (known bot farm pattern)
+    (country === 'SG' && isWindows7) ||
+    // Block empty user agents
+    !userAgent ||
+    userAgent.length < 10 ||
+    // Block common bot signatures
+    /bot|crawler|spider|scraper|headless/i.test(userAgent)
+  )
+
+  // Allow legitimate bots like Google, Bing
+  const isLegitimateBot = /Googlebot|Bingbot|Slurp|DuckDuckBot|facebookexternalhit|Twitterbot|LinkedInBot/i.test(userAgent)
+
+  if (isSuspiciousBot && !isLegitimateBot) {
+    // Return a 403 Forbidden for suspicious bots
+    return new NextResponse('Access Denied', { status: 403 })
+  }
+
   // URL normalization for SEO (before creating response)
   let shouldRedirect = false
 

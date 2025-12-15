@@ -19,22 +19,47 @@ export async function POST(request: NextRequest) {
     // Add small delay to prevent brute force attacks
     await new Promise(resolve => setTimeout(resolve, 1000))
 
-    // Get speaker with password hash
-    const speakers = await sql`
-      SELECT id, email, name, active, password_hash, email_verified
-      FROM speakers
-      WHERE email = ${email.toLowerCase()} AND active = true
+    // First try speaker_accounts table (for portal login - same as password reset)
+    const accounts = await sql`
+      SELECT
+        sa.id as account_id,
+        sa.speaker_id,
+        sa.speaker_email as email,
+        sa.speaker_name as name,
+        sa.is_active as active,
+        sa.password_hash,
+        sa.email_verified
+      FROM speaker_accounts sa
+      WHERE LOWER(sa.speaker_email) = ${email.toLowerCase()}
+        AND sa.is_active = true
       LIMIT 1
     `
 
-    if (speakers.length === 0) {
+    let speaker = null
+    let useAccountsTable = false
+
+    if (accounts.length > 0) {
+      speaker = accounts[0]
+      useAccountsTable = true
+    } else {
+      // Fallback to speakers table
+      const speakers = await sql`
+        SELECT id, email, name, active, password_hash, email_verified
+        FROM speakers
+        WHERE email = ${email.toLowerCase()} AND active = true
+        LIMIT 1
+      `
+      if (speakers.length > 0) {
+        speaker = speakers[0]
+      }
+    }
+
+    if (!speaker) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       )
     }
-
-    const speaker = speakers[0]
 
     // Check if speaker has set a password
     if (!speaker.password_hash) {
@@ -60,13 +85,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get the speaker_id - use speaker_id from accounts table if available, otherwise use id
+    const speakerId = useAccountsTable ? speaker.speaker_id : speaker.id
+
     // Generate session token
-    const sessionToken = Buffer.from(`speaker:${speaker.id}:${Date.now()}`).toString('base64')
+    const sessionToken = Buffer.from(`speaker:${speakerId}:${Date.now()}`).toString('base64')
 
     return NextResponse.json({
       success: true,
       speaker: {
-        id: speaker.id,
+        id: speakerId,
         email: speaker.email,
         name: speaker.name
       },
