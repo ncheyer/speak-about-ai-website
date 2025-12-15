@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
 
 export const metadata: Metadata = {
-  title: "AI Keynote Speaker | Book Artificial Intelligence Speakers for Events",
+  title: "AI Keynote Speakers | Book Artificial Intelligence Speakers for Events",
   description:
     "Book an AI keynote speaker from the #1 AI-exclusive bureau. 70+ artificial intelligence keynote speakers including Siri founders, OpenAI staff & Stanford AI experts.",
   keywords:
