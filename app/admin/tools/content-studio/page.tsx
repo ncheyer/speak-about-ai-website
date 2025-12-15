@@ -55,14 +55,17 @@ interface PreviewData {
   images: string[]
 }
 
-interface ContentfulDraft {
-  id: string
+interface AIDraft {
+  id: number
   title: string
-  body: string
-  createdAt: string
-  updatedAt: string
-  status: 'draft' | 'changed'
-  url: string
+  slug: string
+  content: string
+  original_content: string | null
+  source_type: string | null
+  source_url: string | null
+  status: string
+  created_at: string
+  updated_at: string
 }
 
 type Step = 'input' | 'preview' | 'generate' | 'review'
@@ -92,15 +95,17 @@ export default function AIContentStudioPage() {
   const [copied, setCopied] = useState(false)
 
   // Drafts states
-  const [drafts, setDrafts] = useState<ContentfulDraft[]>([])
+  const [drafts, setDrafts] = useState<AIDraft[]>([])
   const [isLoadingDrafts, setIsLoadingDrafts] = useState(false)
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
 
   const fetchDrafts = async () => {
     setIsLoadingDrafts(true)
     try {
-      const response = await fetch("/api/admin/tools/contentful-drafts", {
+      const token = localStorage.getItem('adminSessionToken')
+      const response = await fetch("/api/admin/tools/blog-drafts", {
         headers: {
-          "x-dev-admin-bypass": "dev-admin-access"
+          "Authorization": `Bearer ${token}`
         }
       })
       if (response.ok) {
@@ -111,6 +116,44 @@ export default function AIContentStudioPage() {
       console.error("Error fetching drafts:", error)
     } finally {
       setIsLoadingDrafts(false)
+    }
+  }
+
+  const saveDraft = async () => {
+    if (!generatedContent || !previewData?.title) {
+      toast({ title: "Error", description: "No content to save", variant: "destructive" })
+      return
+    }
+    setIsSavingDraft(true)
+    try {
+      const token = localStorage.getItem('adminSessionToken')
+      const response = await fetch("/api/admin/tools/blog-drafts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: previewData.title,
+          content: generatedContent,
+          original_content: previewData.content,
+          source_type: "semrush",
+          source_url: semrushUrl,
+          speakers_mentioned: selectedSpeakers.length
+        })
+      })
+      if (response.ok) {
+        toast({ title: "Success", description: "Draft saved successfully" })
+        fetchDrafts()
+      } else {
+        const data = await response.json()
+        toast({ title: "Error", description: data.error || "Failed to save draft", variant: "destructive" })
+      }
+    } catch (error) {
+      console.error("Error saving draft:", error)
+      toast({ title: "Error", description: "Failed to save draft", variant: "destructive" })
+    } finally {
+      setIsSavingDraft(false)
     }
   }
 
@@ -411,17 +454,17 @@ export default function AIContentStudioPage() {
               </CardContent>
             </Card>
 
-            {/* Contentful Drafts Section */}
+            {/* AI Generated Drafts Section */}
             <Card className="mt-6">
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Edit3 className="h-5 w-5 text-blue-600" />
-                      Contentful Drafts
+                      Saved Drafts
                     </CardTitle>
                     <CardDescription>
-                      Unpublished blog posts saved in Contentful
+                      AI-generated articles waiting to be published
                     </CardDescription>
                   </div>
                   <Button variant="outline" size="sm" onClick={fetchDrafts} disabled={isLoadingDrafts}>
@@ -437,35 +480,40 @@ export default function AIContentStudioPage() {
                     <span className="ml-2 text-gray-500">Loading drafts...</span>
                   </div>
                 ) : drafts.length === 0 ? (
-                  <p className="text-gray-500 text-sm text-center py-4">No drafts found in Contentful.</p>
+                  <p className="text-gray-500 text-sm text-center py-4">No saved drafts yet. Generate content and save it as a draft.</p>
                 ) : (
                   <div className="space-y-3 max-h-80 overflow-y-auto">
                     {drafts.map((draft) => (
                       <div
                         key={draft.id}
-                        className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all"
+                        className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer"
+                        onClick={() => {
+                          setGeneratedContent(draft.content)
+                          setCurrentStep('review')
+                          toast({ title: "Draft loaded", description: `Loaded "${draft.title}"` })
+                        }}
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-gray-900 truncate">{draft.title}</span>
-                            <Badge variant={draft.status === 'draft' ? 'secondary' : 'outline'} className="text-xs">
-                              {draft.status === 'draft' ? 'Draft' : 'Changed'}
+                            <Badge variant="secondary" className="text-xs">
+                              Draft
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-500 line-clamp-2">{draft.body}...</p>
-                          <div className="flex items-center gap-1 mt-2 text-xs text-gray-400">
-                            <Clock className="h-3 w-3" />
-                            Updated {new Date(draft.updatedAt).toLocaleDateString()}
+                          <p className="text-sm text-gray-500 line-clamp-2">{draft.content.substring(0, 150)}...</p>
+                          <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {new Date(draft.created_at).toLocaleDateString()}
+                            </div>
+                            {draft.source_url && (
+                              <div className="flex items-center gap-1">
+                                <ExternalLink className="h-3 w-3" />
+                                Semrush
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <a
-                          href={draft.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-shrink-0 p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded-lg transition-colors"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
                       </div>
                     ))}
                   </div>
@@ -654,6 +702,20 @@ export default function AIContentStudioPage() {
                           <Copy className="h-4 w-4 mr-2" />
                         )}
                         {copied ? "Copied!" : "Copy"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={saveDraft}
+                        disabled={isSavingDraft}
+                        className="border-amber-500 text-amber-600 hover:bg-amber-50"
+                      >
+                        {isSavingDraft ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Edit3 className="h-4 w-4 mr-2" />
+                        )}
+                        Save Draft
                       </Button>
                       <Button
                         size="sm"

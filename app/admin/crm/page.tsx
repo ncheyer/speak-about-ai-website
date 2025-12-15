@@ -222,6 +222,15 @@ export default function AdminCRMPage() {
     })
   }
 
+  // Auth headers helper
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("adminSessionToken")
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+    }
+  }
+
   // Check authentication and load data
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
@@ -236,11 +245,13 @@ export default function AdminCRMPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      
+      const token = localStorage.getItem("adminSessionToken")
+      const headers = { 'Authorization': token ? `Bearer ${token}` : '' }
+
       // Load deals and contracts in parallel
       const [dealsResponse, contractsResponse] = await Promise.all([
-        fetch("/api/deals", { credentials: 'include' }),
-        fetch("/api/contracts", { credentials: 'include' })
+        fetch("/api/deals", { headers }),
+        fetch("/api/contracts", { headers })
       ])
 
       if (dealsResponse.ok) {
@@ -460,9 +471,8 @@ d) An immediate family member is stricken by serious injury, illness, or death.
       setSubmitting(true)
       const response = await fetch("/api/contracts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: 'include',
-        body: JSON.stringify({ 
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
           deal_id: contractDeal.id,
           speaker_info: {
             name: contractFormData.speaker_name,
@@ -546,15 +556,13 @@ d) An immediate family member is stricken by serious injury, illness, or death.
         console.log("Deal data being sent:", dealData)
         response = await fetch(`/api/deals/${editingDeal.id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: 'include',
+          headers: getAuthHeaders(),
           body: JSON.stringify(dealData),
         })
       } else {
         response = await fetch("/api/deals", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: 'include',
+          headers: getAuthHeaders(),
           body: JSON.stringify(dealData),
         })
       }
