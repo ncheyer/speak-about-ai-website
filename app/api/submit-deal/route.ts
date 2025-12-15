@@ -64,7 +64,15 @@ export async function POST(request: NextRequest) {
       eventLocation: formData.eventLocation,
       eventBudget: formData.eventBudget,
       additionalInfo: formData.additionalInfo,
-      wishlistSpeakers
+      wishlistSpeakers,
+      // Workshop-specific fields
+      requestType: formData.requestType,
+      selectedWorkshop: formData.selectedWorkshop,
+      selectedWorkshopId: formData.selectedWorkshopId,
+      hasNoWorkshopInMind: formData.hasNoWorkshopInMind,
+      numberOfParticipants: formData.numberOfParticipants,
+      participantSkillLevel: formData.participantSkillLevel,
+      preferredFormat: formData.preferredFormat
     }
 
     // Create the deal
