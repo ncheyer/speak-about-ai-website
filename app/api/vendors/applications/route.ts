@@ -4,7 +4,15 @@ import { Resend } from "resend"
 import { requireAdminAuth } from "@/lib/auth-middleware"
 
 const sql = neon(process.env.DATABASE_URL!)
-const resend = new Resend(process.env.RESEND_API_KEY)
+
+// Lazy initialize Resend to avoid build-time errors
+let resend: Resend | null = null
+function getResend() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resend
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -211,7 +219,7 @@ export async function POST(request: NextRequest) {
     
     // Send confirmation email to applicant
     try {
-      await resend.emails.send({
+      await getResend().emails.send({
         from: 'Vendor Applications <vendors@speakaboutai.com>',
         to: body.business_email,
         subject: 'Application Received - Vendor Directory',
@@ -239,7 +247,7 @@ export async function POST(request: NextRequest) {
     
     // Send notification to admin
     try {
-      await resend.emails.send({
+      await getResend().emails.send({
         from: 'Vendor Applications <vendors@speakaboutai.com>',
         to: 'admin@speakaboutai.com',
         subject: `New Vendor Application: ${body.company_name}`,
@@ -455,7 +463,7 @@ export async function PUT(request: NextRequest) {
     
     if (emailSubject && ["approved", "rejected", "needs_info"].includes(status)) {
       try {
-        await resend.emails.send({
+        await getResend().emails.send({
           from: 'Vendor Applications <vendors@speakaboutai.com>',
           to: application.business_email,
           subject: emailSubject,

@@ -5,7 +5,15 @@ import crypto from 'crypto'
 import { Resend } from 'resend'
 
 const sql = neon(process.env.DATABASE_URL!)
-const resend = new Resend(process.env.RESEND_API_KEY)
+
+// Lazy initialize Resend to avoid build-time errors
+let resend: Resend | null = null
+function getResend() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resend
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -267,7 +275,7 @@ async function sendInvitationEmail(data: any) {
   
   // Send email using Resend
   try {
-    const { data: emailData, error } = await resend.emails.send({
+    const { data: emailData, error } = await getResend().emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'Speak About AI <hello@speakabout.ai>',
       to: data.email,
       subject: isAccountCreation ? 'Create Your Speak About AI Account' : 'You\'re Invited to Join Speak About AI',

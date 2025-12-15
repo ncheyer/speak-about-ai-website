@@ -4,8 +4,16 @@ import { Resend } from "resend"
 import crypto from "crypto"
 import jwt from "jsonwebtoken"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const sql = neon(process.env.DATABASE_URL!)
+
+// Lazy initialize Resend to avoid build-time errors
+let resend: Resend | null = null
+function getResend() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resend
+}
 const JWT_SECRET = process.env.JWT_SECRET || "vendor-secret-key-change-in-production"
 
 export async function POST(request: NextRequest) {
@@ -56,7 +64,7 @@ export async function POST(request: NextRequest) {
         // Send login email
         const loginUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/vendors/login?token=${loginToken}&email=${email}`
         
-        await resend.emails.send({
+        await getResend().emails.send({
           from: 'Vendor Portal <vendors@speakaboutai.com>',
           to: email,
           subject: 'Your Vendor Portal Login Link',

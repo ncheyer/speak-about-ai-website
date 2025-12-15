@@ -346,6 +346,7 @@ export default function AIContentStudioPage() {
 
           {/* Step 1: Input */}
           {currentStep === 'input' && (
+            <>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -471,6 +472,7 @@ export default function AIContentStudioPage() {
                 )}
               </CardContent>
             </Card>
+            </>
           )}
 
           {/* Step 2: Preview */}

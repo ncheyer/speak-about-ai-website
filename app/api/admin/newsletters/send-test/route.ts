@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy initialize Resend to avoid build-time errors
+let resend: Resend | null = null
+function getResend() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resend
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,7 +36,7 @@ export async function POST(request: NextRequest) {
       ${html_content.replace('{{unsubscribe_url}}', '#').replace('{{name}}', 'Test User')}
     `
     
-    const result = await resend.emails.send({
+    const result = await getResend().emails.send({
       from: 'Speak About AI <newsletter@speakabout.ai>',
       to: test_email,
       subject: `[TEST] ${subject}`,

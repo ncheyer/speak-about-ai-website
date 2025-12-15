@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy initialize Resend to avoid build-time errors
+let resend: Resend | null = null
+function getResend() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resend
+}
 
 export async function POST(
   request: NextRequest,
@@ -88,7 +95,7 @@ export async function POST(
             recipient.name || 'Subscriber'
           )
           
-          await resend.emails.send({
+          await getResend().emails.send({
             from: 'Speak About AI <newsletter@speakabout.ai>',
             to: recipient.email,
             subject: newsletter.subject,
