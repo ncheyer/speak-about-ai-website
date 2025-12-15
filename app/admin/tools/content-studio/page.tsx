@@ -577,6 +577,7 @@ export default function AIContentStudioPage() {
                       <SelectItem value="conversational">Conversational & Friendly</SelectItem>
                       <SelectItem value="thought-leadership">Thought Leadership</SelectItem>
                       <SelectItem value="educational">Educational & Instructive</SelectItem>
+                      <SelectItem value="simple">Simple & Approachable (8th Grade)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

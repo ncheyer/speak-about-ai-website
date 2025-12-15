@@ -220,7 +220,8 @@ export async function POST(request: NextRequest) {
       'professional': 'Write in a professional and technical tone. Use industry terminology, data-driven insights, and maintain a formal voice. Focus on credibility and expertise.',
       'conversational': 'Write in a friendly, conversational tone. Use simple language, personal anecdotes, and engaging storytelling. Make complex topics accessible.',
       'thought-leadership': 'Write as a thought leader establishing authority. Use bold statements, future predictions, and industry insights. Challenge conventional thinking.',
-      'educational': 'Write in an instructive, educational tone. Break down complex concepts, use examples, and provide actionable takeaways. Focus on teaching.'
+      'educational': 'Write in an instructive, educational tone. Break down complex concepts, use examples, and provide actionable takeaways. Focus on teaching.',
+      'simple': 'Write at an 8th grade reading level. Use short sentences, simple words, and a friendly approachable tone. Avoid jargon and technical terms - explain concepts simply. Make it easy for anyone to understand.'
     }
 
     const styleInstruction = styleInstructions[style as keyof typeof styleInstructions] || styleInstructions.professional
@@ -235,7 +236,12 @@ export async function POST(request: NextRequest) {
 ORIGINAL ARTICLE:
 ${article}
 
-${userSelectedSpeakers ? '⭐ USER-SELECTED SPEAKERS (MUST INCLUDE THESE):' : 'RELEVANT SPEAKERS FROM OUR ROSTER:'}
+${images.length > 0 ? `ORIGINAL IMAGES (MUST INCLUDE THESE in markdown format):
+${images.map((img, i) => `${i + 1}. ![Image ${i + 1}](${img})`).join('\n')}
+
+IMPORTANT: Include these images at appropriate places throughout the article using markdown image syntax: ![alt text](url)
+
+` : ''}${userSelectedSpeakers ? '⭐ USER-SELECTED SPEAKERS (MUST INCLUDE THESE):' : 'RELEVANT SPEAKERS FROM OUR ROSTER:'}
 ${speakersContext.map((s, i) => `${i + 1}. ${s.name} - ${s.title}
    Bio: ${s.bio}
    Topics: ${s.topics}
@@ -304,9 +310,10 @@ ${userSelectedSpeakers || userSelectedPosts ? `IMPORTANT - USER SELECTIONS:
 
 When enhancing articles:
 - Maintain 100% of the original article's content, structure, and SEO
+- PRESERVE ALL IMAGES from the original article - include them using markdown syntax ![alt](url)
 - Add smart internal links to https://speakabout.ai and relevant speaker pages
 - Add subtle Speak About AI branding in the conclusion
-- Preserve all markdown formatting (headings, lists, emphasis)
+- Preserve all markdown formatting (headings, lists, emphasis, images)
 
 Style instruction: ${styleInstruction}`,
         messages: [
