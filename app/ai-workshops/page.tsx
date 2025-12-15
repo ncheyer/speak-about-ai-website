@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import WorkshopDirectory from "@/components/workshop-directory"
 
-// Revalidate workshops listing every 60 seconds
-export const revalidate = 60
+// Force dynamic rendering to always fetch fresh workshop data
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: "AI Workshops | Immersive Training Programs | Speak About AI",
