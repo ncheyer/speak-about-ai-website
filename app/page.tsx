@@ -11,15 +11,15 @@ import { Button } from "@/components/ui/button"
 import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
 
 export const metadata: Metadata = {
-  title: "Artificial Intelligence (AI) Speakers: Top Talent for Events",
+  title: "AI Keynote Speaker | Book Artificial Intelligence Speakers for Events",
   description:
-    "Book an AI speaker from the #1 AI-exclusive speaker bureau. 70+ experts including Siri founders, OpenAI staff & Stanford researchers for your event.",
+    "Book an AI keynote speaker from the #1 AI-exclusive bureau. 70+ artificial intelligence keynote speakers including Siri founders, OpenAI staff & Stanford AI experts.",
   keywords:
-    "AI speaker, AI speaker bureau, book AI speaker, AI keynote speakers, AI keynote speaker, artificial intelligence speakers, AI speakers, AI conference speakers, machine learning speakers, AI expert speakers, generative AI speakers, ChatGPT speakers, AI motivational speakers",
+    "AI keynote speaker, AI keynote speakers, artificial intelligence keynote speaker, artificial intelligence keynote speakers, ai expert speaker, book AI speaker, AI speaker bureau, AI conference speakers, machine learning speakers, generative AI speakers",
   openGraph: {
-    title: "AI Keynote Speakers | Book Top AI Speakers for 2025",
+    title: "AI Keynote Speaker | Book Artificial Intelligence Speakers",
     description:
-      "Book world-class AI keynote speakers with Speak About AI, the AI-exclusive bureau trusted by Fortune 500s. 50+ experts for your next event.",
+      "Book an AI keynote speaker from the #1 AI-exclusive bureau. 70+ artificial intelligence keynote speakers for conferences, corporate events & summits.",
     type: "website",
     url: "https://speakabout.ai",
     images: [
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Keynote Speakers | Book Top AI Speakers for 2025",
+    title: "AI Keynote Speaker | Book Artificial Intelligence Speakers",
     description:
-      "Book world-class AI keynote speakers. The only AI-exclusive speaker bureau trusted by Fortune 500s.",
+      "Book an AI keynote speaker from the #1 AI-exclusive bureau. 70+ artificial intelligence keynote speakers for your event.",
     images: ["/hero-image.jpg"],
   },
   alternates: {
