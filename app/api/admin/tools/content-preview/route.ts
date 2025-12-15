@@ -30,6 +30,45 @@ const AI_KEYWORDS = [
   'future of work', 'workforce', 'productivity', 'enterprise'
 ]
 
+// Location keywords mapping to database patterns
+const LOCATION_KEYWORDS: Record<string, string[]> = {
+  'new york': ['new york', 'nyc', 'manhattan', 'brooklyn'],
+  'san francisco': ['san francisco', 'sf', 'bay area', 'silicon valley'],
+  'los angeles': ['los angeles', 'la', 'hollywood'],
+  'chicago': ['chicago'],
+  'boston': ['boston', 'massachusetts'],
+  'seattle': ['seattle', 'washington'],
+  'austin': ['austin', 'texas'],
+  'miami': ['miami', 'florida'],
+  'atlanta': ['atlanta', 'georgia'],
+  'denver': ['denver', 'colorado'],
+  'london': ['london', 'uk', 'united kingdom'],
+  'toronto': ['toronto', 'canada'],
+  'berlin': ['berlin', 'germany'],
+  'paris': ['paris', 'france'],
+  'dublin': ['dublin', 'ireland'],
+  'detroit': ['detroit', 'michigan'],
+  'philadelphia': ['philadelphia', 'philly'],
+  'washington dc': ['washington', 'dc', 'washington dc'],
+  'puerto rico': ['puerto rico'],
+  'europe': ['europe', 'european'],
+}
+
+// Extract location from content
+function extractLocation(content: string): string | null {
+  const contentLower = content.toLowerCase()
+  for (const [location, keywords] of Object.entries(LOCATION_KEYWORDS)) {
+    for (const keyword of keywords) {
+      // Look for the keyword with word boundaries
+      const regex = new RegExp(`\\b${keyword}\\b`, 'i')
+      if (regex.test(contentLower)) {
+        return location
+      }
+    }
+  }
+  return null
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Authentication check
@@ -93,58 +132,70 @@ export async function POST(request: NextRequest) {
     const contentLower = content.toLowerCase()
     const foundKeywords = AI_KEYWORDS.filter(kw => contentLower.includes(kw))
 
+    // Extract location from content
+    const detectedLocation = extractLocation(content)
+    console.log('Detected location:', detectedLocation)
+
     // Get SQL client
     const sql = getSqlClient()
     let speakers: any[] = []
+    let locationSpeakers: any[] = []
 
-    if (sql && foundKeywords.length > 0) {
+    if (sql) {
       try {
-        // Build search pattern for multiple keywords
-        const searchPatterns = foundKeywords.slice(0, 5).map(kw => `%${kw}%`)
+        // First, if a location is detected, get speakers from that location
+        if (detectedLocation) {
+          const locationPatterns = LOCATION_KEYWORDS[detectedLocation] || [detectedLocation]
+          const locationPattern = `%${locationPatterns[0]}%`
 
-        // Search speakers using multiple keywords
-        speakers = await sql`
-          SELECT DISTINCT
-            id, name, bio, short_bio, one_liner, title, topics, industries, website, slug
-          FROM speakers
-          WHERE listed = true
-            AND (
-              ${sql.unsafe(searchPatterns.map((_, i) => `
-                LOWER(bio) LIKE $${i + 1}
-                OR LOWER(short_bio) LIKE $${i + 1}
-                OR LOWER(one_liner) LIKE $${i + 1}
-                OR LOWER(title) LIKE $${i + 1}
+          locationSpeakers = await sql`
+            SELECT
+              id, name, bio, short_bio, one_liner, title, topics, industries, website, slug, location,
+              1 as location_match
+            FROM speakers
+            WHERE listed = true
+              AND LOWER(location) LIKE ${locationPattern}
+            ORDER BY featured DESC, ranking DESC
+            LIMIT 8
+          `
+          console.log(`Found ${locationSpeakers.length} speakers in ${detectedLocation}`)
+        }
+
+        // Then get keyword-matched speakers
+        if (foundKeywords.length > 0) {
+          const primaryKeyword = `%${foundKeywords[0]}%`
+          const keywordSpeakers = await sql`
+            SELECT
+              id, name, bio, short_bio, one_liner, title, topics, industries, website, slug, location,
+              0 as location_match
+            FROM speakers
+            WHERE listed = true
+              AND (
+                LOWER(bio) LIKE ${primaryKeyword}
+                OR LOWER(short_bio) LIKE ${primaryKeyword}
+                OR LOWER(one_liner) LIKE ${primaryKeyword}
+                OR LOWER(title) LIKE ${primaryKeyword}
                 OR EXISTS (
                   SELECT 1 FROM jsonb_array_elements_text(topics) topic
-                  WHERE LOWER(topic) LIKE $${i + 1}
+                  WHERE LOWER(topic) LIKE ${primaryKeyword}
                 )
-              `).join(' OR '), ...searchPatterns)}
-            )
-          ORDER BY featured DESC, ranking DESC
-          LIMIT 8
-        `
-      } catch (sqlError) {
-        console.error('SQL query error, trying simpler query:', sqlError)
-        // Fallback to simpler query if the complex one fails
-        const primaryKeyword = `%${foundKeywords[0]}%`
-        speakers = await sql`
-          SELECT
-            id, name, bio, short_bio, one_liner, title, topics, industries, website, slug
-          FROM speakers
-          WHERE listed = true
-            AND (
-              LOWER(bio) LIKE ${primaryKeyword}
-              OR LOWER(short_bio) LIKE ${primaryKeyword}
-              OR LOWER(one_liner) LIKE ${primaryKeyword}
-              OR LOWER(title) LIKE ${primaryKeyword}
-              OR EXISTS (
-                SELECT 1 FROM jsonb_array_elements_text(topics) topic
-                WHERE LOWER(topic) LIKE ${primaryKeyword}
               )
-            )
-          ORDER BY featured DESC, ranking DESC
-          LIMIT 8
-        `
+            ORDER BY featured DESC, ranking DESC
+            LIMIT 8
+          `
+
+          // Combine: location speakers first, then keyword speakers (deduped)
+          const seenIds = new Set(locationSpeakers.map(s => s.id))
+          speakers = [
+            ...locationSpeakers,
+            ...keywordSpeakers.filter(s => !seenIds.has(s.id))
+          ].slice(0, 8)
+        } else {
+          speakers = locationSpeakers
+        }
+      } catch (sqlError) {
+        console.error('SQL query error:', sqlError)
+        speakers = locationSpeakers // Fall back to location speakers if any
       }
     }
 
@@ -155,6 +206,8 @@ export async function POST(request: NextRequest) {
       title: s.title || '',
       bio: s.short_bio || s.one_liner || (s.bio ? s.bio.substring(0, 200) : ''),
       topics: Array.isArray(s.topics) ? s.topics.join(', ') : '',
+      location: s.location || '',
+      locationMatch: s.location_match === 1,
       website: `https://speakabout.ai/speakers/${s.slug}`,
       slug: s.slug
     }))
@@ -191,7 +244,8 @@ export async function POST(request: NextRequest) {
       speakers: formattedSpeakers,
       blogPosts,
       images,
-      keywords: foundKeywords
+      keywords: foundKeywords,
+      detectedLocation
     })
 
   } catch (error) {
