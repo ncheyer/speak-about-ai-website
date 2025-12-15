@@ -221,9 +221,17 @@ export default function AIContentStudioPage() {
       }
 
       const data = await response.json()
-      setPreviewData(data)
+      // Deduplicate speakers by ID and convert IDs to strings
+      const uniqueSpeakers = data.speakers.reduce((acc: Speaker[], speaker: Speaker) => {
+        const stringId = String(speaker.id)
+        if (!acc.find(s => String(s.id) === stringId)) {
+          acc.push({ ...speaker, id: stringId })
+        }
+        return acc
+      }, [])
+      setPreviewData({ ...data, speakers: uniqueSpeakers })
       // Auto-select all speakers and blog posts by default
-      setSelectedSpeakers(data.speakers.map((s: Speaker) => s.id))
+      setSelectedSpeakers(uniqueSpeakers.map((s: Speaker) => s.id))
       setSelectedBlogPosts(data.blogPosts.map((p: BlogPost) => p.slug))
       setCurrentStep('preview')
 
@@ -344,9 +352,10 @@ export default function AIContentStudioPage() {
     setGeneratedContent("")
   }
 
-  const toggleSpeaker = (id: string) => {
+  const toggleSpeaker = (id: string | number) => {
+    const stringId = String(id)
     setSelectedSpeakers(prev =>
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+      prev.includes(stringId) ? prev.filter(s => s !== stringId) : [...prev, stringId]
     )
   }
 
@@ -389,16 +398,17 @@ export default function AIContentStudioPage() {
   // Add speaker from search results to selected
   const addSpeakerFromSearch = (speaker: Speaker) => {
     if (!previewData) return
-    // Check if already in previewData
-    const exists = previewData.speakers.find(s => s.id === speaker.id)
+    // Check if already in previewData - use String() to handle number/string mismatch
+    const speakerId = String(speaker.id)
+    const exists = previewData.speakers.find(s => String(s.id) === speakerId)
     if (!exists) {
       setPreviewData({
         ...previewData,
-        speakers: [...previewData.speakers, speaker]
+        speakers: [...previewData.speakers, { ...speaker, id: speakerId }]
       })
     }
-    if (!selectedSpeakers.includes(speaker.id)) {
-      setSelectedSpeakers(prev => [...prev, speaker.id])
+    if (!selectedSpeakers.includes(speakerId)) {
+      setSelectedSpeakers(prev => [...prev, speakerId])
     }
     toast({ title: "Added", description: `${speaker.name} added to selection` })
   }
@@ -790,11 +800,11 @@ export default function AIContentStudioPage() {
                     <p className="text-gray-500 text-sm">No matching speakers found for this content.</p>
                   ) : (
                     <div className="space-y-3">
-                      {previewData.speakers.map((speaker) => (
+                      {previewData.speakers.map((speaker, index) => (
                         <div
-                          key={speaker.id}
+                          key={`speaker-${speaker.id}-${index}`}
                           className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
-                            selectedSpeakers.includes(speaker.id)
+                            selectedSpeakers.includes(String(speaker.id))
                               ? 'border-purple-300 bg-purple-50'
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
