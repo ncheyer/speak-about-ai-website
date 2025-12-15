@@ -1,6 +1,9 @@
 import type { Metadata } from "next"
 import WorkshopDirectory from "@/components/workshop-directory"
 
+// Revalidate workshops listing every 60 seconds
+export const revalidate = 60
+
 export const metadata: Metadata = {
   title: "AI Workshops | Immersive Training Programs | Speak About AI",
   description:

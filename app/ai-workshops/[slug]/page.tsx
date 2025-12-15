@@ -11,6 +11,9 @@ interface PageProps {
   params: Promise<{ slug: string }>
 }
 
+// Revalidate workshop pages every 60 seconds to pick up new changes
+export const revalidate = 60
+
 export default async function WorkshopDetailPage({ params }: PageProps) {
   const { slug } = await params
   const workshop = await getWorkshopBySlug(slug)
