@@ -11,10 +11,10 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  Settings, User, Bell, Shield, CreditCard, Globe, 
-  Mail, Phone, Lock, Eye, EyeOff, Check, X, 
-  AlertCircle, Download, Trash2, LogOut
+import {
+  Settings, User, Bell, Shield,
+  Mail, Phone, Lock, Eye, EyeOff, Check, X,
+  Download, Trash2, LogOut
 } from "lucide-react"
 
 export default function AccountSettingsPage() {
@@ -57,13 +57,6 @@ export default function AccountSettingsPage() {
     dataSharing: false
   })
   
-  const [billing, setBilling] = useState({
-    paymentMethod: "bank",
-    bankAccount: "****1234",
-    taxId: "XX-XXXXXXX",
-    invoiceEmail: "noah@speakabout.ai",
-    currency: "USD"
-  })
 
   useEffect(() => {
     const token = localStorage.getItem("speakerToken")
@@ -138,21 +131,6 @@ export default function AccountSettingsPage() {
     }
   }
   
-  const handleSaveBilling = async () => {
-    setIsLoading(true)
-    setSaveStatus({type: null, message: ''})
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setSaveStatus({type: 'success', message: 'Billing information updated'})
-    } catch (error) {
-      setSaveStatus({type: 'error', message: 'Failed to update billing information'})
-    } finally {
-      setIsLoading(false)
-    }
-  }
-  
   const handleLogout = () => {
     localStorage.removeItem("speakerToken")
     localStorage.removeItem("speakerEmail")
@@ -206,7 +184,7 @@ export default function AccountSettingsPage() {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 w-full mb-6 bg-white border">
+          <TabsList className="grid grid-cols-4 w-full mb-6 bg-white border">
             <TabsTrigger value="account" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Account</span>
@@ -218,10 +196,6 @@ export default function AccountSettingsPage() {
             <TabsTrigger value="privacy" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
               <span className="hidden sm:inline">Privacy</span>
-            </TabsTrigger>
-            <TabsTrigger value="billing" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              <span className="hidden sm:inline">Billing</span>
             </TabsTrigger>
             <TabsTrigger value="advanced" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -588,173 +562,8 @@ export default function AccountSettingsPage() {
             </div>
           </TabsContent>
 
-          {/* Billing Tab */}
-          <TabsContent value="billing" className="space-y-6">
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <CardTitle>Payment Information</CardTitle>
-                <CardDescription>Manage how you receive payments</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Payment Method</Label>
-                  <Select value={billing.paymentMethod} onValueChange={(value) => setBilling({...billing, paymentMethod: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bank">Bank Transfer (ACH)</SelectItem>
-                      <SelectItem value="wire">Wire Transfer</SelectItem>
-                      <SelectItem value="paypal">PayPal</SelectItem>
-                      <SelectItem value="stripe">Stripe</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="bank-account">Bank Account</Label>
-                    <Input
-                      id="bank-account"
-                      type="text"
-                      value={billing.bankAccount}
-                      onChange={(e) => setBilling({...billing, bankAccount: e.target.value})}
-                      placeholder="****1234"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="tax-id">Tax ID</Label>
-                    <Input
-                      id="tax-id"
-                      type="text"
-                      value={billing.taxId}
-                      onChange={(e) => setBilling({...billing, taxId: e.target.value})}
-                      placeholder="XX-XXXXXXX"
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="invoice-email">Invoice Email</Label>
-                    <Input
-                      id="invoice-email"
-                      type="email"
-                      value={billing.invoiceEmail}
-                      onChange={(e) => setBilling({...billing, invoiceEmail: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Preferred Currency</Label>
-                    <Select value={billing.currency} onValueChange={(value) => setBilling({...billing, currency: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD - US Dollar</SelectItem>
-                        <SelectItem value="EUR">EUR - Euro</SelectItem>
-                        <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                        <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <CardTitle>Earnings Summary</CardTitle>
-                <CardDescription>Your earnings overview for this year</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Total Earned</p>
-                    <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      $125,500
-                    </p>
-                  </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Pending</p>
-                    <p className="text-2xl font-bold text-gray-900">$15,000</p>
-                  </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Next Payout</p>
-                    <p className="text-2xl font-bold text-gray-900">$8,500</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <div className="flex justify-end">
-              <Button 
-                onClick={handleSaveBilling}
-                disabled={isLoading}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                {isLoading ? "Saving..." : "Save Billing Info"}
-              </Button>
-            </div>
-          </TabsContent>
-
           {/* Advanced Tab */}
           <TabsContent value="advanced" className="space-y-6">
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <CardTitle>Two-Factor Authentication</CardTitle>
-                <CardDescription>Add an extra layer of security to your account</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Shield className="h-5 w-5 text-green-600" />
-                    <div>
-                      <p className="font-medium">2FA is enabled</p>
-                      <p className="text-sm text-gray-600">Your account is protected with two-factor authentication</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    Configure
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <CardTitle>Active Sessions</CardTitle>
-                <CardDescription>Manage your active login sessions</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Globe className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <p className="font-medium">Chrome on MacOS</p>
-                      <p className="text-sm text-gray-600">Current session · New York, US</p>
-                    </div>
-                  </div>
-                  <span className="text-sm text-green-600">Active now</span>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Globe className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <p className="font-medium">Safari on iPhone</p>
-                      <p className="text-sm text-gray-600">Last active 2 hours ago · New York, US</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-red-600">
-                    Revoke
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
             <Card className="border-0 shadow-md border-red-200">
               <CardHeader>
                 <CardTitle className="text-red-600">Danger Zone</CardTitle>

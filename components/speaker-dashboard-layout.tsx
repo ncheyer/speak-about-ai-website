@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -24,8 +24,15 @@ import {
   Star,
   Globe,
   Video,
-  BarChart3
+  BarChart3,
+  Clock,
+  AlertTriangle
 } from "lucide-react"
+
+// Session timeout configuration (30 minutes)
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000
+const WARNING_BEFORE_TIMEOUT_MS = 5 * 60 * 1000
+const LAST_ACTIVITY_KEY = "speakerLastActivity"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -42,25 +49,89 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
     profileViews: 0,
     events: 0
   })
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false)
+  const [timeRemaining, setTimeRemaining] = useState(0)
+  const timeoutCheckRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Update last activity timestamp
+  const updateActivity = useCallback(() => {
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
+    setShowTimeoutWarning(false)
+  }, [])
+
+  // Check session timeout
+  const checkSessionTimeout = useCallback(() => {
+    const lastActivity = localStorage.getItem(LAST_ACTIVITY_KEY)
+    const token = localStorage.getItem("speakerToken")
+
+    if (!token) return
+
+    if (!lastActivity) {
+      updateActivity()
+      return
+    }
+
+    const elapsed = Date.now() - parseInt(lastActivity)
+    const remaining = SESSION_TIMEOUT_MS - elapsed
+
+    if (remaining <= 0) {
+      // Session expired - log out
+      handleLogout()
+    } else if (remaining <= WARNING_BEFORE_TIMEOUT_MS) {
+      // Show warning
+      setShowTimeoutWarning(true)
+      setTimeRemaining(Math.ceil(remaining / 1000 / 60)) // minutes
+    }
+  }, [])
+
+  // Extend session
+  const extendSession = useCallback(() => {
+    updateActivity()
+    setShowTimeoutWarning(false)
+  }, [updateActivity])
 
   useEffect(() => {
     const token = localStorage.getItem("speakerToken")
     const name = localStorage.getItem("speakerName")
     const email = localStorage.getItem("speakerEmail")
-    
+
     if (!token) {
       router.push("/portal/speaker")
       return
     }
-    
+
+    // Initialize activity timestamp if not set
+    if (!localStorage.getItem(LAST_ACTIVITY_KEY)) {
+      updateActivity()
+    }
+
     setSpeakerName(name || "Speaker")
     setSpeakerEmail(email || "")
-    
+
     // Fetch profile data for completion percentage
     fetchProfileData(token)
     // Fetch analytics for stats
     fetchAnalytics(token)
-  }, [router])
+
+    // Set up activity listeners
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart']
+    events.forEach(event => {
+      document.addEventListener(event, updateActivity, { passive: true })
+    })
+
+    // Check session timeout every minute
+    timeoutCheckRef.current = setInterval(checkSessionTimeout, 60 * 1000)
+    checkSessionTimeout() // Check immediately
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, updateActivity)
+      })
+      if (timeoutCheckRef.current) {
+        clearInterval(timeoutCheckRef.current)
+      }
+    }
+  }, [router, updateActivity, checkSessionTimeout])
   
   // Refresh stats when pathname changes
   useEffect(() => {
@@ -127,13 +198,17 @@ export function SpeakerDashboardLayout({ children }: DashboardLayoutProps) {
     }
   }
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem("speakerToken")
     localStorage.removeItem("speakerEmail")
     localStorage.removeItem("speakerId")
     localStorage.removeItem("speakerName")
+    localStorage.removeItem(LAST_ACTIVITY_KEY)
+    if (timeoutCheckRef.current) {
+      clearInterval(timeoutCheckRef.current)
+    }
     router.push("/portal/speaker")
-  }
+  }, [router])
 
   const navigation = [
     {

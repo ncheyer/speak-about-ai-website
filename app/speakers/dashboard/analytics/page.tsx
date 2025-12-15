@@ -323,45 +323,6 @@ export default function SpeakerAnalyticsPage() {
                       {analyticsData.engagementMetrics.repeatVisitors}
                     </Badge>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Profile Completion Views</span>
-                    <Badge variant="default">68%</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Popular Sections</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Videos</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }} />
-                      </div>
-                      <span className="text-xs text-gray-500">85%</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Testimonials</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '72%' }} />
-                      </div>
-                      <span className="text-xs text-gray-500">72%</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Speaking Topics</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '68%' }} />
-                      </div>
-                      <span className="text-xs text-gray-500">68%</span>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -437,62 +398,34 @@ export default function SpeakerAnalyticsPage() {
           </TabsContent>
 
           <TabsContent value="engagement" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Visitor Behavior</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">New vs Returning</span>
-                      <span className="text-sm font-medium">69% / 31%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3 flex overflow-hidden">
-                      <div className="bg-blue-600" style={{ width: '69%' }} />
-                      <div className="bg-green-600" style={{ width: '31%' }} />
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Mobile vs Desktop</span>
-                      <span className="text-sm font-medium">42% / 58%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3 flex overflow-hidden">
-                      <div className="bg-purple-600" style={{ width: '42%' }} />
-                      <div className="bg-orange-600" style={{ width: '58%' }} />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Peak Activity Times</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Tuesday, 2-4 PM</span>
-                      <Badge variant="default">High</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Wednesday, 10-12 AM</span>
-                      <Badge variant="default">High</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Thursday, 3-5 PM</span>
-                      <Badge variant="secondary">Medium</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Monday, 9-11 AM</span>
-                      <Badge variant="secondary">Medium</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Session Metrics</CardTitle>
+                <CardDescription>
+                  Detailed engagement metrics from your profile visitors
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Average Time on Profile</span>
+                  <Badge variant="default">
+                    {analyticsData.engagementMetrics.avgTimeOnProfile}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Bounce Rate</span>
+                  <Badge variant={analyticsData.engagementMetrics.bounceRate < 50 ? "default" : "secondary"}>
+                    {analyticsData.engagementMetrics.bounceRate}%
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Booking Conversion</span>
+                  <Badge variant="default">
+                    {analyticsData.conversionRate}%
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
