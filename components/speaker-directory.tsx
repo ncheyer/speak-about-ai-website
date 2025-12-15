@@ -4,9 +4,52 @@ import { useState, useEffect, useMemo, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter } from "lucide-react"
+import { Search, Filter, MapPin, DollarSign } from "lucide-react"
 import type { Speaker } from "@/lib/speakers-data"
 import { SpeakerCard } from "@/components/speaker-card"
+
+// Fee range filter options
+const FEE_RANGES: Record<string, { label: string; min: number; max: number }> = {
+  "under-10k": { label: "Under $10K", min: 0, max: 10000 },
+  "10k-20k": { label: "$10K - $20K", min: 10000, max: 20000 },
+  "20k-30k": { label: "$20K - $30K", min: 20000, max: 30000 },
+  "30k-50k": { label: "$30K - $50K", min: 30000, max: 50000 },
+  "50k-plus": { label: "$50K+", min: 50000, max: Infinity },
+}
+
+// Location region buckets
+const LOCATION_REGIONS: Record<string, string[]> = {
+  "San Francisco Bay Area": ["san francisco", "bay area", "silicon valley", "palo alto", "san jose", "sausalito", "orinda", "scotts valley", "california"],
+  "New York": ["new york", "nyc", "manhattan"],
+  "Los Angeles": ["los angeles", "malibu", "orange county"],
+  "Seattle": ["seattle"],
+  "Boston": ["boston", "massachusetts", "burlington", "wenham"],
+  "Austin/Texas": ["austin", "texas"],
+  "Miami/Florida": ["miami", "florida"],
+  "Chicago": ["chicago", "illinois"],
+  "Atlanta": ["atlanta", "georgia"],
+  "Europe": ["london", "uk", "united kingdom", "berlin", "germany", "munich", "dublin", "ireland", "lisbon", "portugal", "rome", "italy", "paris", "france", "europe"],
+  "Canada": ["canada", "toronto", "alberta"],
+  "International": ["india", "vietnam", "asia", "israel"],
+}
+
+// Parse fee string to get numeric value
+function parseFeeToNumber(feeStr: string | undefined): number | null {
+  if (!feeStr) return null
+  const cleanFee = feeStr.toLowerCase().trim()
+  if (cleanFee.includes("inquire")) return null
+
+  // Extract first number found (handles "$10K", "$10k to $20k", "$10,000", etc.)
+  const match = cleanFee.match(/\$?([\d,]+)(?:k|K)?/)
+  if (!match) return null
+
+  let value = parseInt(match[1].replace(/,/g, ""), 10)
+  // If the number is small and there's a 'k' indicator, multiply by 1000
+  if ((cleanFee.includes("k") || cleanFee.includes("K")) && value < 1000) {
+    value *= 1000
+  }
+  return value
+}
 
 // Define the 7 industry buckets and their associated keywords
 const INDUSTRY_BUCKETS: Record<string, string[]> = {
@@ -90,6 +133,8 @@ interface SpeakerDirectoryProps {
 export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedIndustry, setSelectedIndustry] = useState("all")
+  const [selectedFeeRange, setSelectedFeeRange] = useState("all")
+  const [selectedLocation, setSelectedLocation] = useState("all")
   const searchDebounceTimer = useRef<NodeJS.Timeout | null>(null)
   const lastTrackedSearch = useRef<string>("")
 
@@ -150,7 +195,12 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
       setError(false)
 
       try {
-        if (searchQuery.trim() === "" && selectedIndustry === "all") {
+        const noFiltersActive = searchQuery.trim() === "" &&
+          selectedIndustry === "all" &&
+          selectedFeeRange === "all" &&
+          selectedLocation === "all"
+
+        if (noFiltersActive) {
           setFilteredSpeakers(validInitialSpeakers)
           setDisplayedSpeakers(validInitialSpeakers.slice(0, 12))
           setDisplayCount(12)
@@ -207,10 +257,12 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
         }
 
         let finalFilteredSpeakers = searchResults
+
+        // Apply industry filter
         if (selectedIndustry !== "all") {
           const keywords = INDUSTRY_BUCKETS[selectedIndustry]
           if (keywords) {
-            finalFilteredSpeakers = searchResults.filter((speaker) => {
+            finalFilteredSpeakers = finalFilteredSpeakers.filter((speaker) => {
               if (!speaker.industries) return false
 
               const speakerIndustries = (
@@ -218,6 +270,30 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
               ).map((i) => i.trim().toLowerCase())
 
               return speakerIndustries.some((ind) => keywords.some((kw) => ind.includes(kw)))
+            })
+          }
+        }
+
+        // Apply fee range filter
+        if (selectedFeeRange !== "all") {
+          const feeConfig = FEE_RANGES[selectedFeeRange]
+          if (feeConfig) {
+            finalFilteredSpeakers = finalFilteredSpeakers.filter((speaker) => {
+              const feeValue = parseFeeToNumber(speaker.fee || speaker.feeRange)
+              if (feeValue === null) return false
+              return feeValue >= feeConfig.min && feeValue < feeConfig.max
+            })
+          }
+        }
+
+        // Apply location filter
+        if (selectedLocation !== "all") {
+          const locationKeywords = LOCATION_REGIONS[selectedLocation]
+          if (locationKeywords) {
+            finalFilteredSpeakers = finalFilteredSpeakers.filter((speaker) => {
+              if (!speaker.location) return false
+              const speakerLocation = speaker.location.toLowerCase()
+              return locationKeywords.some(kw => speakerLocation.includes(kw))
             })
           }
         }
@@ -254,7 +330,7 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
         clearTimeout(searchDebounceTimer.current)
       }
     }
-  }, [searchQuery, selectedIndustry, validInitialSpeakers])
+  }, [searchQuery, selectedIndustry, selectedFeeRange, selectedLocation, validInitialSpeakers])
 
   const handleLoadMore = () => {
     const newCount = displayCount + 12
@@ -276,24 +352,28 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1E68C6] w-5 h-5" />
-                  <Input
-                    type="text"
-                    placeholder="Search speakers by name, expertise, or industry..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 font-montserrat border-2 border-[#1E68C6]/30 shadow-lg hover:shadow-xl focus:shadow-xl focus:border-[#1E68C6] transition-all"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Filter className="text-[#1E68C6] w-5 h-5" />
+              {/* Search Bar */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1E68C6] w-5 h-5" />
+                <Input
+                  type="text"
+                  placeholder="Search speakers by name, expertise, or industry..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 font-montserrat border-2 border-[#1E68C6]/30 shadow-lg hover:shadow-xl focus:shadow-xl focus:border-[#1E68C6] transition-all"
+                />
+              </div>
+
+              {/* Filter Row */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                {/* Industry Filter */}
+                <div className="flex items-center gap-2 flex-1">
+                  <Filter className="text-[#1E68C6] w-4 h-4 flex-shrink-0" />
                   <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
-                    <SelectTrigger className="w-full md:w-48 font-montserrat">
-                      <SelectValue placeholder="Filter by industry" />
+                    <SelectTrigger className="w-full font-montserrat text-sm">
+                      <SelectValue placeholder="Industry" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Industries</SelectItem>
@@ -305,7 +385,44 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Fee Range Filter */}
+                <div className="flex items-center gap-2 flex-1">
+                  <DollarSign className="text-[#1E68C6] w-4 h-4 flex-shrink-0" />
+                  <Select value={selectedFeeRange} onValueChange={setSelectedFeeRange}>
+                    <SelectTrigger className="w-full font-montserrat text-sm">
+                      <SelectValue placeholder="Fee Range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Fee Ranges</SelectItem>
+                      {Object.entries(FEE_RANGES).map(([key, { label }]) => (
+                        <SelectItem key={key} value={key}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Location Filter */}
+                <div className="flex items-center gap-2 flex-1">
+                  <MapPin className="text-[#1E68C6] w-4 h-4 flex-shrink-0" />
+                  <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                    <SelectTrigger className="w-full font-montserrat text-sm">
+                      <SelectValue placeholder="Location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Locations</SelectItem>
+                      {Object.keys(LOCATION_REGIONS).map((region) => (
+                        <SelectItem key={region} value={region}>
+                          {region}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+
               <div className="mt-4 text-sm text-gray-600 font-montserrat">
                 Showing {displayedSpeakers.length} of {filteredSpeakers.length} speakers
               </div>
@@ -327,6 +444,8 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
                 onClick={() => {
                   setSearchQuery("")
                   setSelectedIndustry("all")
+                  setSelectedFeeRange("all")
+                  setSelectedLocation("all")
                 }}
                 className="bg-blue-600 hover:bg-blue-700 font-montserrat"
               >
