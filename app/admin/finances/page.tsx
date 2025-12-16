@@ -75,6 +75,7 @@ interface FinancialDeal {
   commission_amount?: number
   payment_status?: 'pending' | 'partial' | 'paid'
   payment_date?: string
+  partial_payment_amount?: number
   invoice_number?: string
   notes?: string
   won_date: string
@@ -276,6 +277,7 @@ export default function FinancesPage() {
           commission_amount: editingDeal.commission_amount,
           payment_status: editingDeal.payment_status,
           payment_date: editingDeal.payment_date,
+          partial_payment_amount: editingDeal.partial_payment_amount,
           invoice_number: editingDeal.invoice_number,
           notes: editingDeal.notes,
           contract_link: editingDeal.contract_link,
@@ -1532,6 +1534,27 @@ export default function FinancesPage() {
                   />
                 </div>
               </div>
+
+              {editingDeal.payment_status === 'partial' && (
+                <div>
+                  <Label htmlFor="partial_payment_amount">Amount Paid So Far ($)</Label>
+                  <Input
+                    id="partial_payment_amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Enter amount received"
+                    value={editingDeal.partial_payment_amount || ''}
+                    onChange={(e) => setEditingDeal({
+                      ...editingDeal,
+                      partial_payment_amount: parseFloat(e.target.value) || 0
+                    })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Remaining: ${((editingDeal.deal_value || 0) - (editingDeal.partial_payment_amount || 0)).toLocaleString()}
+                  </p>
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="invoice_number">Invoice Number</Label>

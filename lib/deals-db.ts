@@ -62,6 +62,19 @@ export interface Deal {
   lost_date?: string
   won_date?: string
   closed_notes?: string
+  // Payment fields
+  payment_status?: 'pending' | 'partial' | 'paid'
+  payment_date?: string
+  partial_payment_amount?: number
+  commission_percentage?: number
+  commission_amount?: number
+  invoice_number?: string
+  contract_link?: string
+  invoice_link_1?: string
+  invoice_link_2?: string
+  contract_signed_date?: string
+  invoice_1_sent_date?: string
+  invoice_2_sent_date?: string
   // Task counts
   pending_tasks_count?: number
   overdue_tasks_count?: number
@@ -211,6 +224,18 @@ export async function updateDeal(id: number, dealData: Partial<Deal>): Promise<D
           lost_date = ${dealData.status === 'lost' ? sql`CURRENT_TIMESTAMP` : sql`lost_date`},
           won_date = ${dealData.status === 'won' ? sql`CURRENT_TIMESTAMP` : sql`won_date`},
           closed_notes = COALESCE(${dealData.closed_notes || null}, closed_notes),
+          payment_status = COALESCE(${dealData.payment_status || null}, payment_status),
+          payment_date = COALESCE(${dealData.payment_date || null}, payment_date),
+          partial_payment_amount = ${dealData.partial_payment_amount !== undefined ? dealData.partial_payment_amount : sql`partial_payment_amount`},
+          commission_percentage = ${dealData.commission_percentage !== undefined ? dealData.commission_percentage : sql`commission_percentage`},
+          commission_amount = ${dealData.commission_amount !== undefined ? dealData.commission_amount : sql`commission_amount`},
+          invoice_number = COALESCE(${dealData.invoice_number || null}, invoice_number),
+          contract_link = COALESCE(${dealData.contract_link || null}, contract_link),
+          invoice_link_1 = COALESCE(${dealData.invoice_link_1 || null}, invoice_link_1),
+          invoice_link_2 = COALESCE(${dealData.invoice_link_2 || null}, invoice_link_2),
+          contract_signed_date = COALESCE(${dealData.contract_signed_date || null}, contract_signed_date),
+          invoice_1_sent_date = COALESCE(${dealData.invoice_1_sent_date || null}, invoice_1_sent_date),
+          invoice_2_sent_date = COALESCE(${dealData.invoice_2_sent_date || null}, invoice_2_sent_date),
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id}
         RETURNING *
