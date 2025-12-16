@@ -50,11 +50,12 @@ export async function POST(request: NextRequest) {
           })
 
           const statusEmoji: Record<string, string> = {
-            'new': '🆕',
-            'contacted': '📞',
-            'proposal_sent': '📨',
+            'lead': '🆕',
+            'qualified': '✅',
+            'proposal': '📨',
             'negotiation': '🤝',
-            'won': '🎉'
+            'won': '🎉',
+            'lost': '❌'
           }
 
           let summaryText = `*📊 Deal Pipeline Summary*\n\n`
@@ -112,9 +113,9 @@ export async function POST(request: NextRequest) {
                 placeholder: { type: 'plain_text', text: deal.status },
                 action_id: 'update_deal_status',
                 options: [
-                  { text: { type: 'plain_text', text: '🆕 New' }, value: `${deal.id}:new` },
-                  { text: { type: 'plain_text', text: '📞 Contacted' }, value: `${deal.id}:contacted` },
-                  { text: { type: 'plain_text', text: '📨 Proposal Sent' }, value: `${deal.id}:proposal_sent` },
+                  { text: { type: 'plain_text', text: '🆕 Lead' }, value: `${deal.id}:lead` },
+                  { text: { type: 'plain_text', text: '✅ Qualified' }, value: `${deal.id}:qualified` },
+                  { text: { type: 'plain_text', text: '📨 Proposal' }, value: `${deal.id}:proposal` },
                   { text: { type: 'plain_text', text: '🤝 Negotiation' }, value: `${deal.id}:negotiation` },
                   { text: { type: 'plain_text', text: '🎉 Won' }, value: `${deal.id}:won` },
                   { text: { type: 'plain_text', text: '❌ Lost' }, value: `${deal.id}:lost` }
