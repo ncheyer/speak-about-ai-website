@@ -10,10 +10,6 @@ function verifySlackRequest(request: NextRequest, body: string): boolean {
     const signingSecret = process.env.SLACK_SIGNING_SECRET
     if (!signingSecret) return true // Skip verification in dev if not set
 
-    // TEMP: Skip verification to debug
-    console.log('Skipping signature verification temporarily')
-    return true
-
     const timestamp = request.headers.get('x-slack-request-timestamp')
     const signature = request.headers.get('x-slack-signature')
 
