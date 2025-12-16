@@ -226,32 +226,38 @@ export async function POST(request: NextRequest) {
 
         case 'update_deal_status': {
           // Update deal status (from select menu)
-          const newStatus = action.selected_option?.value
+          // Value format: "dealId:newStatus" from /deals list command
+          const selectedValue = action.selected_option?.value
 
-          if (newStatus && dealId) {
-            const oldDeal = await sql`SELECT status, event_title, client_name, deal_value FROM deals WHERE id = ${dealId}`
+          if (selectedValue) {
+            const [idStr, newStatus] = selectedValue.split(':')
+            const targetDealId = parseInt(idStr)
 
-            await sql`
-              UPDATE deals SET status = ${newStatus}, updated_at = NOW()
-              WHERE id = ${dealId}
-            `
+            if (targetDealId && newStatus) {
+              const oldDeal = await sql`SELECT status, event_title, client_name, deal_value FROM deals WHERE id = ${targetDealId}`
 
-            if (oldDeal.length > 0) {
-              await sendSlackMessage(buildDealStatusUpdateMessage({
-                id: dealId,
-                event_title: oldDeal[0].event_title,
-                client_name: oldDeal[0].client_name,
-                old_status: oldDeal[0].status,
-                new_status: newStatus,
-                deal_value: oldDeal[0].deal_value,
-                updated_by: userName
-              }))
+              await sql`
+                UPDATE deals SET status = ${newStatus}, updated_at = NOW()
+                WHERE id = ${targetDealId}
+              `
+
+              if (oldDeal.length > 0 && oldDeal[0].status !== newStatus) {
+                await sendSlackMessage(buildDealStatusUpdateMessage({
+                  id: targetDealId,
+                  event_title: oldDeal[0].event_title,
+                  client_name: oldDeal[0].client_name,
+                  old_status: oldDeal[0].status,
+                  new_status: newStatus,
+                  deal_value: oldDeal[0].deal_value,
+                  updated_by: userName
+                }))
+              }
+
+              return NextResponse.json({
+                response_type: 'ephemeral',
+                text: `✅ Deal "${oldDeal[0]?.event_title}" status updated to ${newStatus}`
+              })
             }
-
-            return NextResponse.json({
-              response_type: 'ephemeral',
-              text: `✅ Deal status updated to ${newStatus}`
-            })
           }
           break
         }
