@@ -1,34 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
+import crypto from 'crypto'
 
 const sql = neon(process.env.DATABASE_URL!)
 
 // Verify Slack request signature
 function verifySlackRequest(request: NextRequest, body: string): boolean {
-  const signingSecret = process.env.SLACK_SIGNING_SECRET
-  if (!signingSecret) return true // Skip verification in dev if not set
+  try {
+    const signingSecret = process.env.SLACK_SIGNING_SECRET
+    if (!signingSecret) return true // Skip verification in dev if not set
 
-  const timestamp = request.headers.get('x-slack-request-timestamp')
-  const signature = request.headers.get('x-slack-signature')
+    const timestamp = request.headers.get('x-slack-request-timestamp')
+    const signature = request.headers.get('x-slack-signature')
 
-  if (!timestamp || !signature) return false
+    if (!timestamp || !signature) return false
 
-  // Check timestamp is within 5 minutes
-  const time = Math.floor(Date.now() / 1000)
-  if (Math.abs(time - parseInt(timestamp)) > 60 * 5) return false
+    // Check timestamp is within 5 minutes
+    const time = Math.floor(Date.now() / 1000)
+    if (Math.abs(time - parseInt(timestamp)) > 60 * 5) return false
 
-  // Verify signature using HMAC SHA256
-  const crypto = require('crypto')
-  const sigBasestring = `v0:${timestamp}:${body}`
-  const mySignature = 'v0=' + crypto
-    .createHmac('sha256', signingSecret)
-    .update(sigBasestring)
-    .digest('hex')
+    // Verify signature using HMAC SHA256
+    const sigBasestring = `v0:${timestamp}:${body}`
+    const mySignature = 'v0=' + crypto
+      .createHmac('sha256', signingSecret)
+      .update(sigBasestring)
+      .digest('hex')
 
-  return crypto.timingSafeEqual(
-    Buffer.from(mySignature),
-    Buffer.from(signature)
-  )
+    // Check lengths match before comparing (timingSafeEqual throws if lengths differ)
+    if (mySignature.length !== signature.length) return false
+
+    return crypto.timingSafeEqual(
+      Buffer.from(mySignature),
+      Buffer.from(signature)
+    )
+  } catch (error) {
+    console.error('Slack signature verification error:', error)
+    return false
+  }
 }
 
 export async function POST(request: NextRequest) {
