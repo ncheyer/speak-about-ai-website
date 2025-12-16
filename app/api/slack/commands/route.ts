@@ -6,10 +6,6 @@ const sql = neon(process.env.DATABASE_URL!)
 
 // Verify Slack request signature
 function verifySlackRequest(request: NextRequest, body: string): boolean {
-  // TEMPORARILY SKIP VERIFICATION FOR DEBUGGING
-  console.log('Slack request received, skipping verification for debug')
-  return true
-
   try {
     const signingSecret = process.env.SLACK_SIGNING_SECRET
     if (!signingSecret) return true // Skip verification in dev if not set
