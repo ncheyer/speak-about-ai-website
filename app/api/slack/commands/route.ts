@@ -236,11 +236,7 @@ export async function POST(request: NextRequest) {
             totalRevenue += Number(project.speaker_fee || 0)
           })
 
-          const statusEmoji: Record<string, string> = {
-            '2plus_months': '📅',
-            '1to2_months': '📆',
-            'less_than_month': '⏰',
-            'final_week': '🔥',
+          const stageEmoji: Record<string, string> = {
             'planning': '📋',
             'contracts_signed': '📝',
             'invoicing': '💳',
@@ -252,13 +248,31 @@ export async function POST(request: NextRequest) {
             'cancelled': '❌'
           }
 
+          // Count projects by time until event
+          const timeCounts: Record<string, number> = { 'Final Week': 0, '< 1 Month': 0, '1-2 Months': 0, '2+ Months': 0 }
+          projects.forEach((p: any) => {
+            if (p.event_date) {
+              const daysAway = Math.ceil((new Date(p.event_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+              if (daysAway <= 7) timeCounts['Final Week']++
+              else if (daysAway <= 30) timeCounts['< 1 Month']++
+              else if (daysAway <= 60) timeCounts['1-2 Months']++
+              else timeCounts['2+ Months']++
+            }
+          })
+
           let summaryText = `*📁 Projects Summary*\n\n`
           summaryText += `*Total Active Projects:* ${projects.length}\n`
           summaryText += `*Total Revenue:* $${totalRevenue.toLocaleString()}\n\n`
-          summaryText += `*By Status:*\n`
 
+          summaryText += `*⏱️ By Time Until Event:*\n`
+          if (timeCounts['Final Week'] > 0) summaryText += `🔥 Final Week: ${timeCounts['Final Week']} projects\n`
+          if (timeCounts['< 1 Month'] > 0) summaryText += `⏰ < 1 Month: ${timeCounts['< 1 Month']} projects\n`
+          if (timeCounts['1-2 Months'] > 0) summaryText += `📆 1-2 Months: ${timeCounts['1-2 Months']} projects\n`
+          if (timeCounts['2+ Months'] > 0) summaryText += `📅 2+ Months: ${timeCounts['2+ Months']} projects\n`
+
+          summaryText += `\n*📋 By Stage:*\n`
           Object.entries(statusCounts).forEach(([status, count]) => {
-            const emoji = statusEmoji[status] || '📁'
+            const emoji = stageEmoji[status] || '📁'
             summaryText += `${emoji} ${status}: ${count} projects\n`
           })
 
@@ -294,11 +308,19 @@ export async function POST(request: NextRequest) {
           projects.forEach((project: any) => {
             const fee = project.speaker_fee ? `$${Number(project.speaker_fee).toLocaleString()}` : 'TBD'
             const date = project.event_date ? new Date(project.event_date).toLocaleDateString() : 'TBD'
-            const statusEmoji: Record<string, string> = {
-              '2plus_months': '📅',
-              '1to2_months': '📆',
-              'less_than_month': '⏰',
-              'final_week': '🔥',
+
+            // Calculate time until event
+            let timeUntil = ''
+            if (project.event_date) {
+              const daysAway = Math.ceil((new Date(project.event_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+              if (daysAway < 0) timeUntil = '📍 Past'
+              else if (daysAway <= 7) timeUntil = '🔥 Final Week'
+              else if (daysAway <= 30) timeUntil = '⏰ < 1 Month'
+              else if (daysAway <= 60) timeUntil = '📆 1-2 Months'
+              else timeUntil = '📅 2+ Months'
+            }
+
+            const stageEmoji: Record<string, string> = {
               'planning': '📋',
               'contracts_signed': '📝',
               'invoicing': '💳',
@@ -309,23 +331,19 @@ export async function POST(request: NextRequest) {
               'completed': '🎉',
               'cancelled': '❌'
             }
-            const emoji = statusEmoji[project.status] || '📁'
+            const emoji = stageEmoji[project.status] || '📁'
 
             blocks.push({
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: `${emoji} *${project.project_name}*\n${project.client_name} • ${fee} • ${date}`
+                text: `${emoji} *${project.project_name}*\n${project.client_name} • ${fee} • ${date} • ${timeUntil}`
               },
               accessory: {
                 type: 'static_select',
                 placeholder: { type: 'plain_text', text: project.status },
                 action_id: 'update_project_status',
                 options: [
-                  { text: { type: 'plain_text', text: '📅 2+ Months' }, value: `${project.id}:2plus_months` },
-                  { text: { type: 'plain_text', text: '📆 1-2 Months' }, value: `${project.id}:1to2_months` },
-                  { text: { type: 'plain_text', text: '⏰ < 1 Month' }, value: `${project.id}:less_than_month` },
-                  { text: { type: 'plain_text', text: '🔥 Final Week' }, value: `${project.id}:final_week` },
                   { text: { type: 'plain_text', text: '📋 Planning' }, value: `${project.id}:planning` },
                   { text: { type: 'plain_text', text: '📝 Contracts Signed' }, value: `${project.id}:contracts_signed` },
                   { text: { type: 'plain_text', text: '💳 Invoicing' }, value: `${project.id}:invoicing` },
@@ -368,11 +386,7 @@ export async function POST(request: NextRequest) {
           upcomingProjects.forEach((project: any) => {
             const date = new Date(project.event_date).toLocaleDateString()
             const daysAway = Math.ceil((new Date(project.event_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-            const statusEmoji: Record<string, string> = {
-              '2plus_months': '📅',
-              '1to2_months': '📆',
-              'less_than_month': '⏰',
-              'final_week': '🔥',
+            const stageEmoji: Record<string, string> = {
               'planning': '📋',
               'contracts_signed': '📝',
               'invoicing': '💳',
@@ -383,8 +397,9 @@ export async function POST(request: NextRequest) {
               'completed': '🎉',
               'cancelled': '❌'
             }
-            const emoji = statusEmoji[project.status] || '📁'
-            upcomingText += `${emoji} *${project.project_name}* (${project.client_name})\n   ${date} - _${daysAway} days away_ - ${project.status}\n\n`
+            const emoji = stageEmoji[project.status] || '📁'
+            const urgency = daysAway <= 7 ? '🔥' : daysAway <= 14 ? '⚠️' : ''
+            upcomingText += `${urgency}${emoji} *${project.project_name}* (${project.client_name})\n   ${date} - _${daysAway} days away_ - ${project.status}\n\n`
           })
 
           return NextResponse.json({
