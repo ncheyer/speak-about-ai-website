@@ -1122,7 +1122,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                           <Label htmlFor="travelNotes">Travel Notes</Label>
                           <Textarea
                             id="travelNotes"
-                            value={formData.travelNotes}
+                            value={formData.travelNotes || ""}
                             onChange={(e) => setFormData({ ...formData, travelNotes: e.target.value })}
                             rows={3}
                             placeholder="Additional travel requirements or notes..."
