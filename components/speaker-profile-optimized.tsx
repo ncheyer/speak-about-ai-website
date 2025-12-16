@@ -326,7 +326,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                     )}
 
                     {/* Speaking Programs */}
-                    {speaker.programs && speaker.programs.length > 0 && (
+                    {speaker.programs && Array.isArray(speaker.programs) && speaker.programs.length > 0 && (
                   <section className="mb-12">
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">
                       Available Speaking Programs

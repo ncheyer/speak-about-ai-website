@@ -241,69 +241,39 @@ export default function SpeakerDashboard() {
           <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-600">Profile Views</CardTitle>
-                <Eye className="h-4 w-4 text-gray-400" />
+                <CardTitle className="text-sm font-medium text-gray-600">Active Deals</CardTitle>
+                <Target className="h-4 w-4 text-gray-400" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{stats.profileViews.toLocaleString()}</div>
-              <div className="flex items-center mt-1">
-                {stats.viewsChange > 0 ? (
-                  <>
-                    <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
-                    <span className="text-sm text-green-600">+{stats.viewsChange}%</span>
-                  </>
-                ) : (
-                  <>
-                    <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
-                    <span className="text-sm text-red-600">{stats.viewsChange}%</span>
-                  </>
-                )}
-                <span className="text-sm text-gray-500 ml-1">vs last month</span>
-              </div>
+              <div className="text-2xl font-bold text-gray-900">{stats.activeDeals}</div>
+              <p className="text-sm text-gray-500 mt-1">In negotiation or won</p>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-600">Requests</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">Pending Deals</CardTitle>
                 <MessageSquare className="h-4 w-4 text-gray-400" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{stats.requests}</div>
-              <div className="flex items-center mt-1">
-                {stats.requestsChange > 0 ? (
-                  <>
-                    <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
-                    <span className="text-sm text-green-600">+{stats.requestsChange}%</span>
-                  </>
-                ) : (
-                  <>
-                    <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
-                    <span className="text-sm text-red-600">{Math.abs(stats.requestsChange)}%</span>
-                  </>
-                )}
-                <span className="text-sm text-gray-500 ml-1">vs last month</span>
-              </div>
+              <div className="text-2xl font-bold text-gray-900">{stats.pendingDeals}</div>
+              <p className="text-sm text-gray-500 mt-1">Awaiting response</p>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-600">Events</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">Completed Events</CardTitle>
                 <Calendar className="h-4 w-4 text-gray-400" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900">{stats.completedEvents}</div>
-              <div className="flex items-center mt-1">
-                <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600">+{stats.eventsChange}%</span>
-                <span className="text-sm text-gray-500 ml-1">all time</span>
-              </div>
+              <p className="text-sm text-gray-500 mt-1">All time</p>
             </CardContent>
           </Card>
 
@@ -315,12 +285,8 @@ export default function SpeakerDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">${(stats.earnings / 1000).toFixed(0)}k</div>
-              <div className="flex items-center mt-1">
-                <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600">+{stats.earningsChange}%</span>
-                <span className="text-sm text-gray-500 ml-1">YTD</span>
-              </div>
+              <div className="text-2xl font-bold text-gray-900">${stats.earnings > 0 ? (stats.earnings / 1000).toFixed(0) + 'k' : '0'}</div>
+              <p className="text-sm text-gray-500 mt-1">Paid to date</p>
             </CardContent>
           </Card>
         </div>
@@ -381,101 +347,6 @@ export default function SpeakerDashboard() {
               </CardContent>
             </Card>
 
-            {/* Performance Chart */}
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">Engagement Metrics</CardTitle>
-                  <select 
-                    className="text-sm border rounded-lg px-3 py-1"
-                    value={selectedPeriod}
-                    onChange={(e) => setSelectedPeriod(e.target.value)}
-                  >
-                    <option value="30days">Last 30 days</option>
-                    <option value="3months">Last 3 months</option>
-                    <option value="year">Last year</option>
-                  </select>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Metric Labels */}
-                  <div className="flex items-center justify-around text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                      <span className="text-gray-600">Profile Views</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-gray-600">Requests</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                      <span className="text-gray-600">Bookings</span>
-                    </div>
-                  </div>
-                  
-                  {/* Simple Bar Chart */}
-                  <div className="h-48 relative">
-                    <div className="absolute inset-0 flex items-end justify-between gap-1 px-2">
-                      {engagementData.slice(-10).map((item, index) => {
-                        const maxViews = Math.max(...engagementData.map(d => d.views), 1) // Avoid division by zero
-                        const viewHeight = maxViews > 0 ? (item.views / maxViews) * 100 : 0
-                        const requestHeight = maxViews > 0 ? (item.requests / maxViews) * 100 * 10 : 0 // Scale up for visibility
-                        const bookingHeight = maxViews > 0 ? (item.bookings / maxViews) * 100 * 20 : 0 // Scale up for visibility
-                        
-                        return (
-                          <div key={index} className="flex-1 flex flex-col items-center gap-0.5">
-                            <div className="w-full flex items-end gap-0.5" style={{ height: '160px' }}>
-                              <div 
-                                className="flex-1 bg-blue-500 rounded-t opacity-70 hover:opacity-100 transition-opacity"
-                                style={{ height: `${Math.max(viewHeight, 2)}%` }} // Min height for visibility
-                                title={`Views: ${item.views}`}
-                              />
-                              <div 
-                                className="flex-1 bg-green-500 rounded-t opacity-70 hover:opacity-100 transition-opacity"
-                                style={{ height: `${Math.max(requestHeight, 2)}%` }}
-                                title={`Requests: ${item.requests}`}
-                              />
-                              <div 
-                                className="flex-1 bg-purple-500 rounded-t opacity-70 hover:opacity-100 transition-opacity"
-                                style={{ height: `${Math.max(bookingHeight, 2)}%` }}
-                                title={`Bookings: ${item.bookings}`}
-                              />
-                            </div>
-                            <span className="text-xs text-gray-500 mt-1" style={{ fontSize: '10px' }}>
-                              {index % 2 === 0 ? item.date.split(' ')[1] || item.date : ''}
-                            </span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                  
-                  {/* Summary Stats */}
-                  <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-blue-600">
-                        {analyticsData?.profileViews || engagementData.reduce((sum, item) => sum + item.views, 0).toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-600">Total Views</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-green-600">
-                        {analyticsData?.bookingClicks || engagementData.reduce((sum, item) => sum + item.requests, 0)}
-                      </p>
-                      <p className="text-xs text-gray-600">Book Clicks</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-purple-600">
-                        {analyticsData ? `${analyticsData.conversionRate}%` : '0%'}
-                      </p>
-                      <p className="text-xs text-gray-600">Conversion Rate</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Right Sidebar */}
