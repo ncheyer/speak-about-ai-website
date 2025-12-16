@@ -237,8 +237,18 @@ export async function POST(request: NextRequest) {
 
           const statusEmoji: Record<string, string> = {
             '2plus_months': '📅',
+            '1to2_months': '📆',
+            'less_than_month': '⏰',
+            'final_week': '🔥',
+            'planning': '📋',
+            'contracts_signed': '📝',
             'invoicing': '💳',
-            'completed': '🎉'
+            'logistics_planning': '🗺️',
+            'pre_event': '🎯',
+            'event_week': '🎤',
+            'follow_up': '📧',
+            'completed': '🎉',
+            'cancelled': '❌'
           }
 
           let summaryText = `*📁 Projects Summary*\n\n`
@@ -285,8 +295,18 @@ export async function POST(request: NextRequest) {
             const date = project.event_date ? new Date(project.event_date).toLocaleDateString() : 'TBD'
             const statusEmoji: Record<string, string> = {
               '2plus_months': '📅',
+              '1to2_months': '📆',
+              'less_than_month': '⏰',
+              'final_week': '🔥',
+              'planning': '📋',
+              'contracts_signed': '📝',
               'invoicing': '💳',
-              'completed': '🎉'
+              'logistics_planning': '🗺️',
+              'pre_event': '🎯',
+              'event_week': '🎤',
+              'follow_up': '📧',
+              'completed': '🎉',
+              'cancelled': '❌'
             }
             const emoji = statusEmoji[project.status] || '📁'
 
@@ -301,8 +321,17 @@ export async function POST(request: NextRequest) {
                 placeholder: { type: 'plain_text', text: project.status },
                 action_id: 'update_project_status',
                 options: [
-                  { text: { type: 'plain_text', text: '📅 2+ Months Out' }, value: `${project.id}:2plus_months` },
+                  { text: { type: 'plain_text', text: '📅 2+ Months' }, value: `${project.id}:2plus_months` },
+                  { text: { type: 'plain_text', text: '📆 1-2 Months' }, value: `${project.id}:1to2_months` },
+                  { text: { type: 'plain_text', text: '⏰ < 1 Month' }, value: `${project.id}:less_than_month` },
+                  { text: { type: 'plain_text', text: '🔥 Final Week' }, value: `${project.id}:final_week` },
+                  { text: { type: 'plain_text', text: '📋 Planning' }, value: `${project.id}:planning` },
+                  { text: { type: 'plain_text', text: '📝 Contracts Signed' }, value: `${project.id}:contracts_signed` },
                   { text: { type: 'plain_text', text: '💳 Invoicing' }, value: `${project.id}:invoicing` },
+                  { text: { type: 'plain_text', text: '🗺️ Logistics' }, value: `${project.id}:logistics_planning` },
+                  { text: { type: 'plain_text', text: '🎯 Pre-Event' }, value: `${project.id}:pre_event` },
+                  { text: { type: 'plain_text', text: '🎤 Event Week' }, value: `${project.id}:event_week` },
+                  { text: { type: 'plain_text', text: '📧 Follow Up' }, value: `${project.id}:follow_up` },
                   { text: { type: 'plain_text', text: '🎉 Completed' }, value: `${project.id}:completed` }
                 ]
               }
@@ -340,8 +369,18 @@ export async function POST(request: NextRequest) {
             const daysAway = Math.ceil((new Date(project.event_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
             const statusEmoji: Record<string, string> = {
               '2plus_months': '📅',
+              '1to2_months': '📆',
+              'less_than_month': '⏰',
+              'final_week': '🔥',
+              'planning': '📋',
+              'contracts_signed': '📝',
               'invoicing': '💳',
-              'completed': '🎉'
+              'logistics_planning': '🗺️',
+              'pre_event': '🎯',
+              'event_week': '🎤',
+              'follow_up': '📧',
+              'completed': '🎉',
+              'cancelled': '❌'
             }
             const emoji = statusEmoji[project.status] || '📁'
             upcomingText += `${emoji} *${project.project_name}* (${project.client_name})\n   ${date} - _${daysAway} days away_ - ${project.status}\n\n`
