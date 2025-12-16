@@ -243,6 +243,180 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (command === '/projects') {
+      // Handle different subcommands
+      const subcommand = text.split(' ')[0].toLowerCase()
+
+      switch (subcommand) {
+        case 'summary':
+        case '': {
+          // Get projects summary
+          const projects = await sql`
+            SELECT * FROM projects
+            WHERE status NOT IN ('completed', 'cancelled')
+            ORDER BY event_date ASC NULLS LAST
+          `
+
+          const statusCounts: Record<string, number> = {}
+          let totalRevenue = 0
+
+          projects.forEach((project: any) => {
+            statusCounts[project.status] = (statusCounts[project.status] || 0) + 1
+            totalRevenue += Number(project.speaker_fee || 0)
+          })
+
+          const statusEmoji: Record<string, string> = {
+            'planning': '📋',
+            'invoicing': '💳',
+            'contract': '📝',
+            'preparation': '🎯',
+            'ready': '✅',
+            'completed': '🎉',
+            'on_hold': '⏸️'
+          }
+
+          let summaryText = `*📁 Projects Summary*\n\n`
+          summaryText += `*Total Active Projects:* ${projects.length}\n`
+          summaryText += `*Total Revenue:* $${totalRevenue.toLocaleString()}\n\n`
+          summaryText += `*By Status:*\n`
+
+          Object.entries(statusCounts).forEach(([status, count]) => {
+            const emoji = statusEmoji[status] || '📁'
+            summaryText += `${emoji} ${status}: ${count} projects\n`
+          })
+
+          return NextResponse.json({
+            response_type: 'in_channel',
+            text: summaryText
+          })
+        }
+
+        case 'list': {
+          // List all active projects
+          const projects = await sql`
+            SELECT * FROM projects
+            WHERE status NOT IN ('completed', 'cancelled')
+            ORDER BY event_date ASC NULLS LAST
+            LIMIT 15
+          `
+
+          if (projects.length === 0) {
+            return NextResponse.json({
+              response_type: 'ephemeral',
+              text: 'No active projects found.'
+            })
+          }
+
+          const blocks: any[] = [
+            {
+              type: 'header',
+              text: { type: 'plain_text', text: '📁 Active Projects', emoji: true }
+            }
+          ]
+
+          projects.forEach((project: any) => {
+            const fee = project.speaker_fee ? `$${Number(project.speaker_fee).toLocaleString()}` : 'TBD'
+            const date = project.event_date ? new Date(project.event_date).toLocaleDateString() : 'TBD'
+            const statusEmoji: Record<string, string> = {
+              'planning': '📋',
+              'invoicing': '💳',
+              'contract': '📝',
+              'preparation': '🎯',
+              'ready': '✅',
+              'on_hold': '⏸️'
+            }
+            const emoji = statusEmoji[project.status] || '📁'
+
+            blocks.push({
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `${emoji} *${project.project_name}*\n${project.client_name} • ${fee} • ${date}`
+              },
+              accessory: {
+                type: 'static_select',
+                placeholder: { type: 'plain_text', text: project.status },
+                action_id: 'update_project_status',
+                options: [
+                  { text: { type: 'plain_text', text: '📋 Planning' }, value: `${project.id}:planning` },
+                  { text: { type: 'plain_text', text: '💳 Invoicing' }, value: `${project.id}:invoicing` },
+                  { text: { type: 'plain_text', text: '📝 Contract' }, value: `${project.id}:contract` },
+                  { text: { type: 'plain_text', text: '🎯 Preparation' }, value: `${project.id}:preparation` },
+                  { text: { type: 'plain_text', text: '✅ Ready' }, value: `${project.id}:ready` },
+                  { text: { type: 'plain_text', text: '🎉 Completed' }, value: `${project.id}:completed` },
+                  { text: { type: 'plain_text', text: '⏸️ On Hold' }, value: `${project.id}:on_hold` }
+                ]
+              }
+            })
+          })
+
+          return NextResponse.json({
+            response_type: 'in_channel',
+            blocks
+          })
+        }
+
+        case 'upcoming': {
+          // Show projects with events in the next 30 days
+          const upcomingProjects = await sql`
+            SELECT * FROM projects
+            WHERE status NOT IN ('completed', 'cancelled')
+              AND event_date IS NOT NULL
+              AND event_date <= NOW() + INTERVAL '30 days'
+              AND event_date >= NOW()
+            ORDER BY event_date ASC
+            LIMIT 10
+          `
+
+          if (upcomingProjects.length === 0) {
+            return NextResponse.json({
+              response_type: 'ephemeral',
+              text: 'No upcoming events in the next 30 days.'
+            })
+          }
+
+          let upcomingText = `*📅 Upcoming Events (Next 30 Days)*\n\n`
+          upcomingProjects.forEach((project: any) => {
+            const date = new Date(project.event_date).toLocaleDateString()
+            const daysAway = Math.ceil((new Date(project.event_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+            const statusEmoji: Record<string, string> = {
+              'planning': '📋',
+              'invoicing': '💳',
+              'contract': '📝',
+              'preparation': '🎯',
+              'ready': '✅'
+            }
+            const emoji = statusEmoji[project.status] || '📁'
+            upcomingText += `${emoji} *${project.project_name}* (${project.client_name})\n   ${date} - _${daysAway} days away_ - ${project.status}\n\n`
+          })
+
+          return NextResponse.json({
+            response_type: 'in_channel',
+            text: upcomingText
+          })
+        }
+
+        case 'help':
+        default: {
+          if (subcommand && subcommand !== 'help') {
+            return NextResponse.json({
+              response_type: 'ephemeral',
+              text: `Unknown command: \`${subcommand}\`. Type \`/projects help\` for available commands.`
+            })
+          }
+
+          return NextResponse.json({
+            response_type: 'ephemeral',
+            text: `*📁 /projects Commands*\n\n` +
+              `\`/projects\` or \`/projects summary\` - Overview of active projects\n` +
+              `\`/projects list\` - List all active projects with status dropdowns\n` +
+              `\`/projects upcoming\` - Events in the next 30 days\n` +
+              `\`/projects help\` - Show this help message`
+          })
+        }
+      }
+    }
+
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('Slack command error:', error)

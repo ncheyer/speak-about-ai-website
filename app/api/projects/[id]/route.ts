@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { deleteProject, updateProject, getProjectById } from "@/lib/projects-db"
 import { requireAdminAuth } from "@/lib/auth-middleware"
+import { sendSlackWebhook, buildProjectStatusUpdateMessage, buildProjectCompletedMessage } from "@/lib/slack"
 
 export async function GET(
   request: NextRequest,
@@ -52,20 +53,52 @@ export async function PUT(
       const authError = requireAdminAuth(request)
       if (authError) return authError
     }
-    
+
     const { id: idString } = await params
     const id = parseInt(idString)
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid project ID" }, { status: 400 })
     }
-    
+
+    // Get original project to check if status is changing
+    const originalProject = await getProjectById(id)
+
     const body = await request.json()
     const project = await updateProject(id, body)
-    
+
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 })
     }
-    
+
+    // Send Slack notification for status changes
+    if (originalProject && originalProject.status !== project.status) {
+      try {
+        if (project.status === 'completed') {
+          await sendSlackWebhook(buildProjectCompletedMessage({
+            id: project.id,
+            project_name: project.project_name,
+            client_name: project.client_name,
+            company: project.company,
+            speaker_fee: project.speaker_fee,
+            speaker_name: project.requested_speaker_name,
+            event_date: project.event_date
+          }))
+        } else {
+          await sendSlackWebhook(buildProjectStatusUpdateMessage({
+            id: project.id,
+            project_name: project.project_name,
+            client_name: project.client_name,
+            old_status: originalProject.status,
+            new_status: project.status,
+            speaker_fee: project.speaker_fee,
+            event_date: project.event_date
+          }))
+        }
+      } catch (slackError) {
+        console.error('Slack notification failed:', slackError)
+      }
+    }
+
     return NextResponse.json(project)
   } catch (error) {
     console.error("Error updating project:", error)

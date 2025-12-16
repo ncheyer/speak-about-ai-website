@@ -474,3 +474,185 @@ export function buildDealsNeedingAttentionMessage(deals: {
     ]
   }
 }
+
+// ===== Project-Specific Message Builders =====
+
+export function buildProjectStatusUpdateMessage(project: {
+  id: number
+  project_name: string
+  client_name: string
+  old_status: string
+  new_status: string
+  speaker_fee?: number
+  event_date?: string
+  updated_by?: string
+}): SlackMessage {
+  const statusEmoji: Record<string, string> = {
+    'planning': '📋',
+    'invoicing': '💳',
+    'contract': '📝',
+    'preparation': '🎯',
+    'ready': '✅',
+    'completed': '🎉',
+    'cancelled': '🚫',
+    'on_hold': '⏸️'
+  }
+
+  const emoji = statusEmoji[project.new_status] || '📁'
+  const fee = project.speaker_fee ? `$${Number(project.speaker_fee).toLocaleString()}` : ''
+
+  return {
+    text: `Project Updated: ${project.project_name} → ${project.new_status}`,
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `${emoji} *${project.project_name}* ${fee}\n${project.client_name}\n\n_Status changed: ${project.old_status} → *${project.new_status}*_${project.updated_by ? `\nby ${project.updated_by}` : ''}`
+        },
+        accessory: {
+          type: 'button',
+          text: { type: 'plain_text', text: 'View', emoji: true },
+          url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://speakabout.ai'}/admin/projects/${project.id}`,
+          action_id: 'view_project'
+        }
+      }
+    ]
+  }
+}
+
+export function buildProjectCompletedMessage(project: {
+  id: number
+  project_name: string
+  client_name: string
+  company?: string
+  speaker_fee?: number
+  speaker_name?: string
+  event_date?: string
+}): SlackMessage {
+  const fee = project.speaker_fee ? `$${Number(project.speaker_fee).toLocaleString()}` : 'N/A'
+
+  return {
+    text: `🎉 Project Completed: ${project.project_name}`,
+    blocks: [
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: '🎉 PROJECT COMPLETED!',
+          emoji: true
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*${project.project_name}*\n${project.client_name}${project.company ? ` • ${project.company}` : ''}`
+        }
+      },
+      {
+        type: 'section',
+        fields: [
+          { type: 'mrkdwn', text: `*Speaker Fee:*\n${fee}` },
+          { type: 'mrkdwn', text: `*Speaker:*\n${project.speaker_name || 'N/A'}` },
+          { type: 'mrkdwn', text: `*Event Date:*\n${project.event_date ? new Date(project.event_date).toLocaleDateString() : 'N/A'}` }
+        ]
+      },
+      {
+        type: 'context',
+        elements: [
+          { type: 'mrkdwn', text: '✨ Great job team! Time to follow up for feedback and referrals.' }
+        ]
+      },
+      {
+        type: 'actions',
+        block_id: `project_completed_${project.id}`,
+        elements: [
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: '📋 View Project', emoji: true },
+            url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://speakabout.ai'}/admin/projects/${project.id}`,
+            action_id: 'view_project'
+          }
+        ]
+      }
+    ]
+  }
+}
+
+export function buildProjectsSummaryMessage(summary: {
+  total_projects: number
+  by_status: Record<string, number>
+  upcoming_events: { project_name: string; client_name: string; event_date: string; status: string }[]
+  total_revenue: number
+}): SlackMessage {
+  const statusEmoji: Record<string, string> = {
+    'planning': '📋',
+    'invoicing': '💳',
+    'contract': '📝',
+    'preparation': '🎯',
+    'ready': '✅',
+    'completed': '🎉',
+    'cancelled': '🚫',
+    'on_hold': '⏸️'
+  }
+
+  const statusBreakdown = Object.entries(summary.by_status)
+    .map(([status, count]) => `${statusEmoji[status] || '📁'} ${status}: ${count}`)
+    .join('\n')
+
+  const upcomingText = summary.upcoming_events.length > 0
+    ? summary.upcoming_events.map(p =>
+        `• *${p.project_name}* (${p.client_name}) - ${new Date(p.event_date).toLocaleDateString()}`
+      ).join('\n')
+    : '_No upcoming events_'
+
+  return {
+    text: `Projects Summary: ${summary.total_projects} active projects`,
+    blocks: [
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: '📁 Projects Summary',
+          emoji: true
+        }
+      },
+      {
+        type: 'section',
+        fields: [
+          { type: 'mrkdwn', text: `*Total Active:*\n${summary.total_projects}` },
+          { type: 'mrkdwn', text: `*Total Revenue:*\n$${summary.total_revenue.toLocaleString()}` }
+        ]
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*By Status:*\n${statusBreakdown}`
+        }
+      },
+      {
+        type: 'divider'
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*📅 Upcoming Events:*\n${upcomingText}`
+        }
+      },
+      {
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: '📋 View All Projects', emoji: true },
+            url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://speakabout.ai'}/admin/projects`,
+            action_id: 'view_all_projects'
+          }
+        ]
+      }
+    ]
+  }
+}

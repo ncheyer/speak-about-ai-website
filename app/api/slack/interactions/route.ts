@@ -269,6 +269,46 @@ export async function POST(request: NextRequest) {
           }
           break
         }
+
+        case 'update_project_status': {
+          // Update project status (from select menu)
+          // Value format: "projectId:newStatus" from /projects list command
+          const selectedValue = action.selected_option?.value
+
+          if (selectedValue) {
+            const [idStr, newStatus] = selectedValue.split(':')
+            const targetProjectId = parseInt(idStr)
+
+            if (targetProjectId && newStatus) {
+              const oldProject = await sql`SELECT status, project_name, client_name, speaker_fee FROM projects WHERE id = ${targetProjectId}`
+
+              await sql`
+                UPDATE projects SET status = ${newStatus}, updated_at = NOW()
+                WHERE id = ${targetProjectId}
+              `
+
+              if (oldProject.length > 0 && oldProject[0].status !== newStatus) {
+                // Import and use the project status update message
+                const { buildProjectStatusUpdateMessage } = await import('@/lib/slack')
+                await sendSlackMessage(buildProjectStatusUpdateMessage({
+                  id: targetProjectId,
+                  project_name: oldProject[0].project_name,
+                  client_name: oldProject[0].client_name,
+                  old_status: oldProject[0].status,
+                  new_status: newStatus,
+                  speaker_fee: oldProject[0].speaker_fee,
+                  updated_by: userName
+                }))
+              }
+
+              return NextResponse.json({
+                response_type: 'ephemeral',
+                text: `✅ Project "${oldProject[0]?.project_name}" status updated to ${newStatus}`
+              })
+            }
+          }
+          break
+        }
       }
     }
 
