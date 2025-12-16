@@ -86,7 +86,7 @@ interface Project {
   event_location: string
   event_type: string
   attendee_count?: number
-  status: "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled"
+  status: "planning" | "contracts_signed" | "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled"
   priority: "low" | "medium" | "high" | "urgent"
   budget: string
   speaker_fee?: string
@@ -97,6 +97,13 @@ interface Project {
   notes?: string
   created_at: string
   updated_at: string
+
+  // Payment Tracking
+  payment_status?: "pending" | "partial" | "paid"
+  payment_date?: string
+  speaker_payment_status?: "pending" | "paid"
+  speaker_payment_date?: string
+  travel_buyout?: number
   
   // Event logistics
   venue_details?: string
@@ -164,50 +171,52 @@ interface Invoice {
   notes?: string
 }
 
-const PROJECT_STATUSES = {
-  invoicing: { 
-    label: "Invoicing & Setup", 
-    color: "bg-blue-500", 
-    description: "Send invoices (net 30 & final), plan kickoff meeting"
+const PROJECT_STATUSES: Record<string, { label: string; color: string; description?: string }> = {
+  planning: {
+    label: "Planning",
+    color: "bg-slate-500",
+    description: "Initial planning and scoping"
   },
-  logistics_planning: { 
-    label: "Logistics Planning", 
-    color: "bg-purple-500", 
-    description: "Confirm details, A/V requirements, press pack, calendar, vendor onboarding"
+  contracts_signed: {
+    label: "Contracts Signed",
+    color: "bg-emerald-500",
+    description: "Contracts finalized and signed"
   },
-  pre_event: { 
-    label: "Pre-Event Ready", 
-    color: "bg-yellow-500", 
+  invoicing: {
+    label: "Invoicing",
+    color: "bg-blue-500",
+    description: "Send invoices (deposit & final)"
+  },
+  logistics_planning: {
+    label: "Logistics",
+    color: "bg-purple-500",
+    description: "Confirm details, A/V, travel, vendor onboarding"
+  },
+  pre_event: {
+    label: "Pre-Event",
+    color: "bg-yellow-500",
     description: "All logistics confirmed, speaker prepared"
   },
-  event_week: { 
-    label: "Event Week", 
-    color: "bg-orange-500", 
+  event_week: {
+    label: "Event Week",
+    color: "bg-orange-500",
     description: "Final preparations and event execution"
   },
-  follow_up: { 
-    label: "Event Follow-up", 
-    color: "bg-indigo-500", 
-    description: "Send follow-up communications and request feedback"
+  follow_up: {
+    label: "Follow-up",
+    color: "bg-indigo-500",
+    description: "Post-event communications and feedback"
   },
-  completed: { 
-    label: "Completed", 
-    color: "bg-green-500", 
-    description: "Event successfully completed with all follow-up done" 
+  completed: {
+    label: "Completed",
+    color: "bg-green-500",
+    description: "Event successfully completed"
   },
-  cancelled: { 
-    label: "Cancelled", 
-    color: "bg-red-500", 
+  cancelled: {
+    label: "Cancelled",
+    color: "bg-red-500",
     description: "Project cancelled"
-  },
-  
-  // Legacy status values for backward compatibility
-  "2plus_months": { label: "2+ Months Out", color: "bg-blue-500" },
-  "1to2_months": { label: "1-2 Months Out", color: "bg-yellow-500" },
-  "less_than_month": { label: "Less Than Month", color: "bg-orange-500" },
-  "final_week": { label: "Final Week", color: "bg-red-500" },
-  planning: { label: "Planning", color: "bg-blue-500" },
-  contracts_signed: { label: "Contracts Signed", color: "bg-green-500" }
+  }
 }
 
 const INVOICE_STATUSES = {
@@ -386,7 +395,7 @@ export default function EnhancedProjectManagementPage() {
 
   const getTimeUntilEvent = (eventDate: string) => {
     if (!eventDate) return { text: 'No date', color: 'text-gray-500', urgency: 'unknown' }
-    
+
     // Parse date the same way as formatEventDate to be consistent
     let event: Date
     if (eventDate.length === 10 && eventDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -397,26 +406,50 @@ export default function EnhancedProjectManagementPage() {
       const [year, month, day] = datePart.split('-').map(Number)
       event = new Date(year, month - 1, day)
     }
-    
+
     const now = new Date()
     now.setHours(0, 0, 0, 0) // Reset time to start of day for accurate day calculation
     event.setHours(0, 0, 0, 0) // Reset time to start of day
-    
+
     const diffTime = event.getTime() - now.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    
+
+    // Format as months and days
+    const formatTimeText = (days: number): string => {
+      if (days < 0) {
+        const absDays = Math.abs(days)
+        const months = Math.floor(absDays / 30)
+        const remainingDays = absDays % 30
+        if (months > 0 && remainingDays > 0) {
+          return `${months}mo ${remainingDays}d ago`
+        } else if (months > 0) {
+          return `${months}mo ago`
+        }
+        return `${absDays}d ago`
+      }
+
+      const months = Math.floor(days / 30)
+      const remainingDays = days % 30
+      if (months > 0 && remainingDays > 0) {
+        return `${months}mo ${remainingDays}d`
+      } else if (months > 0) {
+        return `${months}mo`
+      }
+      return `${days}d`
+    }
+
     if (diffDays < 0) {
-      return { text: `${Math.abs(diffDays)} days ago`, color: "text-red-600", urgency: "past" }
+      return { text: formatTimeText(diffDays), color: "text-red-600", urgency: "past" }
     } else if (diffDays === 0) {
       return { text: "Today", color: "text-red-600", urgency: "today" }
     } else if (diffDays === 1) {
       return { text: "Tomorrow", color: "text-orange-600", urgency: "urgent" }
     } else if (diffDays <= 7) {
-      return { text: `${diffDays} days`, color: "text-orange-600", urgency: "urgent" }
+      return { text: `${diffDays}d`, color: "text-orange-600", urgency: "urgent" }
     } else if (diffDays <= 30) {
-      return { text: `${diffDays} days`, color: "text-yellow-600", urgency: "soon" }
+      return { text: formatTimeText(diffDays), color: "text-yellow-600", urgency: "soon" }
     } else {
-      return { text: `${diffDays} days`, color: "text-green-600", urgency: "future" }
+      return { text: formatTimeText(diffDays), color: "text-green-600", urgency: "future" }
     }
   }
 
@@ -812,16 +845,30 @@ export default function EnhancedProjectManagementPage() {
 
   // Filter projects based on search and status
   const filteredProjects = projects.filter(project => {
-    const matchesSearch = 
+    const matchesSearch =
       (project.project_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
       (project.client_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
       (project.event_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
       (project.event_title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
       (project.event_location?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
       (project.requested_speaker_name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
-    
+
     const matchesStatus = statusFilter === "all" || project.status === statusFilter
-    return matchesSearch && matchesStatus
+
+    // Apply quick filter based on time until event
+    let matchesQuickFilter = true
+    if (quickFilter !== "all" && project.event_date) {
+      const timeInfo = getTimeUntilEvent(project.event_date)
+      if (quickFilter === "this_week") {
+        matchesQuickFilter = timeInfo.urgency === "urgent" || timeInfo.urgency === "today"
+      } else if (quickFilter === "urgent") {
+        matchesQuickFilter = timeInfo.urgency === "urgent" || timeInfo.urgency === "today" || timeInfo.urgency === "soon"
+      } else if (quickFilter === "overdue") {
+        matchesQuickFilter = timeInfo.urgency === "past"
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesQuickFilter
   })
 
   if (!isLoggedIn) {
@@ -962,7 +1009,7 @@ export default function EnhancedProjectManagementPage() {
                   <CardContent>
                     <div className="space-y-4">
                       {Object.entries(PROJECT_STATUSES)
-                        .filter(([status]) => !["2plus_months", "1to2_months", "less_than_month", "final_week", "planning", "contracts_signed"].includes(status))
+                        .filter(([status]) => !["cancelled"].includes(status))
                         .map(([status, config]) => {
                         const count = projects.filter(p => p.status === status).length
                         return (
@@ -1068,7 +1115,7 @@ export default function EnhancedProjectManagementPage() {
                                 <div className="text-sm font-medium mb-2">Stage Progress</div>
                                 <div className="space-y-1">
                                   {Object.entries(PROJECT_STATUSES)
-                                    .filter(([status]) => !["2plus_months", "1to2_months", "less_than_month", "final_week", "planning", "contracts_signed", "cancelled"].includes(status))
+                                    .filter(([status]) => !["cancelled"].includes(status))
                                     .map(([status, config]) => {
                                       const isCurrentStage = project.status === status
                                       const isCompleted = ["invoicing", "logistics_planning", "pre_event", "event_week", "follow_up"].indexOf(status) < ["invoicing", "logistics_planning", "pre_event", "event_week", "follow_up"].indexOf(project.status)
@@ -1129,16 +1176,51 @@ export default function EnhancedProjectManagementPage() {
                         <SelectValue placeholder="Filter by status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="invoicing">Invoicing & Setup</SelectItem>
-                        <SelectItem value="logistics_planning">Logistics Planning</SelectItem>
-                        <SelectItem value="pre_event">Pre-Event Ready</SelectItem>
+                        <SelectItem value="all">All Stages</SelectItem>
+                        <SelectItem value="planning">Planning</SelectItem>
+                        <SelectItem value="contracts_signed">Contracts Signed</SelectItem>
+                        <SelectItem value="invoicing">Invoicing</SelectItem>
+                        <SelectItem value="logistics_planning">Logistics</SelectItem>
+                        <SelectItem value="pre_event">Pre-Event</SelectItem>
                         <SelectItem value="event_week">Event Week</SelectItem>
-                        <SelectItem value="follow_up">Event Follow-up</SelectItem>
+                        <SelectItem value="follow_up">Follow-up</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>
+                    <div className="flex gap-1">
+                      <Button
+                        variant={quickFilter === "all" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setQuickFilter("all")}
+                      >
+                        All
+                      </Button>
+                      <Button
+                        variant={quickFilter === "this_week" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setQuickFilter("this_week")}
+                        className={quickFilter === "this_week" ? "" : "text-orange-600 border-orange-300 hover:bg-orange-50"}
+                      >
+                        🔥 This Week
+                      </Button>
+                      <Button
+                        variant={quickFilter === "urgent" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setQuickFilter("urgent")}
+                        className={quickFilter === "urgent" ? "" : "text-yellow-600 border-yellow-300 hover:bg-yellow-50"}
+                      >
+                        ⚡ Within 30 Days
+                      </Button>
+                      <Button
+                        variant={quickFilter === "overdue" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setQuickFilter("overdue")}
+                        className={quickFilter === "overdue" ? "" : "text-gray-600 border-gray-300 hover:bg-gray-50"}
+                      >
+                        📍 Past Events
+                      </Button>
+                    </div>
                     <Dialog open={showCreateProject} onOpenChange={setShowCreateProject}>
                       <DialogTrigger asChild>
                         <Button>
@@ -1368,15 +1450,28 @@ export default function EnhancedProjectManagementPage() {
                         <TableHead>Client</TableHead>
                         <TableHead>Speaker</TableHead>
                         <TableHead>Stage</TableHead>
-                        <TableHead>Date</TableHead>
+                        <TableHead>Event Date</TableHead>
+                        <TableHead>Time Until</TableHead>
                         <TableHead>Invoices</TableHead>
                         <TableHead>Revenue</TableHead>
+                        <TableHead>Payment</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredProjects.map((project) => (
-                        <TableRow key={project.id}>
+                      {filteredProjects.map((project) => {
+                        // Calculate urgency for row color
+                        const timeInfo = getTimeUntilEvent(project.event_date)
+                        const rowUrgencyClasses: Record<string, string> = {
+                          past: "bg-gray-50",
+                          today: "bg-red-100 border-l-4 border-l-red-500",
+                          urgent: "bg-orange-50 border-l-4 border-l-orange-500",
+                          soon: "bg-yellow-50 border-l-4 border-l-yellow-400",
+                          future: "",
+                          unknown: ""
+                        }
+                        return (
+                        <TableRow key={project.id} className={rowUrgencyClasses[timeInfo.urgency] || ""}>
                           <TableCell>
                             <div>
                               <div className="font-medium">{project.event_name || project.event_title || project.project_name}</div>
@@ -1384,7 +1479,7 @@ export default function EnhancedProjectManagementPage() {
                                 {project.event_location || "Location TBD"}
                                 {project.event_classification && (
                                   <Badge variant="outline" className="ml-2 text-xs">
-                                    {project.event_classification === "virtual" ? "Virtual" : 
+                                    {project.event_classification === "virtual" ? "Virtual" :
                                      project.event_classification === "local" ? "Local" : "Travel"}
                                   </Badge>
                                 )}
@@ -1443,6 +1538,12 @@ export default function EnhancedProjectManagementPage() {
                                 </SelectValue>
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value="planning">
+                                  <Badge className="bg-slate-500 text-white">Planning</Badge>
+                                </SelectItem>
+                                <SelectItem value="contracts_signed">
+                                  <Badge className="bg-emerald-500 text-white">Contracts</Badge>
+                                </SelectItem>
                                 <SelectItem value="invoicing">
                                   <Badge className="bg-blue-500 text-white">Invoicing</Badge>
                                 </SelectItem>
@@ -1450,25 +1551,52 @@ export default function EnhancedProjectManagementPage() {
                                   <Badge className="bg-purple-500 text-white">Logistics</Badge>
                                 </SelectItem>
                                 <SelectItem value="pre_event">
-                                  <Badge className="bg-indigo-500 text-white">Pre-Event</Badge>
+                                  <Badge className="bg-yellow-500 text-white">Pre-Event</Badge>
                                 </SelectItem>
                                 <SelectItem value="event_week">
                                   <Badge className="bg-orange-500 text-white">Event Week</Badge>
                                 </SelectItem>
                                 <SelectItem value="follow_up">
-                                  <Badge className="bg-yellow-500 text-white">Follow Up</Badge>
+                                  <Badge className="bg-indigo-500 text-white">Follow Up</Badge>
                                 </SelectItem>
                                 <SelectItem value="completed">
                                   <Badge className="bg-green-500 text-white">Completed</Badge>
                                 </SelectItem>
                                 <SelectItem value="cancelled">
-                                  <Badge className="bg-gray-500 text-white">Cancelled</Badge>
+                                  <Badge className="bg-red-500 text-white">Cancelled</Badge>
                                 </SelectItem>
                               </SelectContent>
                             </Select>
                           </TableCell>
                           <TableCell>
                             {formatEventDate(project.event_date)}
+                          </TableCell>
+                          <TableCell>
+                            {(() => {
+                              const timeInfo = getTimeUntilEvent(project.event_date)
+                              const urgencyColors: Record<string, string> = {
+                                past: "bg-gray-100 text-gray-600 border-gray-300",
+                                today: "bg-red-100 text-red-700 border-red-300",
+                                urgent: "bg-orange-100 text-orange-700 border-orange-300",
+                                soon: "bg-yellow-100 text-yellow-700 border-yellow-300",
+                                future: "bg-green-100 text-green-700 border-green-300",
+                                unknown: "bg-gray-100 text-gray-500 border-gray-300"
+                              }
+                              return (
+                                <div className="flex flex-col gap-1">
+                                  <Badge variant="outline" className={urgencyColors[timeInfo.urgency] + " text-xs font-medium"}>
+                                    <Timer className="h-3 w-3 mr-1" />
+                                    {timeInfo.text}
+                                  </Badge>
+                                  {timeInfo.urgency === "urgent" && (
+                                    <span className="text-xs text-orange-600 font-medium">🔥 Urgent</span>
+                                  )}
+                                  {timeInfo.urgency === "today" && (
+                                    <span className="text-xs text-red-600 font-medium">⚡ Event Today!</span>
+                                  )}
+                                </div>
+                              )
+                            })()}
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
@@ -1584,6 +1712,41 @@ export default function EnhancedProjectManagementPage() {
                             </div>
                           </TableCell>
                           <TableCell>
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-gray-500">Client:</span>
+                                <Badge
+                                  variant="outline"
+                                  className={`text-xs ${
+                                    project.payment_status === 'paid'
+                                      ? 'bg-green-100 text-green-700 border-green-300'
+                                      : project.payment_status === 'partial'
+                                      ? 'bg-blue-100 text-blue-700 border-blue-300'
+                                      : 'bg-yellow-100 text-yellow-700 border-yellow-300'
+                                  }`}
+                                >
+                                  {project.payment_status === 'paid' ? '✓ Paid' :
+                                   project.payment_status === 'partial' ? 'Partial' : 'Pending'}
+                                </Badge>
+                              </div>
+                              {parseFloat(project.speaker_fee || "0") > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-gray-500">Speaker:</span>
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-xs ${
+                                      project.speaker_payment_status === 'paid'
+                                        ? 'bg-green-100 text-green-700 border-green-300'
+                                        : 'bg-yellow-100 text-yellow-700 border-yellow-300'
+                                    }`}
+                                  >
+                                    {project.speaker_payment_status === 'paid' ? '✓ Paid' : 'Due'}
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
                             <div className="flex gap-2">
                               <Button
                                 size="sm"
@@ -1622,7 +1785,8 @@ export default function EnhancedProjectManagementPage() {
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))}
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </CardContent>

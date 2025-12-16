@@ -1215,7 +1215,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                     <Label htmlFor="notes">Notes</Label>
                     <Textarea
                       id="notes"
-                      value={formData.notes}
+                      value={formData.notes || ""}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       rows={4}
                       placeholder="Add any additional notes about the deal..."

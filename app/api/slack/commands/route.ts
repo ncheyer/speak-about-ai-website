@@ -309,15 +309,23 @@ export async function POST(request: NextRequest) {
             const fee = project.speaker_fee ? `$${Number(project.speaker_fee).toLocaleString()}` : 'TBD'
             const date = project.event_date ? new Date(project.event_date).toLocaleDateString() : 'TBD'
 
-            // Calculate time until event
+            // Calculate time until event (months and days)
             let timeUntil = ''
             if (project.event_date) {
               const daysAway = Math.ceil((new Date(project.event_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-              if (daysAway < 0) timeUntil = '📍 Past'
-              else if (daysAway <= 7) timeUntil = '🔥 Final Week'
-              else if (daysAway <= 30) timeUntil = '⏰ < 1 Month'
-              else if (daysAway <= 60) timeUntil = '📆 1-2 Months'
-              else timeUntil = '📅 2+ Months'
+              const formatTime = (days: number) => {
+                const absDays = Math.abs(days)
+                const months = Math.floor(absDays / 30)
+                const remainingDays = absDays % 30
+                if (months > 0 && remainingDays > 0) return `${months}mo ${remainingDays}d`
+                if (months > 0) return `${months}mo`
+                return `${absDays}d`
+              }
+              if (daysAway < 0) timeUntil = `📍 ${formatTime(daysAway)} ago`
+              else if (daysAway === 0) timeUntil = '🔥 Today'
+              else if (daysAway <= 7) timeUntil = `🔥 ${daysAway}d`
+              else if (daysAway <= 30) timeUntil = `⏰ ${formatTime(daysAway)}`
+              else timeUntil = `📅 ${formatTime(daysAway)}`
             }
 
             const stageEmoji: Record<string, string> = {
@@ -398,8 +406,9 @@ export async function POST(request: NextRequest) {
               'cancelled': '❌'
             }
             const emoji = stageEmoji[project.status] || '📁'
-            const urgency = daysAway <= 7 ? '🔥' : daysAway <= 14 ? '⚠️' : ''
-            upcomingText += `${urgency}${emoji} *${project.project_name}* (${project.client_name})\n   ${date} - _${daysAway} days away_ - ${project.status}\n\n`
+            const urgency = daysAway === 0 ? '🔥 Today!' : daysAway <= 7 ? '🔥' : daysAway <= 14 ? '⚠️' : ''
+            const timeText = daysAway === 0 ? 'Today' : daysAway === 1 ? 'Tomorrow' : `${daysAway}d`
+            upcomingText += `${urgency}${emoji} *${project.project_name}* (${project.client_name})\n   ${date} - _${timeText}_ - ${project.status}\n\n`
           })
 
           return NextResponse.json({

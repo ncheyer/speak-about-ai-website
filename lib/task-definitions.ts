@@ -17,6 +17,180 @@ export interface StageTaskDefinitions {
 }
 
 export const TASK_DEFINITIONS: StageTaskDefinitions = {
+  planning: {
+    initial_discovery_call: {
+      key: 'initial_discovery_call',
+      name: 'Initial Discovery Call',
+      description: 'Schedule and conduct initial discovery call to understand event requirements',
+      requirements: [
+        'Client contact information',
+        'Preliminary event details',
+        'Call scheduled'
+      ],
+      deliverables: [
+        'Event requirements documented',
+        'Client expectations clarified',
+        'Budget range confirmed',
+        'Follow-up actions identified'
+      ],
+      priority: 'critical',
+      estimatedTime: '1 hour',
+      owner: 'sales'
+    },
+    speaker_selection: {
+      key: 'speaker_selection',
+      name: 'Speaker Selection & Matching',
+      description: 'Identify and recommend suitable speaker(s) based on client requirements',
+      requirements: [
+        'Event topic confirmed',
+        'Audience demographics known',
+        'Budget parameters established',
+        'Event format defined'
+      ],
+      deliverables: [
+        'Speaker recommendations sent',
+        'Speaker availability confirmed',
+        'Client decision received',
+        'Speaker selected'
+      ],
+      priority: 'high',
+      estimatedTime: '2 hours',
+      owner: 'sales'
+    },
+    proposal_sent: {
+      key: 'proposal_sent',
+      name: 'Send Proposal to Client',
+      description: 'Prepare and send formal proposal with speaker details and pricing',
+      requirements: [
+        'Speaker selected',
+        'Pricing confirmed',
+        'Event details documented',
+        'Proposal template prepared'
+      ],
+      deliverables: [
+        'Proposal document created',
+        'Proposal sent to client',
+        'Follow-up scheduled',
+        'Client feedback received'
+      ],
+      priority: 'high',
+      estimatedTime: '1.5 hours',
+      owner: 'sales'
+    },
+    negotiate_terms: {
+      key: 'negotiate_terms',
+      name: 'Negotiate Terms & Conditions',
+      description: 'Handle any negotiations on pricing, terms, or scope',
+      requirements: [
+        'Initial proposal reviewed by client',
+        'Client feedback received',
+        'Negotiation parameters defined'
+      ],
+      deliverables: [
+        'Terms agreed upon',
+        'Final pricing confirmed',
+        'Special conditions documented',
+        'Ready for contract'
+      ],
+      priority: 'medium',
+      estimatedTime: '1 hour',
+      owner: 'sales'
+    }
+  },
+
+  contracts_signed: {
+    prepare_client_contract: {
+      key: 'prepare_client_contract',
+      name: 'Prepare Client Contract',
+      description: 'Draft and prepare the client engagement contract',
+      requirements: [
+        'Terms agreed with client',
+        'Event details confirmed',
+        'Pricing finalized',
+        'Legal terms approved'
+      ],
+      deliverables: [
+        'Contract document prepared',
+        'Internal review completed',
+        'Ready for client signature'
+      ],
+      priority: 'critical',
+      estimatedTime: '1 hour',
+      owner: 'operations'
+    },
+    send_client_contract: {
+      key: 'send_client_contract',
+      name: 'Send Contract to Client',
+      description: 'Send contract to client for review and signature',
+      requirements: [
+        'Contract prepared',
+        'Client contact confirmed',
+        'DocuSign/signing method ready'
+      ],
+      deliverables: [
+        'Contract sent to client',
+        'Signature tracking initiated',
+        'Client signed contract received'
+      ],
+      priority: 'critical',
+      estimatedTime: '30 min',
+      owner: 'operations'
+    },
+    prepare_speaker_agreement: {
+      key: 'prepare_speaker_agreement',
+      name: 'Prepare Speaker Agreement',
+      description: 'Draft internal speaker agreement with event details and compensation',
+      requirements: [
+        'Event details confirmed',
+        'Speaker fee agreed',
+        'Terms and conditions ready'
+      ],
+      deliverables: [
+        'Speaker agreement prepared',
+        'Compensation terms documented',
+        'Ready for speaker signature'
+      ],
+      priority: 'critical',
+      estimatedTime: '45 min',
+      owner: 'operations'
+    },
+    obtain_speaker_signature: {
+      key: 'obtain_speaker_signature',
+      name: 'Obtain Speaker Signature',
+      description: 'Send agreement to speaker and obtain signed copy',
+      requirements: [
+        'Speaker agreement prepared',
+        'Speaker contact confirmed'
+      ],
+      deliverables: [
+        'Agreement sent to speaker',
+        'Signed agreement received',
+        'Filed in project folder'
+      ],
+      priority: 'critical',
+      estimatedTime: '30 min',
+      owner: 'operations'
+    },
+    file_signed_contracts: {
+      key: 'file_signed_contracts',
+      name: 'File All Signed Contracts',
+      description: 'Organize and file all signed contracts in project folder',
+      requirements: [
+        'Client contract signed',
+        'Speaker agreement signed',
+        'Project folder created'
+      ],
+      deliverables: [
+        'All contracts filed',
+        'Project documentation complete',
+        'Ready to proceed to invoicing'
+      ],
+      priority: 'high',
+      estimatedTime: '15 min',
+      owner: 'operations'
+    }
+  },
+
   invoicing: {
     send_internal_contract: {
       key: 'send_internal_contract',
@@ -499,7 +673,15 @@ export function calculateTaskUrgency(
   if (daysUntilEvent === null) return 'low'
   
   // Stage-specific urgency rules
-  const urgencyRules = {
+  const urgencyRules: Record<string, { thresholds: { critical: number; high: number; medium: number }; criticalTasks: string[] }> = {
+    planning: {
+      thresholds: { critical: 60, high: 90, medium: 120 },
+      criticalTasks: ['initial_discovery_call', 'speaker_selection']
+    },
+    contracts_signed: {
+      thresholds: { critical: 45, high: 60, medium: 90 },
+      criticalTasks: ['prepare_client_contract', 'send_client_contract', 'obtain_speaker_signature']
+    },
     invoicing: {
       thresholds: { critical: 45, high: 60, medium: 90 },
       criticalTasks: ['send_internal_contract', 'initial_invoice_sent', 'event_details_confirmed']

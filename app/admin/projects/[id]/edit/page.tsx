@@ -143,9 +143,16 @@ interface Project {
   speaker_fee?: number
   travel_expenses_type?: string
   travel_expenses_amount?: number
+  travel_buyout?: number
   payment_terms?: string
   invoice_number?: string
   purchase_order_number?: string
+
+  // Payment Tracking
+  payment_status?: "pending" | "partial" | "paid"
+  payment_date?: string
+  speaker_payment_status?: "pending" | "paid"
+  speaker_payment_date?: string
   
   // Confirmation Details
   prep_call_requested?: boolean
@@ -1455,6 +1462,160 @@ export default function ProjectEditPage() {
                       value={formData.invoice_number || ""}
                       onChange={(e) => updateField("invoice_number", e.target.value)}
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="travel_buyout">Travel Buyout ($)</Label>
+                    <Input
+                      id="travel_buyout"
+                      type="number"
+                      step="0.01"
+                      value={formData.travel_buyout || ""}
+                      onChange={(e) => updateField("travel_buyout", parseFloat(e.target.value) || 0)}
+                      placeholder="Flat travel buyout amount"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Payment Tracking Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Payment Tracking
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Financial Summary */}
+                <div className="bg-gray-50 p-4 rounded-lg border">
+                  <h4 className="font-semibold mb-3">Financial Summary</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
+                    <div>
+                      <span className="text-gray-500">Deal Value</span>
+                      <p className="font-semibold text-lg">${(formData.budget || 0).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Speaker Fee</span>
+                      <p className="font-semibold text-lg">${(formData.speaker_fee || 0).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Travel Buyout</span>
+                      <p className="font-semibold text-lg">${(formData.travel_buyout || 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className="border-t pt-4 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-500">Total to Collect</span>
+                      <p className="font-semibold text-lg text-blue-600">${((formData.budget || 0) + (formData.travel_buyout || 0)).toLocaleString()}</p>
+                      <span className="text-xs text-gray-400">Deal + Travel</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Speaker Payout</span>
+                      <p className="font-semibold text-lg text-orange-600">${((formData.speaker_fee || 0) + (formData.travel_buyout || 0)).toLocaleString()}</p>
+                      <span className="text-xs text-gray-400">Fee + Travel</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Net Commission</span>
+                      <p className={`font-semibold text-lg ${((formData.budget || 0) - (formData.speaker_fee || 0)) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        ${((formData.budget || 0) - (formData.speaker_fee || 0)).toLocaleString()}
+                      </p>
+                      <span className="text-xs text-gray-400">Deal − Speaker Fee</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Client Payment */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Client Payment
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="payment_status">Payment Status</Label>
+                      <Select
+                        value={formData.payment_status || "pending"}
+                        onValueChange={(value) => updateField("payment_status", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                              Pending
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="partial">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-blue-500" />
+                              Partial
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="paid">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-green-500" />
+                              Paid
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="payment_date">Payment Date</Label>
+                      <Input
+                        id="payment_date"
+                        type="date"
+                        value={formData.payment_date?.split('T')[0] || ""}
+                        onChange={(e) => updateField("payment_date", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Speaker Payment */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Mic className="h-4 w-4" />
+                    Speaker Payment
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="speaker_payment_status">Speaker Payment Status</Label>
+                      <Select
+                        value={formData.speaker_payment_status || "pending"}
+                        onValueChange={(value) => updateField("speaker_payment_status", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                              Pending
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="paid">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-green-500" />
+                              Paid
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="speaker_payment_date">Speaker Payment Date</Label>
+                      <Input
+                        id="speaker_payment_date"
+                        type="date"
+                        value={formData.speaker_payment_date?.split('T')[0] || ""}
+                        onChange={(e) => updateField("speaker_payment_date", e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>

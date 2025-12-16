@@ -4,90 +4,205 @@ import { neon } from '@neondatabase/serverless'
 export async function GET(request: NextRequest) {
   try {
     const sql = neon(process.env.DATABASE_URL!)
-    
-    // Get all won deals with their associated projects
-    const deals = await sql`
-      SELECT 
-        d.*,
-        d.commission_percentage,
-        d.commission_amount,
-        d.payment_status,
-        d.payment_date,
-        d.invoice_number,
-        d.financial_notes,
-        d.contract_link,
-        d.invoice_link_1,
-        d.invoice_link_2,
-        d.contract_signed_date,
-        d.invoice_1_sent_date,
-        d.invoice_2_sent_date,
-        d.project_id,
+
+    // Get all projects with financial data (excluding cancelled)
+    // Projects are now the single source of truth for payment tracking
+    const projects = await sql`
+      SELECT
+        p.id,
         p.project_name,
-        p.budget as project_budget,
+        p.client_name,
+        p.client_email,
+        p.company,
+        p.event_name,
+        p.event_date,
+        p.status,
+        p.budget,
         p.speaker_fee,
-        p.status as project_status
-      FROM deals d
-      LEFT JOIN projects p ON p.id = d.project_id
-      WHERE d.status = 'won'
-      ORDER BY d.won_date DESC
+        p.travel_buyout,
+        p.payment_status,
+        p.payment_date,
+        p.speaker_payment_status,
+        p.speaker_payment_date,
+        p.invoice_number,
+        p.purchase_order_number,
+        p.payment_terms,
+        p.notes,
+        p.deal_id,
+        p.created_at,
+        s.name as speaker_name
+      FROM projects p
+      LEFT JOIN speakers s ON s.id = p.speaker_id
+      WHERE p.status != 'cancelled'
+      ORDER BY p.event_date DESC NULLS LAST
     `
-    
-    // Transform the data to group projects with deals
-    const transformedDeals = deals.map(deal => {
-      // Ensure numeric values are properly converted
-      const dealValue = Number(deal.deal_value) || 0
-      const commissionPercentage = Number(deal.commission_percentage) || 20
-      let commissionAmount = Number(deal.commission_amount) || 0
-      
-      // If commission_amount is 0 or null, calculate it
-      if (!commissionAmount && dealValue > 0) {
-        commissionAmount = (dealValue * commissionPercentage) / 100
-      }
-      
+
+    // Transform and calculate financial metrics for each project
+    const transformedProjects = projects.map(project => {
+      const budget = Number(project.budget) || 0
+      const speakerFee = Number(project.speaker_fee) || 0
+      const travelBuyout = Number(project.travel_buyout) || 0
+
+      // Travel buyout is paid by client ON TOP of the deal value, then passed through to speaker
+      // Total to collect from client = deal value + travel buyout
+      const totalToCollect = budget + travelBuyout
+
+      // Speaker gets their fee + travel buyout
+      const speakerPayout = speakerFee + travelBuyout
+
+      // Net commission = deal value - speaker fee (travel is pass-through, doesn't affect commission)
+      const netCommission = budget - speakerFee
+
       return {
-        id: Number(deal.id),
-        client_name: deal.client_name,
-        client_email: deal.client_email,
-        company: deal.company,
-        event_title: deal.event_title,
-        event_date: deal.event_date,
-        deal_value: dealValue,
-        commission_percentage: commissionPercentage,
-        commission_amount: commissionAmount,
-        payment_status: deal.payment_status || 'pending',
-        payment_date: deal.payment_date,
-        invoice_number: deal.invoice_number,
-        notes: deal.financial_notes,
-        won_date: deal.won_date,
-        contract_link: deal.contract_link,
-        invoice_link_1: deal.invoice_link_1,
-        invoice_link_2: deal.invoice_link_2,
-        contract_signed_date: deal.contract_signed_date,
-        invoice_1_sent_date: deal.invoice_1_sent_date,
-        invoice_2_sent_date: deal.invoice_2_sent_date,
-        project: deal.project_id ? {
-          id: deal.project_id,
-          project_name: deal.project_name,
-          budget: deal.project_budget,
-          speaker_fee: deal.speaker_fee,
-          status: deal.project_status
-        } : null
+        id: Number(project.id),
+        project_name: project.project_name,
+        client_name: project.client_name,
+        client_email: project.client_email,
+        company: project.company,
+        event_name: project.event_name || project.project_name,
+        event_date: project.event_date,
+        status: project.status,
+        speaker_name: project.speaker_name,
+
+        // Financial data
+        budget: budget,
+        speaker_fee: speakerFee,
+        travel_buyout: travelBuyout,
+        total_to_collect: totalToCollect,
+        speaker_payout: speakerPayout,
+        net_commission: netCommission,
+
+        // Client payment tracking
+        payment_status: project.payment_status || 'pending',
+        payment_date: project.payment_date,
+        invoice_number: project.invoice_number,
+        purchase_order_number: project.purchase_order_number,
+        payment_terms: project.payment_terms,
+
+        // Speaker payment tracking
+        speaker_payment_status: project.speaker_payment_status || 'pending',
+        speaker_payment_date: project.speaker_payment_date,
+
+        notes: project.notes,
+        deal_id: project.deal_id,
+        created_at: project.created_at
       }
     })
-    
-    // Calculate total for verification
-    const totalCommission = transformedDeals.reduce((sum, deal) => sum + deal.commission_amount, 0)
-    console.log(`API: Returning ${transformedDeals.length} deals with total commission: $${totalCommission}`)
-    
-    return NextResponse.json({ 
-      deals: transformedDeals,
-      success: true 
+
+    // Calculate aggregate summaries
+    const summary = {
+      // Total to collect from clients (deal values + travel buyouts)
+      total_to_collect: transformedProjects.reduce((sum, p) => sum + p.total_to_collect, 0),
+
+      // Amount collected (where client has paid)
+      amount_collected: transformedProjects
+        .filter(p => p.payment_status === 'paid')
+        .reduce((sum, p) => sum + p.total_to_collect, 0),
+
+      // Amount pending collection
+      amount_pending: transformedProjects
+        .filter(p => p.payment_status !== 'paid')
+        .reduce((sum, p) => sum + p.total_to_collect, 0),
+
+      // Total speaker payouts (speaker fees + travel buyouts)
+      total_speaker_payouts: transformedProjects.reduce((sum, p) => sum + p.speaker_payout, 0),
+
+      // Speaker payouts completed
+      speaker_payouts_paid: transformedProjects
+        .filter(p => p.speaker_payment_status === 'paid')
+        .reduce((sum, p) => sum + p.speaker_payout, 0),
+
+      // Speaker payouts pending
+      speaker_payouts_pending: transformedProjects
+        .filter(p => p.speaker_payment_status !== 'paid')
+        .reduce((sum, p) => sum + p.speaker_payout, 0),
+
+      // Total travel buyouts (for reference)
+      total_travel_buyouts: transformedProjects.reduce((sum, p) => sum + p.travel_buyout, 0),
+
+      // Net commission (realized - where client paid)
+      net_commission_realized: transformedProjects
+        .filter(p => p.payment_status === 'paid')
+        .reduce((sum, p) => sum + p.net_commission, 0),
+
+      // Net commission (projected - all projects)
+      net_commission_projected: transformedProjects.reduce((sum, p) => sum + p.net_commission, 0),
+
+      // Project counts
+      total_projects: transformedProjects.length,
+      projects_paid: transformedProjects.filter(p => p.payment_status === 'paid').length,
+      projects_pending: transformedProjects.filter(p => p.payment_status !== 'paid').length,
+      speakers_paid: transformedProjects.filter(p => p.speaker_payment_status === 'paid').length,
+      speakers_pending: transformedProjects.filter(p => p.speaker_payment_status !== 'paid' && p.speaker_payout > 0).length
+    }
+
+    console.log(`Finances API: Returning ${transformedProjects.length} projects, total to collect: $${summary.total_to_collect}`)
+
+    return NextResponse.json({
+      projects: transformedProjects,
+      summary,
+      success: true
     })
-    
+
   } catch (error) {
     console.error('Error fetching financial data:', error)
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to fetch financial data',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
+  }
+}
+
+// PATCH to update project payment info
+export async function PATCH(request: NextRequest) {
+  try {
+    const sql = neon(process.env.DATABASE_URL!)
+    const body = await request.json()
+
+    const {
+      projectId,
+      payment_status,
+      payment_date,
+      speaker_payment_status,
+      speaker_payment_date,
+      travel_buyout,
+      invoice_number,
+      purchase_order_number
+    } = body
+
+    if (!projectId) {
+      return NextResponse.json({ error: 'Project ID required' }, { status: 400 })
+    }
+
+    // Use tagged template literal for the update with all fields
+    const result = await sql`
+      UPDATE projects
+      SET
+        payment_status = COALESCE(${payment_status ?? null}, payment_status),
+        payment_date = COALESCE(${payment_date ?? null}, payment_date),
+        speaker_payment_status = COALESCE(${speaker_payment_status ?? null}, speaker_payment_status),
+        speaker_payment_date = COALESCE(${speaker_payment_date ?? null}, speaker_payment_date),
+        travel_buyout = COALESCE(${travel_buyout ?? null}, travel_buyout),
+        invoice_number = COALESCE(${invoice_number ?? null}, invoice_number),
+        purchase_order_number = COALESCE(${purchase_order_number ?? null}, purchase_order_number),
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${projectId}
+      RETURNING *
+    `
+
+    if (result.length === 0) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({
+      project: result[0],
+      success: true
+    })
+
+  } catch (error) {
+    console.error('Error updating project payment:', error)
+    return NextResponse.json({
+      error: 'Failed to update payment data',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }

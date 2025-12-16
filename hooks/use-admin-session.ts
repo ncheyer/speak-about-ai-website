@@ -52,7 +52,10 @@ export function useAdminSession(options: UseAdminSessionOptions = {}) {
     // Refresh session token if we haven't refreshed in the last 5 minutes
     const now = Date.now()
     if (now - refreshCooldownRef.current > 5 * 60 * 1000) {
-      refreshSession()
+      refreshSession().catch(() => {
+        // Silently ignore refresh errors during activity updates
+        // This prevents console noise from network blips
+      })
       refreshCooldownRef.current = now
     }
   }, [])
@@ -212,14 +215,19 @@ export function useAdminSession(options: UseAdminSessionOptions = {}) {
   // Validate session on mount
   useEffect(() => {
     const validateSession = async () => {
-      const token = localStorage.getItem('adminSessionToken')
-      if (!token) {
-        performLogout()
-        return
-      }
+      try {
+        const token = localStorage.getItem('adminSessionToken')
+        if (!token) {
+          performLogout()
+          return
+        }
 
-      // Try to refresh the session
-      await refreshSession()
+        // Try to refresh the session
+        await refreshSession()
+      } catch {
+        // Silently ignore validation errors on mount
+        // Session will be validated again on next activity
+      }
     }
 
     validateSession()

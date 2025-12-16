@@ -5,10 +5,11 @@ const sql = neon(process.env.DATABASE_URL!)
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const projectId = parseInt(params.id)
+    const { id } = await params
+    const projectId = parseInt(id)
     
     const tasks = await sql`
       SELECT * FROM project_tasks 
@@ -36,10 +37,11 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const projectId = parseInt(params.id)
+    const { id } = await params
+    const projectId = parseInt(id)
     const { tasks } = await request.json()
 
     if (!Array.isArray(tasks) || tasks.length === 0) {
@@ -130,7 +132,7 @@ export async function POST(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { taskId, completed, status } = await request.json()

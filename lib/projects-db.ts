@@ -133,9 +133,17 @@ export interface Project {
   speaker_fee?: number
   travel_expenses_type?: string
   travel_expenses_amount?: number
+  travel_buyout?: number
   payment_terms?: string
   invoice_number?: string
   purchase_order_number?: string
+
+  // Payment Tracking
+  deal_id?: number
+  payment_status?: "pending" | "partial" | "paid"
+  payment_date?: string
+  speaker_payment_status?: "pending" | "paid"
+  speaker_payment_date?: string
   
   // Confirmation Details
   prep_call_requested?: boolean
@@ -496,10 +504,18 @@ export async function updateProject(id: number, projectData: Partial<Project>): 
         speaker_fee = COALESCE(${projectData.speaker_fee || null}, speaker_fee),
         travel_expenses_type = COALESCE(${projectData.travel_expenses_type || null}, travel_expenses_type),
         travel_expenses_amount = COALESCE(${projectData.travel_expenses_amount || null}, travel_expenses_amount),
+        travel_buyout = COALESCE(${projectData.travel_buyout || null}, travel_buyout),
         payment_terms = COALESCE(${projectData.payment_terms || null}, payment_terms),
         invoice_number = COALESCE(${projectData.invoice_number || null}, invoice_number),
         purchase_order_number = COALESCE(${projectData.purchase_order_number || null}, purchase_order_number),
-        
+
+        -- Payment Tracking
+        deal_id = COALESCE(${projectData.deal_id || null}, deal_id),
+        payment_status = COALESCE(${projectData.payment_status || null}, payment_status),
+        payment_date = COALESCE(${projectData.payment_date || null}, payment_date),
+        speaker_payment_status = COALESCE(${projectData.speaker_payment_status || null}, speaker_payment_status),
+        speaker_payment_date = COALESCE(${projectData.speaker_payment_date || null}, speaker_payment_date),
+
         -- Confirmation Details
         prep_call_requested = COALESCE(${projectData.prep_call_requested !== undefined ? projectData.prep_call_requested : null}, prep_call_requested),
         prep_call_date = COALESCE(${projectData.prep_call_date || null}, prep_call_date),
