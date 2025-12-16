@@ -3,6 +3,7 @@ import { updateDeal, deleteDeal } from "@/lib/deals-db"
 import { createProject } from "@/lib/projects-db"
 import { getAutomaticProjectStatus } from "@/lib/project-status-utils"
 import { requireAdminAuth } from "@/lib/auth-middleware"
+import { sendSlackWebhook, buildDealStatusUpdateMessage, buildDealWonMessage } from "@/lib/slack"
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -26,11 +27,39 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { getAllDeals } = await import("@/lib/deals-db")
     const deals = await getAllDeals()
     const originalDeal = deals.find(d => d.id === id)
-    
+
     const deal = await updateDeal(id, body)
 
     if (!deal) {
       return NextResponse.json({ error: "Deal not found or failed to update" }, { status: 404 })
+    }
+
+    // Send Slack notification for status changes
+    if (originalDeal && originalDeal.status !== deal.status) {
+      try {
+        if (deal.status === 'won') {
+          await sendSlackWebhook(buildDealWonMessage({
+            id: deal.id,
+            event_title: deal.event_title,
+            client_name: deal.client_name,
+            company: deal.company,
+            deal_value: deal.deal_value,
+            speaker_name: deal.speaker_requested,
+            event_date: deal.event_date
+          }))
+        } else {
+          await sendSlackWebhook(buildDealStatusUpdateMessage({
+            id: deal.id,
+            event_title: deal.event_title,
+            client_name: deal.client_name,
+            old_status: originalDeal.status,
+            new_status: deal.status,
+            deal_value: deal.deal_value
+          }))
+        }
+      } catch (slackError) {
+        console.error('Slack notification failed:', slackError)
+      }
     }
 
     // If deal status changed to "won", create a project
@@ -43,7 +72,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           client_email: deal.client_email,
           client_phone: deal.client_phone,
           company: deal.company,
-          project_type: deal.event_type === "Workshop" ? "Workshop" : 
+          project_type: deal.event_type === "Workshop" ? "Workshop" :
                        deal.event_type === "Keynote" ? "Speaking" :
                        deal.event_type === "Consulting" ? "Consulting" : "Other",
           description: `Event: ${deal.event_title}\nLocation: ${deal.event_location}\nAttendees: ${deal.attendee_count}\n\n${deal.notes}`,
@@ -55,52 +84,52 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           budget: deal.deal_value,
           spent: 0,
           completion_percentage: 0,
-          
+
           // Event Overview - Billing Contact (from deal client info)
           billing_contact_name: deal.client_name,
           billing_contact_email: deal.client_email,
           billing_contact_phone: deal.client_phone,
-          
+
           // Event Overview - Logistics Contact (same as billing for now)
           logistics_contact_name: deal.client_name,
           logistics_contact_email: deal.client_email,
           logistics_contact_phone: deal.client_phone,
-          
+
           // Event Overview - Additional Fields
           end_client_name: deal.company,
           event_name: deal.event_title,
           event_date: deal.event_date,
           event_location: deal.event_location,
           event_type: deal.event_type,
-          
+
           // Speaker Program Details
           requested_speaker_name: deal.speaker_requested,
           program_topic: `${deal.event_title} - ${deal.event_type}`,
           program_type: deal.event_type,
           audience_size: deal.attendee_count,
           audience_demographics: "To be determined during planning",
-          
+
           // Financial Details
           speaker_fee: deal.deal_value,
-          
+
           // Basic event fields (existing)
           attendee_count: deal.attendee_count,
           contact_person: deal.client_name,
           notes: `Deal ID: ${deal.id}\nSource: ${deal.source}\nBudget Range: ${deal.budget_range}\nOriginal notes: ${deal.notes}`,
           tags: [deal.event_type, deal.source],
-          
+
           // Status tracking (initialized for new project)
           contract_signed: false,
           invoice_sent: false,
           payment_received: false,
           presentation_ready: false,
           materials_sent: false,
-          
+
           // Event classification based on type
           event_classification: deal.event_type?.toLowerCase().includes('virtual') || deal.event_type?.toLowerCase().includes('webinar') ? 'virtual' :
                               deal.event_location?.toLowerCase().includes('remote') ? 'virtual' : 'local'
         }
-        
+
         const project = await createProject(projectData)
         if (project) {
           console.log(`Successfully created project "${project.project_name}" from won deal #${deal.id}`)

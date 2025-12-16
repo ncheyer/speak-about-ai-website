@@ -3,6 +3,7 @@ import { getAllDeals, createDeal, searchDeals, getDealsByStatus } from "@/lib/de
 import { createProject } from "@/lib/projects-db"
 import { getAutomaticProjectStatus } from "@/lib/project-status-utils"
 import { requireAdminAuth } from "@/lib/auth-middleware"
+import { sendSlackWebhook, buildNewDealMessage, buildDealWonMessage } from "@/lib/slack"
 
 export async function GET(request: NextRequest) {
   try {
@@ -89,6 +90,23 @@ export async function POST(request: NextRequest) {
 
     if (!deal) {
       return NextResponse.json({ error: "Failed to create deal" }, { status: 500 })
+    }
+
+    // Send Slack notification for new deal
+    try {
+      await sendSlackWebhook(buildNewDealMessage({
+        id: deal.id,
+        event_title: deal.event_title,
+        client_name: deal.client_name,
+        company: deal.company,
+        deal_value: deal.deal_value,
+        event_date: deal.event_date,
+        speaker_name: deal.speaker_requested,
+        status: deal.status
+      }))
+    } catch (slackError) {
+      console.error('Slack notification failed:', slackError)
+      // Don't fail the request if Slack fails
     }
 
     // If deal is created with status "won", automatically create a project
