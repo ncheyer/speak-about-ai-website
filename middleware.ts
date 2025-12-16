@@ -25,8 +25,8 @@ export async function middleware(request: NextRequest) {
     /bot|crawler|spider|scraper|headless/i.test(userAgent)
   )
 
-  // Allow legitimate bots like Google, Bing
-  const isLegitimateBot = /Googlebot|Bingbot|Slurp|DuckDuckBot|facebookexternalhit|Twitterbot|LinkedInBot/i.test(userAgent)
+  // Allow legitimate bots like Google, Bing, Slack
+  const isLegitimateBot = /Googlebot|Bingbot|Slurp|DuckDuckBot|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot/i.test(userAgent)
 
   if (isSuspiciousBot && !isLegitimateBot) {
     // Return a 403 Forbidden for suspicious bots
