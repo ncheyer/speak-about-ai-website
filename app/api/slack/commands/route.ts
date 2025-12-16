@@ -236,13 +236,9 @@ export async function POST(request: NextRequest) {
           })
 
           const statusEmoji: Record<string, string> = {
-            'planning': '📋',
+            '2plus_months': '📅',
             'invoicing': '💳',
-            'contract': '📝',
-            'preparation': '🎯',
-            'ready': '✅',
-            'completed': '🎉',
-            'on_hold': '⏸️'
+            'completed': '🎉'
           }
 
           let summaryText = `*📁 Projects Summary*\n\n`
@@ -288,12 +284,9 @@ export async function POST(request: NextRequest) {
             const fee = project.speaker_fee ? `$${Number(project.speaker_fee).toLocaleString()}` : 'TBD'
             const date = project.event_date ? new Date(project.event_date).toLocaleDateString() : 'TBD'
             const statusEmoji: Record<string, string> = {
-              'planning': '📋',
+              '2plus_months': '📅',
               'invoicing': '💳',
-              'contract': '📝',
-              'preparation': '🎯',
-              'ready': '✅',
-              'on_hold': '⏸️'
+              'completed': '🎉'
             }
             const emoji = statusEmoji[project.status] || '📁'
 
@@ -308,13 +301,9 @@ export async function POST(request: NextRequest) {
                 placeholder: { type: 'plain_text', text: project.status },
                 action_id: 'update_project_status',
                 options: [
-                  { text: { type: 'plain_text', text: '📋 Planning' }, value: `${project.id}:planning` },
+                  { text: { type: 'plain_text', text: '📅 2+ Months Out' }, value: `${project.id}:2plus_months` },
                   { text: { type: 'plain_text', text: '💳 Invoicing' }, value: `${project.id}:invoicing` },
-                  { text: { type: 'plain_text', text: '📝 Contract' }, value: `${project.id}:contract` },
-                  { text: { type: 'plain_text', text: '🎯 Preparation' }, value: `${project.id}:preparation` },
-                  { text: { type: 'plain_text', text: '✅ Ready' }, value: `${project.id}:ready` },
-                  { text: { type: 'plain_text', text: '🎉 Completed' }, value: `${project.id}:completed` },
-                  { text: { type: 'plain_text', text: '⏸️ On Hold' }, value: `${project.id}:on_hold` }
+                  { text: { type: 'plain_text', text: '🎉 Completed' }, value: `${project.id}:completed` }
                 ]
               }
             })
@@ -350,11 +339,9 @@ export async function POST(request: NextRequest) {
             const date = new Date(project.event_date).toLocaleDateString()
             const daysAway = Math.ceil((new Date(project.event_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
             const statusEmoji: Record<string, string> = {
-              'planning': '📋',
+              '2plus_months': '📅',
               'invoicing': '💳',
-              'contract': '📝',
-              'preparation': '🎯',
-              'ready': '✅'
+              'completed': '🎉'
             }
             const emoji = statusEmoji[project.status] || '📁'
             upcomingText += `${emoji} *${project.project_name}* (${project.client_name})\n   ${date} - _${daysAway} days away_ - ${project.status}\n\n`
