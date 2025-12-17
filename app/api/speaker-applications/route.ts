@@ -12,42 +12,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    // Verify Cloudflare Turnstile CAPTCHA token
-    const turnstileToken = body.turnstileToken || body['cf-turnstile-response']
-    if (!turnstileToken) {
-      return NextResponse.json(
-        { error: "CAPTCHA verification is required" },
-        { status: 400 }
-      )
-    }
-
-    // Verify the turnstile token with Cloudflare
-    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY
-    if (turnstileSecret) {
-      const turnstileResponse = await fetch(
-        'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            secret: turnstileSecret,
-            response: turnstileToken,
-            remoteip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
-          }),
-        }
-      )
-
-      const turnstileData = await turnstileResponse.json()
-      if (!turnstileData.success) {
-        return NextResponse.json(
-          { error: "CAPTCHA verification failed. Please try again." },
-          { status: 400 }
-        )
-      }
-    }
-
     // Validate required fields
     const requiredFields = ['first_name', 'last_name', 'email', 'bio', 'location', 'title', 'company', 'speaking_topics']
     for (const field of requiredFields) {
