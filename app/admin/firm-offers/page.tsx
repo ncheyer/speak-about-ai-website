@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
@@ -14,82 +15,73 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  FileText,
-  Send,
-  Eye,
-  MoreHorizontal,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Copy,
-  ExternalLink,
+  FileSignature,
+  Plus,
   Search,
-  RefreshCw
+  Eye,
+  Edit,
+  DollarSign,
+  Clock,
+  CheckCircle,
+  Calendar,
+  MoreHorizontal,
+  Send,
+  Building2,
+  User,
+  MapPin
 } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { Label } from "@/components/ui/label"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { formatCurrency, formatDate } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
-interface FirmOffer {
+interface Deal {
   id: number
-  proposal_id: number
+  title: string
+  company: string
+  contact_name: string
+  contact_email: string
+  value: string
   status: string
-  proposal_title: string
-  client_name: string
-  client_email: string
-  event_overview: any
-  speaker_program: any
-  financial_details: any
-  speaker_access_token: string
-  speaker_viewed_at: string | null
-  speaker_response_at: string | null
-  speaker_confirmed: boolean | null
-  speaker_notes: string | null
+  event_date: string
+  event_location: string
+  speaker_id: number
+  speaker_name?: string
+  project_id?: number
   created_at: string
-  submitted_at: string | null
-  sent_to_speaker_at: string | null
+  updated_at: string
 }
 
-export default function AdminFirmOffersPage() {
+export default function FirmOffersPage() {
+  const router = useRouter()
   const { toast } = useToast()
-  const [firmOffers, setFirmOffers] = useState<FirmOffer[]>([])
+  const [deals, setDeals] = useState<Deal[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedOffer, setSelectedOffer] = useState<FirmOffer | null>(null)
-  const [showSendDialog, setShowSendDialog] = useState(false)
-  const [speakerEmail, setSpeakerEmail] = useState("")
-  const [isSending, setIsSending] = useState(false)
 
   useEffect(() => {
-    fetchFirmOffers()
+    loadDeals()
   }, [])
 
-  const fetchFirmOffers = async () => {
+  const loadDeals = async () => {
     try {
-      const response = await fetch('/api/firm-offers')
+      const response = await fetch("/api/deals")
       if (response.ok) {
         const data = await response.json()
-        setFirmOffers(data)
+        setDeals(data)
       }
     } catch (error) {
-      console.error('Error fetching firm offers:', error)
+      console.error("Error loading deals:", error)
       toast({
         title: "Error",
-        description: "Failed to load firm offers",
+        description: "Failed to load deals",
         variant: "destructive"
       })
     } finally {
@@ -97,308 +89,217 @@ export default function AdminFirmOffersPage() {
     }
   }
 
-  const getStatusBadge = (offer: FirmOffer) => {
-    if (offer.speaker_confirmed === true) {
-      return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Speaker Confirmed</Badge>
-    }
-    if (offer.speaker_confirmed === false) {
-      return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Speaker Declined</Badge>
-    }
-    if (offer.status === 'sent_to_speaker') {
-      return <Badge className="bg-blue-100 text-blue-800"><Clock className="h-3 w-3 mr-1" />Awaiting Speaker</Badge>
-    }
-    if (offer.status === 'submitted') {
-      return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Ready for Review</Badge>
-    }
-    return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Draft</Badge>
-  }
+  // Filter deals in negotiation stage (ready for firm offers)
+  const negotiationDeals = deals.filter(d => d.status === 'negotiation')
 
-  const handleSendToSpeaker = async () => {
-    if (!selectedOffer) return
+  // Filter based on search
+  const filteredDeals = negotiationDeals.filter(deal => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      deal.title?.toLowerCase().includes(searchLower) ||
+      deal.company?.toLowerCase().includes(searchLower) ||
+      deal.contact_name?.toLowerCase().includes(searchLower) ||
+      deal.speaker_name?.toLowerCase().includes(searchLower)
+    )
+  })
 
-    setIsSending(true)
-    try {
-      const response = await fetch(`/api/firm-offers/${selectedOffer.id}/send-to-speaker`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          speaker_email: speakerEmail,
-          speaker_name: selectedOffer.speaker_program?.requested_speaker_name
-        })
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        toast({
-          title: "Sent!",
-          description: "Firm offer sent to speaker for review."
-        })
-        setShowSendDialog(false)
-        fetchFirmOffers()
-
-        // Copy the review URL to clipboard
-        if (data.speaker_review_url) {
-          navigator.clipboard.writeText(data.speaker_review_url)
-          toast({
-            title: "Link Copied",
-            description: "Speaker review link has been copied to clipboard."
-          })
-        }
-      } else {
-        throw new Error(data.error)
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send to speaker",
-        variant: "destructive"
-      })
-    } finally {
-      setIsSending(false)
-    }
-  }
-
-  const copyReviewLink = (token: string) => {
-    const url = `${window.location.origin}/speaker-review/${token}`
-    navigator.clipboard.writeText(url)
-    toast({
-      title: "Copied!",
-      description: "Speaker review link copied to clipboard."
-    })
-  }
-
-  const copyClientLink = (token: string) => {
-    const url = `${window.location.origin}/firm-offer/${token}`
-    navigator.clipboard.writeText(url)
-    toast({
-      title: "Copied!",
-      description: "Client firm offer link copied to clipboard."
-    })
-  }
-
-  const filteredOffers = firmOffers.filter(offer =>
-    offer.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    offer.proposal_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    offer.speaker_program?.requested_speaker_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '-'
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    })
-  }
+  const totalValue = negotiationDeals.reduce((sum, d) => sum + parseFloat(d.value || '0'), 0)
+  const pendingOffers = negotiationDeals.filter(d => !d.project_id).length
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <AdminSidebar />
-      <div className="flex-1 overflow-auto">
-        <div className="p-8">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Firm Offers</h1>
-              <p className="text-gray-600">Manage client firm offer sheets and speaker confirmations</p>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 ml-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold">Firm Offer Sheets</h1>
+                <p className="text-gray-600">Create and manage firm offers for deals in negotiation</p>
+              </div>
+              <Button
+                className="bg-amber-500 hover:bg-amber-600"
+                onClick={() => router.push('/admin/firm-offers/new')}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create Firm Offer
+              </Button>
             </div>
-            <Button onClick={fetchFirmOffers} variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold">{firmOffers.length}</div>
-                <div className="text-sm text-gray-500">Total Offers</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {firmOffers.filter(o => o.status === 'submitted').length}
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Deals in Negotiation</p>
+                    <p className="text-2xl font-bold">{negotiationDeals.length}</p>
+                  </div>
+                  <FileSignature className="h-8 w-8 text-amber-400" />
                 </div>
-                <div className="text-sm text-gray-500">Ready for Review</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-blue-600">
-                  {firmOffers.filter(o => o.status === 'sent_to_speaker' && o.speaker_confirmed === null).length}
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Value</p>
+                    <p className="text-2xl font-bold">{formatCurrency(totalValue)}</p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-green-400" />
                 </div>
-                <div className="text-sm text-gray-500">Awaiting Speaker</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-green-600">
-                  {firmOffers.filter(o => o.speaker_confirmed === true).length}
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Pending Firm Offers</p>
+                    <p className="text-2xl font-bold">{pendingOffers}</p>
+                  </div>
+                  <Clock className="h-8 w-8 text-orange-400" />
                 </div>
-                <div className="text-sm text-gray-500">Confirmed</div>
-              </CardContent>
-            </Card>
-          </div>
+              </Card>
+            </div>
 
-          {/* Search */}
-          <div className="mb-6">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search by client, proposal, or speaker..."
+                placeholder="Search by deal, company, contact, or speaker..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
-          </div>
 
-          {/* Table */}
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Client / Event</TableHead>
-                    <TableHead>Speaker</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead>Sent to Speaker</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
-                        Loading...
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredOffers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                        No firm offers found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredOffers.map((offer) => (
-                      <TableRow key={offer.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{offer.client_name}</p>
-                            <p className="text-sm text-gray-500">{offer.proposal_title || offer.event_overview?.event_name}</p>
+            {/* Deals Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Deals Ready for Firm Offer</CardTitle>
+                <CardDescription>Click on a deal to create or view its firm offer sheet</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8 text-gray-500">Loading deals...</div>
+                ) : filteredDeals.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FileSignature className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No deals in negotiation stage</p>
+                    <p className="text-sm text-gray-400 mt-1">Move deals to "Negotiation" in the CRM to create firm offers</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredDeals.map(deal => (
+                      <div
+                        key={deal.id}
+                        className="border rounded-lg p-4 hover:border-amber-300 hover:bg-amber-50/30 transition-all"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-semibold text-lg">{deal.title || deal.company}</h3>
+                              {deal.project_id ? (
+                                <Badge className="bg-green-100 text-green-800">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Offer Created
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-amber-100 text-amber-800">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Needs Firm Offer
+                                </Badge>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-gray-500">Contact</p>
+                                <p className="font-medium flex items-center gap-1">
+                                  <User className="h-3 w-3" />
+                                  {deal.contact_name}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">Speaker</p>
+                                <p className="font-medium">{deal.speaker_name || 'Not assigned'}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">Event Date</p>
+                                <p className="font-medium flex items-center gap-1">
+                                  {deal.event_date ? (
+                                    <>
+                                      <Calendar className="h-3 w-3" />
+                                      {formatDate(deal.event_date)}
+                                    </>
+                                  ) : (
+                                    <span className="text-gray-400">TBD</span>
+                                  )}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">Location</p>
+                                <p className="font-medium flex items-center gap-1">
+                                  {deal.event_location ? (
+                                    <>
+                                      <MapPin className="h-3 w-3" />
+                                      {deal.event_location}
+                                    </>
+                                  ) : (
+                                    <span className="text-gray-400">TBD</span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          {offer.speaker_program?.requested_speaker_name || '-'}
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(offer)}
-                          {offer.speaker_viewed_at && offer.speaker_confirmed === null && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              Viewed {formatDate(offer.speaker_viewed_at)}
-                            </p>
-                          )}
-                        </TableCell>
-                        <TableCell>{formatDate(offer.submitted_at)}</TableCell>
-                        <TableCell>{formatDate(offer.sent_to_speaker_at)}</TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
+
+                          <div className="flex flex-col items-end gap-2 ml-4">
+                            <div className="text-right">
+                              <p className="text-xs text-gray-500">Deal Value</p>
+                              <p className="text-xl font-bold text-green-600">
+                                {formatCurrency(parseFloat(deal.value || '0'))}
+                              </p>
+                            </div>
+
+                            {deal.project_id ? (
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => router.push(`/admin/firm-offers/${deal.project_id}`)}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => router.push(`/admin/firm-offers/${deal.project_id}/edit`)}
+                                >
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Edit
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                className="bg-amber-500 hover:bg-amber-600"
+                                onClick={() => router.push(`/admin/firm-offers/new?deal_id=${deal.id}`)}
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Create Firm Offer
                               </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => window.open(`/firm-offer/${offer.speaker_access_token}`, '_blank')}>
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Form
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => copyClientLink(offer.speaker_access_token)}>
-                                <Copy className="h-4 w-4 mr-2" />
-                                Copy Client Link
-                              </DropdownMenuItem>
-                              {offer.status === 'submitted' && (
-                                <DropdownMenuItem onClick={() => {
-                                  setSelectedOffer(offer)
-                                  setShowSendDialog(true)
-                                }}>
-                                  <Send className="h-4 w-4 mr-2" />
-                                  Send to Speaker
-                                </DropdownMenuItem>
-                              )}
-                              {offer.status === 'sent_to_speaker' && (
-                                <>
-                                  <DropdownMenuItem onClick={() => copyReviewLink(offer.speaker_access_token)}>
-                                    <Copy className="h-4 w-4 mr-2" />
-                                    Copy Speaker Link
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => window.open(`/speaker-review/${offer.speaker_access_token}`, '_blank')}>
-                                    <ExternalLink className="h-4 w-4 mr-2" />
-                                    View Speaker Page
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-
-      {/* Send to Speaker Dialog */}
-      <Dialog open={showSendDialog} onOpenChange={setShowSendDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Send to Speaker</DialogTitle>
-            <DialogDescription>
-              Send this firm offer to the speaker for review and confirmation.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Speaker</Label>
-              <p className="font-medium">{selectedOffer?.speaker_program?.requested_speaker_name}</p>
-            </div>
-            <div>
-              <Label>Event</Label>
-              <p className="text-sm text-gray-600">
-                {selectedOffer?.event_overview?.event_name || selectedOffer?.proposal_title}
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="speaker-email">Speaker Email (optional)</Label>
-              <Input
-                id="speaker-email"
-                type="email"
-                value={speakerEmail}
-                onChange={(e) => setSpeakerEmail(e.target.value)}
-                placeholder="speaker@email.com"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Leave blank to just copy the review link
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSendDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSendToSpeaker} disabled={isSending}>
-              <Send className="h-4 w-4 mr-2" />
-              {isSending ? 'Sending...' : 'Send & Copy Link'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

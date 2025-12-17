@@ -34,6 +34,7 @@ import {
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import { AdminSidebar } from "@/components/admin-sidebar"
 import type { Deal } from "@/lib/deals-db"
 import type { Speaker as SpeakerType, Service, Deliverable, PaymentMilestone, Testimonial, CaseStudy } from "@/lib/proposals-db"
 import { proposalTemplates, getTemplateById } from "@/lib/proposal-templates"
@@ -588,30 +589,39 @@ function NewProposalPageContent() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{isEditMode ? 'Edit Proposal' : 'Create Proposal'}</h1>
-            <p className="text-gray-600">{isEditMode ? 'Update your proposal details' : 'Build a compelling proposal for your client'}</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => handleSubmit("draft")} disabled={loading}>
-            <Save className="h-4 w-4 mr-2" />
-            Save Draft
-          </Button>
-          <Button onClick={() => handleSubmit("sent")} disabled={loading}>
-            <FileText className="h-4 w-4 mr-2" />
-            Publish
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
       </div>
 
-      <Tabs defaultValue="basics" className="space-y-4">
+      {/* Main Content */}
+      <div className="flex-1 ml-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                  <h1 className="text-2xl font-bold">{isEditMode ? 'Edit Proposal' : 'Create Proposal'}</h1>
+                  <p className="text-gray-600">{isEditMode ? 'Update your proposal details' : 'Build a compelling proposal for your client'}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => handleSubmit("draft")} disabled={loading}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Draft
+                </Button>
+                <Button onClick={() => handleSubmit("sent")} disabled={loading}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Publish
+                </Button>
+              </div>
+            </div>
+
+            <Tabs defaultValue="basics" className="space-y-4">
         <TabsList className="grid grid-cols-7 w-full">
           <TabsTrigger value="basics">Basics</TabsTrigger>
           <TabsTrigger value="speakers">Speakers</TabsTrigger>
@@ -1298,7 +1308,10 @@ function NewProposalPageContent() {
             </div>
           </Card>
         </TabsContent>
-      </Tabs>
+            </Tabs>
+          </div>
+        </div>
+      </div>
 
       {/* Deal Selection Dialog */}
       <Dialog open={showDealDialog} onOpenChange={setShowDealDialog}>

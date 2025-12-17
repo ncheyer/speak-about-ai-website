@@ -235,132 +235,172 @@ export function ProjectDetailsManager({
         <CardContent className="p-0">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="w-full justify-start rounded-none border-b overflow-x-auto flex-nowrap">
+              {/* Firm Offer Sheet Core Tabs */}
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger 
-                value="travel" 
-                disabled={details.overview?.event_classification === 'virtual'}
-                className={details.overview?.event_classification === 'virtual' ? 'opacity-50' : ''}
+              <TabsTrigger value="contacts">Contacts</TabsTrigger>
+              <TabsTrigger value="program">Program</TabsTrigger>
+              <TabsTrigger value="schedule">Schedule</TabsTrigger>
+              <TabsTrigger value="technical">Technical</TabsTrigger>
+              <TabsTrigger
+                value="travel"
+                disabled={details.overview?.event_classification === 'virtual' || details.overview?.event_classification === 'local'}
+                className={(details.overview?.event_classification === 'virtual' || details.overview?.event_classification === 'local') ? 'opacity-50' : ''}
               >
-                Travel & Hotel {details.overview?.event_classification === 'virtual' && '(N/A)'}
+                Travel {(details.overview?.event_classification === 'virtual' || details.overview?.event_classification === 'local') && '(N/A)'}
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="venue"
                 disabled={details.overview?.event_classification === 'virtual'}
                 className={details.overview?.event_classification === 'virtual' ? 'opacity-50' : ''}
               >
                 Venue {details.overview?.event_classification === 'virtual' && '(N/A)'}
               </TabsTrigger>
-              <TabsTrigger value="contacts">Contacts</TabsTrigger>
-              <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
+              <TabsTrigger value="additional">Additional</TabsTrigger>
+              <TabsTrigger value="financial">Financial</TabsTrigger>
+              <TabsTrigger value="confirmation">Confirmation</TabsTrigger>
+              {/* Extended Details Tabs (post-contract) */}
+              <TabsTrigger value="itinerary">Day-of</TabsTrigger>
               <TabsTrigger value="audience">Audience</TabsTrigger>
-              <TabsTrigger value="event">Event Details</TabsTrigger>
               <TabsTrigger value="speaker">Speaker Needs</TabsTrigger>
-              <TabsTrigger value="online">Online</TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
-            <TabsContent value="overview" className="p-6 space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Speaker Name</Label>
-                  <Input
-                    value={details.overview?.speaker_name || ''}
-                    onChange={(e) => updateField('overview.speaker_name', e.target.value)}
-                    placeholder="Enter speaker name"
-                  />
+            <TabsContent value="overview" className="p-6 space-y-6">
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Event Overview
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <Label>Event Classification *</Label>
+                    <Select
+                      value={details.overview?.event_classification || ''}
+                      onValueChange={(value) => {
+                        updateField('overview.event_classification', value);
+                        if (value === 'virtual') {
+                          setDetails(prev => ({
+                            ...prev,
+                            travel: {},
+                            venue: {}
+                          }));
+                          setUnsavedChanges(true);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select event type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="virtual">
+                          <div className="flex items-center gap-2">
+                            <Monitor className="h-4 w-4" />
+                            Virtual Event (No travel/venue required)
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="local">
+                          <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4" />
+                            Local Event (Venue required, no travel)
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="travel">
+                          <div className="flex items-center gap-2">
+                            <Plane className="h-4 w-4" />
+                            Travel Required (Full logistics needed)
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {details.overview?.event_classification === 'virtual' && (
+                      <p className="text-sm text-blue-600 mt-1">
+                        Travel and venue tabs are disabled for virtual events
+                      </p>
+                    )}
+                    {details.overview?.event_classification === 'local' && (
+                      <p className="text-sm text-blue-600 mt-1">
+                        Travel tab is disabled for local events (no flights/hotel needed)
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>End Client Name</Label>
+                    <Input
+                      value={details.overview?.end_client_name || ''}
+                      onChange={(e) => updateField('overview.end_client_name', e.target.value)}
+                      placeholder="Name of the end client organization"
+                    />
+                  </div>
+                  <div>
+                    <Label>Event Name</Label>
+                    <Input
+                      value={details.overview?.event_name || ''}
+                      onChange={(e) => updateField('overview.event_name', e.target.value)}
+                      placeholder="Official event name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Event Date</Label>
+                    <Input
+                      type="date"
+                      value={details.overview?.event_date || ''}
+                      onChange={(e) => updateField('overview.event_date', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Event Website/Link</Label>
+                    <Input
+                      value={details.overview?.event_website || ''}
+                      onChange={(e) => updateField('overview.event_website', e.target.value)}
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div>
+                    <Label>Event Location</Label>
+                    <Input
+                      value={details.overview?.event_location || ''}
+                      onChange={(e) => updateField('overview.event_location', e.target.value)}
+                      placeholder="City, State"
+                    />
+                  </div>
+                  <div>
+                    <Label>Company/Organization (Client)</Label>
+                    <Input
+                      value={details.overview?.company_name || ''}
+                      onChange={(e) => updateField('overview.company_name', e.target.value)}
+                      placeholder="Booking client/agency name"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label>Speaker Title/Designation</Label>
-                  <Input
-                    value={details.overview?.speaker_title || ''}
-                    onChange={(e) => updateField('overview.speaker_title', e.target.value)}
-                    placeholder="e.g., CSP, PhD"
-                  />
-                </div>
-                <div>
-                  <Label>Company/Organization</Label>
-                  <Input
-                    value={details.overview?.company_name || ''}
-                    onChange={(e) => updateField('overview.company_name', e.target.value)}
-                    placeholder="Client company name"
-                  />
-                </div>
-                <div>
-                  <Label>Event Location</Label>
-                  <Input
-                    value={details.overview?.event_location || ''}
-                    onChange={(e) => updateField('overview.event_location', e.target.value)}
-                    placeholder="City, State"
-                  />
-                </div>
-                <div>
-                  <Label>Event Date</Label>
-                  <Input
-                    type="date"
-                    value={details.overview?.event_date || ''}
-                    onChange={(e) => updateField('overview.event_date', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label>Event Time</Label>
-                  <Input
-                    type="time"
-                    value={details.overview?.event_time || ''}
-                    onChange={(e) => updateField('overview.event_time', e.target.value)}
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <Label>Event Classification</Label>
-                  <Select 
-                    value={details.overview?.event_classification || ''}
-                    onValueChange={(value) => {
-                      updateField('overview.event_classification', value);
-                      // Auto-clear travel and venue fields when switching to virtual
-                      if (value === 'virtual') {
-                        // Clear travel data
-                        setDetails(prev => ({
-                          ...prev,
-                          travel: {},
-                          venue: {}
-                        }));
-                        setUnsavedChanges(true);
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select event type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="virtual">
-                        <div className="flex items-center gap-2">
-                          <Monitor className="h-4 w-4" />
-                          Virtual Event (No travel/venue required)
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="local">
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4" />
-                          Local Event (Venue required, no travel)
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="travel">
-                        <div className="flex items-center gap-2">
-                          <Plane className="h-4 w-4" />
-                          Travel Required (Full logistics needed)
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {details.overview?.event_classification === 'virtual' && (
-                    <p className="text-sm text-blue-600 mt-1">
-                      ℹ️ Travel and venue tabs are disabled for virtual events
-                    </p>
-                  )}
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Speaker Information
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Speaker Name</Label>
+                    <Input
+                      value={details.overview?.speaker_name || ''}
+                      onChange={(e) => updateField('overview.speaker_name', e.target.value)}
+                      placeholder="Enter speaker name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Speaker Title/Designation</Label>
+                    <Input
+                      value={details.overview?.speaker_title || ''}
+                      onChange={(e) => updateField('overview.speaker_title', e.target.value)}
+                      placeholder="e.g., CSP, PhD"
+                    />
+                  </div>
                 </div>
               </div>
             </TabsContent>
 
-            {/* Travel & Hotel Tab */}
+            {/* Travel & Accommodation Tab */}
             <TabsContent value="travel" className="p-6 space-y-6">
               {details.overview?.event_classification === 'virtual' && (
                 <Alert className="border-blue-200 bg-blue-50">
@@ -370,7 +410,123 @@ export function ProjectDetailsManager({
                   </AlertDescription>
                 </Alert>
               )}
-              {/* Flights Section */}
+              {details.overview?.event_classification === 'local' && (
+                <Alert className="border-blue-200 bg-blue-50">
+                  <Building className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Local Event</strong> - Flight and hotel arrangements are typically not required for local events.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Travel Dates */}
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Travel Dates
+                </h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <Label>Expected Fly-In Date</Label>
+                    <Input
+                      type="date"
+                      value={details.travel?.fly_in_date || ''}
+                      onChange={(e) => updateField('travel.fly_in_date', e.target.value)}
+                      disabled={details.overview?.event_classification === 'virtual' || details.overview?.event_classification === 'local'}
+                    />
+                  </div>
+                  <div>
+                    <Label>Expected Fly-Out Date</Label>
+                    <Input
+                      type="date"
+                      value={details.travel?.fly_out_date || ''}
+                      onChange={(e) => updateField('travel.fly_out_date', e.target.value)}
+                      disabled={details.overview?.event_classification === 'virtual' || details.overview?.event_classification === 'local'}
+                    />
+                  </div>
+                  <div>
+                    <Label>Nearest Airport</Label>
+                    <Input
+                      value={details.travel?.nearest_airport || ''}
+                      onChange={(e) => updateField('travel.nearest_airport', e.target.value)}
+                      placeholder="e.g., LAX, JFK, ORD"
+                      disabled={details.overview?.event_classification === 'virtual' || details.overview?.event_classification === 'local'}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Transportation */}
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Car className="h-5 w-5" />
+                  Transportation
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-4 border rounded-lg">
+                    <Label className="font-medium mb-2 block">Airport to Hotel</Label>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={details.travel?.airport_to_hotel?.provided_by_client || false}
+                            onChange={(e) => updateField('travel.airport_to_hotel.provided_by_client', e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Client will provide</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={details.travel?.airport_to_hotel?.speaker_arranges || false}
+                            onChange={(e) => updateField('travel.airport_to_hotel.speaker_arranges', e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Speaker to arrange</span>
+                        </label>
+                      </div>
+                      <Input
+                        value={details.travel?.airport_to_hotel?.details || ''}
+                        onChange={(e) => updateField('travel.airport_to_hotel.details', e.target.value)}
+                        placeholder="Additional details..."
+                      />
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <Label className="font-medium mb-2 block">Hotel to Venue</Label>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={details.travel?.hotel_to_venue?.provided_by_client || false}
+                            onChange={(e) => updateField('travel.hotel_to_venue.provided_by_client', e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Client will provide</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={details.travel?.hotel_to_venue?.speaker_arranges || false}
+                            onChange={(e) => updateField('travel.hotel_to_venue.speaker_arranges', e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Speaker to arrange</span>
+                        </label>
+                      </div>
+                      <Input
+                        value={details.travel?.hotel_to_venue?.details || ''}
+                        onChange={(e) => updateField('travel.hotel_to_venue.details', e.target.value)}
+                        placeholder="Additional details..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Flight Details */}
               <div>
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
                   <Plane className="h-5 w-5" />
@@ -378,68 +534,23 @@ export function ProjectDetailsManager({
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <Label className={details.overview?.event_classification === 'virtual' ? 'text-gray-400' : ''}>Outbound Flight Details</Label>
+                    <Label>Flight Details</Label>
                     <Textarea
                       value={details.travel?.flights?.notes || ''}
                       onChange={(e) => updateField('travel.flights.notes', e.target.value)}
-                      placeholder={details.overview?.event_classification === 'virtual' ? "Not applicable for virtual event" : "Enter flight details (airline, flight numbers, times, etc.)"}
+                      placeholder="Enter flight details (airline, flight numbers, times, etc.)"
                       rows={3}
-                      disabled={details.overview?.event_classification === 'virtual'}
+                      disabled={details.overview?.event_classification === 'virtual' || details.overview?.event_classification === 'local'}
                     />
                   </div>
                   <div>
-                    <Label className={details.overview?.event_classification === 'virtual' ? 'text-gray-400' : ''}>Confirmation Numbers</Label>
+                    <Label>Confirmation Numbers</Label>
                     <Input
                       value={details.travel?.flights?.confirmation_numbers?.join(', ') || ''}
-                      onChange={(e) => updateField('travel.flights.confirmation_numbers', e.target.value.split(', '))}
-                      placeholder={details.overview?.event_classification === 'virtual' ? "Not applicable for virtual event" : "Enter confirmation numbers"}
-                      disabled={details.overview?.event_classification === 'virtual'}
+                      onChange={(e) => updateField('travel.flights.confirmation_numbers', e.target.value.split(', ').filter(s => s))}
+                      placeholder="Enter confirmation numbers"
+                      disabled={details.overview?.event_classification === 'virtual' || details.overview?.event_classification === 'local'}
                     />
-                  </div>
-                </div>
-              </div>
-
-              {/* Ground Transportation */}
-              <div>
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Car className="h-5 w-5" />
-                  Ground Transportation
-                </h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label>Transportation Type</Label>
-                    <Select
-                      value={details.travel?.ground_transportation?.type || ''}
-                      onValueChange={(value) => updateField('travel.ground_transportation.type', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="taxi">Taxi</SelectItem>
-                        <SelectItem value="uber">Uber/Lyft</SelectItem>
-                        <SelectItem value="car_service">Car Service</SelectItem>
-                        <SelectItem value="rental">Rental Car</SelectItem>
-                        <SelectItem value="provided">Client Provided</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Responsibility</Label>
-                    <Select
-                      value={details.travel?.ground_transportation?.responsibility || ''}
-                      onValueChange={(value) => updateField('travel.ground_transportation.responsibility', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Who arranges?" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="speaker">Speaker</SelectItem>
-                        <SelectItem value="client">Client</SelectItem>
-                        <SelectItem value="agency">Agency</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
               </div>
@@ -565,6 +676,98 @@ export function ProjectDetailsManager({
                     placeholder="Any special notes about the hotel, amenities, etc."
                     rows={2}
                   />
+                </div>
+              </div>
+
+              {/* Meals */}
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Meals
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Meals Provided</Label>
+                    <Textarea
+                      value={details.travel?.meals?.meals_provided || ''}
+                      onChange={(e) => updateField('travel.meals.meals_provided', e.target.value)}
+                      placeholder="Which meals will be provided? (breakfast, lunch, dinner, reception)"
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <Label>Dietary Requirements</Label>
+                    <Textarea
+                      value={details.travel?.meals?.dietary_requirements || ''}
+                      onChange={(e) => updateField('travel.meals.dietary_requirements', e.target.value)}
+                      placeholder="Any special dietary requirements or allergies"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Guest List / VIP */}
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Guest List / VIP Opportunities
+                </h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <Label>Invited to Reception/Dinner?</Label>
+                    <Select
+                      value={details.travel?.guest_list?.invited_to_reception === true ? 'yes' : details.travel?.guest_list?.invited_to_reception === false ? 'no' : ''}
+                      onValueChange={(value) => updateField('travel.guest_list.invited_to_reception', value === 'yes')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Invited to Dinner?</Label>
+                    <Select
+                      value={details.travel?.guest_list?.invited_to_dinner === true ? 'yes' : details.travel?.guest_list?.invited_to_dinner === false ? 'no' : ''}
+                      onValueChange={(value) => updateField('travel.guest_list.invited_to_dinner', value === 'yes')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>VIP Meet & Greet?</Label>
+                    <Select
+                      value={details.travel?.guest_list?.vip_meet_greet === true ? 'yes' : details.travel?.guest_list?.vip_meet_greet === false ? 'no' : ''}
+                      onValueChange={(value) => updateField('travel.guest_list.vip_meet_greet', value === 'yes')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="md:col-span-3">
+                    <Label>Guest List Details</Label>
+                    <Textarea
+                      value={details.travel?.guest_list?.details || ''}
+                      onChange={(e) => updateField('travel.guest_list.details', e.target.value)}
+                      placeholder="Additional details about receptions, dinners, VIP meet & greets, etc."
+                      rows={2}
+                    />
+                  </div>
                 </div>
               </div>
             </TabsContent>
@@ -756,6 +959,93 @@ export function ProjectDetailsManager({
 
             {/* Contacts Tab */}
             <TabsContent value="contacts" className="p-6 space-y-6">
+              {/* Billing Contact */}
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Billing Contact
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Name</Label>
+                    <Input
+                      value={details.billing_contact?.name || ''}
+                      onChange={(e) => updateField('billing_contact.name', e.target.value)}
+                      placeholder="Billing contact name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Title</Label>
+                    <Input
+                      value={details.billing_contact?.title || ''}
+                      onChange={(e) => updateField('billing_contact.title', e.target.value)}
+                      placeholder="Job title"
+                    />
+                  </div>
+                  <div>
+                    <Label>Email Address</Label>
+                    <Input
+                      type="email"
+                      value={details.billing_contact?.email || ''}
+                      onChange={(e) => updateField('billing_contact.email', e.target.value)}
+                      placeholder="billing@company.com"
+                    />
+                  </div>
+                  <div>
+                    <Label>Phone #</Label>
+                    <Input
+                      value={details.billing_contact?.phone || ''}
+                      onChange={(e) => updateField('billing_contact.phone', e.target.value)}
+                      placeholder="Phone number"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Billing Address</Label>
+                    <Textarea
+                      value={details.billing_contact?.address || ''}
+                      onChange={(e) => updateField('billing_contact.address', e.target.value)}
+                      placeholder="Full billing address"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Logistics Contact */}
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Logistics Contact
+                </h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <Label>Name</Label>
+                    <Input
+                      value={details.logistics_contact?.name || ''}
+                      onChange={(e) => updateField('logistics_contact.name', e.target.value)}
+                      placeholder="Logistics contact name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Email Address</Label>
+                    <Input
+                      type="email"
+                      value={details.logistics_contact?.email || ''}
+                      onChange={(e) => updateField('logistics_contact.email', e.target.value)}
+                      placeholder="logistics@company.com"
+                    />
+                  </div>
+                  <div>
+                    <Label>Phone #</Label>
+                    <Input
+                      value={details.logistics_contact?.phone || ''}
+                      onChange={(e) => updateField('logistics_contact.phone', e.target.value)}
+                      placeholder="Phone number"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* On-Site Contact */}
               <div>
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -854,35 +1144,6 @@ export function ProjectDetailsManager({
                       onChange={(e) => updateField('contacts.av_contact.cell_phone', e.target.value)}
                       placeholder="Phone number"
                     />
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Important Contacts */}
-              <div>
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Additional Contacts
-                </h3>
-                <div className="space-y-3">
-                  <div className="text-sm text-gray-600 mb-2">Add any other important contacts for this event</div>
-                  <div className="p-4 border rounded-lg bg-gray-50">
-                    <Label>Event Coordinator</Label>
-                    <div className="grid md:grid-cols-2 gap-3 mt-2">
-                      <Input placeholder="Name" />
-                      <Input placeholder="Phone" />
-                      <Input placeholder="Email" type="email" />
-                      <Input placeholder="Role/Title" />
-                    </div>
-                  </div>
-                  <div className="p-4 border rounded-lg bg-gray-50">
-                    <Label>Client Executive Sponsor</Label>
-                    <div className="grid md:grid-cols-2 gap-3 mt-2">
-                      <Input placeholder="Name" />
-                      <Input placeholder="Phone" />
-                      <Input placeholder="Email" type="email" />
-                      <Input placeholder="Role/Title" />
-                    </div>
                   </div>
                 </div>
               </div>
@@ -1413,76 +1674,602 @@ export function ProjectDetailsManager({
               </div>
             </TabsContent>
 
-            {/* Online Presence Tab */}
-            <TabsContent value="online" className="p-6 space-y-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Online Presence & Links
-              </h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Event Website</Label>
-                  <Input
-                    value={details.online_presence?.event_website || ''}
-                    onChange={(e) => updateField('online_presence.event_website', e.target.value)}
-                    placeholder="https://..."
+            {/* Program Details Tab */}
+            <TabsContent value="program" className="p-6 space-y-6">
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Mic className="h-5 w-5" />
+                  Speaker Program Details
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Requested Speaker Name</Label>
+                    <Input
+                      value={details.program_details?.requested_speaker_name || ''}
+                      onChange={(e) => updateField('program_details.requested_speaker_name', e.target.value)}
+                      placeholder="Speaker's full name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Program Topic</Label>
+                    <Input
+                      value={details.program_details?.program_topic || ''}
+                      onChange={(e) => updateField('program_details.program_topic', e.target.value)}
+                      placeholder="Topic/title of the presentation"
+                    />
+                  </div>
+                  <div>
+                    <Label>Program Type</Label>
+                    <Select
+                      value={details.program_details?.program_type || ''}
+                      onValueChange={(value) => updateField('program_details.program_type', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select program type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="keynote">Keynote</SelectItem>
+                        <SelectItem value="fireside_chat">Fireside Chat</SelectItem>
+                        <SelectItem value="panel_discussion">Panel Discussion</SelectItem>
+                        <SelectItem value="workshop">Workshop</SelectItem>
+                        <SelectItem value="breakout_session">Breakout Session</SelectItem>
+                        <SelectItem value="emcee">Emcee/Host</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {details.program_details?.program_type === 'other' && (
+                    <div>
+                      <Label>Program Type (Other)</Label>
+                      <Input
+                        value={details.program_details?.program_type_other || ''}
+                        onChange={(e) => updateField('program_details.program_type_other', e.target.value)}
+                        placeholder="Describe the program type"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <Label>Audience Size</Label>
+                    <Input
+                      type="number"
+                      value={details.program_details?.audience_size || ''}
+                      onChange={(e) => updateField('program_details.audience_size', parseInt(e.target.value) || undefined)}
+                      placeholder="Expected number of attendees"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Audience Demographics</Label>
+                    <Textarea
+                      value={details.program_details?.audience_demographics || ''}
+                      onChange={(e) => updateField('program_details.audience_demographics', e.target.value)}
+                      placeholder="Job titles, industries, experience levels, etc."
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <Label>Speaker's Attire</Label>
+                    <Select
+                      value={details.program_details?.speaker_attire || ''}
+                      onValueChange={(value) => updateField('program_details.speaker_attire', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select attire" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="business_formal">Business Formal</SelectItem>
+                        <SelectItem value="business_casual">Business Casual</SelectItem>
+                        <SelectItem value="smart_casual">Smart Casual</SelectItem>
+                        <SelectItem value="casual">Casual</SelectItem>
+                        <SelectItem value="black_tie">Black Tie</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {details.program_details?.speaker_attire === 'other' && (
+                    <div>
+                      <Label>Attire Notes</Label>
+                      <Input
+                        value={details.program_details?.attire_notes || ''}
+                        onChange={(e) => updateField('program_details.attire_notes', e.target.value)}
+                        placeholder="Describe the expected attire"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Schedule Tab */}
+            <TabsContent value="schedule" className="p-6 space-y-6">
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Event Schedule
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Event Start Time</Label>
+                    <Input
+                      type="time"
+                      value={details.event_schedule?.event_start_time || ''}
+                      onChange={(e) => updateField('event_schedule.event_start_time', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Event End Time</Label>
+                    <Input
+                      type="time"
+                      value={details.event_schedule?.event_end_time || ''}
+                      onChange={(e) => updateField('event_schedule.event_end_time', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Speaker's Arrival Time at Venue</Label>
+                    <Input
+                      type="time"
+                      value={details.event_schedule?.speaker_arrival_time || ''}
+                      onChange={(e) => updateField('event_schedule.speaker_arrival_time', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Speaker's Departure Time from Venue</Label>
+                    <Input
+                      type="time"
+                      value={details.event_schedule?.speaker_departure_time || ''}
+                      onChange={(e) => updateField('event_schedule.speaker_departure_time', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Speaker's Program Start Time</Label>
+                    <Input
+                      type="time"
+                      value={details.event_schedule?.program_start_time || ''}
+                      onChange={(e) => updateField('event_schedule.program_start_time', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Timezone</Label>
+                    <Input
+                      value={details.event_schedule?.timezone || ''}
+                      onChange={(e) => updateField('event_schedule.timezone', e.target.value)}
+                      placeholder="e.g., EST, PST, CST"
+                    />
+                  </div>
+                  <div>
+                    <Label>Program Length (minutes)</Label>
+                    <Input
+                      type="number"
+                      value={details.event_schedule?.program_length_minutes || ''}
+                      onChange={(e) => updateField('event_schedule.program_length_minutes', parseInt(e.target.value) || undefined)}
+                      placeholder="e.g., 45"
+                    />
+                  </div>
+                  <div>
+                    <Label>Q&A Length (minutes)</Label>
+                    <Input
+                      type="number"
+                      value={details.event_schedule?.qa_length_minutes || ''}
+                      onChange={(e) => updateField('event_schedule.qa_length_minutes', parseInt(e.target.value) || undefined)}
+                      placeholder="e.g., 15"
+                    />
+                  </div>
+                  <div>
+                    <Label>Total Program Length (minutes)</Label>
+                    <Input
+                      type="number"
+                      value={details.event_schedule?.total_program_length_minutes || ''}
+                      onChange={(e) => updateField('event_schedule.total_program_length_minutes', parseInt(e.target.value) || undefined)}
+                      placeholder="e.g., 60"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-3">Detailed Event Timeline</h3>
+                <Textarea
+                  value={details.event_schedule?.detailed_timeline || ''}
+                  onChange={(e) => updateField('event_schedule.detailed_timeline', e.target.value)}
+                  placeholder="Full agenda with specific times and time zone. Example:
+8:00 AM - Registration & Networking
+9:00 AM - Opening Remarks
+9:15 AM - Keynote Speaker (45 min + 15 min Q&A)
+10:15 AM - Break
+..."
+                  rows={8}
+                />
+              </div>
+            </TabsContent>
+
+            {/* Technical Requirements Tab */}
+            <TabsContent value="technical" className="p-6 space-y-6">
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Monitor className="h-5 w-5" />
+                  A/V Requirements
+                </h3>
+                <div className="md:col-span-2">
+                  <Label>A/V Requirements</Label>
+                  <Textarea
+                    value={details.technical_requirements?.av_requirements || ''}
+                    onChange={(e) => updateField('technical_requirements.av_requirements', e.target.value)}
+                    placeholder="Microphone type, projector, screen size, lighting, confidence monitor, etc."
+                    rows={3}
                   />
                 </div>
-                <div>
-                  <Label>Registration Link</Label>
-                  <Input
-                    value={details.online_presence?.registration_link || ''}
-                    onChange={(e) => updateField('online_presence.registration_link', e.target.value)}
-                    placeholder="https://..."
-                  />
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-3">Recording/Photography</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Recording Allowed?</Label>
+                    <Select
+                      value={details.technical_requirements?.recording_allowed === true ? 'yes' : details.technical_requirements?.recording_allowed === false ? 'no' : ''}
+                      onValueChange={(value) => updateField('technical_requirements.recording_allowed', value === 'yes')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {details.technical_requirements?.recording_allowed && (
+                    <div>
+                      <Label>Recording Purpose</Label>
+                      <Input
+                        value={details.technical_requirements?.recording_purpose || ''}
+                        onChange={(e) => updateField('technical_requirements.recording_purpose', e.target.value)}
+                        placeholder="Internal use, promotional, archival, etc."
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <Label>Live Streaming?</Label>
+                    <Select
+                      value={details.technical_requirements?.live_streaming === true ? 'yes' : details.technical_requirements?.live_streaming === false ? 'no' : ''}
+                      onValueChange={(value) => updateField('technical_requirements.live_streaming', value === 'yes')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Photography Allowed?</Label>
+                    <Select
+                      value={details.technical_requirements?.photography_allowed === true ? 'yes' : details.technical_requirements?.photography_allowed === false ? 'no' : ''}
+                      onValueChange={(value) => updateField('technical_requirements.photography_allowed', value === 'yes')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div>
-                  <Label>LinkedIn URL</Label>
-                  <Input
-                    value={details.online_presence?.linkedin_url || ''}
-                    onChange={(e) => updateField('online_presence.linkedin_url', e.target.value)}
-                    placeholder="LinkedIn event page"
-                  />
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-3">Tech Rehearsal</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Tech Rehearsal Date</Label>
+                    <Input
+                      type="date"
+                      value={details.technical_requirements?.tech_rehearsal_date || ''}
+                      onChange={(e) => updateField('technical_requirements.tech_rehearsal_date', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Tech Rehearsal Time</Label>
+                    <Input
+                      type="time"
+                      value={details.technical_requirements?.tech_rehearsal_time || ''}
+                      onChange={(e) => updateField('technical_requirements.tech_rehearsal_time', e.target.value)}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Tech Rehearsal Notes</Label>
+                    <Textarea
+                      value={details.technical_requirements?.tech_rehearsal_notes || ''}
+                      onChange={(e) => updateField('technical_requirements.tech_rehearsal_notes', e.target.value)}
+                      placeholder="Sound check details, equipment testing, etc."
+                      rows={2}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label>Facebook Event</Label>
-                  <Input
-                    value={details.online_presence?.facebook_event || ''}
-                    onChange={(e) => updateField('online_presence.facebook_event', e.target.value)}
-                    placeholder="Facebook event URL"
-                  />
+              </div>
+            </TabsContent>
+
+            {/* Additional Information Tab */}
+            <TabsContent value="additional" className="p-6 space-y-6">
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Info className="h-5 w-5" />
+                  Additional Information
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Green Room/Holding Area Available?</Label>
+                    <Select
+                      value={details.additional_info?.green_room_available === true ? 'yes' : details.additional_info?.green_room_available === false ? 'no' : ''}
+                      onValueChange={(value) => updateField('additional_info.green_room_available', value === 'yes')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {details.additional_info?.green_room_available && (
+                    <div>
+                      <Label>Green Room Details</Label>
+                      <Input
+                        value={details.additional_info?.green_room_details || ''}
+                        onChange={(e) => updateField('additional_info.green_room_details', e.target.value)}
+                        placeholder="Location, amenities, etc."
+                      />
+                    </div>
+                  )}
+                  <div className="md:col-span-2">
+                    <Label>Meet & Greet Opportunities</Label>
+                    <Textarea
+                      value={details.additional_info?.meet_greet_opportunities || ''}
+                      onChange={(e) => updateField('additional_info.meet_greet_opportunities', e.target.value)}
+                      placeholder="Before/after presentation, VIP reception, book signing, photo ops, etc."
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <Label>Marketing/Promotion Use Allowed?</Label>
+                    <Select
+                      value={details.additional_info?.marketing_use_allowed === true ? 'yes' : details.additional_info?.marketing_use_allowed === false ? 'no' : ''}
+                      onValueChange={(value) => updateField('additional_info.marketing_use_allowed', value === 'yes')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes - Speaker name/bio can be used in event marketing</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Press/Media Present?</Label>
+                    <Select
+                      value={details.additional_info?.press_media_present === true ? 'yes' : details.additional_info?.press_media_present === false ? 'no' : ''}
+                      onValueChange={(value) => updateField('additional_info.press_media_present', value === 'yes')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {details.additional_info?.press_media_present && (
+                    <div className="md:col-span-2">
+                      <Label>Media Interview Requests</Label>
+                      <Textarea
+                        value={details.additional_info?.media_interview_requests || ''}
+                        onChange={(e) => updateField('additional_info.media_interview_requests', e.target.value)}
+                        placeholder="Details of media presence and any interview requests"
+                        rows={2}
+                      />
+                    </div>
+                  )}
+                  <div className="md:col-span-2">
+                    <Label>Special Requests or Considerations</Label>
+                    <Textarea
+                      value={details.additional_info?.special_requests || ''}
+                      onChange={(e) => updateField('additional_info.special_requests', e.target.value)}
+                      placeholder="Any special requirements, accommodations, or considerations"
+                      rows={3}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label>Twitter/X Handle</Label>
-                  <Input
-                    value={details.online_presence?.twitter_handle || ''}
-                    onChange={(e) => updateField('online_presence.twitter_handle', e.target.value)}
-                    placeholder="@handle"
-                  />
+              </div>
+            </TabsContent>
+
+            {/* Financial Details Tab */}
+            <TabsContent value="financial" className="p-6 space-y-6">
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Financial Details
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Speaker Fee</Label>
+                    <Input
+                      type="number"
+                      value={details.financial_details?.speaker_fee || ''}
+                      onChange={(e) => updateField('financial_details.speaker_fee', parseFloat(e.target.value) || undefined)}
+                      placeholder="Amount"
+                    />
+                  </div>
+                  <div>
+                    <Label>Currency</Label>
+                    <Input
+                      value={details.financial_details?.speaker_fee_currency || 'USD'}
+                      onChange={(e) => updateField('financial_details.speaker_fee_currency', e.target.value)}
+                      placeholder="USD"
+                    />
+                  </div>
+                  <div>
+                    <Label>Travel Expenses Type</Label>
+                    <Select
+                      value={details.financial_details?.travel_expenses_type || ''}
+                      onValueChange={(value) => updateField('financial_details.travel_expenses_type', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="flat_buyout">Flat Travel Buyout</SelectItem>
+                        <SelectItem value="actual_expenses">Actual Expenses (Reimbursed)</SelectItem>
+                        <SelectItem value="client_books">Client Books Travel Directly</SelectItem>
+                        <SelectItem value="included">Included in Speaker Fee</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {(details.financial_details?.travel_expenses_type === 'flat_buyout' || details.financial_details?.travel_expenses_type === 'actual_expenses') && (
+                    <div>
+                      <Label>Travel Expenses Amount</Label>
+                      <Input
+                        type="number"
+                        value={details.financial_details?.travel_expenses_amount || ''}
+                        onChange={(e) => updateField('financial_details.travel_expenses_amount', parseFloat(e.target.value) || undefined)}
+                        placeholder="Amount"
+                      />
+                    </div>
+                  )}
+                  <div className="md:col-span-2">
+                    <Label>Travel Expenses Notes</Label>
+                    <Textarea
+                      value={details.financial_details?.travel_expenses_notes || ''}
+                      onChange={(e) => updateField('financial_details.travel_expenses_notes', e.target.value)}
+                      placeholder="Ground transportation, accommodation, meals - what's included/covered"
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <Label>Payment Terms</Label>
+                    <Select
+                      value={details.financial_details?.payment_terms || ''}
+                      onValueChange={(value) => updateField('financial_details.payment_terms', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select terms" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="net_30">Net 30</SelectItem>
+                        <SelectItem value="net_15">Net 15</SelectItem>
+                        <SelectItem value="upon_completion">Upon Completion</SelectItem>
+                        <SelectItem value="deposit_balance">Deposit + Balance</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {details.financial_details?.payment_terms === 'other' && (
+                    <div>
+                      <Label>Payment Terms (Other)</Label>
+                      <Input
+                        value={details.financial_details?.payment_terms_other || ''}
+                        onChange={(e) => updateField('financial_details.payment_terms_other', e.target.value)}
+                        placeholder="Describe payment terms"
+                      />
+                    </div>
+                  )}
+                  {details.financial_details?.payment_terms === 'deposit_balance' && (
+                    <>
+                      <div>
+                        <Label>Deposit Amount</Label>
+                        <Input
+                          type="number"
+                          value={details.financial_details?.deposit_amount || ''}
+                          onChange={(e) => updateField('financial_details.deposit_amount', parseFloat(e.target.value) || undefined)}
+                          placeholder="Deposit amount"
+                        />
+                      </div>
+                      <div>
+                        <Label>Deposit Due Date</Label>
+                        <Input
+                          type="date"
+                          value={details.financial_details?.deposit_due_date || ''}
+                          onChange={(e) => updateField('financial_details.deposit_due_date', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label>Balance Due Date</Label>
+                        <Input
+                          type="date"
+                          value={details.financial_details?.balance_due_date || ''}
+                          onChange={(e) => updateField('financial_details.balance_due_date', e.target.value)}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div>
-                  <Label>Instagram Handle</Label>
-                  <Input
-                    value={details.online_presence?.instagram_handle || ''}
-                    onChange={(e) => updateField('online_presence.instagram_handle', e.target.value)}
-                    placeholder="@handle"
-                  />
-                </div>
-                <div>
-                  <Label>YouTube Channel</Label>
-                  <Input
-                    value={details.online_presence?.youtube_channel || ''}
-                    onChange={(e) => updateField('online_presence.youtube_channel', e.target.value)}
-                    placeholder="YouTube channel URL"
-                  />
-                </div>
-                <div>
-                  <Label>Event App</Label>
-                  <Input
-                    value={details.online_presence?.event_app || ''}
-                    onChange={(e) => updateField('online_presence.event_app', e.target.value)}
-                    placeholder="Mobile app name/link"
-                  />
+              </div>
+            </TabsContent>
+
+            {/* Confirmation Details Tab */}
+            <TabsContent value="confirmation" className="p-6 space-y-6">
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5" />
+                  Confirmation Details
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Prep Call Requested?</Label>
+                    <Select
+                      value={details.confirmation_details?.prep_call_requested === true ? 'yes' : details.confirmation_details?.prep_call_requested === false ? 'no' : ''}
+                      onValueChange={(value) => updateField('confirmation_details.prep_call_requested', value === 'yes')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {details.confirmation_details?.prep_call_requested && (
+                    <>
+                      <div>
+                        <Label>Prep Call Date</Label>
+                        <Input
+                          type="date"
+                          value={details.confirmation_details?.prep_call_date || ''}
+                          onChange={(e) => updateField('confirmation_details.prep_call_date', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label>Prep Call Time</Label>
+                        <Input
+                          type="time"
+                          value={details.confirmation_details?.prep_call_time || ''}
+                          onChange={(e) => updateField('confirmation_details.prep_call_time', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label>Prep Call Notes</Label>
+                        <Input
+                          value={details.confirmation_details?.prep_call_notes || ''}
+                          onChange={(e) => updateField('confirmation_details.prep_call_notes', e.target.value)}
+                          placeholder="Time preferences, topics to cover, etc."
+                        />
+                      </div>
+                    </>
+                  )}
+                  <div className="md:col-span-2">
+                    <Label>Additional Notes</Label>
+                    <Textarea
+                      value={details.confirmation_details?.additional_notes || ''}
+                      onChange={(e) => updateField('confirmation_details.additional_notes', e.target.value)}
+                      placeholder="Any other important notes or details about this engagement"
+                      rows={4}
+                    />
+                  </div>
                 </div>
               </div>
             </TabsContent>
