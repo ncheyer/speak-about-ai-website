@@ -99,7 +99,7 @@ export default function PublicFirmOfferPage({ params }: { params: Promise<{ toke
 
   const loadFirmOffer = async () => {
     try {
-      const response = await fetch(`/api/firm-offers/${token}`)
+      const response = await fetch(`/api/firm-offers/public/${token}`)
       if (response.ok) {
         const data = await response.json()
         setFormData(data)
@@ -118,7 +118,7 @@ export default function PublicFirmOfferPage({ params }: { params: Promise<{ toke
   const handleSave = async () => {
     setSaving(true)
     try {
-      const response = await fetch(`/api/firm-offers/${token}`, {
+      const response = await fetch(`/api/firm-offers/public/${token}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, _wasComplete: wasComplete })

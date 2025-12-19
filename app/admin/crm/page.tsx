@@ -659,6 +659,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
     })
     setEditingDeal(deal)
     setShowCreateForm(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleSendContract = async (contractId: number) => {

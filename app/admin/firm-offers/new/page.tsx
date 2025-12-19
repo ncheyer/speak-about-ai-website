@@ -29,25 +29,41 @@ import {
   ExternalLink,
   CheckCircle,
   Link as LinkIcon,
-  Send
+  Send,
+  Sparkles,
+  Mail,
+  ChevronDown,
+  ChevronUp,
+  X
 } from "lucide-react"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
 
 interface Deal {
   id: number
-  title: string
+  title?: string
+  event_title?: string
   company: string
-  contact_name: string
-  contact_email: string
+  client_name: string
+  client_email: string
+  client_phone?: string
+  contact_name?: string
+  contact_email?: string
   contact_phone?: string
-  value: string
+  value?: string
+  deal_value?: number
   status: string
   event_date: string
   event_location: string
-  speaker_id: number
+  event_type?: string
+  speaker_id?: number
+  speaker_requested?: string
   speaker_name?: string
   notes?: string
+  attendee_count?: number
+  travel_required?: boolean
+  flight_required?: boolean
+  travel_stipend?: number
 }
 
 export default function NewFirmOfferPage() {
@@ -73,6 +89,19 @@ function NewFirmOfferContent() {
   const [deal, setDeal] = useState<Deal | null>(null)
   const [createdOffer, setCreatedOffer] = useState<{ id: number; share_url: string } | null>(null)
   const [copied, setCopied] = useState(false)
+
+  // AI parsing state
+  const [showAiParser, setShowAiParser] = useState(false)
+  const [aiInputText, setAiInputText] = useState('')
+  const [aiParsing, setAiParsing] = useState(false)
+
+  // Gmail import state
+  const [showGmailImport, setShowGmailImport] = useState(false)
+  const [gmailLoading, setGmailLoading] = useState(false)
+  const [emailThreads, setEmailThreads] = useState<any[]>([])
+  const [selectedEmails, setSelectedEmails] = useState<string[]>([])
+  const [gmailSearchMode, setGmailSearchMode] = useState<'synced' | 'live'>('synced')
+  const [gmailNeedsAuth, setGmailNeedsAuth] = useState(false)
 
   // Form state - pre-populated from deal
   const [formData, setFormData] = useState({
@@ -156,20 +185,48 @@ function NewFirmOfferContent() {
         setDeal(dealData)
 
         // Pre-populate form from deal data
+        // Determine event classification from event type
+        let eventClassification: 'virtual' | 'local' | 'travel' = 'travel'
+        const eventType = (dealData.event_type || '').toLowerCase()
+        if (eventType.includes('virtual') || eventType.includes('webinar') || eventType.includes('online')) {
+          eventClassification = 'virtual'
+        } else if (!dealData.travel_required && !dealData.flight_required) {
+          eventClassification = 'local'
+        }
+
         setFormData(prev => ({
           ...prev,
+          // Event Overview
+          event_classification: eventClassification,
           company_name: dealData.company || '',
-          event_name: dealData.title || '',
+          event_name: dealData.event_title || '',
           event_date: dealData.event_date?.split('T')[0] || '',
           event_location: dealData.event_location || '',
-          billing_contact_name: dealData.contact_name || '',
-          billing_contact_email: dealData.contact_email || '',
-          billing_contact_phone: dealData.contact_phone || '',
-          logistics_contact_name: dealData.contact_name || '',
-          logistics_contact_email: dealData.contact_email || '',
-          logistics_contact_phone: dealData.contact_phone || '',
-          speaker_name: dealData.speaker_name || '',
-          speaker_fee: dealData.value || ''
+
+          // Billing Contact
+          billing_contact_name: dealData.client_name || '',
+          billing_contact_email: dealData.client_email || '',
+          billing_contact_phone: dealData.client_phone || '',
+
+          // Logistics Contact (same as billing by default)
+          logistics_contact_name: dealData.client_name || '',
+          logistics_contact_email: dealData.client_email || '',
+          logistics_contact_phone: dealData.client_phone || '',
+
+          // Speaker Program
+          speaker_name: dealData.speaker_requested || '',
+          program_type: eventType.includes('workshop') ? 'workshop' :
+                       eventType.includes('panel') ? 'panel_discussion' :
+                       eventType.includes('fireside') ? 'fireside_chat' : 'keynote',
+          audience_size: dealData.attendee_count?.toString() || '',
+
+          // Financial Details
+          speaker_fee: dealData.deal_value?.toString() || '',
+          travel_expenses_type: dealData.travel_required ? 'flat_buyout' : 'included',
+          travel_expenses_amount: dealData.travel_stipend?.toString() || '',
+
+          // Additional Notes
+          additional_notes: dealData.notes || ''
         }))
       }
     } catch (error) {
@@ -244,8 +301,236 @@ function NewFirmOfferContent() {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  // AI parsing function
+  const parseWithAI = async () => {
+    if (!aiInputText.trim()) {
+      toast({
+        title: "Error",
+        description: "Please paste some text to parse",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setAiParsing(true)
+    try {
+      const response = await fetch('/api/ai/parse-event-details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: aiInputText })
+      })
+
+      if (response.ok) {
+        const parsed = await response.json()
+
+        // Merge parsed data with existing form data
+        setFormData(prev => ({
+          ...prev,
+          company_name: parsed.company_name || prev.company_name,
+          event_name: parsed.event_name || prev.event_name,
+          event_date: parsed.event_date || prev.event_date,
+          event_location: parsed.event_location || prev.event_location,
+          billing_contact_name: parsed.contact_name || prev.billing_contact_name,
+          billing_contact_email: parsed.contact_email || prev.billing_contact_email,
+          billing_contact_phone: parsed.contact_phone || prev.billing_contact_phone,
+          speaker_name: parsed.speaker_name || prev.speaker_name,
+          program_topic: parsed.program_topic || prev.program_topic,
+          audience_size: parsed.audience_size?.toString() || prev.audience_size,
+          speaker_fee: parsed.speaker_fee?.toString() || prev.speaker_fee,
+          event_classification: parsed.event_type || prev.event_classification,
+          additional_notes: parsed.notes || prev.additional_notes
+        }))
+
+        toast({
+          title: "Success",
+          description: "Event details extracted and filled in"
+        })
+        setShowAiParser(false)
+        setAiInputText('')
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to parse text with AI",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("AI parsing error:", error)
+      toast({
+        title: "Error",
+        description: "Failed to parse text",
+        variant: "destructive"
+      })
+    } finally {
+      setAiParsing(false)
+    }
+  }
+
+  // Gmail import function - tries synced emails first, then searches Gmail directly
+  const loadGmailThreads = async () => {
+    const clientEmail = deal?.client_email || formData.billing_contact_email
+
+    if (!clientEmail) {
+      toast({
+        title: "Error",
+        description: "No client email to search for. Enter a billing contact email first.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setGmailLoading(true)
+    setGmailNeedsAuth(false)
+
+    try {
+      // First, try to load synced emails from database
+      if (dealId) {
+        const syncedResponse = await fetch(`/api/email-threads?deal_id=${dealId}`)
+        if (syncedResponse.ok) {
+          const data = await syncedResponse.json()
+          if (data.threads && data.threads.length > 0) {
+            setEmailThreads(data.threads)
+            setGmailSearchMode('synced')
+            setShowGmailImport(true)
+            setGmailLoading(false)
+            return
+          }
+        }
+      }
+
+      // No synced emails found - search Gmail directly using client email
+      if (clientEmail) {
+        const searchResponse = await fetch(`/api/gmail/search?email=${encodeURIComponent(clientEmail)}`)
+
+        if (searchResponse.ok) {
+          const data = await searchResponse.json()
+          setEmailThreads(data.emails || [])
+          setGmailSearchMode('live')
+          setShowGmailImport(true)
+
+          if (data.emails?.length === 0) {
+            toast({
+              title: "No emails found",
+              description: `No emails found for ${clientEmail}`,
+            })
+          }
+        } else {
+          const errorData = await searchResponse.json()
+          if (errorData.needsAuth) {
+            setGmailNeedsAuth(true)
+            setShowGmailImport(true)
+          } else {
+            toast({
+              title: "Error",
+              description: errorData.error || "Failed to search Gmail",
+              variant: "destructive"
+            })
+          }
+        }
+      } else {
+        toast({
+          title: "No client email",
+          description: "This deal doesn't have a client email address to search",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Gmail load error:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load emails",
+        variant: "destructive"
+      })
+    } finally {
+      setGmailLoading(false)
+    }
+  }
+
+  const parseEmailsWithAI = async () => {
+    if (selectedEmails.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select emails to parse",
+        variant: "destructive"
+      })
+      return
+    }
+
+    const selectedContent = emailThreads
+      .filter(t => selectedEmails.includes(t.id))
+      .map(t => `Subject: ${t.subject}\n\n${t.body_full || t.body_snippet}`)
+      .join('\n\n---\n\n')
+
+    setAiInputText(selectedContent)
+    setShowGmailImport(false)
+    setShowAiParser(true)
+  }
+
   const isVirtual = formData.event_classification === 'virtual'
   const isLocal = formData.event_classification === 'local'
+
+  // Calculate form completion
+  const calculateCompletion = () => {
+    const requiredFields = [
+      { name: 'Company', value: formData.company_name },
+      { name: 'Event Name', value: formData.event_name },
+      { name: 'Event Date', value: formData.event_date },
+      { name: 'Event Location', value: !isVirtual ? formData.event_location : 'virtual' },
+      { name: 'Billing Contact Name', value: formData.billing_contact_name },
+      { name: 'Billing Contact Email', value: formData.billing_contact_email },
+      { name: 'Speaker Name', value: formData.speaker_name },
+      { name: 'Speaker Fee', value: formData.speaker_fee },
+    ]
+
+    const optionalFields = [
+      { name: 'End Client', value: formData.end_client_name },
+      { name: 'Event Website', value: formData.event_website },
+      { name: 'Billing Phone', value: formData.billing_contact_phone },
+      { name: 'Billing Title', value: formData.billing_contact_title },
+      { name: 'Billing Address', value: formData.billing_address },
+      { name: 'Logistics Contact', value: formData.logistics_contact_name },
+      { name: 'Program Topic', value: formData.program_topic },
+      { name: 'Audience Size', value: formData.audience_size },
+      { name: 'Audience Demographics', value: formData.audience_demographics },
+      { name: 'Event Start Time', value: formData.event_start_time },
+      { name: 'Program Start Time', value: formData.program_start_time },
+      { name: 'Program Length', value: formData.program_length_minutes },
+    ]
+
+    // Add travel fields only if not virtual
+    if (!isVirtual) {
+      optionalFields.push(
+        { name: 'Fly-In Date', value: formData.fly_in_date },
+        { name: 'Fly-Out Date', value: formData.fly_out_date },
+        { name: 'Nearest Airport', value: formData.nearest_airport },
+        { name: 'Hotel Name', value: formData.hotel_name }
+      )
+    }
+
+    const filledRequired = requiredFields.filter(f => f.value && f.value.toString().trim() !== '').length
+    const filledOptional = optionalFields.filter(f => f.value && f.value.toString().trim() !== '').length
+
+    const missingRequired = requiredFields.filter(f => !f.value || f.value.toString().trim() === '').map(f => f.name)
+
+    const totalRequired = requiredFields.length
+    const totalOptional = optionalFields.length
+
+    // Weight: required fields count 2x
+    const weightedFilled = (filledRequired * 2) + filledOptional
+    const weightedTotal = (totalRequired * 2) + totalOptional
+    const percentage = Math.round((weightedFilled / weightedTotal) * 100)
+
+    return {
+      percentage,
+      filledRequired,
+      totalRequired,
+      filledOptional,
+      totalOptional,
+      missingRequired
+    }
+  }
+
+  const completion = calculateCompletion()
 
   if (loading) {
     return (
@@ -353,7 +638,7 @@ function NewFirmOfferContent() {
                 </h1>
                 {deal && (
                   <p className="text-gray-600">
-                    For: {deal.title || deal.company} - {deal.speaker_name}
+                    For: {deal.event_title || deal.title || deal.company} - {deal.speaker_requested || deal.speaker_name || 'Speaker TBD'}
                   </p>
                 )}
               </div>
@@ -383,7 +668,7 @@ function NewFirmOfferContent() {
                   </div>
                   <div>
                     <p className="text-amber-700 font-medium">Speaker</p>
-                    <p>{deal.speaker_name}</p>
+                    <p>{deal.speaker_requested || deal.speaker_name || 'Not assigned'}</p>
                   </div>
                   <div>
                     <p className="text-amber-700 font-medium">Event Date</p>
@@ -395,12 +680,239 @@ function NewFirmOfferContent() {
                   </div>
                   <div>
                     <p className="text-amber-700 font-medium">Deal Value</p>
-                    <p className="text-lg font-bold text-green-600">${parseFloat(deal.value || '0').toLocaleString()}</p>
+                    <p className="text-lg font-bold text-green-600">${(deal.deal_value || parseFloat(deal.value || '0')).toLocaleString()}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           )}
+
+          {/* Completion Progress Indicator */}
+          <Card className="mb-6">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className={`h-5 w-5 ${completion.percentage === 100 ? 'text-green-500' : 'text-gray-400'}`} />
+                  <span className="font-medium">Form Completion</span>
+                </div>
+                <span className={`text-lg font-bold ${
+                  completion.percentage >= 80 ? 'text-green-600' :
+                  completion.percentage >= 50 ? 'text-amber-600' :
+                  'text-red-600'
+                }`}>
+                  {completion.percentage}%
+                </span>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+                <div
+                  className={`h-3 rounded-full transition-all duration-300 ${
+                    completion.percentage >= 80 ? 'bg-green-500' :
+                    completion.percentage >= 50 ? 'bg-amber-500' :
+                    'bg-red-500'
+                  }`}
+                  style={{ width: `${completion.percentage}%` }}
+                />
+              </div>
+
+              {/* Stats */}
+              <div className="flex items-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                    completion.filledRequired === completion.totalRequired
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}>
+                    Required: {completion.filledRequired}/{completion.totalRequired}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                    Optional: {completion.filledOptional}/{completion.totalOptional}
+                  </span>
+                </div>
+              </div>
+
+              {/* Missing Required Fields */}
+              {completion.missingRequired.length > 0 && (
+                <div className="mt-3 pt-3 border-t">
+                  <p className="text-xs text-gray-500 mb-2">Missing required fields:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {completion.missingRequired.map(field => (
+                      <span key={field} className="px-2 py-0.5 text-xs bg-red-50 text-red-600 rounded">
+                        {field}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* AI Import Section */}
+          <Card className="mb-6 border-purple-200 bg-purple-50/50">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-purple-500" />
+                  <span className="font-medium text-purple-900">Quick Fill with AI</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAiParser(!showAiParser)}
+                    className="border-purple-300 text-purple-700 hover:bg-purple-100"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Paste & Parse
+                    {showAiParser ? <ChevronUp className="h-4 w-4 ml-2" /> : <ChevronDown className="h-4 w-4 ml-2" />}
+                  </Button>
+                  {(deal?.client_email || formData.billing_contact_email) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={loadGmailThreads}
+                      disabled={gmailLoading}
+                      className="border-purple-300 text-purple-700 hover:bg-purple-100"
+                    >
+                      {gmailLoading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Mail className="h-4 w-4 mr-2" />
+                      )}
+                      Search Gmail
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* AI Parser Panel */}
+              {showAiParser && (
+                <div className="mt-4 pt-4 border-t border-purple-200">
+                  <Label className="text-purple-900">Paste email, notes, or event details</Label>
+                  <Textarea
+                    value={aiInputText}
+                    onChange={(e) => setAiInputText(e.target.value)}
+                    placeholder="Paste any text containing event details - emails, notes, RFPs, etc. AI will extract the relevant information."
+                    rows={6}
+                    className="mt-2 bg-white"
+                  />
+                  <div className="flex justify-end gap-2 mt-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowAiParser(false)
+                        setAiInputText('')
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={parseWithAI}
+                      disabled={aiParsing || !aiInputText.trim()}
+                      className="bg-purple-500 hover:bg-purple-600"
+                    >
+                      {aiParsing ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 mr-2" />
+                      )}
+                      Extract Details
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Gmail Import Panel */}
+              {showGmailImport && (
+                <div className="mt-4 pt-4 border-t border-purple-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-purple-900">
+                        {gmailSearchMode === 'live' ? `Emails with ${deal?.client_email}` : 'Synced email threads'}
+                      </Label>
+                      {gmailSearchMode === 'live' && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Live Search</span>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowGmailImport(false)
+                        setSelectedEmails([])
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Gmail Auth Required */}
+                  {gmailNeedsAuth ? (
+                    <div className="text-center py-4">
+                      <Mail className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600 mb-3">Connect Gmail to search for emails with this client</p>
+                      <Button
+                        variant="outline"
+                        onClick={() => window.open('/api/auth/gmail', '_blank')}
+                        className="border-purple-300 text-purple-700"
+                      >
+                        <Mail className="h-4 w-4 mr-2" />
+                        Connect Gmail
+                      </Button>
+                    </div>
+                  ) : emailThreads.length === 0 ? (
+                    <p className="text-sm text-gray-500 py-2">
+                      No emails found for {deal?.client_email || 'this client'}.
+                    </p>
+                  ) : (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {emailThreads.map((thread) => (
+                        <div
+                          key={thread.id}
+                          className={`p-3 rounded border cursor-pointer transition-all ${
+                            selectedEmails.includes(thread.id)
+                              ? 'border-purple-400 bg-purple-100'
+                              : 'border-gray-200 bg-white hover:border-purple-200'
+                          }`}
+                          onClick={() => {
+                            setSelectedEmails(prev =>
+                              prev.includes(thread.id)
+                                ? prev.filter(id => id !== thread.id)
+                                : [...prev, thread.id]
+                            )
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-sm">{thread.subject}</span>
+                            <span className="text-xs text-gray-500">
+                              {thread.received_at ? new Date(thread.received_at).toLocaleDateString() : ''}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">{thread.body_snippet}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {emailThreads.length > 0 && (
+                    <div className="flex justify-end mt-3">
+                      <Button
+                        onClick={parseEmailsWithAI}
+                        disabled={selectedEmails.length === 0}
+                        className="bg-purple-500 hover:bg-purple-600"
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Parse Selected ({selectedEmails.length})
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* All Sections on One Page */}
           <div className="space-y-6">

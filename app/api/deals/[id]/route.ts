@@ -1,9 +1,31 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { updateDeal, deleteDeal } from "@/lib/deals-db"
+import { updateDeal, deleteDeal, getAllDeals } from "@/lib/deals-db"
 import { createProject } from "@/lib/projects-db"
 import { getAutomaticProjectStatus } from "@/lib/project-status-utils"
 import { requireAdminAuth } from "@/lib/auth-middleware"
 import { sendSlackWebhook, buildDealStatusUpdateMessage, buildDealWonMessage } from "@/lib/slack"
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id: idString } = await params
+    const id = Number.parseInt(idString)
+    if (Number.isNaN(id)) {
+      return NextResponse.json({ error: "Invalid deal ID" }, { status: 400 })
+    }
+
+    const deals = await getAllDeals()
+    const deal = deals.find(d => d.id === id)
+
+    if (!deal) {
+      return NextResponse.json({ error: "Deal not found" }, { status: 404 })
+    }
+
+    return NextResponse.json(deal)
+  } catch (error) {
+    console.error("Error fetching deal:", error)
+    return NextResponse.json({ error: "Failed to fetch deal" }, { status: 500 })
+  }
+}
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
