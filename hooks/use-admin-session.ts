@@ -89,8 +89,15 @@ export function useAdminSession(options: UseAdminSessionOptions = {}) {
     }
   }
 
+  // Track if logout is in progress to prevent multiple calls
+  const isLoggingOutRef = useRef(false)
+
   // Perform logout
   const performLogout = useCallback(async () => {
+    // Prevent multiple simultaneous logout calls
+    if (isLoggingOutRef.current) return
+    isLoggingOutRef.current = true
+
     try {
       // Clear local storage
       localStorage.removeItem('adminLoggedIn')
@@ -109,6 +116,11 @@ export function useAdminSession(options: UseAdminSessionOptions = {}) {
       console.error('Logout error:', error)
       // Still redirect even if API call fails
       router.push('/admin')
+    } finally {
+      // Reset after a delay to allow redirect to complete
+      setTimeout(() => {
+        isLoggingOutRef.current = false
+      }, 1000)
     }
   }, [router])
 
@@ -212,26 +224,47 @@ export function useAdminSession(options: UseAdminSessionOptions = {}) {
     }
   }, [updateActivity])
 
-  // Validate session on mount
+  // Track if session has been validated to prevent re-validation on back navigation
+  const hasValidatedRef = useRef(false)
+
+  // Validate session on mount (only once)
   useEffect(() => {
+    // Skip if already validated (prevents issues with back button navigation)
+    if (hasValidatedRef.current) return
+    hasValidatedRef.current = true
+
     const validateSession = async () => {
       try {
         const token = localStorage.getItem('adminSessionToken')
-        if (!token) {
-          performLogout()
+        const isLoggedIn = localStorage.getItem('adminLoggedIn')
+
+        // Only logout if there's genuinely no session
+        // Check both token AND logged in flag to be safe
+        if (!token && !isLoggedIn) {
+          // Double-check we're on an admin page that requires auth
+          // Don't logout if we're on the login page itself
+          if (typeof window !== 'undefined' && window.location.pathname !== '/admin') {
+            performLogout()
+          }
           return
         }
 
-        // Try to refresh the session
-        await refreshSession()
+        // Try to refresh the session if we have a token
+        if (token) {
+          await refreshSession()
+        }
       } catch {
         // Silently ignore validation errors on mount
         // Session will be validated again on next activity
       }
     }
 
-    validateSession()
-  }, [performLogout])
+    // Small delay to ensure localStorage is accessible after navigation
+    const timeoutId = setTimeout(validateSession, 100)
+
+    return () => clearTimeout(timeoutId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty deps - only run once on mount
 
   return {
     ...sessionState,
