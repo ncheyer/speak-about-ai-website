@@ -110,6 +110,22 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           bgColor: "bg-blue-50"
         },
         {
+          title: "Firm Offers",
+          href: "/admin/firm-offers",
+          icon: FileSignature,
+          description: "Offer Sheets",
+          color: "text-amber-600",
+          bgColor: "bg-amber-50"
+        },
+        {
+          title: "Proposals",
+          href: "/admin/proposals",
+          icon: FileText,
+          description: "Client Proposals",
+          color: "text-indigo-600",
+          bgColor: "bg-indigo-50"
+        },
+        {
           title: "Kondo MQL",
           href: "/admin/kondo",
           icon: Linkedin,

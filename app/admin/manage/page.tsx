@@ -1,13 +1,22 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import {
@@ -205,9 +214,23 @@ const PRIORITY_COLORS = {
 }
 
 export default function MasterAdminPanel() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    }>
+      <MasterAdminPanelContent />
+    </Suspense>
+  )
+}
+
+function MasterAdminPanelContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
-  const [activeTab, setActiveTab] = useState("overview")
+  const tabFromUrl = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState(tabFromUrl || "overview")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [lastSync, setLastSync] = useState<Date | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
@@ -436,6 +459,14 @@ export default function MasterAdminPanel() {
   }
 
   // Check authentication and load data on mount
+  // Sync activeTab with URL query parameter
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
+
   useEffect(() => {
     // Only run on client side
     if (typeof window === 'undefined') {
@@ -451,9 +482,9 @@ export default function MasterAdminPanel() {
     setIsLoggedIn(true)
 
     // Check for Gmail connection status in URL params
-    const searchParams = new URLSearchParams(window.location.search)
-    const gmailConnectedEmail = searchParams.get('gmail_connected')
-    const gmailError = searchParams.get('gmail_error')
+    const urlParams = new URLSearchParams(window.location.search)
+    const gmailConnectedEmail = urlParams.get('gmail_connected')
+    const gmailError = urlParams.get('gmail_error')
 
     if (gmailConnectedEmail) {
       setGmailConnected(gmailConnectedEmail)
@@ -461,8 +492,9 @@ export default function MasterAdminPanel() {
         title: "Gmail Connected!",
         description: `Successfully connected ${gmailConnectedEmail}. Email tracking is now active.`,
       })
-      // Clean up URL
-      window.history.replaceState({}, '', '/admin/manage')
+      // Clean up URL (preserve tab param)
+      const tab = urlParams.get('tab')
+      window.history.replaceState({}, '', tab ? `/admin/manage?tab=${tab}` : '/admin/manage')
     }
 
     if (gmailError) {
@@ -471,8 +503,9 @@ export default function MasterAdminPanel() {
         description: gmailError,
         variant: "destructive"
       })
-      // Clean up URL
-      window.history.replaceState({}, '', '/admin/manage')
+      // Clean up URL (preserve tab param)
+      const tab = urlParams.get('tab')
+      window.history.replaceState({}, '', tab ? `/admin/manage?tab=${tab}` : '/admin/manage')
     }
 
     // Load all data
@@ -764,7 +797,7 @@ export default function MasterAdminPanel() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-white border shadow-sm">
+            <TabsList className="grid w-full grid-cols-6 bg-white border shadow-sm">
               <TabsTrigger
                 value="overview"
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
@@ -778,6 +811,13 @@ export default function MasterAdminPanel() {
               >
                 <ShoppingCart className="h-4 w-4" />
                 CRM & Sales
+              </TabsTrigger>
+              <TabsTrigger
+                value="firm-offers"
+                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
+              >
+                <FileSignature className="h-4 w-4" />
+                Firm Offers
               </TabsTrigger>
               <TabsTrigger
                 value="projects"
@@ -1259,6 +1299,124 @@ export default function MasterAdminPanel() {
                   </CardContent>
                 </Card>
               )}
+            </TabsContent>
+
+            {/* Firm Offers Tab */}
+            <TabsContent value="firm-offers" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold">Firm Offer Sheets</h2>
+                  <p className="text-gray-600">Create and manage firm offers for deals in negotiation</p>
+                </div>
+                <Button
+                  className="bg-amber-500 hover:bg-amber-600"
+                  onClick={() => router.push('/admin/firm-offers/new')}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Firm Offer
+                </Button>
+              </div>
+
+              {/* Negotiation Deals Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Deals in Negotiation</p>
+                      <p className="text-2xl font-bold">{deals.filter(d => d.status === 'negotiation').length}</p>
+                    </div>
+                    <FileSignature className="h-8 w-8 text-amber-400" />
+                  </div>
+                </Card>
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Total Value</p>
+                      <p className="text-2xl font-bold">
+                        ${deals.filter(d => d.status === 'negotiation').reduce((sum, d) => sum + parseFloat(d.value || '0'), 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <DollarSign className="h-8 w-8 text-green-400" />
+                  </div>
+                </Card>
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Pending Firm Offers</p>
+                      <p className="text-2xl font-bold">{deals.filter(d => d.status === 'negotiation' && !d.project_id).length}</p>
+                    </div>
+                    <Clock className="h-8 w-8 text-orange-400" />
+                  </div>
+                </Card>
+              </div>
+
+              {/* Deals in Negotiation List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Deals Ready for Firm Offer</CardTitle>
+                  <CardDescription>Click on a deal to create or view its firm offer sheet</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Deal</TableHead>
+                        <TableHead>Speaker</TableHead>
+                        <TableHead>Event Date</TableHead>
+                        <TableHead>Value</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {deals.filter(d => d.status === 'negotiation').map(deal => (
+                        <TableRow key={deal.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{deal.title || deal.company}</p>
+                              <p className="text-sm text-gray-500">{deal.contact_name}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>{deal.speaker_name || '-'}</TableCell>
+                          <TableCell>
+                            {deal.event_date ? new Date(deal.event_date).toLocaleDateString() : '-'}
+                          </TableCell>
+                          <TableCell className="font-semibold">
+                            ${parseFloat(deal.value || '0').toLocaleString()}
+                          </TableCell>
+                          <TableCell>
+                            {deal.project_id ? (
+                              <Badge className="bg-green-100 text-green-800">Firm Offer Created</Badge>
+                            ) : (
+                              <Badge className="bg-amber-100 text-amber-800">Pending</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {deal.project_id ? (
+                              <Button size="sm" variant="outline" onClick={() => router.push(`/admin/projects/${deal.project_id}/edit`)}>
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
+                              </Button>
+                            ) : (
+                              <Button size="sm" className="bg-amber-500 hover:bg-amber-600" onClick={() => router.push(`/admin/projects?createFromDeal=${deal.id}`)}>
+                                <Plus className="h-4 w-4 mr-1" />
+                                Create
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {deals.filter(d => d.status === 'negotiation').length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                            No deals in negotiation. Move deals to negotiation status in the CRM tab.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Projects Tab */}

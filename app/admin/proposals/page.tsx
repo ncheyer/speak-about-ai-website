@@ -54,6 +54,7 @@ import {
 } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import { AdminSidebar } from "@/components/admin-sidebar"
 import type { Proposal } from "@/lib/proposals-db"
 
 export default function ProposalsPage() {
@@ -214,17 +215,26 @@ export default function ProposalsPage() {
   const stats = getProposalStats()
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Proposals</h1>
-          <p className="text-gray-600">Create and manage client proposals</p>
-        </div>
-        <Button onClick={() => router.push("/admin/proposals/new")}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Proposal
-        </Button>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
       </div>
+
+      {/* Main Content */}
+      <div className="flex-1 ml-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold">Proposals</h1>
+                <p className="text-gray-600">Create and manage client proposals</p>
+              </div>
+              <Button onClick={() => router.push("/admin/proposals/new")}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Proposal
+              </Button>
+            </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -436,7 +446,10 @@ export default function ProposalsPage() {
             </Card>
           )}
         </TabsContent>
-      </Tabs>
+          </Tabs>
+          </div>
+        </div>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

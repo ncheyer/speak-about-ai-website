@@ -1,4 +1,5 @@
 // Comprehensive project details schema for event management
+// Aligned with Firm Offer Sheet template
 
 export interface ProjectDetails {
   // Basic Overview
@@ -9,11 +10,89 @@ export interface ProjectDetails {
     event_location?: string
     event_date?: string // ISO date string
     event_time?: string
-    event_classification?: 'virtual' | 'local' | 'travel' // Add event classification
+    event_classification?: 'virtual' | 'local' | 'travel' // Event type determines required fields
+
+    // Additional Event Overview fields
+    end_client_name?: string
+    event_name?: string
+    event_website?: string
   }
 
-  // Travel & Logistics
+  // Billing Contact (from Firm Offer Sheet)
+  billing_contact?: {
+    name?: string
+    title?: string
+    email?: string
+    phone?: string
+    address?: string
+  }
+
+  // Logistics Contact (from Firm Offer Sheet)
+  logistics_contact?: {
+    name?: string
+    email?: string
+    phone?: string
+  }
+
+  // Speaker Program Details (from Firm Offer Sheet)
+  program_details?: {
+    requested_speaker_name?: string
+    program_topic?: string
+    program_type?: 'keynote' | 'fireside_chat' | 'panel_discussion' | 'workshop' | 'breakout_session' | 'emcee' | 'other'
+    program_type_other?: string // If "other" is selected
+    audience_size?: number
+    audience_demographics?: string // Job titles, industries, experience levels
+    speaker_attire?: 'business_formal' | 'business_casual' | 'smart_casual' | 'casual' | 'black_tie' | 'other'
+    attire_notes?: string
+  }
+
+  // Event Schedule (from Firm Offer Sheet)
+  event_schedule?: {
+    event_start_time?: string
+    event_end_time?: string
+    speaker_arrival_time?: string
+    program_start_time?: string
+    program_length_minutes?: number
+    qa_length_minutes?: number
+    total_program_length_minutes?: number
+    speaker_departure_time?: string
+    detailed_timeline?: string // Full agenda with specific times
+    timezone?: string
+  }
+
+  // Technical Requirements (from Firm Offer Sheet)
+  technical_requirements?: {
+    av_requirements?: string // Microphone type, projector, screen size, lighting, etc.
+    recording_allowed?: boolean
+    recording_purpose?: string // Internal use, promotional use, etc.
+    live_streaming?: boolean
+    photography_allowed?: boolean
+    tech_rehearsal_date?: string
+    tech_rehearsal_time?: string
+    tech_rehearsal_notes?: string
+  }
+
+  // Travel & Accommodation (from Firm Offer Sheet)
   travel: {
+    // Expected Travel Dates (from Firm Offer Sheet)
+    fly_in_date?: string
+    fly_out_date?: string
+    nearest_airport?: string
+
+    // Transportation from Airport to Hotel
+    airport_to_hotel?: {
+      provided_by_client?: boolean
+      speaker_arranges?: boolean
+      details?: string
+    }
+
+    // Transportation from Hotel to Venue
+    hotel_to_venue?: {
+      provided_by_client?: boolean
+      speaker_arranges?: boolean
+      details?: string
+    }
+
     // Flights
     flights?: {
       outbound?: Flight[]
@@ -21,16 +100,16 @@ export interface ProjectDetails {
       confirmation_numbers?: string[]
       notes?: string
     }
-    
-    // Ground Transportation
+
+    // Ground Transportation (legacy - keeping for backwards compatibility)
     ground_transportation?: {
       type?: 'taxi' | 'uber' | 'car_service' | 'rental' | 'provided' | 'other'
       details?: string
       responsibility?: 'speaker' | 'client' | 'agency'
       confirmation?: string
     }
-    
-    // Hotel
+
+    // Hotel Accommodation
     hotel?: {
       name?: string
       address?: string
@@ -44,7 +123,23 @@ export interface ProjectDetails {
       travel_time_to_airport?: string // e.g., "10 miles / 20 minutes"
       travel_time_to_venue?: string
       arranged_by?: 'sponsor' | 'speaker' | 'agency' | 'other'
+      preferred_tier?: string // Preferred hotel tier
+      dates_needed?: string
       additional_info?: string
+    }
+
+    // Meals (from Firm Offer Sheet)
+    meals?: {
+      meals_provided?: string // Which meals will be provided
+      dietary_requirements?: string
+    }
+
+    // Guest List / VIP (from Firm Offer Sheet)
+    guest_list?: {
+      invited_to_reception?: boolean
+      invited_to_dinner?: boolean
+      vip_meet_greet?: boolean
+      details?: string
     }
   }
 
@@ -254,6 +349,40 @@ export interface ProjectDetails {
     instagram_handle?: string
     youtube_channel?: string
     event_app?: string
+  }
+
+  // Additional Information (from Firm Offer Sheet)
+  additional_info?: {
+    green_room_available?: boolean
+    green_room_details?: string
+    meet_greet_opportunities?: string // Before/after presentation, VIP reception, etc.
+    marketing_use_allowed?: boolean // Will speaker's name/bio be used in event marketing?
+    press_media_present?: boolean
+    media_interview_requests?: string
+    special_requests?: string
+  }
+
+  // Financial Details (from Firm Offer Sheet)
+  financial_details?: {
+    speaker_fee?: number
+    speaker_fee_currency?: string
+    travel_expenses_type?: 'flat_buyout' | 'actual_expenses' | 'client_books' | 'included'
+    travel_expenses_amount?: number
+    travel_expenses_notes?: string // Ground transportation, accommodation, meals details
+    payment_terms?: 'net_30' | 'net_15' | 'upon_completion' | 'deposit_balance' | 'other'
+    payment_terms_other?: string
+    deposit_amount?: number
+    deposit_due_date?: string
+    balance_due_date?: string
+  }
+
+  // Confirmation Details (from Firm Offer Sheet)
+  confirmation_details?: {
+    prep_call_requested?: boolean
+    prep_call_date?: string
+    prep_call_time?: string
+    prep_call_notes?: string
+    additional_notes?: string
   }
 
   // Files & Documents

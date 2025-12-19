@@ -59,6 +59,17 @@ export async function authPut(url: string, body?: any, options: AuthFetchOptions
 }
 
 /**
+ * Convenience method for PATCH requests
+ */
+export async function authPatch(url: string, body?: any, options: AuthFetchOptions = {}): Promise<Response> {
+  return authFetch(url, {
+    ...options,
+    method: 'PATCH',
+    body: body ? JSON.stringify(body) : undefined,
+  })
+}
+
+/**
  * Convenience method for DELETE requests
  */
 export async function authDelete(url: string, options: AuthFetchOptions = {}): Promise<Response> {
