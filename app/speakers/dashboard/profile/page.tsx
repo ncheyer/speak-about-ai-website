@@ -1224,22 +1224,37 @@ export default function SpeakerProfilePageRestructured() {
                         </div>
                       </div>
 
-                      <div className="flex justify-end pt-4">
+                      <div className="flex justify-end gap-2 pt-4 border-t">
                         {editMode.experience ? (
-                          <Button
-                            onClick={() => {
-                              setEditMode({ ...editMode, experience: false })
-                              handleSave()
-                            }}
-                            disabled={isSaving}
-                          >
-                            {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                            Save Experience
-                          </Button>
+                          <>
+                            <Button
+                              variant="outline"
+                              onClick={() => setEditMode(prev => ({ ...prev, experience: false }))}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={() => handleSave('experience')}
+                              disabled={isSaving}
+                              className="bg-gradient-to-r from-green-600 to-emerald-600"
+                            >
+                              {isSaving ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <Save className="h-4 w-4 mr-2" />
+                                  Save Changes
+                                </>
+                              )}
+                            </Button>
+                          </>
                         ) : (
                           <Button
                             variant="outline"
-                            onClick={() => setEditMode({ ...editMode, experience: true })}
+                            onClick={() => setEditMode(prev => ({ ...prev, experience: true }))}
                           >
                             <Edit className="h-4 w-4 mr-2" />
                             Edit Experience
@@ -1907,6 +1922,44 @@ export default function SpeakerProfilePageRestructured() {
                           placeholder="On file, needed, updated date..."
                         />
                       </div>
+
+                      <div className="flex justify-end gap-2 pt-4 border-t">
+                        {editMode.financial ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              onClick={() => setEditMode(prev => ({ ...prev, financial: false }))}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={() => handleSave('financial')}
+                              disabled={isSaving}
+                              className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                            >
+                              {isSaving ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <Save className="h-4 w-4 mr-2" />
+                                  Save Changes
+                                </>
+                              )}
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            onClick={() => setEditMode(prev => ({ ...prev, financial: true }))}
+                            variant="outline"
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Financial Info
+                          </Button>
+                        )}
+                      </div>
                     </TabsContent>
 
                     {/* Health & Safety Section */}
@@ -1948,6 +2001,44 @@ export default function SpeakerProfilePageRestructured() {
                           className="mt-2"
                           placeholder="Mobility assistance, visual/hearing accommodations..."
                         />
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-4 border-t">
+                        {editMode.health ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              onClick={() => setEditMode(prev => ({ ...prev, health: false }))}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={() => handleSave('health')}
+                              disabled={isSaving}
+                              className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                            >
+                              {isSaving ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <Save className="h-4 w-4 mr-2" />
+                                  Save Changes
+                                </>
+                              )}
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            onClick={() => setEditMode(prev => ({ ...prev, health: true }))}
+                            variant="outline"
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Health & Safety
+                          </Button>
+                        )}
                       </div>
                     </TabsContent>
                   </div>
