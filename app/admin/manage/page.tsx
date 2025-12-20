@@ -684,27 +684,27 @@ function MasterAdminPanelContent() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
             {/* Revenue Card */}
             <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(financialStats.totalRevenue)}</p>
+              <CardHeader className="pb-2 sm:pb-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600">Total Revenue</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{formatCurrency(financialStats.totalRevenue)}</p>
                   </div>
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
+                  <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-gray-500">This month</p>
-                    <p className="text-sm font-semibold text-green-600">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-gray-500 flex-shrink-0">This month</p>
+                    <p className="text-xs sm:text-sm font-semibold text-green-600 truncate">
                       {formatCurrency(financialStats.monthlyRevenue)}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Trophy className="h-3 w-3 text-yellow-500" />
+                    <Trophy className="h-3 w-3 text-yellow-500 flex-shrink-0" />
                     <p className="text-xs text-gray-500">{dealStats.won} deals closed</p>
                   </div>
                 </div>
@@ -713,26 +713,26 @@ function MasterAdminPanelContent() {
 
             {/* Pipeline Card */}
             <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Pipeline Value</p>
-                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(dealStats.pipelineValue)}</p>
+              <CardHeader className="pb-2 sm:pb-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600">Pipeline Value</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{formatCurrency(dealStats.pipelineValue)}</p>
                   </div>
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Target className="h-5 w-5 text-blue-600" />
+                  <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                    <Target className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-gray-500">{dealStats.active} active deals</p>
-                    <p className="text-sm font-semibold text-blue-600">{dealStats.conversionRate}% conv</p>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-gray-500">{dealStats.active} active</p>
+                    <p className="text-xs sm:text-sm font-semibold text-blue-600">{dealStats.conversionRate}% conv</p>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-1.5">
-                    <div 
-                      className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" 
+                    <div
+                      className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
                       style={{ width: `${dealStats.conversionRate}%` }}
                     />
                   </div>
@@ -742,27 +742,27 @@ function MasterAdminPanelContent() {
 
             {/* Active Projects Card */}
             <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Active Projects</p>
-                    <p className="text-2xl font-bold text-gray-900">{projectStats.active}</p>
+              <CardHeader className="pb-2 sm:pb-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600">Active Projects</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{projectStats.active}</p>
                   </div>
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <Briefcase className="h-5 w-5 text-orange-600" />
+                  <div className="p-1.5 sm:p-2 bg-orange-100 rounded-lg flex-shrink-0">
+                    <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-1.5 sm:space-y-2">
                   <div className="flex items-center gap-2">
                     <Progress value={projectStats.averageCompletion} className="flex-1" />
-                    <p className="text-xs font-medium">{Math.round(projectStats.averageCompletion)}%</p>
+                    <p className="text-xs font-medium flex-shrink-0">{Math.round(projectStats.averageCompletion)}%</p>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1">
-                      <Timer className="h-3 w-3 text-orange-500" />
-                      <p className="text-xs text-gray-500">{projectStats.upcoming} upcoming</p>
+                      <Timer className="h-3 w-3 text-orange-500 flex-shrink-0" />
+                      <p className="text-xs text-gray-500">{projectStats.upcoming} up</p>
                     </div>
                     <p className="text-xs text-green-600">{projectStats.completed} done</p>
                   </div>
@@ -772,27 +772,27 @@ function MasterAdminPanelContent() {
 
             {/* Commissions Card */}
             <Card className="border-l-4 border-l-emerald-500 hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Commissions</p>
-                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(financialStats.totalCommission)}</p>
+              <CardHeader className="pb-2 sm:pb-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600">Commissions</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{formatCurrency(financialStats.totalCommission)}</p>
                   </div>
-                  <div className="p-2 bg-emerald-100 rounded-lg">
-                    <Percent className="h-5 w-5 text-emerald-600" />
+                  <div className="p-1.5 sm:p-2 bg-emerald-100 rounded-lg flex-shrink-0">
+                    <Percent className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-gray-500">Pending</p>
-                    <p className="text-sm font-semibold text-yellow-600">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-gray-500 flex-shrink-0">Pending</p>
+                    <p className="text-xs sm:text-sm font-semibold text-yellow-600 truncate">
                       {formatCurrency(financialStats.pendingPayments)}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Award className="h-3 w-3 text-emerald-500" />
+                    <Award className="h-3 w-3 text-emerald-500 flex-shrink-0" />
                     <p className="text-xs text-gray-500">Avg {financialStats.averageCommissionRate}% rate</p>
                   </div>
                 </div>
@@ -802,48 +802,52 @@ function MasterAdminPanelContent() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6 bg-white border shadow-sm">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 bg-white border shadow-sm">
               <TabsTrigger
                 value="overview"
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
-                <PieChart className="h-4 w-4" />
-                Overview
+                <PieChart className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Overview</span>
+                <span className="sm:hidden">Over</span>
               </TabsTrigger>
               <TabsTrigger
                 value="crm"
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
-                <ShoppingCart className="h-4 w-4" />
-                CRM & Sales
+                <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">CRM & Sales</span>
+                <span className="sm:hidden">CRM</span>
               </TabsTrigger>
               <TabsTrigger
                 value="firm-offers"
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
-                <FileSignature className="h-4 w-4" />
-                Firm Offers
+                <FileSignature className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Firm Offers</span>
+                <span className="sm:hidden">Offers</span>
               </TabsTrigger>
               <TabsTrigger
                 value="projects"
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
-                <Briefcase className="h-4 w-4" />
-                Projects
+                <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Projects</span>
               </TabsTrigger>
               <TabsTrigger
                 value="finances"
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
-                <Wallet className="h-4 w-4" />
-                Finances
+                <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Finances</span>
               </TabsTrigger>
               <TabsTrigger
                 value="marketing"
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
-                <TrendingUp className="h-4 w-4" />
-                Marketing
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Marketing</span>
+                <span className="sm:hidden">Mktg</span>
               </TabsTrigger>
             </TabsList>
 
