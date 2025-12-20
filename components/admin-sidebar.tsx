@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -48,9 +48,15 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ className }: AdminSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [expandedSections, setExpandedSections] = useState<string[]>(['sales', 'operations', 'website', 'marketing', 'tools'])
   const pathname = usePathname()
   const router = useRouter()
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
 
   const handleLogout = async () => {
     try {
@@ -335,36 +341,73 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
   ]
 
   return (
-    <div className={cn(
-      "flex flex-col h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl transition-all duration-300 ease-in-out",
-      collapsed ? "w-16" : "w-72",
-      className
-    )}>
-      {/* Header */}
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-10" />
-        <div className="relative flex items-center justify-between p-6 border-b border-slate-700/50">
-          {!collapsed && (
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg">
-                <Activity className="h-5 w-5 text-white" />
+    <>
+      {/* Mobile Menu Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setMobileOpen(true)}
+        className="lg:hidden fixed top-4 left-4 z-50 bg-slate-900 text-white hover:bg-slate-800 shadow-lg"
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-[70]"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={cn(
+        "flex flex-col h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl transition-all duration-300 ease-in-out",
+        // Desktop behavior
+        "lg:relative lg:translate-x-0",
+        collapsed ? "lg:w-16" : "lg:w-72",
+        // Mobile behavior
+        "fixed top-0 left-0 z-[80] w-72",
+        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        className
+      )}>
+        {/* Header */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-10" />
+          <div className="relative flex items-center justify-between p-6 border-b border-slate-700/50">
+            {!collapsed && (
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg">
+                  <Activity className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white tracking-tight">Speak About AI</h2>
+                  <p className="text-sm text-slate-400 font-medium">Admin Dashboard</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-white tracking-tight">Speak About AI</h2>
-                <p className="text-sm text-slate-400 font-medium">Admin Dashboard</p>
-              </div>
+            )}
+            <div className="flex items-center gap-2 ml-auto">
+              {/* Mobile Close Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMobileOpen(false)}
+                className="lg:hidden text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all duration-200"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              {/* Desktop Collapse Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCollapsed(!collapsed)}
+                className="hidden lg:block text-slate-400 hover:text-white hover:bg-slate-700/50 border-slate-600 transition-all duration-200"
+              >
+                {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </Button>
             </div>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCollapsed(!collapsed)}
-            className="ml-auto text-slate-400 hover:text-white hover:bg-slate-700/50 border-slate-600 transition-all duration-200"
-          >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
+          </div>
         </div>
-      </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -545,6 +588,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           )}
         </Button>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

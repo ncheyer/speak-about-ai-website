@@ -217,70 +217,75 @@ export default function ProposalsPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full z-[60]">
+      <div className="hidden lg:block lg:fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div className="lg:hidden">
         <AdminSidebar />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 ml-72 min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 lg:ml-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 lg:pt-8">
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
                 <h1 className="text-2xl font-bold">Proposals</h1>
-                <p className="text-gray-600">Create and manage client proposals</p>
+                <p className="text-gray-600 text-sm">Create and manage client proposals</p>
               </div>
-              <Button onClick={() => router.push("/admin/proposals/new")}>
+              <Button onClick={() => router.push("/admin/proposals/new")} className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 New Proposal
               </Button>
             </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card className="p-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Proposals</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-xs sm:text-sm text-gray-600">Total</p>
+              <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
             </div>
-            <FileText className="h-8 w-8 text-gray-400" />
+            <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
           </div>
         </Card>
-        <Card className="p-4">
+        <Card className="p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Sent</p>
-              <p className="text-2xl font-bold">{stats.sent}</p>
+              <p className="text-xs sm:text-sm text-gray-600">Sent</p>
+              <p className="text-xl sm:text-2xl font-bold">{stats.sent}</p>
             </div>
-            <Send className="h-8 w-8 text-blue-400" />
+            <Send className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400" />
           </div>
         </Card>
-        <Card className="p-4">
+        <Card className="p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Accepted</p>
-              <p className="text-2xl font-bold">{stats.accepted}</p>
+              <p className="text-xs sm:text-sm text-gray-600">Accepted</p>
+              <p className="text-xl sm:text-2xl font-bold">{stats.accepted}</p>
             </div>
-            <CheckCircle className="h-8 w-8 text-green-400" />
+            <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-400" />
           </div>
         </Card>
-        <Card className="p-4">
+        <Card className="p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Conversion Rate</p>
-              <p className="text-2xl font-bold">{stats.conversionRate.toFixed(1)}%</p>
+              <p className="text-xs sm:text-sm text-gray-600">Conv. Rate</p>
+              <p className="text-xl sm:text-2xl font-bold">{stats.conversionRate.toFixed(1)}%</p>
             </div>
-            <TrendingUp className="h-8 w-8 text-purple-400" />
+            <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-purple-400" />
           </div>
         </Card>
-        <Card className="p-4">
+        <Card className="p-3 sm:p-4 col-span-2 sm:col-span-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Value</p>
-              <p className="text-2xl font-bold">{formatCurrency(stats.totalValue)}</p>
+              <p className="text-xs sm:text-sm text-gray-600">Total Value</p>
+              <p className="text-xl sm:text-2xl font-bold">{formatCurrency(stats.totalValue)}</p>
             </div>
-            <DollarSign className="h-8 w-8 text-green-400" />
+            <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-green-400" />
           </div>
         </Card>
       </div>
@@ -322,69 +327,183 @@ export default function ProposalsPage() {
               </Button>
             </Card>
           ) : (
-            <Card>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Proposal</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Event</TableHead>
-                    <TableHead>Value</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Views</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Valid Until</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProposals.map((proposal) => (
-                    <TableRow key={proposal.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{proposal.proposal_number}</p>
-                          <p className="text-sm text-gray-500">{proposal.title}</p>
+            <>
+              {/* Desktop Table View */}
+              <Card className="hidden lg:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Proposal</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Event</TableHead>
+                      <TableHead>Value</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Views</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Valid Until</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredProposals.map((proposal) => (
+                      <TableRow key={proposal.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{proposal.proposal_number}</p>
+                            <p className="text-sm text-gray-500">{proposal.title}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{proposal.client_name}</p>
+                            <p className="text-sm text-gray-500">{proposal.client_company}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="text-sm">{proposal.event_title}</p>
+                            {proposal.event_date && (
+                              <p className="text-xs text-gray-500">
+                                <Calendar className="h-3 w-3 inline mr-1" />
+                                {formatDate(proposal.event_date)}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{formatCurrency(proposal.total_investment)}</TableCell>
+                        <TableCell>{getStatusBadge(proposal.status)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            {proposal.views}
+                          </div>
+                        </TableCell>
+                        <TableCell>{formatDate(proposal.created_at)}</TableCell>
+                        <TableCell>
+                          {proposal.valid_until ? (
+                            <span className={new Date(proposal.valid_until) < new Date() ? "text-red-600" : ""}>
+                              {formatDate(proposal.valid_until)}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => router.push(`/admin/proposals/${proposal.id}`)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => router.push(`/admin/proposals/${proposal.id}/edit`)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => copyProposalLink(proposal)}>
+                                <LinkIcon className="h-4 w-4 mr-2" />
+                                Copy Link
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => window.open(`/proposal/${proposal.access_token}`, '_blank')}
+                              >
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Preview
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => window.open(`/api/proposals/${proposal.id}/pdf`, '_blank')}
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Download PDF
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {proposal.status === "draft" && (
+                                <DropdownMenuItem onClick={() => handleSendProposal(proposal)}>
+                                  <Send className="h-4 w-4 mr-2" />
+                                  Send to Client
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => router.push(`/admin/proposals/${proposal.id}/duplicate`)}>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Duplicate
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => {
+                                  setProposalToDelete(proposal)
+                                  setShowDeleteDialog(true)
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+
+              {/* Mobile Card View */}
+              <div className="lg:hidden space-y-3">
+                {filteredProposals.map((proposal) => (
+                  <Card key={proposal.id} className="p-4">
+                    <div className="space-y-3">
+                      {/* Header */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm">{proposal.proposal_number}</p>
+                          <p className="text-xs text-gray-600 mt-0.5">{proposal.title}</p>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{proposal.client_name}</p>
-                          <p className="text-sm text-gray-500">{proposal.client_company}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="text-sm">{proposal.event_title}</p>
+                        {getStatusBadge(proposal.status)}
+                      </div>
+
+                      {/* Client Info */}
+                      <div className="space-y-1">
+                        <p className="font-medium text-sm">{proposal.client_name}</p>
+                        {proposal.client_company && (
+                          <p className="text-xs text-gray-500">{proposal.client_company}</p>
+                        )}
+                      </div>
+
+                      {/* Event & Value */}
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500">Event</p>
+                          <p className="font-medium text-xs">{proposal.event_title}</p>
                           {proposal.event_date && (
-                            <p className="text-xs text-gray-500">
-                              <Calendar className="h-3 w-3 inline mr-1" />
+                            <p className="text-xs text-gray-400 flex items-center mt-0.5">
+                              <Calendar className="h-3 w-3 mr-1" />
                               {formatDate(proposal.event_date)}
                             </p>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>{formatCurrency(proposal.total_investment)}</TableCell>
-                      <TableCell>{getStatusBadge(proposal.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          {proposal.views}
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500">Value</p>
+                          <p className="font-bold text-sm text-green-600">{formatCurrency(proposal.total_investment)}</p>
                         </div>
-                      </TableCell>
-                      <TableCell>{formatDate(proposal.created_at)}</TableCell>
-                      <TableCell>
-                        {proposal.valid_until ? (
-                          <span className={new Date(proposal.valid_until) < new Date() ? "text-red-600" : ""}>
-                            {formatDate(proposal.valid_until)}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
+                      </div>
+
+                      {/* Meta Info */}
+                      <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            {proposal.views}
+                          </div>
+                          <span>{formatDate(proposal.created_at)}</span>
+                        </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -402,13 +521,13 @@ export default function ProposalsPage() {
                               <LinkIcon className="h-4 w-4 mr-2" />
                               Copy Link
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => window.open(`/proposal/${proposal.access_token}`, '_blank')}
                             >
                               <ExternalLink className="h-4 w-4 mr-2" />
                               Preview
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => window.open(`/api/proposals/${proposal.id}/pdf`, '_blank')}
                             >
                               <Download className="h-4 w-4 mr-2" />
@@ -426,7 +545,7 @@ export default function ProposalsPage() {
                               Duplicate
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               className="text-red-600"
                               onClick={() => {
                                 setProposalToDelete(proposal)
@@ -438,12 +557,12 @@ export default function ProposalsPage() {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Card>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </>
           )}
         </TabsContent>
           </Tabs>

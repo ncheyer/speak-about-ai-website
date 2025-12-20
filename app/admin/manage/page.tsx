@@ -624,51 +624,56 @@ function MasterAdminPanelContent() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full z-[60]">
+      <div className="hidden lg:block lg:fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div className="lg:hidden">
         <AdminSidebar />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 ml-72 min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 lg:ml-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 lg:pt-8">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Master Panel</h1>
-                <p className="mt-2 text-gray-600">Command center for all operations</p>
-                <p className="text-sm text-gray-500 mt-1">All times displayed in {getPSTTimezoneLabel()}</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Master Panel</h1>
+                <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">Command center for all operations</p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">All times displayed in {getPSTTimezoneLabel()}</p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button 
+              <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2">
+                <Button
                   onClick={syncAllData}
                   disabled={isSyncing}
                   variant="outline"
-                  className="border-gray-300"
+                  className="border-gray-300 text-xs sm:text-sm"
                   title={lastSync ? `Last synced: ${lastSync.toLocaleTimeString()}` : 'Never synced'}
                 >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
                   {isSyncing ? 'Syncing...' : 'Sync All'}
                 </Button>
-                <Button 
-                  onClick={() => router.push("/admin/crm")} 
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md"
+                <Button
+                  onClick={() => router.push("/admin/crm")}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md text-xs sm:text-sm"
                 >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Open CRM
+                  <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  CRM
                 </Button>
-                <Button 
-                  onClick={() => router.push("/admin/projects")} 
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-md"
+                <Button
+                  onClick={() => router.push("/admin/projects")}
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-md text-xs sm:text-sm"
                 >
-                  <Briefcase className="h-4 w-4 mr-2" />
+                  <Briefcase className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Projects
                 </Button>
-                <Button 
-                  onClick={() => router.push("/admin/finances")} 
-                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 shadow-md"
+                <Button
+                  onClick={() => router.push("/admin/finances")}
+                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 shadow-md text-xs sm:text-sm"
                 >
-                  <Wallet className="h-4 w-4 mr-2" />
+                  <Wallet className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Finances
                 </Button>
               </div>
@@ -676,7 +681,7 @@ function MasterAdminPanelContent() {
           </div>
 
           {/* Key Metrics Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
             {/* Revenue Card */}
             <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">

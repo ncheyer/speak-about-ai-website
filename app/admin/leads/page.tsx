@@ -98,67 +98,72 @@ export default function LeadsPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full z-[60]">
+      <div className="hidden lg:block lg:fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div className="lg:hidden">
         <AdminSidebar />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 ml-72 p-8">
+      <div className="flex-1 lg:ml-72 p-4 sm:p-8 pt-20 lg:pt-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8 flex justify-between items-start">
+          <div className="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-                <Users className="w-10 h-10 text-purple-600" />
+              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3">
+                <Users className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600" />
                 Sales Leads
               </h1>
-              <p className="text-gray-600">SQL contacts from LinkedIn outreach</p>
+              <p className="text-sm sm:text-base text-gray-600">SQL contacts from LinkedIn outreach</p>
             </div>
-            <Button onClick={loadLeads} disabled={loading}>
+            <Button onClick={loadLeads} disabled={loading} className="w-full sm:w-auto">
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">Total Leads</CardTitle>
+              <CardHeader className="pb-2 sm:pb-3">
+                <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">Total Leads</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">{leads.length}</p>
+                <p className="text-2xl sm:text-3xl font-bold">{leads.length}</p>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">New</CardTitle>
+              <CardHeader className="pb-2 sm:pb-3">
+                <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">New</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-blue-600">{newLeads.length}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-600">{newLeads.length}</p>
                 <p className="text-xs text-gray-500 mt-1">Need first contact</p>
               </CardContent>
             </Card>
             <Card className={overdueLeads.length > 0 ? 'border-red-200' : ''}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
-                  {overdueLeads.length > 0 && <AlertCircle className="w-4 h-4 text-red-600" />}
-                  Overdue Follow-ups
+              <CardHeader className="pb-2 sm:pb-3">
+                <CardTitle className="text-xs sm:text-sm font-medium text-gray-600 flex items-center gap-1 sm:gap-2">
+                  {overdueLeads.length > 0 && <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-red-600" />}
+                  Overdue
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className={`text-3xl font-bold ${overdueLeads.length > 0 ? 'text-red-600' : ''}`}>
+                <p className={`text-2xl sm:text-3xl font-bold ${overdueLeads.length > 0 ? 'text-red-600' : ''}`}>
                   {overdueLeads.length}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Need attention</p>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">In Progress</CardTitle>
+              <CardHeader className="pb-2 sm:pb-3">
+                <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">In Progress</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-purple-600">{contactedLeads.length}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-purple-600">{contactedLeads.length}</p>
                 <p className="text-xs text-gray-500 mt-1">Being nurtured</p>
               </CardContent>
             </Card>

@@ -1018,21 +1018,26 @@ d) An immediate family member is stricken by serious injury, illness, or death.
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full z-[60]">
+      <div className="hidden lg:block lg:fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div className="lg:hidden">
         <AdminSidebar />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 ml-72 min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 lg:ml-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 lg:pt-8">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">CRM - Customer Relationship Management</h1>
-              <p className="mt-2 text-gray-600">Manage deals, contracts, and client relationships</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">CRM</h1>
+              <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">Manage deals and client relationships</p>
             </div>
-            <div className="flex gap-4">
-              <Button onClick={() => setShowCreateForm(true)}>
+            <div className="flex gap-2 sm:gap-4">
+              <Button onClick={() => setShowCreateForm(true)} className="flex-1 sm:flex-none">
                 <Plus className="mr-2 h-4 w-4" />
                 New Deal
               </Button>
@@ -1328,86 +1333,89 @@ d) An immediate family member is stricken by serious injury, illness, or death.
           )}
 
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-6 mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Deals</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium">Total Deals</CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalDeals}</div>
+                <div className="text-xl sm:text-2xl font-bold">{totalDeals}</div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pipeline Value</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium">Pipeline Value</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  ${new Intl.NumberFormat('en-US', { 
+                <div className="text-xl sm:text-2xl font-bold">
+                  ${new Intl.NumberFormat('en-US', {
                     minimumFractionDigits: 0,
-                    maximumFractionDigits: 0 
+                    maximumFractionDigits: 0
                   }).format(pipelineValue)}
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Won Deals</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium">Won Deals</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{wonDeals}</div>
+                <div className="text-xl sm:text-2xl font-bold">{wonDeals}</div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium">Total Contracts</CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalContracts}</div>
+                <div className="text-xl sm:text-2xl font-bold">{totalContracts}</div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Executed</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium">Executed</CardTitle>
                 <CheckCircle className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">{executedContracts}</div>
+                <div className="text-xl sm:text-2xl font-bold text-green-600">{executedContracts}</div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium">Pending</CardTitle>
                 <Clock className="h-4 w-4 text-yellow-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{pendingContracts}</div>
+                <div className="text-xl sm:text-2xl font-bold text-yellow-600">{pendingContracts}</div>
               </CardContent>
             </Card>
           </div>
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 max-w-3xl">
-              <TabsTrigger value="deals" className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Deals Pipeline
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-full sm:max-w-3xl">
+              <TabsTrigger value="deals" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Deals Pipeline</span>
+                <span className="sm:hidden">Deals</span>
               </TabsTrigger>
-              <TabsTrigger value="proposals" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Proposals
+              <TabsTrigger value="proposals" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Proposals</span>
+                <span className="sm:hidden">Props</span>
               </TabsTrigger>
-              <TabsTrigger value="contracts" className="flex items-center gap-2">
-                <CheckSquare className="h-4 w-4" />
-                Contracts
+              <TabsTrigger value="contracts" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <CheckSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Contracts</span>
               </TabsTrigger>
-              <TabsTrigger value="past-deals" className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Past Deals
+              <TabsTrigger value="past-deals" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Past Deals</span>
+                <span className="sm:hidden">Past</span>
               </TabsTrigger>
             </TabsList>
 
@@ -1416,7 +1424,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
               {/* Filters */}
               <Card>
                 <CardContent className="pt-6">
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <div className="flex-1">
                       <div className="relative">
                         <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -1429,7 +1437,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                       </div>
                     </div>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-48">
+                      <SelectTrigger className="w-full sm:w-48">
                         <SelectValue placeholder="Filter by status" />
                       </SelectTrigger>
                       <SelectContent>

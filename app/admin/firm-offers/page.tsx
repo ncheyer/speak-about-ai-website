@@ -211,22 +211,27 @@ export default function FirmOffersPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full z-[60]">
+      <div className="hidden lg:block lg:fixed left-0 top-0 h-full z-[60]">
+        <AdminSidebar />
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div className="lg:hidden">
         <AdminSidebar />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 ml-72 min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 lg:ml-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 lg:pt-8">
           <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
                 <h1 className="text-2xl font-bold">Firm Offer Sheets</h1>
-                <p className="text-gray-600">Create and manage firm offers for speakers</p>
+                <p className="text-sm sm:text-base text-gray-600">Create and manage firm offers for speakers</p>
               </div>
               <Button
-                className="bg-amber-500 hover:bg-amber-600"
+                className="bg-amber-500 hover:bg-amber-600 w-full sm:w-auto"
                 onClick={() => router.push('/admin/firm-offers/new')}
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -235,41 +240,41 @@ export default function FirmOffersPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="p-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <Card className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Total Offers</p>
-                    <p className="text-2xl font-bold">{firmOffers.length}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Total Offers</p>
+                    <p className="text-xl sm:text-2xl font-bold">{firmOffers.length}</p>
                   </div>
-                  <FileSignature className="h-8 w-8 text-amber-400" />
+                  <FileSignature className="h-6 w-6 sm:h-8 sm:w-8 text-amber-400" />
                 </div>
               </Card>
-              <Card className="p-4">
+              <Card className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Confirmed</p>
-                    <p className="text-2xl font-bold text-green-600">{confirmedOffers}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Confirmed</p>
+                    <p className="text-xl sm:text-2xl font-bold text-green-600">{confirmedOffers}</p>
                   </div>
-                  <CheckCircle className="h-8 w-8 text-green-400" />
+                  <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-400" />
                 </div>
               </Card>
-              <Card className="p-4">
+              <Card className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Awaiting Response</p>
-                    <p className="text-2xl font-bold text-blue-600">{sentOffers}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Awaiting</p>
+                    <p className="text-xl sm:text-2xl font-bold text-blue-600">{sentOffers}</p>
                   </div>
-                  <Send className="h-8 w-8 text-blue-400" />
+                  <Send className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400" />
                 </div>
               </Card>
-              <Card className="p-4">
+              <Card className="p-3 sm:p-4 col-span-2 lg:col-span-1">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Total Value</p>
-                    <p className="text-2xl font-bold">{formatCurrency(totalOfferValue)}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Total Value</p>
+                    <p className="text-xl sm:text-2xl font-bold">{formatCurrency(totalOfferValue)}</p>
                   </div>
-                  <DollarSign className="h-8 w-8 text-green-400" />
+                  <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-green-400" />
                 </div>
               </Card>
             </div>
