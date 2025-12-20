@@ -7,7 +7,7 @@ const sql = neon(process.env.DATABASE_URL!)
 export async function GET(request: NextRequest) {
   try {
     const result = await sql`
-      SELECT fo.*, d.title as deal_title, d.company as deal_company, d.speaker_name
+      SELECT fo.*, d.event_title as deal_title, d.company as deal_company, d.speaker_requested as speaker_name
       FROM firm_offers fo
       LEFT JOIN deals d ON fo.id = d.firm_offer_id
       ORDER BY fo.created_at DESC

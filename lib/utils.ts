@@ -53,22 +53,27 @@ export function getImageUrl(imagePath?: string | null): string | null {
  */
 export function formatDate(dateString: string): string {
   if (!dateString) return ""
-  
+
   try {
     const date = new Date(dateString)
-    
+
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      return ""
+    }
+
     // Use UTC methods to ensure consistent formatting across server/client
-    const month = date.toLocaleDateString("en-US", { 
+    const month = date.toLocaleDateString("en-US", {
       month: "short",
       timeZone: "UTC"
     })
     const day = date.getUTCDate()
     const year = date.getUTCFullYear()
-    
+
     return `${month} ${day}, ${year}`
   } catch (error) {
     console.warn(`formatDate: Invalid date string "${dateString}"`)
-    return dateString
+    return ""
   }
 }
 

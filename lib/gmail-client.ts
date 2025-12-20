@@ -24,10 +24,15 @@ export class GmailClient {
   private oauth2Client: any
 
   constructor() {
+    // Use localhost for development, production URL otherwise
+    const baseUrl = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3000'
+      : (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000')
+
     this.oauth2Client = new google.auth.OAuth2(
       process.env.GMAIL_CLIENT_ID,
       process.env.GMAIL_CLIENT_SECRET,
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/auth/gmail/callback`
+      `${baseUrl}/api/auth/gmail/callback`
     )
   }
 

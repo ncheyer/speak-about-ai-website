@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
+import { sendEmail } from "@/lib/email"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -261,26 +262,105 @@ async function sendCompletionNotification(firmOffer: any) {
     const overview = firmOffer.event_overview || {}
     const program = firmOffer.speaker_program || {}
     const financial = firmOffer.financial_details || {}
+    const schedule = firmOffer.event_schedule || {}
+    const travel = firmOffer.travel_accommodation || {}
 
-    const emailData = {
-      to: process.env.ADMIN_EMAIL || "noah@speakabout.ai",
-      subject: `Firm Offer Completed: ${overview.event_name || overview.company_name}`,
-      html: `
-        <h2>A firm offer has been completed!</h2>
-        <p><strong>Company:</strong> ${overview.company_name}</p>
-        <p><strong>Event:</strong> ${overview.event_name}</p>
-        <p><strong>Speaker:</strong> ${program.speaker_name}</p>
-        <p><strong>Event Date:</strong> ${overview.event_date ? new Date(overview.event_date).toLocaleDateString() : 'TBD'}</p>
-        <p><strong>Speaker Fee:</strong> $${parseFloat(financial.speaker_fee || 0).toLocaleString()}</p>
-        <p><a href="${process.env.NEXT_PUBLIC_BASE_URL}/admin/firm-offers/${firmOffer.id}">View Full Details</a></p>
-      `
-    }
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://speakabout.ai'
+    const adminEmail = process.env.ADMIN_EMAIL || 'noah@speakabout.ai'
 
-    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/email/send`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(emailData)
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 20px; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">Firm Offer Completed!</h1>
+        </div>
+        <div style="padding: 24px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+          <p style="font-size: 16px; color: #374151; margin-bottom: 24px;">
+            A client has completed their firm offer sheet. Here are the details:
+          </p>
+
+          <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 16px;">
+            <h2 style="font-size: 18px; color: #111827; margin: 0 0 16px 0; border-bottom: 2px solid #f59e0b; padding-bottom: 8px;">Event Details</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px 0; color: #6b7280; width: 140px;">Company:</td><td style="padding: 8px 0; font-weight: 600; color: #111827;">${overview.company_name || 'N/A'}</td></tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Event Name:</td><td style="padding: 8px 0; font-weight: 600; color: #111827;">${overview.event_name || 'N/A'}</td></tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Event Date:</td><td style="padding: 8px 0; font-weight: 600; color: #111827;">${overview.event_date ? new Date(overview.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'TBD'}</td></tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Location:</td><td style="padding: 8px 0; font-weight: 600; color: #111827;">${overview.event_location || 'TBD'}</td></tr>
+            </table>
+          </div>
+
+          <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 16px;">
+            <h2 style="font-size: 18px; color: #111827; margin: 0 0 16px 0; border-bottom: 2px solid #3b82f6; padding-bottom: 8px;">Speaker & Program</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px 0; color: #6b7280; width: 140px;">Speaker:</td><td style="padding: 8px 0; font-weight: 600; color: #111827;">${program.speaker_name || 'N/A'}</td></tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Topic:</td><td style="padding: 8px 0; font-weight: 600; color: #111827;">${program.program_topic || 'N/A'}</td></tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Program Type:</td><td style="padding: 8px 0; font-weight: 600; color: #111827;">${program.program_type || 'Keynote'}</td></tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Audience Size:</td><td style="padding: 8px 0; font-weight: 600; color: #111827;">${program.audience_size || 'TBD'}</td></tr>
+            </table>
+          </div>
+
+          <div style="background: #dcfce7; padding: 20px; border-radius: 8px; border: 1px solid #16a34a; margin-bottom: 24px;">
+            <h2 style="font-size: 18px; color: #166534; margin: 0 0 16px 0;">Financial Details</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px 0; color: #166534; width: 140px;">Speaker Fee:</td><td style="padding: 8px 0; font-weight: 700; color: #166534; font-size: 20px;">$${parseFloat(financial.speaker_fee || 0).toLocaleString()}</td></tr>
+              ${financial.travel_expenses_amount ? `<tr><td style="padding: 8px 0; color: #166534;">Travel Budget:</td><td style="padding: 8px 0; font-weight: 600; color: #166534;">$${parseFloat(financial.travel_expenses_amount).toLocaleString()}</td></tr>` : ''}
+              <tr><td style="padding: 8px 0; color: #166534;">Payment Terms:</td><td style="padding: 8px 0; font-weight: 600; color: #166534;">${financial.payment_terms?.replace(/_/g, ' ').toUpperCase() || 'Net 30'}</td></tr>
+            </table>
+          </div>
+
+          <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 24px;">
+            <h2 style="font-size: 18px; color: #111827; margin: 0 0 16px 0; border-bottom: 2px solid #8b5cf6; padding-bottom: 8px;">Contact Information</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px 0; color: #6b7280; width: 140px;">Billing Contact:</td><td style="padding: 8px 0; font-weight: 600; color: #111827;">${overview.billing_contact?.name || 'N/A'} (${overview.billing_contact?.email || 'N/A'})</td></tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Logistics Contact:</td><td style="padding: 8px 0; font-weight: 600; color: #111827;">${overview.logistics_contact?.name || 'N/A'} (${overview.logistics_contact?.email || 'N/A'})</td></tr>
+            </table>
+          </div>
+
+          <div style="text-align: center;">
+            <a href="${baseUrl}/admin/firm-offers/${firmOffer.id}"
+               style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
+              View Full Details
+            </a>
+          </div>
+
+          <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 24px;">
+            This notification was sent from Speak About AI
+          </p>
+        </div>
+      </div>
+    `
+
+    const textContent = `
+Firm Offer Completed!
+
+A client has completed their firm offer sheet.
+
+EVENT DETAILS
+Company: ${overview.company_name || 'N/A'}
+Event Name: ${overview.event_name || 'N/A'}
+Event Date: ${overview.event_date ? new Date(overview.event_date).toLocaleDateString() : 'TBD'}
+Location: ${overview.event_location || 'TBD'}
+
+SPEAKER & PROGRAM
+Speaker: ${program.speaker_name || 'N/A'}
+Topic: ${program.program_topic || 'N/A'}
+Program Type: ${program.program_type || 'Keynote'}
+
+FINANCIAL DETAILS
+Speaker Fee: $${parseFloat(financial.speaker_fee || 0).toLocaleString()}
+${financial.travel_expenses_amount ? `Travel Budget: $${parseFloat(financial.travel_expenses_amount).toLocaleString()}` : ''}
+Payment Terms: ${financial.payment_terms?.replace(/_/g, ' ').toUpperCase() || 'Net 30'}
+
+View full details: ${baseUrl}/admin/firm-offers/${firmOffer.id}
+    `
+
+    await sendEmail({
+      to: adminEmail,
+      subject: `Firm Offer Completed: ${overview.event_name || overview.company_name || 'New Event'}`,
+      html: htmlContent,
+      text: textContent
     })
+
+    console.log('Firm offer completion notification sent to:', adminEmail)
   } catch (error) {
     console.error("Error sending completion notification:", error)
   }

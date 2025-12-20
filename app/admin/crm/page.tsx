@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { DealStatusDropdown } from "@/components/deal-status-dropdown"
 import { LostDealModal, type LostDealData } from "@/components/lost-deal-modal"
+import { WonDealModal, type WonDealData } from "@/components/won-deal-modal"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -53,7 +54,12 @@ import {
   ArrowLeft,
   Download,
   X,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Plane,
+  Hotel,
+  User
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -143,6 +149,7 @@ export default function AdminCRMPage() {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null)
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
+  const [expandedDeals, setExpandedDeals] = useState<Set<number>>(new Set())
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -155,6 +162,8 @@ export default function AdminCRMPage() {
   const [contractPreviewContent, setContractPreviewContent] = useState("")
   const [showLostDealModal, setShowLostDealModal] = useState(false)
   const [lostDealInfo, setLostDealInfo] = useState<{ id: number; name: string } | null>(null)
+  const [showWonDealModal, setShowWonDealModal] = useState(false)
+  const [wonDealInfo, setWonDealInfo] = useState<Deal | null>(null)
   const [pastDealsSearch, setPastDealsSearch] = useState("")
   const [pastDealsFilter, setPastDealsFilter] = useState<"all" | "won" | "lost">("all")
   const [pastDealsDateRange, setPastDealsDateRange] = useState<"all" | "30days" | "90days" | "1year">("all")
@@ -229,6 +238,19 @@ export default function AdminCRMPage() {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : '',
     }
+  }
+
+  // Toggle deal expansion
+  const toggleDealExpansion = (dealId: number) => {
+    setExpandedDeals(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(dealId)) {
+        newSet.delete(dealId)
+      } else {
+        newSet.add(dealId)
+      }
+      return newSet
+    })
   }
 
   // Check authentication and load data
@@ -736,6 +758,16 @@ d) An immediate family member is stricken by serious injury, illness, or death.
       return
     }
 
+    // If marking as won, show the won deal modal for fee confirmation
+    if (newStatus === 'won') {
+      const deal = deals.find(d => d.id === dealId)
+      if (deal) {
+        setWonDealInfo(deal)
+        setShowWonDealModal(true)
+      }
+      return
+    }
+
     // Otherwise, update the status directly
     try {
       const response = await fetch(`/api/deals/${dealId}`, {
@@ -819,6 +851,60 @@ d) An immediate family member is stricken by serious injury, illness, or death.
       toast({
         title: "Error",
         description: "Failed to mark deal as lost",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleWonDealSubmit = async (wonData: WonDealData) => {
+    if (!wonDealInfo) return
+
+    try {
+      // Build the notes to append to the deal
+      const wonNotes = `\n\n--- MARKED AS WON ---\nDate: ${new Date().toLocaleDateString()}\nSpeaker: ${wonData.speaker_name}\nSpeaker Fee: $${wonData.speaker_fee.toLocaleString()}\nCommission: ${wonData.commission_percentage}% ($${wonData.commission_amount.toLocaleString()})\nPayment Terms: ${wonData.payment_terms}\nContract Signed: ${wonData.contract_signed ? 'Yes' : 'No'}\nDeposit Received: ${wonData.deposit_received ? `Yes ($${wonData.deposit_amount?.toLocaleString() || 0})` : 'No'}\n${wonData.win_notes ? `Notes: ${wonData.win_notes}` : ''}`
+
+      // Find the current deal to append to existing notes
+      const currentDeal = deals.find(d => d.id === wonDealInfo.id)
+      const updatedNotes = (currentDeal?.notes || '') + wonNotes
+
+      const response = await fetch(`/api/deals/${wonDealInfo.id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          status: 'won',
+          deal_value: wonData.deal_value,
+          speaker_requested: wonData.speaker_name,
+          notes: updatedNotes,
+          // Store financial details
+          commission_percentage: wonData.commission_percentage,
+          commission_amount: wonData.commission_amount,
+          payment_status: wonData.deposit_received ? 'partial' : 'pending',
+          partial_payment_amount: wonData.deposit_received ? wonData.deposit_amount : null,
+          contract_signed_date: wonData.contract_signed ? new Date().toISOString() : null,
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Deal marked as won!",
+          description: `Congratulations! Deal value: $${wonData.deal_value.toLocaleString()}`,
+        })
+        setShowWonDealModal(false)
+        setWonDealInfo(null)
+        loadData() // Reload deals
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to update deal",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error marking deal as won:", error)
+      toast({
+        title: "Error",
+        description: "Failed to mark deal as won",
         variant: "destructive"
       })
     }
@@ -1403,11 +1489,19 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                       </TableHeader>
                       <TableBody>
                         {filteredDeals.map((deal) => (
-                          <TableRow key={deal.id}>
+                          <React.Fragment key={deal.id}>
+                          <TableRow className="cursor-pointer hover:bg-gray-50" onClick={() => toggleDealExpansion(deal.id)}>
                             <TableCell>
-                              <div>
-                                <div className="font-medium">{deal.client_name}</div>
-                                <div className="text-sm text-gray-500">{deal.company}</div>
+                              <div className="flex items-center gap-2">
+                                {expandedDeals.has(deal.id) ? (
+                                  <ChevronUp className="h-4 w-4 text-gray-400" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                                )}
+                                <div>
+                                  <div className="font-medium">{deal.client_name}</div>
+                                  <div className="text-sm text-gray-500">{deal.company}</div>
+                                </div>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -1419,7 +1513,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                             <TableCell>
                               ${new Intl.NumberFormat('en-US').format(deal.deal_value)}
                             </TableCell>
-                            <TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
                               <DealStatusDropdown
                                 currentStatus={deal.status}
                                 dealId={deal.id}
@@ -1433,7 +1527,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                                   {deal.priority.toUpperCase()}
                                 </Badge>
                                 {deal.pending_tasks_count && deal.pending_tasks_count > 0 && (
-                                  <Link href={`/admin/tasks?deal_id=${deal.id}`}>
+                                  <Link href={`/admin/tasks?deal_id=${deal.id}`} onClick={(e) => e.stopPropagation()}>
                                     <Badge className={deal.overdue_tasks_count && deal.overdue_tasks_count > 0 ? "bg-red-100 text-red-800 cursor-pointer hover:bg-red-200" : "bg-blue-100 text-blue-800 cursor-pointer hover:bg-blue-200"}>
                                       <CheckSquare className="w-3 h-3 mr-1" />
                                       {deal.pending_tasks_count}
@@ -1446,25 +1540,25 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                             <TableCell>
                               {new Date(deal.event_date).toLocaleDateString()}
                             </TableCell>
-                            <TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
                               <div className="flex gap-2">
-                                <Button size="sm" variant="ghost" onClick={() => setSelectedDeal(deal)}>
-                                  <Eye className="h-4 w-4" />
+                                <Button size="sm" variant="ghost" onClick={() => toggleDealExpansion(deal.id)}>
+                                  {expandedDeals.has(deal.id) ? <ChevronUp className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </Button>
                                 <Button size="sm" variant="ghost" onClick={() => handleEdit(deal)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost" 
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
                                   onClick={() => handleDeleteDeal(deal)}
                                   className="text-red-600 hover:text-red-700"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                                 {deal.status === "won" && (
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     variant="outline"
                                     onClick={() => handleCreateContract(deal)}
                                   >
@@ -1475,6 +1569,141 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                               </div>
                             </TableCell>
                           </TableRow>
+                          {/* Expandable Details Row */}
+                          {expandedDeals.has(deal.id) && (
+                            <TableRow className="bg-gray-50 border-t-0">
+                              <TableCell colSpan={7} className="py-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
+                                  {/* Contact Info */}
+                                  <div className="space-y-3">
+                                    <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                                      <User className="h-4 w-4" />
+                                      Contact Information
+                                    </h4>
+                                    <div className="space-y-2 text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <Mail className="h-3 w-3 text-gray-400" />
+                                        <a href={`mailto:${deal.client_email}`} className="text-blue-600 hover:underline">
+                                          {deal.client_email}
+                                        </a>
+                                      </div>
+                                      {deal.client_phone && (
+                                        <div className="flex items-center gap-2">
+                                          <Phone className="h-3 w-3 text-gray-400" />
+                                          <a href={`tel:${deal.client_phone}`} className="text-blue-600 hover:underline">
+                                            {deal.client_phone}
+                                          </a>
+                                        </div>
+                                      )}
+                                      <div className="flex items-center gap-2">
+                                        <MapPin className="h-3 w-3 text-gray-400" />
+                                        <span className="text-gray-600">{deal.event_location || 'No location specified'}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Event Details */}
+                                  <div className="space-y-3">
+                                    <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                                      <Calendar className="h-4 w-4" />
+                                      Event Details
+                                    </h4>
+                                    <div className="space-y-2 text-sm">
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-gray-500">Event Type:</span>
+                                        <Badge variant="outline">{deal.event_type || 'in-person'}</Badge>
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-gray-500">Speaker:</span>
+                                        <span className="font-medium">{deal.speaker_requested || 'TBD'}</span>
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-gray-500">Attendees:</span>
+                                        <span>{deal.attendee_count || 'Not specified'}</span>
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-gray-500">Budget Range:</span>
+                                        <span>{deal.budget_range || 'Not specified'}</span>
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-gray-500">Source:</span>
+                                        <span>{deal.source || 'Direct'}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Travel & Notes */}
+                                  <div className="space-y-3">
+                                    <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                                      <Plane className="h-4 w-4" />
+                                      Travel & Notes
+                                    </h4>
+                                    <div className="space-y-2 text-sm">
+                                      <div className="flex flex-wrap gap-2">
+                                        {deal.travel_required && (
+                                          <Badge variant="secondary" className="text-xs">
+                                            <Plane className="h-3 w-3 mr-1" />
+                                            Travel Required
+                                          </Badge>
+                                        )}
+                                        {deal.flight_required && (
+                                          <Badge variant="secondary" className="text-xs">
+                                            <Plane className="h-3 w-3 mr-1" />
+                                            Flight Needed
+                                          </Badge>
+                                        )}
+                                        {deal.hotel_required && (
+                                          <Badge variant="secondary" className="text-xs">
+                                            <Hotel className="h-3 w-3 mr-1" />
+                                            Hotel Needed
+                                          </Badge>
+                                        )}
+                                        {deal.travel_stipend && deal.travel_stipend > 0 && (
+                                          <Badge variant="outline" className="text-xs text-green-700">
+                                            <DollarSign className="h-3 w-3 mr-1" />
+                                            Stipend: ${deal.travel_stipend.toLocaleString()}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      {deal.notes && (
+                                        <div className="mt-2 p-2 bg-white rounded border text-gray-600">
+                                          <p className="text-xs font-medium text-gray-500 mb-1">Notes:</p>
+                                          <p className="text-sm whitespace-pre-wrap">{deal.notes}</p>
+                                        </div>
+                                      )}
+                                      {deal.next_follow_up && (
+                                        <div className="flex items-center gap-2 text-orange-600">
+                                          <Clock className="h-3 w-3" />
+                                          <span className="text-xs">Follow-up: {new Date(deal.next_follow_up).toLocaleDateString()}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Quick Actions */}
+                                <div className="mt-4 pt-4 border-t flex gap-2 px-4">
+                                  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleEdit(deal); }}>
+                                    <Edit className="h-3 w-3 mr-1" />
+                                    Edit Deal
+                                  </Button>
+                                  <Link href={`/admin/tasks?deal_id=${deal.id}`}>
+                                    <Button size="sm" variant="outline">
+                                      <CheckSquare className="h-3 w-3 mr-1" />
+                                      View Tasks
+                                    </Button>
+                                  </Link>
+                                  {deal.client_email && (
+                                    <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); window.location.href = `mailto:${deal.client_email}`; }}>
+                                      <Mail className="h-3 w-3 mr-1" />
+                                      Email Client
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                          </React.Fragment>
                         ))}
                       </TableBody>
                     </Table>
@@ -1835,18 +2064,28 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-2">
-                                <Button 
-                                  size="sm" 
+                                <Button
+                                  size="sm"
                                   variant="ghost"
                                   onClick={() => setSelectedDeal(deal)}
+                                  title="View deal"
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleEdit(deal)}
+                                  title="Edit deal"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
                                 {deal.status === "lost" && (
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     variant="outline"
                                     onClick={() => handleReactivateDeal(deal)}
+                                    title="Reactivate deal"
                                   >
                                     <RefreshCw className="h-4 w-4" />
                                   </Button>
@@ -2539,6 +2778,17 @@ d) An immediate family member is stricken by serious injury, illness, or death.
         }}
         onSubmit={handleLostDealSubmit}
         dealName={lostDealInfo?.name || ''}
+      />
+
+      {/* Won Deal Modal */}
+      <WonDealModal
+        isOpen={showWonDealModal}
+        onClose={() => {
+          setShowWonDealModal(false)
+          setWonDealInfo(null)
+        }}
+        onSubmit={handleWonDealSubmit}
+        deal={wonDealInfo}
       />
     </div>
   )

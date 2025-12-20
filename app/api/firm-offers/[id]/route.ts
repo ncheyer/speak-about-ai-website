@@ -11,11 +11,26 @@ export async function GET(
   try {
     const { id } = await params
 
+    // Try to get firm offer - works with or without proposal
     const [offer] = await sql`
-      SELECT fo.*, p.title as proposal_title, p.client_name, p.client_email,
-             p.speakers, p.event_title, p.event_date, p.total_investment
+      SELECT fo.*,
+             p.title as proposal_title,
+             p.client_name as proposal_client_name,
+             p.client_email as proposal_client_email,
+             p.speakers as proposal_speakers,
+             p.event_title as proposal_event_title,
+             p.event_date as proposal_event_date,
+             p.total_investment as proposal_total_investment,
+             d.event_title as deal_event_title,
+             d.company as deal_company,
+             d.client_name as deal_client_name,
+             d.client_email as deal_client_email,
+             d.event_date as deal_event_date,
+             d.event_location as deal_event_location,
+             d.speaker_requested as deal_speaker_name
       FROM firm_offers fo
-      JOIN proposals p ON p.id = fo.proposal_id
+      LEFT JOIN proposals p ON p.id = fo.proposal_id
+      LEFT JOIN deals d ON d.firm_offer_id = fo.id
       WHERE fo.id = ${id}
     `
 
@@ -43,98 +58,107 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
-    const body = await request.json()
+    const numericId = parseInt(id, 10)
 
-    // Build dynamic update query
-    const updates: string[] = []
-    const values: any[] = []
-
-    if (body.status !== undefined) {
-      updates.push('status')
-      values.push(body.status)
-
-      // Set timestamps based on status
-      if (body.status === 'submitted') {
-        updates.push('submitted_at')
-        values.push(new Date().toISOString())
-      } else if (body.status === 'sent_to_speaker') {
-        updates.push('sent_to_speaker_at')
-        values.push(new Date().toISOString())
-      }
-    }
-
-    if (body.event_overview !== undefined) {
-      updates.push('event_overview')
-      values.push(JSON.stringify(body.event_overview))
-    }
-    if (body.speaker_program !== undefined) {
-      updates.push('speaker_program')
-      values.push(JSON.stringify(body.speaker_program))
-    }
-    if (body.event_schedule !== undefined) {
-      updates.push('event_schedule')
-      values.push(JSON.stringify(body.event_schedule))
-    }
-    if (body.technical_requirements !== undefined) {
-      updates.push('technical_requirements')
-      values.push(JSON.stringify(body.technical_requirements))
-    }
-    if (body.travel_accommodation !== undefined) {
-      updates.push('travel_accommodation')
-      values.push(JSON.stringify(body.travel_accommodation))
-    }
-    if (body.additional_info !== undefined) {
-      updates.push('additional_info')
-      values.push(JSON.stringify(body.additional_info))
-    }
-    if (body.financial_details !== undefined) {
-      updates.push('financial_details')
-      values.push(JSON.stringify(body.financial_details))
-    }
-    if (body.confirmation !== undefined) {
-      updates.push('confirmation')
-      values.push(JSON.stringify(body.confirmation))
-    }
-    if (body.speaker_notes !== undefined) {
-      updates.push('speaker_notes')
-      values.push(body.speaker_notes)
-    }
-    if (body.speaker_confirmed !== undefined) {
-      updates.push('speaker_confirmed')
-      values.push(body.speaker_confirmed)
-      updates.push('speaker_response_at')
-      values.push(new Date().toISOString())
-    }
-
-    if (updates.length === 0) {
+    if (isNaN(numericId)) {
       return NextResponse.json(
-        { error: 'No fields to update' },
+        { error: 'Invalid firm offer ID' },
         { status: 400 }
       )
     }
 
-    // Use tagged template literal for Neon
-    const [updated] = await sql`
+    const body = await request.json()
+
+    // Build SET clauses dynamically based on what's provided
+    const setClauses: string[] = ['updated_at = CURRENT_TIMESTAMP']
+    const values: any[] = []
+    let paramIndex = 1
+
+    if (body.status !== undefined) {
+      setClauses.push(`status = $${paramIndex}`)
+      values.push(body.status)
+      paramIndex++
+
+      if (body.status === 'submitted') {
+        setClauses.push('submitted_at = CURRENT_TIMESTAMP')
+      } else if (body.status === 'sent_to_speaker') {
+        setClauses.push('sent_to_speaker_at = CURRENT_TIMESTAMP')
+      }
+    }
+
+    if (body.event_overview !== undefined) {
+      setClauses.push(`event_overview = $${paramIndex}::jsonb`)
+      values.push(JSON.stringify(body.event_overview))
+      paramIndex++
+    }
+
+    if (body.speaker_program !== undefined) {
+      setClauses.push(`speaker_program = $${paramIndex}::jsonb`)
+      values.push(JSON.stringify(body.speaker_program))
+      paramIndex++
+    }
+
+    if (body.event_schedule !== undefined) {
+      setClauses.push(`event_schedule = $${paramIndex}::jsonb`)
+      values.push(JSON.stringify(body.event_schedule))
+      paramIndex++
+    }
+
+    if (body.technical_requirements !== undefined) {
+      setClauses.push(`technical_requirements = $${paramIndex}::jsonb`)
+      values.push(JSON.stringify(body.technical_requirements))
+      paramIndex++
+    }
+
+    if (body.travel_accommodation !== undefined) {
+      setClauses.push(`travel_accommodation = $${paramIndex}::jsonb`)
+      values.push(JSON.stringify(body.travel_accommodation))
+      paramIndex++
+    }
+
+    if (body.additional_info !== undefined) {
+      setClauses.push(`additional_info = $${paramIndex}::jsonb`)
+      values.push(JSON.stringify(body.additional_info))
+      paramIndex++
+    }
+
+    if (body.financial_details !== undefined) {
+      setClauses.push(`financial_details = $${paramIndex}::jsonb`)
+      values.push(JSON.stringify(body.financial_details))
+      paramIndex++
+    }
+
+    if (body.confirmation !== undefined) {
+      setClauses.push(`confirmation = $${paramIndex}::jsonb`)
+      values.push(JSON.stringify(body.confirmation))
+      paramIndex++
+    }
+
+    if (body.speaker_notes !== undefined) {
+      setClauses.push(`speaker_notes = $${paramIndex}`)
+      values.push(body.speaker_notes)
+      paramIndex++
+    }
+
+    if (body.speaker_confirmed !== undefined) {
+      setClauses.push(`speaker_confirmed = $${paramIndex}`)
+      values.push(body.speaker_confirmed)
+      paramIndex++
+      setClauses.push('speaker_response_at = CURRENT_TIMESTAMP')
+    }
+
+    // Add the ID as the last parameter
+    values.push(numericId)
+
+    const query = `
       UPDATE firm_offers
-      SET
-        status = COALESCE(${body.status}, status),
-        event_overview = COALESCE(${body.event_overview ? JSON.stringify(body.event_overview) : null}::jsonb, event_overview),
-        speaker_program = COALESCE(${body.speaker_program ? JSON.stringify(body.speaker_program) : null}::jsonb, speaker_program),
-        event_schedule = COALESCE(${body.event_schedule ? JSON.stringify(body.event_schedule) : null}::jsonb, event_schedule),
-        technical_requirements = COALESCE(${body.technical_requirements ? JSON.stringify(body.technical_requirements) : null}::jsonb, technical_requirements),
-        travel_accommodation = COALESCE(${body.travel_accommodation ? JSON.stringify(body.travel_accommodation) : null}::jsonb, travel_accommodation),
-        additional_info = COALESCE(${body.additional_info ? JSON.stringify(body.additional_info) : null}::jsonb, additional_info),
-        financial_details = COALESCE(${body.financial_details ? JSON.stringify(body.financial_details) : null}::jsonb, financial_details),
-        confirmation = COALESCE(${body.confirmation ? JSON.stringify(body.confirmation) : null}::jsonb, confirmation),
-        speaker_notes = COALESCE(${body.speaker_notes}, speaker_notes),
-        speaker_confirmed = COALESCE(${body.speaker_confirmed}, speaker_confirmed),
-        submitted_at = CASE WHEN ${body.status} = 'submitted' THEN CURRENT_TIMESTAMP ELSE submitted_at END,
-        sent_to_speaker_at = CASE WHEN ${body.status} = 'sent_to_speaker' THEN CURRENT_TIMESTAMP ELSE sent_to_speaker_at END,
-        speaker_response_at = CASE WHEN ${body.speaker_confirmed} IS NOT NULL THEN CURRENT_TIMESTAMP ELSE speaker_response_at END,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${id}
+      SET ${setClauses.join(', ')}
+      WHERE id = $${paramIndex}
       RETURNING *
     `
+
+    const result = await sql.query(query, values)
+    const updated = result[0]
 
     if (!updated) {
       return NextResponse.json(

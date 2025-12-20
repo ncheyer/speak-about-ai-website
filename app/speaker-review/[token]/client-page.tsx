@@ -1,12 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import {
   Dialog,
   DialogContent,
@@ -31,7 +30,6 @@ import {
   Mail,
   Phone,
   Globe,
-  FileText,
   Camera
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -165,14 +163,33 @@ export function SpeakerReviewClient({ token, firmOffer, speakerName }: Props) {
   }
 
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return 'TBD'
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
+    if (!dateStr) return ''
+    try {
+      const date = new Date(dateStr)
+      if (isNaN(date.getTime())) return ''
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    } catch {
+      return ''
+    }
   }
+
+  // Helper to check if a section has meaningful data
+  const hasScheduleData = eventSchedule.speaker_arrival_time || eventSchedule.program_start_time ||
+                          eventSchedule.program_length_minutes || eventSchedule.detailed_timeline
+  const hasTravelData = travelAccom.fly_in_date || travelAccom.fly_out_date || travelAccom.nearest_airport ||
+                        travelAccom.hotel_required || travelAccom.hotel_dates
+  const hasTechnicalData = technicalReqs.recording_allowed === true || technicalReqs.live_stream === true ||
+                           technicalReqs.photography_allowed === true || technicalReqs.tech_rehearsal_date
+  const hasAdditionalData = additionalInfo.green_room_available === true || additionalInfo.meet_greet_before === true ||
+                            additionalInfo.meet_greet_after === true || additionalInfo.vip_reception === true ||
+                            additionalInfo.press_media_present === true || additionalInfo.special_requests ||
+                            additionalInfo.additional_engagements === true || additionalInfo.meet_and_greet ||
+                            additionalInfo.marketing_promotion || additionalInfo.press_media || additionalInfo.guest_list_notes
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -188,7 +205,31 @@ export function SpeakerReviewClient({ token, firmOffer, speakerName }: Props) {
           </Badge>
         </div>
 
-        {/* Event Overview */}
+        {/* Financial - Always show prominently */}
+        <Card className="mb-6 border-green-200 bg-green-50">
+          <CardContent className="py-6">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-6 w-6 text-green-700" />
+                <span className="text-lg font-medium text-green-800">Your Fee</span>
+              </div>
+              <span className="text-3xl font-bold text-green-700">
+                ${(financialDetails.speaker_fee || firmOffer.total_investment || 0).toLocaleString()}
+              </span>
+            </div>
+            {financialDetails.travel_expenses_type && (
+              <p className="text-sm text-green-700 mt-2">
+                Travel: {financialDetails.travel_expenses_type === 'flat_buyout' ?
+                  `Flat buyout${financialDetails.travel_buyout_amount ? ` ($${financialDetails.travel_buyout_amount.toLocaleString()})` : ''}` :
+                  financialDetails.travel_expenses_type === 'client_books' ? 'Client books travel' :
+                  financialDetails.travel_expenses_type === 'reimbursement' ? 'Speaker books, client reimburses' :
+                  financialDetails.travel_expenses_type.replace(/_/g, ' ')}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Event Overview - Essential info */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -198,32 +239,44 @@ export function SpeakerReviewClient({ token, firmOffer, speakerName }: Props) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">Event Name</p>
-                <p className="font-medium">{eventOverview.event_name || firmOffer.event_title || 'TBD'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Client</p>
-                <p className="font-medium">{eventOverview.end_client_name || firmOffer.client_name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Event Date</p>
-                <p className="font-medium flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {formatDate(eventOverview.event_date || firmOffer.event_date)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Location</p>
-                <p className="font-medium flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  {eventOverview.venue_name || firmOffer.event_location || 'TBD'}
-                </p>
-              </div>
-              {eventOverview.venue_address && (
-                <div className="md:col-span-2">
-                  <p className="text-sm text-gray-500">Full Address</p>
-                  <p className="font-medium">{eventOverview.venue_address}</p>
+              {(eventOverview.event_name || firmOffer.event_title) && (
+                <div>
+                  <p className="text-sm text-gray-500">Event Name</p>
+                  <p className="font-medium">{eventOverview.event_name || firmOffer.event_title}</p>
+                </div>
+              )}
+              {eventOverview.end_client_name && (
+                <div>
+                  <p className="text-sm text-gray-500">Client</p>
+                  <p className="font-medium">{eventOverview.end_client_name}</p>
+                </div>
+              )}
+              {(eventOverview.event_date || firmOffer.event_date) && formatDate(eventOverview.event_date || firmOffer.event_date) && (
+                <div>
+                  <p className="text-sm text-gray-500">Event Date</p>
+                  <p className="font-medium flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    {formatDate(eventOverview.event_date || firmOffer.event_date)}
+                  </p>
+                </div>
+              )}
+              {eventOverview.event_location && (
+                <div>
+                  <p className="text-sm text-gray-500">Location</p>
+                  <p className="font-medium flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    {eventOverview.event_location}
+                  </p>
+                </div>
+              )}
+              {(eventOverview.venue_name || eventOverview.venue_address) && (
+                <div>
+                  <p className="text-sm text-gray-500">Venue</p>
+                  <p className="font-medium">
+                    {eventOverview.venue_name}
+                    {eventOverview.venue_name && eventOverview.venue_address && <br />}
+                    {eventOverview.venue_address}
+                  </p>
                 </div>
               )}
               {eventOverview.event_website && (
@@ -236,10 +289,37 @@ export function SpeakerReviewClient({ token, firmOffer, speakerName }: Props) {
                 </div>
               )}
             </div>
+
+            {/* Logistics Contact - only show if filled */}
+            {(eventOverview.logistics_contact?.name || eventOverview.logistics_contact?.email) && (
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium text-gray-700 mb-2">Logistics Contact</p>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  {eventOverview.logistics_contact?.name && (
+                    <span className="flex items-center gap-1">
+                      <User className="h-4 w-4 text-gray-400" />
+                      {eventOverview.logistics_contact.name}
+                    </span>
+                  )}
+                  {eventOverview.logistics_contact?.email && (
+                    <a href={`mailto:${eventOverview.logistics_contact.email}`} className="flex items-center gap-1 text-blue-600 hover:underline">
+                      <Mail className="h-4 w-4" />
+                      {eventOverview.logistics_contact.email}
+                    </a>
+                  )}
+                  {eventOverview.logistics_contact?.phone && (
+                    <span className="flex items-center gap-1">
+                      <Phone className="h-4 w-4 text-gray-400" />
+                      {eventOverview.logistics_contact.phone}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Speaker Program */}
+        {/* Speaker Program - Essential */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -247,247 +327,307 @@ export function SpeakerReviewClient({ token, firmOffer, speakerName }: Props) {
               Your Program
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">Program Type</p>
-                <p className="font-medium capitalize">{(speakerProgram.program_type || 'keynote').replace('_', ' ')}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Audience Size</p>
-                <p className="font-medium flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  {speakerProgram.audience_size || 'TBD'} attendees
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Attire</p>
-                <p className="font-medium capitalize">{(speakerProgram.speaker_attire || 'business_casual').replace('_', ' ')}</p>
-              </div>
-            </div>
-            {speakerProgram.program_topic && (
-              <div>
-                <p className="text-sm text-gray-500">Topic/Focus</p>
-                <p className="font-medium">{speakerProgram.program_topic}</p>
-              </div>
-            )}
-            {speakerProgram.audience_demographics && (
-              <div>
-                <p className="text-sm text-gray-500">Audience Demographics</p>
-                <p className="font-medium">{speakerProgram.audience_demographics}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Schedule */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Schedule
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">Arrival at Venue</p>
-                <p className="font-medium">{eventSchedule.speaker_arrival_time || 'TBD'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Program Start</p>
-                <p className="font-medium">{eventSchedule.program_start_time || 'TBD'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Program Length</p>
-                <p className="font-medium">{eventSchedule.program_length_minutes || 'TBD'} min</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Q&A</p>
-                <p className="font-medium">{eventSchedule.qa_length_minutes || 0} min</p>
-              </div>
-            </div>
-            {eventSchedule.timezone && (
-              <p className="text-sm text-gray-500">Timezone: {eventSchedule.timezone}</p>
-            )}
-            {eventSchedule.detailed_timeline && (
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Full Timeline</p>
-                <div className="bg-gray-50 p-3 rounded-lg text-sm whitespace-pre-wrap">
-                  {eventSchedule.detailed_timeline}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Technical & Recording */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mic className="h-5 w-5" />
-              Technical & Recording
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {technicalReqs.microphone_type && (
+              {speakerProgram.program_type && (
                 <div>
-                  <p className="text-sm text-gray-500">Microphone</p>
-                  <p className="font-medium">{technicalReqs.microphone_type}</p>
+                  <p className="text-sm text-gray-500">Program Type</p>
+                  <p className="font-medium capitalize">{speakerProgram.program_type.replace(/_/g, ' ')}</p>
                 </div>
               )}
-              <div className="flex flex-wrap gap-2">
-                {technicalReqs.recording_allowed && (
-                  <Badge variant="secondary">
-                    <Camera className="h-3 w-3 mr-1" />
-                    Recording ({technicalReqs.recording_purpose})
-                  </Badge>
-                )}
-                {technicalReqs.live_stream && (
-                  <Badge variant="secondary">Live Stream</Badge>
-                )}
-                {technicalReqs.photography_allowed && (
-                  <Badge variant="secondary">Photography</Badge>
-                )}
-              </div>
-            </div>
-            {technicalReqs.tech_rehearsal_date && (
-              <div>
-                <p className="text-sm text-gray-500">Tech Rehearsal</p>
-                <p className="font-medium">{formatDate(technicalReqs.tech_rehearsal_date)} at {technicalReqs.tech_rehearsal_time || 'TBD'}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Travel */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plane className="h-5 w-5" />
-              Travel & Accommodation
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">Fly-In Date</p>
-                <p className="font-medium">{formatDate(travelAccom.fly_in_date)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Fly-Out Date</p>
-                <p className="font-medium">{formatDate(travelAccom.fly_out_date)}</p>
-              </div>
-              {travelAccom.nearest_airport && (
+              {speakerProgram.audience_size && (
                 <div>
-                  <p className="text-sm text-gray-500">Nearest Airport</p>
-                  <p className="font-medium">{travelAccom.nearest_airport}</p>
+                  <p className="text-sm text-gray-500">Audience Size</p>
+                  <p className="font-medium flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    {speakerProgram.audience_size} attendees
+                  </p>
                 </div>
               )}
-              <div>
-                <p className="text-sm text-gray-500">Airport Transportation</p>
-                <p className="font-medium capitalize">{(travelAccom.airport_transportation || 'tbd').replace('_', ' ')}</p>
-              </div>
+              {speakerProgram.speaker_attire && (
+                <div>
+                  <p className="text-sm text-gray-500">Attire</p>
+                  <p className="font-medium capitalize">{speakerProgram.speaker_attire.replace(/_/g, ' ')}</p>
+                </div>
+              )}
+              {speakerProgram.program_topic && (
+                <div className="md:col-span-2">
+                  <p className="text-sm text-gray-500">Topic</p>
+                  <p className="font-medium">{speakerProgram.program_topic}</p>
+                </div>
+              )}
+              {speakerProgram.audience_demographics && (
+                <div className="md:col-span-2">
+                  <p className="text-sm text-gray-500">Audience Demographics</p>
+                  <p className="font-medium">{speakerProgram.audience_demographics}</p>
+                </div>
+              )}
             </div>
-            {travelAccom.hotel_required && (
-              <div className="flex items-center gap-2">
-                <Hotel className="h-4 w-4 text-gray-500" />
-                <span className="font-medium">Hotel: {travelAccom.hotel_dates || 'Dates TBD'}</span>
-                <Badge variant="secondary" className="capitalize">{travelAccom.hotel_tier || 'TBD'}</Badge>
-              </div>
-            )}
-            {travelAccom.meals_provided?.length > 0 && (
-              <div>
-                <p className="text-sm text-gray-500">Meals Provided</p>
-                <p className="font-medium">{travelAccom.meals_provided.join(', ')}</p>
-              </div>
-            )}
-            {(travelAccom.guest_list_invitation || travelAccom.vip_meet_greet) && (
-              <div className="flex gap-2">
-                {travelAccom.guest_list_invitation && <Badge>Guest List Invite</Badge>}
-                {travelAccom.vip_meet_greet && <Badge>VIP Meet & Greet</Badge>}
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        {/* Additional Info */}
-        {(additionalInfo.green_room_available || additionalInfo.meet_greet_before || additionalInfo.meet_greet_after || additionalInfo.press_media_present || additionalInfo.special_requests) && (
+        {/* Schedule - only if has data */}
+        {hasScheduleData && (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Additional Information
+                <Clock className="h-5 w-5" />
+                Schedule
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {additionalInfo.green_room_available && <Badge variant="secondary">Green Room Available</Badge>}
-                {additionalInfo.meet_greet_before && <Badge variant="secondary">Meet & Greet Before</Badge>}
-                {additionalInfo.meet_greet_after && <Badge variant="secondary">Meet & Greet After</Badge>}
-                {additionalInfo.vip_reception && <Badge variant="secondary">VIP Reception</Badge>}
-                {additionalInfo.press_media_present && <Badge variant="secondary">Press/Media Present</Badge>}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {eventSchedule.speaker_arrival_time && (
+                  <div>
+                    <p className="text-sm text-gray-500">Arrival at Venue</p>
+                    <p className="font-medium">{eventSchedule.speaker_arrival_time}</p>
+                  </div>
+                )}
+                {eventSchedule.program_start_time && (
+                  <div>
+                    <p className="text-sm text-gray-500">Program Start</p>
+                    <p className="font-medium">{eventSchedule.program_start_time}</p>
+                  </div>
+                )}
+                {eventSchedule.program_length_minutes && (
+                  <div>
+                    <p className="text-sm text-gray-500">Program Length</p>
+                    <p className="font-medium">{eventSchedule.program_length_minutes} min</p>
+                  </div>
+                )}
+                {eventSchedule.qa_length_minutes && (
+                  <div>
+                    <p className="text-sm text-gray-500">Q&A</p>
+                    <p className="font-medium">{eventSchedule.qa_length_minutes} min</p>
+                  </div>
+                )}
+                {eventSchedule.speaker_departure_time && (
+                  <div>
+                    <p className="text-sm text-gray-500">Departure</p>
+                    <p className="font-medium">{eventSchedule.speaker_departure_time}</p>
+                  </div>
+                )}
+                {eventSchedule.timezone && (
+                  <div>
+                    <p className="text-sm text-gray-500">Timezone</p>
+                    <p className="font-medium">{eventSchedule.timezone}</p>
+                  </div>
+                )}
               </div>
-              {additionalInfo.special_requests && (
+              {eventSchedule.detailed_timeline && (
                 <div>
-                  <p className="text-sm text-gray-500">Special Requests</p>
-                  <p className="font-medium">{additionalInfo.special_requests}</p>
+                  <p className="text-sm text-gray-500 mb-1">Full Timeline</p>
+                  <div className="bg-gray-50 p-3 rounded-lg text-sm whitespace-pre-wrap">
+                    {eventSchedule.detailed_timeline}
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
         )}
 
-        {/* Financial */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Financial Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="p-4 bg-green-50 rounded-lg mb-4">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-medium">Your Fee</span>
-                <span className="text-2xl font-bold text-green-700">
-                  ${(financialDetails.speaker_fee || firmOffer.total_investment || 0).toLocaleString()}
-                </span>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">Travel Arrangement</p>
-                <p className="font-medium capitalize">{(financialDetails.travel_expenses_type || 'TBD').replace('_', ' ')}</p>
-              </div>
-              {financialDetails.travel_buyout_amount && (
-                <div>
-                  <p className="text-sm text-gray-500">Travel Buyout</p>
-                  <p className="font-medium">${financialDetails.travel_buyout_amount.toLocaleString()}</p>
-                </div>
-              )}
-              <div>
-                <p className="text-sm text-gray-500">Payment Terms</p>
-                <p className="font-medium">{financialDetails.payment_terms || 'Net 30'}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Prep Call */}
-        {confirmation.prep_call_requested && (
+        {/* Technical - only if has data */}
+        {hasTechnicalData && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Prep Call Requested</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Mic className="h-5 w-5" />
+                Technical & Recording
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {technicalReqs.recording_allowed === true && (
+                  <Badge variant="secondary">
+                    <Camera className="h-3 w-3 mr-1" />
+                    Recording {technicalReqs.recording_purpose ? `(${technicalReqs.recording_purpose})` : ''}
+                  </Badge>
+                )}
+                {technicalReqs.live_stream === true && (
+                  <Badge variant="secondary">Live Streaming</Badge>
+                )}
+                {technicalReqs.photography_allowed === true && (
+                  <Badge variant="secondary">Photography</Badge>
+                )}
+              </div>
+              {technicalReqs.tech_rehearsal_date && formatDate(technicalReqs.tech_rehearsal_date) && (
+                <div>
+                  <p className="text-sm text-gray-500">Tech Rehearsal</p>
+                  <p className="font-medium">
+                    {formatDate(technicalReqs.tech_rehearsal_date)}
+                    {technicalReqs.tech_rehearsal_time ? ` at ${technicalReqs.tech_rehearsal_time}` : ''}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Travel - only if has data */}
+        {hasTravelData && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plane className="h-5 w-5" />
+                Travel & Accommodation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {travelAccom.fly_in_date && formatDate(travelAccom.fly_in_date) && (
+                  <div>
+                    <p className="text-sm text-gray-500">Fly-In Date</p>
+                    <p className="font-medium">{formatDate(travelAccom.fly_in_date)}</p>
+                  </div>
+                )}
+                {travelAccom.fly_out_date && formatDate(travelAccom.fly_out_date) && (
+                  <div>
+                    <p className="text-sm text-gray-500">Fly-Out Date</p>
+                    <p className="font-medium">{formatDate(travelAccom.fly_out_date)}</p>
+                  </div>
+                )}
+                {travelAccom.nearest_airport && (
+                  <div>
+                    <p className="text-sm text-gray-500">Nearest Airport</p>
+                    <p className="font-medium">{travelAccom.nearest_airport}</p>
+                  </div>
+                )}
+                {travelAccom.airport_transportation && travelAccom.airport_transportation !== 'tbd' && (
+                  <div>
+                    <p className="text-sm text-gray-500">Airport Transportation</p>
+                    <p className="font-medium capitalize">{travelAccom.airport_transportation.replace(/_/g, ' ')}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Hotel */}
+              {travelAccom.hotel_required === true && (
+                <div className="border-t pt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Hotel className="h-4 w-4 text-gray-500" />
+                    <span className="font-medium">Hotel Accommodation</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
+                    {travelAccom.hotel_dates && (
+                      <div>
+                        <p className="text-sm text-gray-500">Dates</p>
+                        <p className="font-medium">{travelAccom.hotel_dates}</p>
+                      </div>
+                    )}
+                    {travelAccom.hotel_tier && travelAccom.hotel_tier !== 'tbd' && (
+                      <div>
+                        <p className="text-sm text-gray-500">Hotel Tier</p>
+                        <p className="font-medium capitalize">{travelAccom.hotel_tier}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Meals */}
+              {travelAccom.meals_provided?.length > 0 && (
+                <div>
+                  <p className="text-sm text-gray-500">Meals Provided</p>
+                  <p className="font-medium">{travelAccom.meals_provided.join(', ')}</p>
+                </div>
+              )}
+
+              {/* Perks */}
+              {(travelAccom.guest_list_invitation === true || travelAccom.vip_meet_greet === true) && (
+                <div className="flex gap-2 flex-wrap">
+                  {travelAccom.guest_list_invitation === true && <Badge>Guest List Invite</Badge>}
+                  {travelAccom.vip_meet_greet === true && <Badge>VIP Meet & Greet</Badge>}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Additional Info - only if has data */}
+        {hasAdditionalData && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Additional Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {additionalInfo.green_room_available === true && <Badge variant="secondary">Green Room Available</Badge>}
+                {additionalInfo.meet_greet_before === true && <Badge variant="secondary">Meet & Greet (Before)</Badge>}
+                {additionalInfo.meet_greet_after === true && <Badge variant="secondary">Meet & Greet (After)</Badge>}
+                {additionalInfo.vip_reception === true && <Badge variant="secondary">VIP Reception</Badge>}
+                {additionalInfo.press_media_present === true && <Badge variant="secondary">Press/Media Present</Badge>}
+              </div>
+              {additionalInfo.special_requests && (
+                <div>
+                  <p className="text-sm text-gray-500">Special Requests</p>
+                  <p className="font-medium whitespace-pre-wrap">{additionalInfo.special_requests}</p>
+                </div>
+              )}
+
+              {/* Additional Engagements Section */}
+              {(additionalInfo.meet_and_greet || additionalInfo.marketing_promotion || additionalInfo.press_media || additionalInfo.guest_list_notes) && (
+                <div className="border-t pt-4 mt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-3">Additional Engagement Opportunities</p>
+                  <div className="space-y-3">
+                    {additionalInfo.meet_and_greet && (
+                      <div>
+                        <p className="text-sm text-gray-500">Meet & Greet</p>
+                        <p className="font-medium whitespace-pre-wrap">{additionalInfo.meet_and_greet}</p>
+                      </div>
+                    )}
+                    {additionalInfo.guest_list_notes && (
+                      <div>
+                        <p className="text-sm text-gray-500">Guest List Notes</p>
+                        <p className="font-medium whitespace-pre-wrap">{additionalInfo.guest_list_notes}</p>
+                      </div>
+                    )}
+                    {additionalInfo.marketing_promotion && (
+                      <div>
+                        <p className="text-sm text-gray-500">Marketing & Promotion</p>
+                        <p className="font-medium whitespace-pre-wrap">{additionalInfo.marketing_promotion}</p>
+                      </div>
+                    )}
+                    {additionalInfo.press_media && (
+                      <div>
+                        <p className="text-sm text-gray-500">Press & Media</p>
+                        <p className="font-medium whitespace-pre-wrap">{additionalInfo.press_media}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Prep Call - only if requested */}
+        {confirmation.prep_call_requested === true && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Prep Call
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">
                 The client has requested a prep call.
                 {confirmation.prep_call_date_preferences && (
-                  <span> Preferred timing: {confirmation.prep_call_date_preferences}</span>
+                  <span className="block mt-1 font-medium">Preferred timing: {confirmation.prep_call_date_preferences}</span>
                 )}
               </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Additional Notes */}
+        {confirmation.additional_notes && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Additional Notes from Client</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-wrap">{confirmation.additional_notes}</p>
             </CardContent>
           </Card>
         )}

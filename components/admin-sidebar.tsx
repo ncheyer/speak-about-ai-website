@@ -110,6 +110,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           bgColor: "bg-blue-50"
         },
         {
+          title: "Proposals",
+          href: "/admin/proposals",
+          icon: FileText,
+          description: "Client Proposals",
+          color: "text-indigo-600",
+          bgColor: "bg-indigo-50"
+        },
+        {
           title: "Firm Offers",
           href: "/admin/firm-offers",
           icon: FileSignature,
@@ -118,12 +126,12 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           bgColor: "bg-amber-50"
         },
         {
-          title: "Proposals",
-          href: "/admin/proposals",
-          icon: FileText,
-          description: "Client Proposals",
-          color: "text-indigo-600",
-          bgColor: "bg-indigo-50"
+          title: "Contracts Hub",
+          href: "/admin/contracts-hub",
+          icon: FileSignature,
+          description: "Contract Management",
+          color: "text-emerald-600",
+          bgColor: "bg-emerald-50"
         },
         {
           title: "Kondo MQL",
@@ -321,14 +329,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Invoice Management",
           color: "text-green-600",
           bgColor: "bg-green-50"
-        },
-        {
-          title: "Contracts Hub (BETA)",
-          href: "/admin/contracts-hub",
-          icon: FileSignature,
-          description: "Contract Management",
-          color: "text-indigo-600",
-          bgColor: "bg-indigo-50"
         }
       ]
     }
