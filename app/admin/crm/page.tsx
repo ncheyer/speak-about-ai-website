@@ -1549,13 +1549,20 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                               {new Date(deal.event_date).toLocaleDateString()}
                             </TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 flex-wrap">
                                 <Button size="sm" variant="ghost" onClick={() => toggleDealExpansion(deal.id)}>
                                   {expandedDeals.has(deal.id) ? <ChevronUp className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </Button>
                                 <Button size="sm" variant="ghost" onClick={() => handleEdit(deal)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
+                                {(deal.status === 'proposal' || deal.status === 'negotiation' || deal.status === 'qualified') && (
+                                  <Link href={`/admin/proposals/new?deal_id=${deal.id}`}>
+                                    <Button size="sm" variant="ghost" className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+                                      <FileText className="h-4 w-4" />
+                                    </Button>
+                                  </Link>
+                                )}
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -1690,7 +1697,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                                 </div>
 
                                 {/* Quick Actions */}
-                                <div className="mt-4 pt-4 border-t flex gap-2 px-4">
+                                <div className="mt-4 pt-4 border-t flex flex-wrap gap-2 px-4">
                                   <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleEdit(deal); }}>
                                     <Edit className="h-3 w-3 mr-1" />
                                     Edit Deal
@@ -1701,6 +1708,14 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                                       View Tasks
                                     </Button>
                                   </Link>
+                                  {(deal.status === 'proposal' || deal.status === 'negotiation' || deal.status === 'qualified') && (
+                                    <Link href={`/admin/proposals/new?deal_id=${deal.id}`}>
+                                      <Button size="sm" variant="outline" className="bg-indigo-50 border-indigo-200 hover:bg-indigo-100">
+                                        <FileText className="h-3 w-3 mr-1" />
+                                        Create Proposal
+                                      </Button>
+                                    </Link>
+                                  )}
                                   {deal.client_email && (
                                     <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); window.location.href = `mailto:${deal.client_email}`; }}>
                                       <Mail className="h-3 w-3 mr-1" />

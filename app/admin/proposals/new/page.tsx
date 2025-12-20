@@ -109,15 +109,22 @@ function NewProposalPageContent() {
   useEffect(() => {
     fetchDeals()
     fetchSpeakers()
-    
+
     // Load proposal data if in edit mode
     if (isEditMode && editId) {
       loadProposalForEdit(editId)
     } else {
-      // Show deal dialog only for new proposals
-      setShowDealDialog(true)
+      // Check if deal_id is in URL params
+      const dealIdParam = searchParams.get('deal_id')
+      if (dealIdParam) {
+        // Don't show dialog, will auto-populate after deals are loaded
+        setFormData(prev => ({ ...prev, deal_id: dealIdParam }))
+      } else {
+        // Show deal dialog only for new proposals without deal_id
+        setShowDealDialog(true)
+      }
     }
-  }, [isEditMode, editId])
+  }, [isEditMode, editId, searchParams])
 
   useEffect(() => {
     // Auto-calculate payment amounts based on total
@@ -129,12 +136,20 @@ function NewProposalPageContent() {
   }, [services])
 
   useEffect(() => {
+    // Auto-populate from deal_id when deals are loaded
+    if (formData.deal_id && deals.length > 0 && !formData.client_name) {
+      // Only auto-populate if form is empty (not already populated)
+      handleDealSelect(formData.deal_id)
+    }
+  }, [deals, formData.deal_id])
+
+  useEffect(() => {
     // Update deal with speakers when speakers are modified (debounced)
     if (formData.deal_id && proposalSpeakers.length > 0 && proposalSpeakers.some(s => s.name)) {
       const timeoutId = setTimeout(() => {
         updateDealWithSpeakers(formData.deal_id, proposalSpeakers.filter(s => s.name), "draft")
       }, 1000) // Debounce for 1 second
-      
+
       return () => clearTimeout(timeoutId)
     }
   }, [proposalSpeakers, formData.deal_id])
