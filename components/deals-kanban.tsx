@@ -144,7 +144,7 @@ export function DealsKanban({ onDealClick }: DealsKanbanProps = {}) {
 
   return (
     <div className="overflow-x-auto pb-4">
-      <div className="flex gap-4 min-w-max p-4">
+      <div className="flex flex-col lg:flex-row gap-4 lg:min-w-max p-4">
         {STAGES.map(stage => {
           const stageDeals = (deals || []).filter(deal => deal.status === stage.id)
           const totalValue = stageDeals.reduce((sum, deal) => sum + Number(deal.deal_value), 0)
@@ -152,7 +152,7 @@ export function DealsKanban({ onDealClick }: DealsKanbanProps = {}) {
           return (
             <div
               key={stage.id}
-              className="flex-1 min-w-[320px]"
+              className="flex-1 lg:min-w-[320px] w-full"
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, stage.id)}
             >

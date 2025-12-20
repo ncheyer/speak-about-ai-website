@@ -832,14 +832,16 @@ function MasterAdminPanelContent() {
                 className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
                 <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>Projects</span>
+                <span className="hidden sm:inline">Projects</span>
+                <span className="sm:hidden">Proj</span>
               </TabsTrigger>
               <TabsTrigger
                 value="finances"
                 className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
                 <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>Finances</span>
+                <span className="hidden sm:inline">Finances</span>
+                <span className="sm:hidden">Fin</span>
               </TabsTrigger>
               <TabsTrigger
                 value="marketing"
@@ -1252,41 +1254,41 @@ function MasterAdminPanelContent() {
               </div>
 
               {/* Deal Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Active Deals</p>
-                      <p className="text-2xl font-bold">{dealStats.active}</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                <Card className="p-3 md:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm text-gray-600 truncate">Active Deals</p>
+                      <p className="text-lg md:text-2xl font-bold">{dealStats.active}</p>
                     </div>
-                    <ShoppingCart className="h-8 w-8 text-blue-400" />
+                    <ShoppingCart className="h-6 w-6 md:h-8 md:w-8 text-blue-400 flex-shrink-0" />
                   </div>
                 </Card>
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Won Deals</p>
-                      <p className="text-2xl font-bold text-green-600">{dealStats.won}</p>
+                <Card className="p-3 md:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm text-gray-600 truncate">Won Deals</p>
+                      <p className="text-lg md:text-2xl font-bold text-green-600">{dealStats.won}</p>
                     </div>
-                    <CheckCircle className="h-8 w-8 text-green-400" />
+                    <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-green-400 flex-shrink-0" />
                   </div>
                 </Card>
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Pipeline Value</p>
-                      <p className="text-2xl font-bold">{formatCurrency(dealStats.pipelineValue)}</p>
+                <Card className="p-3 md:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm text-gray-600 truncate">Pipeline</p>
+                      <p className="text-lg md:text-2xl font-bold truncate">{formatCurrency(dealStats.pipelineValue)}</p>
                     </div>
-                    <Target className="h-8 w-8 text-yellow-400" />
+                    <Target className="h-6 w-6 md:h-8 md:w-8 text-yellow-400 flex-shrink-0" />
                   </div>
                 </Card>
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Won Value</p>
-                      <p className="text-2xl font-bold text-green-600">{formatCurrency(dealStats.wonValue)}</p>
+                <Card className="p-3 md:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm text-gray-600 truncate">Won Value</p>
+                      <p className="text-lg md:text-2xl font-bold text-green-600 truncate">{formatCurrency(dealStats.wonValue)}</p>
                     </div>
-                    <DollarSign className="h-8 w-8 text-green-400" />
+                    <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-green-400 flex-shrink-0" />
                   </div>
                 </Card>
               </div>
@@ -1439,41 +1441,41 @@ function MasterAdminPanelContent() {
               </div>
 
               {/* Project Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Active Projects</p>
-                      <p className="text-2xl font-bold">{projectStats.active}</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                <Card className="p-3 md:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm text-gray-600 truncate">Active</p>
+                      <p className="text-lg md:text-2xl font-bold">{projectStats.active}</p>
                     </div>
-                    <Briefcase className="h-8 w-8 text-orange-400" />
+                    <Briefcase className="h-6 w-6 md:h-8 md:w-8 text-orange-400 flex-shrink-0" />
                   </div>
                 </Card>
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Upcoming (30d)</p>
-                      <p className="text-2xl font-bold">{projectStats.upcoming}</p>
+                <Card className="p-3 md:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm text-gray-600 truncate">Upcoming</p>
+                      <p className="text-lg md:text-2xl font-bold">{projectStats.upcoming}</p>
                     </div>
-                    <Calendar className="h-8 w-8 text-blue-400" />
+                    <Calendar className="h-6 w-6 md:h-8 md:w-8 text-blue-400 flex-shrink-0" />
                   </div>
                 </Card>
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Completed</p>
-                      <p className="text-2xl font-bold text-green-600">{projectStats.completed}</p>
+                <Card className="p-3 md:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm text-gray-600 truncate">Done</p>
+                      <p className="text-lg md:text-2xl font-bold text-green-600">{projectStats.completed}</p>
                     </div>
-                    <CheckSquare className="h-8 w-8 text-green-400" />
+                    <CheckSquare className="h-6 w-6 md:h-8 md:w-8 text-green-400 flex-shrink-0" />
                   </div>
                 </Card>
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Total Budget</p>
-                      <p className="text-2xl font-bold">{formatCurrency(projectStats.totalBudget)}</p>
+                <Card className="p-3 md:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm text-gray-600 truncate">Budget</p>
+                      <p className="text-lg md:text-2xl font-bold truncate">{formatCurrency(projectStats.totalBudget)}</p>
                     </div>
-                    <DollarSign className="h-8 w-8 text-emerald-400" />
+                    <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-emerald-400 flex-shrink-0" />
                   </div>
                 </Card>
               </div>
@@ -1508,41 +1510,41 @@ function MasterAdminPanelContent() {
               </div>
 
               {/* Financial Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Total Revenue</p>
-                      <p className="text-2xl font-bold">{formatCurrency(financialStats.totalRevenue)}</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                <Card className="p-3 md:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm text-gray-600 truncate">Revenue</p>
+                      <p className="text-lg md:text-2xl font-bold truncate">{formatCurrency(financialStats.totalRevenue)}</p>
                     </div>
-                    <Banknote className="h-8 w-8 text-green-400" />
+                    <Banknote className="h-6 w-6 md:h-8 md:w-8 text-green-400 flex-shrink-0" />
                   </div>
                 </Card>
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Total Commission</p>
-                      <p className="text-2xl font-bold">{formatCurrency(financialStats.totalCommission)}</p>
+                <Card className="p-3 md:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm text-gray-600 truncate">Commission</p>
+                      <p className="text-lg md:text-2xl font-bold truncate">{formatCurrency(financialStats.totalCommission)}</p>
                     </div>
-                    <Percent className="h-8 w-8 text-emerald-400" />
+                    <Percent className="h-6 w-6 md:h-8 md:w-8 text-emerald-400 flex-shrink-0" />
                   </div>
                 </Card>
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Pending Payments</p>
-                      <p className="text-2xl font-bold text-yellow-600">{formatCurrency(financialStats.pendingPayments)}</p>
+                <Card className="p-3 md:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm text-gray-600 truncate">Pending</p>
+                      <p className="text-lg md:text-2xl font-bold text-yellow-600 truncate">{formatCurrency(financialStats.pendingPayments)}</p>
                     </div>
-                    <Clock className="h-8 w-8 text-yellow-400" />
+                    <Clock className="h-6 w-6 md:h-8 md:w-8 text-yellow-400 flex-shrink-0" />
                   </div>
                 </Card>
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">This Month</p>
-                      <p className="text-2xl font-bold">{formatCurrency(financialStats.monthlyRevenue)}</p>
+                <Card className="p-3 md:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm text-gray-600 truncate">This Month</p>
+                      <p className="text-lg md:text-2xl font-bold truncate">{formatCurrency(financialStats.monthlyRevenue)}</p>
                     </div>
-                    <Calendar className="h-8 w-8 text-blue-400" />
+                    <Calendar className="h-6 w-6 md:h-8 md:w-8 text-blue-400 flex-shrink-0" />
                   </div>
                 </Card>
               </div>
@@ -1758,38 +1760,38 @@ function SEODashboardEmbed() {
   return (
     <div className="space-y-6">
       {/* Overview Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <Card className="border-pink-200 bg-pink-50">
-          <CardHeader className="pb-3">
-            <CardDescription className="text-pink-800">Domain Rank</CardDescription>
-            <CardTitle className="text-2xl text-pink-900">
+          <CardHeader className="pb-2 md:pb-3">
+            <CardDescription className="text-pink-800 text-xs md:text-sm truncate">Domain Rank</CardDescription>
+            <CardTitle className="text-lg md:text-2xl text-pink-900">
               {parseInt(overview.Rank).toLocaleString()}
             </CardTitle>
           </CardHeader>
         </Card>
 
         <Card className="border-blue-200 bg-blue-50">
-          <CardHeader className="pb-3">
-            <CardDescription className="text-blue-800">Organic Keywords</CardDescription>
-            <CardTitle className="text-2xl text-blue-900">
+          <CardHeader className="pb-2 md:pb-3">
+            <CardDescription className="text-blue-800 text-xs md:text-sm truncate">Keywords</CardDescription>
+            <CardTitle className="text-lg md:text-2xl text-blue-900">
               {overview['Organic Keywords']}
             </CardTitle>
           </CardHeader>
         </Card>
 
         <Card className="border-green-200 bg-green-50">
-          <CardHeader className="pb-3">
-            <CardDescription className="text-green-800">Monthly Traffic</CardDescription>
-            <CardTitle className="text-2xl text-green-900">
+          <CardHeader className="pb-2 md:pb-3">
+            <CardDescription className="text-green-800 text-xs md:text-sm truncate">Traffic</CardDescription>
+            <CardTitle className="text-lg md:text-2xl text-green-900">
               {overview['Organic Traffic']}
             </CardTitle>
           </CardHeader>
         </Card>
 
         <Card className="border-purple-200 bg-purple-50">
-          <CardHeader className="pb-3">
-            <CardDescription className="text-purple-800">Traffic Value</CardDescription>
-            <CardTitle className="text-2xl text-purple-900">
+          <CardHeader className="pb-2 md:pb-3">
+            <CardDescription className="text-purple-800 text-xs md:text-sm truncate">Value</CardDescription>
+            <CardTitle className="text-lg md:text-2xl text-purple-900 truncate">
               ${overview['Organic Cost']}
             </CardTitle>
           </CardHeader>

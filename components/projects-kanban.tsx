@@ -161,7 +161,7 @@ export function ProjectsKanban() {
 
   return (
     <div className="overflow-x-auto pb-4">
-      <div className="flex gap-4 min-w-max p-4">
+      <div className="flex flex-col lg:flex-row gap-4 lg:min-w-max p-4">
         {STAGES.map(stage => {
           const stageProjects = (projects || []).filter(project => project.status === stage.id)
           const totalFees = stageProjects.reduce((sum, project) => sum + Number(project.speaker_fee || project.budget || 0), 0)
@@ -169,7 +169,7 @@ export function ProjectsKanban() {
           return (
             <div
               key={stage.id}
-              className="flex-1 min-w-[320px]"
+              className="flex-1 lg:min-w-[320px] w-full"
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, stage.id)}
             >
