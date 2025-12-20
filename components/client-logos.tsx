@@ -90,8 +90,8 @@ export default function ClientLogos() {
       </div>
       <TooltipProvider>
         <div className="relative w-full overflow-hidden py-1">
-          {/* Added gap-x-16 for spacing between logos - faster animation */}
-          <div className="flex animate-marquee-fast gap-x-16">
+          {/* Added gap-x-16 for spacing between logos - faster animation on mobile */}
+          <div className="flex animate-marquee-mobile md:animate-marquee-fast gap-x-16">
             {allClients.map((client, index) => (
               // Removed px-8 from here
               <Tooltip key={index}>
