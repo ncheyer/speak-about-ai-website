@@ -175,16 +175,28 @@ export async function generateMetadata({ params }: SpeakerPageProps) {
         : `https://speakabout.ai${speaker.image}`)
     : "https://speakabout.ai/hero-image.jpg"
 
-  // Generate optimized title for better SEO
-  const isAdamCheyer = slug === 'adam-cheyer'
-  const pageTitle = isAdamCheyer
-    ? `Adam Cheyer - Siri Co-Founder & AI Pioneer | Book for Keynote Speaking`
-    : speaker.title 
-      ? `${speaker.name} - ${speaker.title} | Book AI Keynote Speaker`
-      : `${speaker.name} - AI Keynote Speaker | Book for Your Event`
+  // Generate optimized title for better SEO (keep under 60 chars before template adds "| Speak About AI")
+  // Helper to create short title from full title
+  const getShortTitle = (fullTitle: string): string => {
+    // Extract key role/company from title
+    const lowerTitle = fullTitle.toLowerCase()
+    if (lowerTitle.includes('siri') && lowerTitle.includes('co-founder')) return 'Siri Co-Founder'
+    if (lowerTitle.includes('shazam') && lowerTitle.includes('founder')) return 'Shazam Founder'
+    if (lowerTitle.includes('google')) return fullTitle.split(',')[0].replace(/former\s*/i, '').trim()
+    if (lowerTitle.includes('amazon')) return fullTitle.split(',')[0].replace(/former\s*/i, '').trim()
+    if (lowerTitle.includes('ceo')) return fullTitle.split(',')[0].trim()
+    if (lowerTitle.includes('founder')) return fullTitle.split(',')[0].trim()
+    // Default: take first part before comma, max 40 chars
+    const firstPart = fullTitle.split(',')[0].trim()
+    return firstPart.length > 40 ? firstPart.substring(0, 37) + '...' : firstPart
+  }
 
-  // Special optimization for Adam Cheyer
-  const optimizedDescription = isAdamCheyer 
+  const shortTitle = speaker.title ? getShortTitle(speaker.title) : 'AI Keynote Speaker'
+  const pageTitle = `${speaker.name} - ${shortTitle}`
+
+  // Special optimization for featured speakers
+  const isAdamCheyer = slug === 'adam-cheyer'
+  const optimizedDescription = isAdamCheyer
     ? `Book Adam Cheyer, Siri Co-Founder and AI pioneer, for your next event. Leading AI keynote speaker with 30+ years experience. VP Engineering at Samsung, founder of Viv Labs (acquired by Samsung). Get pricing & availability.`
     : description
     

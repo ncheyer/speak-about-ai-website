@@ -4,7 +4,7 @@ import TechnologyAISpeakersClientPage from "../technology-ai-keynote-speakers/Te
 import Script from "next/script"
 
 export const metadata: Metadata = {
-  title: "Technology Keynote Speakers | Top AI & Tech Experts for 2025",
+  title: "Technology Keynote Speakers | AI & Tech Experts",
   description:
     "Book leading technology keynote speakers and AI experts for your 2025 tech conference. Silicon Valley executives, AI pioneers, and digital transformation leaders.",
   keywords:

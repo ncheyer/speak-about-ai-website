@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Event Professional Networking Groups - AI WhatsApp Community | Speak About AI",
+  title: "Event Professional WhatsApp Community",
   description:
     "Join exclusive event professional networking groups for AI innovation. Connect with 200+ event planners, venue managers, and industry experts in our WhatsApp community.",
   keywords:

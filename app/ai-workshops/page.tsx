@@ -5,13 +5,13 @@ import WorkshopDirectory from "@/components/workshop-directory"
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: "AI Workshops | Immersive Training Programs | Speak About AI",
+  title: "AI Workshops | Hands-On Training Programs",
   description:
     "Discover hands-on AI workshops led by industry experts. Interactive training programs covering machine learning, generative AI, and practical implementation strategies for your team.",
   keywords:
     "AI workshops, machine learning training, AI corporate training, hands-on AI courses, generative AI workshops, AI implementation training",
   openGraph: {
-    title: "AI Workshops | Speak About AI",
+    title: "AI Workshops | Hands-On Training Programs",
     description:
       "Transform your team with immersive AI workshops led by industry pioneers. Practical, hands-on training programs tailored to your organization.",
     images: [
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Workshops | Speak About AI",
+    title: "AI Workshops | Hands-On Training",
     description:
       "Transform your team with immersive AI workshops led by industry pioneers.",
     images: ["/hero-image.jpg"],
