@@ -2,6 +2,7 @@
 
 import type React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -88,11 +89,13 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                 <div className="lg:sticky lg:top-24" suppressHydrationWarning>
                   <Card className="shadow-lg border border-gray-200">
                     <div className="relative aspect-square overflow-hidden rounded-t-lg">
-                      <img
+                      <Image
                         src={imageUrl}
                         alt={`${speaker.name} - AI Keynote Speaker`}
-                        className="w-full h-full object-cover"
-                        loading="eager"
+                        fill
+                        className="object-cover"
+                        priority
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
                       />
                       {speaker.fee && (
                         <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-md">

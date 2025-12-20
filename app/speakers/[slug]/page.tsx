@@ -69,13 +69,6 @@ export default async function SpeakerPage({ params }: SpeakerPageProps) {
       "name": "Speak About AI",
       "description": "Premier AI Keynote Speakers Bureau"
     },
-    "performerIn": {
-      "@type": "Event",
-      "name": "AI Keynote Speaking Engagements",
-      "description": `Book ${speaker.name} for keynote speeches on AI and technology`,
-      "eventAttendanceMode": "https://schema.org/MixedEventAttendanceMode",
-      "eventStatus": "https://schema.org/EventScheduled"
-    },
     "offers": {
       "@type": "Offer",
       "description": `Book ${speaker.name} for keynote speaking engagements on AI and technology topics`,

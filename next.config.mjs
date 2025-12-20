@@ -7,7 +7,27 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    // Enable Next.js image optimization for better Core Web Vitals
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.ctfassets.net',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.ctfassets.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'sheets.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+      },
+    ],
+    // Use modern formats for better compression
+    formats: ['image/avif', 'image/webp'],
   },
   // Enable compression for better performance
   compress: true,

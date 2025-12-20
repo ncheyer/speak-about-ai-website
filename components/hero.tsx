@@ -76,12 +76,13 @@ export default function Hero() {
           <div className="relative">
             <div className="relative rounded-xl overflow-hidden shadow-2xl">
               <Image
-                src="/robert-strong-adam-cheyer-peter-norvig-on-stage-at-microsoft.png"
+                src="/robert-strong-adam-cheyer-peter-norvig-on-stage-at-microsoft.jpg"
                 alt="Robert Strong, Adam Cheyer (Siri Co-Founder), and Peter Norvig (Google & Stanford AI Researcher) on stage at a Microsoft event"
                 width={700}
                 height={467}
                 className="w-full h-auto object-cover"
                 priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 700px"
               />
             </div>
           </div>

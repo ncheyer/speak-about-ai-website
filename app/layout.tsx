@@ -99,6 +99,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Preconnect to external resources for faster loading */}
+        <link rel="preconnect" href="https://images.ctfassets.net" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://images.ctfassets.net" />
+
         <link rel="icon" href="/new-ai-logo.png" sizes="any" />
         <link rel="apple-touch-icon" href="/new-ai-logo.png" />
         <TrackingScripts />
