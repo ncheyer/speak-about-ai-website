@@ -29,7 +29,20 @@ import {
   CreditCard,
   Star,
   Briefcase,
-  ChevronDown
+  ChevronDown,
+  Search,
+  Sparkles,
+  Building2,
+  Globe,
+  Linkedin,
+  ExternalLink,
+  Loader2,
+  Users,
+  Filter,
+  Mail,
+  MessageSquare,
+  ChevronRight,
+  Check
 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -58,6 +71,35 @@ function NewProposalPageContent() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("")
   const [speakerSearchOpen, setSpeakerSearchOpen] = useState<{ [key: number]: boolean }>({})
   const [dealStatusFilter, setDealStatusFilter] = useState<"all" | "qualified" | "proposal" | "negotiation">("qualified")
+
+  // Speaker discovery state
+  const [showSpeakerDiscovery, setShowSpeakerDiscovery] = useState(false)
+  const [speakerTopicFilter, setSpeakerTopicFilter] = useState<string>("")
+  const [speakerSuggestions, setSpeakerSuggestions] = useState<any[]>([])
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+
+  // Client research state
+  const [clientResearch, setClientResearch] = useState<{
+    website?: string | null
+    linkedin?: string | null
+    person_linkedin?: string | null
+    person_role?: string | null
+    description?: string | null
+    industry?: string | null
+    company_size?: string | null
+    speaking_context?: string | null
+    key_topics?: string[]
+  } | null>(null)
+  const [loadingResearch, setLoadingResearch] = useState(false)
+
+  // Gmail pull state
+  const [gmailData, setGmailData] = useState<{
+    emails: any[]
+    extracted: any
+    emailCount?: number
+  } | null>(null)
+  const [loadingGmail, setLoadingGmail] = useState(false)
+  const [showEmailThread, setShowEmailThread] = useState(false)
   
   // Edit mode
   const editId = searchParams.get('edit')
@@ -384,6 +426,7 @@ function NewProposalPageContent() {
               topics: requestedSpeaker.topics || requestedSpeaker.primary_topics || [],
               fee: speakerNames.length > 1 ? Math.round((deal.deal_value || 0) / speakerNames.length) : (deal.deal_value || 0),
               availability_confirmed: false,
+              fee_status: "estimated" as "confirmed" | "estimated",
               video_url: videoUrl,
               image_url: requestedSpeaker.image || requestedSpeaker.headshot_url || ""
             })
@@ -397,6 +440,7 @@ function NewProposalPageContent() {
               topics: [],
               fee: speakerNames.length > 1 ? Math.round((deal.deal_value || 0) / speakerNames.length) : (deal.deal_value || 0),
               availability_confirmed: false,
+              fee_status: "estimated" as "confirmed" | "estimated",
               video_url: ""
             })
           }
@@ -451,6 +495,7 @@ function NewProposalPageContent() {
       topics: [],
       fee: 0,
       availability_confirmed: false,
+      fee_status: "estimated" as "confirmed" | "estimated",
       video_url: ""
     }]
     setProposalSpeakers(newSpeakers)
@@ -500,6 +545,238 @@ function NewProposalPageContent() {
   const calculateTotal = () => {
     return services.reduce((sum, service) => sum + (service.included ? service.price : 0), 0)
   }
+
+  // Research client/company
+  const researchClient = async () => {
+    if (!formData.client_company && !formData.client_name) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a client name or company first",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setLoadingResearch(true)
+    try {
+      const response = await fetch("/api/proposals/research-client", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_name: formData.client_name,
+          client_company: formData.client_company,
+          client_email: formData.client_email,
+          event_title: formData.event_title
+        })
+      })
+
+      if (response.ok) {
+        const { research } = await response.json()
+        setClientResearch(research)
+        toast({
+          title: "Research Complete",
+          description: "Client information has been gathered"
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to research client",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error researching client:", error)
+      toast({
+        title: "Error",
+        description: "Failed to research client",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingResearch(false)
+    }
+  }
+
+  // Pull emails from Gmail
+  const pullFromGmail = async () => {
+    if (!formData.client_email) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a client email first",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setLoadingGmail(true)
+    try {
+      const response = await fetch("/api/proposals/pull-gmail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_email: formData.client_email,
+          client_name: formData.client_name,
+          client_company: formData.client_company,
+          event_title: formData.event_title
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.needsAuth) {
+        // Open Gmail auth in new window
+        window.open(data.authUrl, '_blank', 'width=600,height=700')
+        toast({
+          title: "Gmail Authorization Required",
+          description: "Please authorize Gmail access in the popup window, then try again"
+        })
+        return
+      }
+
+      if (response.ok) {
+        setGmailData(data)
+        if (data.emailCount > 0) {
+          toast({
+            title: "Emails Retrieved",
+            description: `Found ${data.emailCount} emails with this client`
+          })
+        } else {
+          toast({
+            title: "No Emails Found",
+            description: "No email correspondence found with this client"
+          })
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to pull emails",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error pulling Gmail:", error)
+      toast({
+        title: "Error",
+        description: "Failed to pull emails from Gmail",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingGmail(false)
+    }
+  }
+
+  // Apply extracted Gmail data to form
+  const applyGmailData = () => {
+    if (!gmailData?.extracted) return
+
+    const ext = gmailData.extracted
+    setFormData(prev => ({
+      ...prev,
+      event_title: ext.event_title || prev.event_title,
+      event_location: ext.event_location || prev.event_location,
+      event_description: ext.event_description || prev.event_description,
+      attendee_count: ext.attendee_count?.toString() || prev.attendee_count,
+      event_format: ext.event_format || prev.event_format
+    }))
+
+    toast({
+      title: "Data Applied",
+      description: "Extracted information has been applied to the form"
+    })
+  }
+
+  // Get AI speaker suggestions
+  const getSpeakerSuggestions = async () => {
+    if (speakers.length === 0) {
+      toast({
+        title: "No Speakers Available",
+        description: "Speaker catalog is still loading",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setLoadingSuggestions(true)
+    try {
+      const response = await fetch("/api/proposals/suggest-speakers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: {
+            title: formData.event_title,
+            type: formData.event_type,
+            company: formData.client_company,
+            description: formData.event_description,
+            location: formData.event_location,
+            attendee_count: formData.attendee_count
+          },
+          speakers: speakers,
+          budget: calculateTotal() || undefined
+        })
+      })
+
+      if (response.ok) {
+        const { suggestions } = await response.json()
+        setSpeakerSuggestions(suggestions)
+        toast({
+          title: "Suggestions Ready",
+          description: `Found ${suggestions.length} recommended speakers`
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to get speaker suggestions",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error getting suggestions:", error)
+      toast({
+        title: "Error",
+        description: "Failed to get speaker suggestions",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingSuggestions(false)
+    }
+  }
+
+  // Add speaker from suggestion
+  const addSpeakerFromSuggestion = (suggestedSpeaker: any) => {
+    const firstVideo = suggestedSpeaker.videos && suggestedSpeaker.videos.length > 0
+      ? suggestedSpeaker.videos[0]
+      : null
+    const videoUrl = firstVideo ? (typeof firstVideo === 'string' ? firstVideo : firstVideo.url || '') : ""
+
+    const newSpeaker: SpeakerType = {
+      name: suggestedSpeaker.name,
+      slug: suggestedSpeaker.slug,
+      title: suggestedSpeaker.title || "",
+      bio: suggestedSpeaker.bio || suggestedSpeaker.shortBio || "",
+      topics: suggestedSpeaker.topics || suggestedSpeaker.primary_topics || [],
+      fee: 0,
+      availability_confirmed: false,
+      fee_status: "estimated",
+      video_url: videoUrl,
+      image_url: suggestedSpeaker.image || suggestedSpeaker.headshot_url || "",
+      relevance_text: suggestedSpeaker.suggestion_reason || ""
+    }
+
+    setProposalSpeakers(prev => [...prev, newSpeaker])
+    // Remove from suggestions
+    setSpeakerSuggestions(prev => prev.filter(s => s.name !== suggestedSpeaker.name))
+    toast({
+      title: "Speaker Added",
+      description: `${suggestedSpeaker.name} has been added to the proposal`
+    })
+  }
+
+  // Get unique topics from all speakers
+  const allTopics = [...new Set(speakers.flatMap(s => s.topics || s.primary_topics || []))].slice(0, 15)
+
+  // Filter speakers by topic
+  const filteredSpeakers = speakerTopicFilter
+    ? speakers.filter(s => (s.topics || s.primary_topics || []).includes(speakerTopicFilter))
+    : speakers
 
   const updateDealWithSpeakers = async (dealId: string, speakers: SpeakerType[], proposalStatus: string) => {
     if (!dealId || speakers.length === 0) return
@@ -747,6 +1024,337 @@ function NewProposalPageContent() {
                   />
                 </div>
               </div>
+
+              {/* Research Button */}
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={researchClient}
+                  disabled={loadingResearch || (!formData.client_company && !formData.client_name)}
+                  className="w-full"
+                >
+                  {loadingResearch ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Researching...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Research Client/Company with AI
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Research Results */}
+              {clientResearch && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-blue-900 flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Company Research Results
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setClientResearch(null)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      Dismiss
+                    </Button>
+                  </div>
+
+                  {clientResearch.description && (
+                    <p className="text-sm text-gray-700">{clientResearch.description}</p>
+                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    {clientResearch.industry && (
+                      <Badge variant="secondary">{clientResearch.industry}</Badge>
+                    )}
+                    {clientResearch.company_size && (
+                      <Badge variant="outline">{clientResearch.company_size}</Badge>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    {clientResearch.website && (
+                      <a
+                        href={clientResearch.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                      >
+                        <Globe className="h-3 w-3" />
+                        Website
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    {clientResearch.linkedin && (
+                      <a
+                        href={clientResearch.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                      >
+                        <Linkedin className="h-3 w-3" />
+                        Company
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    {clientResearch.person_linkedin && (
+                      <a
+                        href={clientResearch.person_linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                      >
+                        <User className="h-3 w-3" />
+                        {formData.client_name || 'Contact'}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+
+                  {clientResearch.person_role && (
+                    <p className="text-xs text-gray-600">
+                      <span className="text-gray-500">Likely Role: </span>
+                      {clientResearch.person_role}
+                    </p>
+                  )}
+
+                  {clientResearch.speaking_context && (
+                    <div className="bg-white rounded p-3 border border-blue-100">
+                      <p className="text-xs text-gray-500 mb-1">Speaking Opportunity Context</p>
+                      <p className="text-sm text-gray-700">{clientResearch.speaking_context}</p>
+                    </div>
+                  )}
+
+                  {clientResearch.key_topics && clientResearch.key_topics.length > 0 && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Recommended Topics</p>
+                      <div className="flex flex-wrap gap-1">
+                        {clientResearch.key_topics.map((topic, i) => (
+                          <Badge key={i} variant="outline" className="text-xs">
+                            {topic}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Gmail Pull Button */}
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={pullFromGmail}
+                  disabled={loadingGmail || !formData.client_email}
+                  className="w-full"
+                >
+                  {loadingGmail ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Searching Emails...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Pull from Gmail Thread
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Gmail Results */}
+              {gmailData && (
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-purple-900 flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Email Thread Analysis ({gmailData.emailCount} emails)
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setGmailData(null)}
+                      className="text-purple-600 hover:text-purple-800"
+                    >
+                      Dismiss
+                    </Button>
+                  </div>
+
+                  {/* Extracted Summary */}
+                  {gmailData.extracted?.conversation_summary && (
+                    <div className="bg-white rounded p-3 border border-purple-100">
+                      <p className="text-xs text-gray-500 mb-1">Conversation Summary</p>
+                      <p className="text-sm text-gray-700">{gmailData.extracted.conversation_summary}</p>
+                    </div>
+                  )}
+
+                  {/* Extracted Event Details */}
+                  {gmailData.extracted && (
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {gmailData.extracted.event_title && (
+                        <div>
+                          <span className="text-gray-500">Event: </span>
+                          <span className="font-medium">{gmailData.extracted.event_title}</span>
+                        </div>
+                      )}
+                      {gmailData.extracted.event_date && (
+                        <div>
+                          <span className="text-gray-500">Date: </span>
+                          <span className="font-medium">{gmailData.extracted.event_date}</span>
+                        </div>
+                      )}
+                      {gmailData.extracted.event_location && (
+                        <div>
+                          <span className="text-gray-500">Location: </span>
+                          <span className="font-medium">{gmailData.extracted.event_location}</span>
+                        </div>
+                      )}
+                      {gmailData.extracted.attendee_count && (
+                        <div>
+                          <span className="text-gray-500">Attendees: </span>
+                          <span className="font-medium">{gmailData.extracted.attendee_count}</span>
+                        </div>
+                      )}
+                      {gmailData.extracted.budget_mentioned && (
+                        <div className="col-span-2">
+                          <span className="text-gray-500">Budget: </span>
+                          <span className="font-medium text-green-700">{gmailData.extracted.budget_mentioned}</span>
+                        </div>
+                      )}
+                      {gmailData.extracted.speaker_preferences && (
+                        <div className="col-span-2">
+                          <span className="text-gray-500">Speaker Preferences: </span>
+                          <span className="font-medium">{gmailData.extracted.speaker_preferences}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Questions to Address */}
+                  {gmailData.extracted?.questions_to_address?.length > 0 && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Client Questions to Address</p>
+                      <ul className="text-sm space-y-1">
+                        {gmailData.extracted.questions_to_address.map((q: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <MessageSquare className="h-3 w-3 mt-1 text-purple-500 flex-shrink-0" />
+                            <span>{q}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Next Steps */}
+                  {gmailData.extracted?.next_steps && (
+                    <div className="bg-white rounded p-3 border border-purple-100">
+                      <p className="text-xs text-gray-500 mb-1">Suggested Next Steps</p>
+                      <p className="text-sm text-gray-700 flex items-center gap-2">
+                        <ChevronRight className="h-4 w-4 text-purple-500" />
+                        {gmailData.extracted.next_steps}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Apply Buttons */}
+                  {gmailData.extracted && (
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={applyGmailData}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        <Check className="h-4 w-4 mr-2" />
+                        Apply All Data
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => {
+                          // Build comprehensive event description from email analysis
+                          const ext = gmailData.extracted
+                          const parts = []
+
+                          if (ext.conversation_summary) {
+                            parts.push(`Context: ${ext.conversation_summary}`)
+                          }
+                          if (ext.event_description) {
+                            parts.push(`Event: ${ext.event_description}`)
+                          }
+                          if (ext.speaker_preferences) {
+                            parts.push(`Speaker Preferences: ${ext.speaker_preferences}`)
+                          }
+                          if (ext.key_requirements?.length > 0) {
+                            parts.push(`Requirements: ${ext.key_requirements.join('; ')}`)
+                          }
+                          if (ext.budget_mentioned) {
+                            parts.push(`Budget Notes: ${ext.budget_mentioned}`)
+                          }
+                          if (ext.questions_to_address?.length > 0) {
+                            parts.push(`Questions to Address: ${ext.questions_to_address.join('; ')}`)
+                          }
+
+                          const description = parts.join('\n\n')
+                          setFormData(prev => ({
+                            ...prev,
+                            event_description: description
+                          }))
+
+                          toast({
+                            title: "Summary Applied",
+                            description: "Email analysis has been added to event description"
+                          })
+                        }}
+                        className="flex-1 bg-purple-600 hover:bg-purple-700"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Add to Event Description
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Show Email Thread Toggle */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowEmailThread(!showEmailThread)}
+                    className="w-full text-purple-600"
+                  >
+                    {showEmailThread ? "Hide Email Thread" : "View Email Thread"}
+                  </Button>
+
+                  {/* Email Thread */}
+                  {showEmailThread && gmailData.emails.length > 0 && (
+                    <div className="max-h-64 overflow-y-auto border border-purple-100 rounded bg-white">
+                      {gmailData.emails.map((email: any, i: number) => (
+                        <div key={i} className="p-3 border-b last:border-b-0">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-xs font-medium text-gray-900 truncate max-w-[60%]">
+                              {email.from?.split('<')[0].trim() || email.from}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {new Date(email.date).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 font-medium mb-1">{email.subject}</p>
+                          <p className="text-xs text-gray-500 line-clamp-2">{email.snippet}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </Card>
 
@@ -854,7 +1462,171 @@ function NewProposalPageContent() {
             </div>
 
             {proposalSpeakers.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No speakers added yet</p>
+              <div className="space-y-6">
+                {/* Speaker Discovery Panel */}
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
+                  <div className="text-center mb-6">
+                    <Users className="h-12 w-12 mx-auto text-blue-500 mb-3" />
+                    <h3 className="text-lg font-semibold text-gray-900">Find the Perfect Speaker</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Get AI-powered suggestions based on your event, or browse our speaker catalog
+                    </p>
+                  </div>
+
+                  {/* AI Suggestions Button */}
+                  <div className="flex justify-center mb-6">
+                    <Button
+                      onClick={getSpeakerSuggestions}
+                      disabled={loadingSuggestions}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    >
+                      {loadingSuggestions ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Finding Best Matches...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Get AI Speaker Suggestions
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* AI Suggestions Results */}
+                  {speakerSuggestions.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-purple-500" />
+                        Recommended for Your Event
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {speakerSuggestions.map((suggestion, idx) => (
+                          <Card key={idx} className="p-3 hover:border-blue-400 transition-colors">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <p className="font-medium text-gray-900">{suggestion.name}</p>
+                                <p className="text-xs text-gray-500 line-clamp-1">{suggestion.title}</p>
+                                {suggestion.suggestion_reason && (
+                                  <p className="text-xs text-blue-600 mt-1 italic">
+                                    "{suggestion.suggestion_reason}"
+                                  </p>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => addSpeakerFromSuggestion(suggestion)}
+                                className="ml-2 flex-shrink-0"
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Topic Filters */}
+                  <div className="border-t border-blue-200 pt-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Filter className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">Browse by Topic</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <Button
+                        variant={speakerTopicFilter === "" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSpeakerTopicFilter("")}
+                        className="text-xs"
+                      >
+                        All
+                      </Button>
+                      {allTopics.map((topic) => (
+                        <Button
+                          key={topic}
+                          variant={speakerTopicFilter === topic ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setSpeakerTopicFilter(topic)}
+                          className="text-xs"
+                        >
+                          {topic}
+                        </Button>
+                      ))}
+                    </div>
+
+                    {/* Speaker Browse Grid */}
+                    {showSpeakerDiscovery && (
+                      <div className="max-h-80 overflow-y-auto border rounded-lg bg-white p-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {filteredSpeakers.slice(0, 20).map((s) => (
+                            <Card
+                              key={s.id}
+                              className="p-2 cursor-pointer hover:border-blue-400 transition-colors"
+                              onClick={() => {
+                                const firstVideo = s.videos && s.videos.length > 0 ? s.videos[0] : null
+                                const videoUrl = firstVideo ? (typeof firstVideo === 'string' ? firstVideo : firstVideo.url || '') : ""
+
+                                const newSpeaker: SpeakerType = {
+                                  name: s.name,
+                                  slug: s.slug,
+                                  title: s.title || "",
+                                  bio: s.bio || s.shortBio || "",
+                                  topics: s.topics || s.primary_topics || [],
+                                  fee: 0,
+                                  availability_confirmed: false,
+                                  fee_status: "estimated",
+                                  video_url: videoUrl,
+                                  image_url: s.image || s.headshot_url || ""
+                                }
+                                setProposalSpeakers([newSpeaker])
+                                setShowSpeakerDiscovery(false)
+                              }}
+                            >
+                              <p className="font-medium text-sm">{s.name}</p>
+                              <p className="text-xs text-gray-500 line-clamp-1">{s.title}</p>
+                              {(s.topics || s.primary_topics || []).length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {(s.topics || s.primary_topics || []).slice(0, 2).map((t: string, i: number) => (
+                                    <Badge key={i} variant="secondary" className="text-xs px-1 py-0">
+                                      {t}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </Card>
+                          ))}
+                        </div>
+                        {filteredSpeakers.length > 20 && (
+                          <p className="text-xs text-gray-500 text-center mt-2">
+                            Showing 20 of {filteredSpeakers.length} speakers. Use filters or search for more.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowSpeakerDiscovery(!showSpeakerDiscovery)}
+                      className="w-full mt-3"
+                    >
+                      <Search className="h-4 w-4 mr-2" />
+                      {showSpeakerDiscovery ? "Hide Speaker Catalog" : "Browse All Speakers"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Or manually add */}
+                <div className="text-center">
+                  <p className="text-sm text-gray-500 mb-2">Or add a speaker manually</p>
+                  <Button variant="outline" onClick={addSpeaker}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Speaker Manually
+                  </Button>
+                </div>
+              </div>
             ) : (
               <div className="space-y-4">
                 {proposalSpeakers.map((speaker, index) => (
@@ -977,7 +1749,47 @@ function NewProposalPageContent() {
                           placeholder="0"
                         />
                       </div>
-                      
+
+                      <div>
+                        <Label>Fee Status</Label>
+                        <Select
+                          value={speaker.fee_status || "estimated"}
+                          onValueChange={(value: "confirmed" | "estimated") =>
+                            updateSpeaker(index, { ...speaker, fee_status: value })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="estimated">Estimated</SelectItem>
+                            <SelectItem value="confirmed">Confirmed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label>Availability Status</Label>
+                        <Select
+                          value={speaker.availability_confirmed ? "confirmed" : "pending"}
+                          onValueChange={(value) =>
+                            updateSpeaker(index, { ...speaker, availability_confirmed: value === "confirmed" })
+                          }
+                        >
+                          <SelectTrigger className={cn(
+                            speaker.availability_confirmed
+                              ? "border-green-500 bg-green-50"
+                              : "border-yellow-500 bg-yellow-50"
+                          )}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Availability Pending</SelectItem>
+                            <SelectItem value="confirmed">Availability Confirmed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       <div className="col-span-2">
                         <Label>Title</Label>
                         <Input
@@ -996,16 +1808,77 @@ function NewProposalPageContent() {
                           placeholder="Brief speaker bio"
                         />
                       </div>
-                      
-                      <div className="col-span-2 flex items-center space-x-2 p-4 bg-blue-50 rounded-lg">
-                        <Switch
-                          id={`availability-${index}`}
-                          checked={speaker.availability_confirmed || false}
-                          onCheckedChange={(checked) => updateSpeaker(index, { ...speaker, availability_confirmed: checked })}
+
+                      <div className="col-span-2">
+                        <div className="flex justify-between items-center mb-2">
+                          <Label>Why This Speaker is Relevant</Label>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={async () => {
+                              if (!speaker.name) {
+                                toast({
+                                  title: "Missing Information",
+                                  description: "Please select a speaker first",
+                                  variant: "destructive"
+                                })
+                                return
+                              }
+
+                              try {
+                                const response = await fetch("/api/proposals/generate-relevance", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({
+                                    speaker: {
+                                      name: speaker.name,
+                                      title: speaker.title,
+                                      bio: speaker.bio,
+                                      topics: speaker.topics
+                                    },
+                                    event: {
+                                      title: formData.event_title,
+                                      type: formData.event_type,
+                                      description: formData.event_description,
+                                      company: formData.client_company
+                                    }
+                                  })
+                                })
+
+                                if (response.ok) {
+                                  const { relevance } = await response.json()
+                                  updateSpeaker(index, { ...speaker, relevance_text: relevance })
+                                  toast({
+                                    title: "Generated",
+                                    description: "Relevance text generated successfully"
+                                  })
+                                } else {
+                                  toast({
+                                    title: "Error",
+                                    description: "Failed to generate relevance text",
+                                    variant: "destructive"
+                                  })
+                                }
+                              } catch (error) {
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to generate relevance text",
+                                  variant: "destructive"
+                                })
+                              }
+                            }}
+                            className="text-xs"
+                          >
+                            ✨ AI Generate
+                          </Button>
+                        </div>
+                        <Textarea
+                          value={speaker.relevance_text || ""}
+                          onChange={(e) => updateSpeaker(index, { ...speaker, relevance_text: e.target.value })}
+                          rows={2}
+                          placeholder="One sentence explaining why this speaker is perfect for this event..."
                         />
-                        <Label htmlFor={`availability-${index}`} className="cursor-pointer">
-                          Availability Confirmed for Event Date
-                        </Label>
                       </div>
                     </div>
                   </Card>

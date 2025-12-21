@@ -26,6 +26,7 @@ export interface Speaker {
   bio: string
   topics: string[]
   fee: number
+  fee_status?: 'confirmed' | 'estimated'
   image_url?: string
   video_url?: string
   availability_confirmed?: boolean
@@ -163,6 +164,27 @@ function generateSecureToken(length: number = 32): string {
   return result
 }
 
+// Generate a unique proposal number based on existing max
+async function generateUniqueProposalNumber(): Promise<string> {
+  const year = new Date().getFullYear()
+
+  try {
+    // Find the max proposal number for this year
+    const [result] = await sql`
+      SELECT MAX(CAST(SUBSTRING(proposal_number FROM 'PROP-${year}-([0-9]+)') AS INTEGER)) as max_num
+      FROM proposals
+      WHERE proposal_number LIKE ${'PROP-' + year + '-%'}
+    `
+
+    const nextNum = (result?.max_num || 0) + 1
+    return `PROP-${year}-${nextNum.toString().padStart(4, '0')}`
+  } catch (error) {
+    // Fallback: use timestamp-based number
+    const timestamp = Date.now().toString().slice(-6)
+    return `PROP-${year}-${timestamp}`
+  }
+}
+
 // Create a new proposal
 export async function createProposal(proposalData: Omit<Proposal, 'id' | 'created_at' | 'updated_at' | 'proposal_number' | 'access_token' | 'views'>): Promise<Proposal | null> {
   if (!databaseAvailable || !sql) {
@@ -178,62 +200,85 @@ export async function createProposal(proposalData: Omit<Proposal, 'id' | 'create
     speakers_count: proposalData.speakers?.length
   })
 
-  try {
-    // Generate proposal number
-    const [{ proposal_number }] = await sql`SELECT generate_proposal_number() as proposal_number`
-    
-    // Generate access token
-    const access_token = generateSecureToken(40)
-    
-    const [proposal] = await sql`
-      INSERT INTO proposals (
-        deal_id, proposal_number, title, status, version,
-        client_name, client_email, client_company, client_title,
-        executive_summary, speakers,
-        event_title, event_date, event_location, event_type, event_format,
-        attendee_count, event_description,
-        services, deliverables,
-        subtotal, discount_percentage, discount_amount, total_investment,
-        payment_terms, payment_schedule,
-        why_us, testimonials, case_studies, terms_conditions,
-        valid_until, access_token, created_by
-      ) VALUES (
-        ${proposalData.deal_id}, ${proposal_number}, ${proposalData.title},
-        ${proposalData.status || 'draft'}, ${proposalData.version || 1},
-        ${proposalData.client_name}, ${proposalData.client_email},
-        ${proposalData.client_company}, ${proposalData.client_title},
-        ${proposalData.executive_summary}, ${JSON.stringify(proposalData.speakers || [])},
-        ${proposalData.event_title}, ${proposalData.event_date},
-        ${proposalData.event_location}, ${proposalData.event_type}, ${proposalData.event_format},
-        ${proposalData.attendee_count}, ${proposalData.event_description},
-        ${JSON.stringify(proposalData.services || [])}, ${JSON.stringify(proposalData.deliverables || [])},
-        ${proposalData.subtotal}, ${proposalData.discount_percentage || 0},
-        ${proposalData.discount_amount || 0}, ${proposalData.total_investment},
-        ${proposalData.payment_terms}, ${JSON.stringify(proposalData.payment_schedule || [])},
-        ${proposalData.why_us}, ${JSON.stringify(proposalData.testimonials || [])},
-        ${JSON.stringify(proposalData.case_studies || [])}, ${proposalData.terms_conditions},
-        ${proposalData.valid_until}, ${access_token}, ${proposalData.created_by}
-      )
-      RETURNING *
-    `
-    
-    return {
-      ...proposal,
-      speakers: proposal.speakers || [],
-      services: proposal.services || [],
-      deliverables: proposal.deliverables || [],
-      payment_schedule: proposal.payment_schedule || [],
-      testimonials: proposal.testimonials || [],
-      case_studies: proposal.case_studies || []
-    } as Proposal
-  } catch (error) {
-    console.error("Error creating proposal:", error)
-    console.error("Error details:", {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    })
-    return null
+  // Retry up to 3 times with unique proposal numbers
+  const maxRetries = 3
+  let lastError: Error | null = null
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Generate proposal number - use our own function instead of the DB function
+      const proposal_number = await generateUniqueProposalNumber()
+      console.log(`Attempt ${attempt}: Generated proposal number: ${proposal_number}`)
+
+      // Generate access token
+      const access_token = generateSecureToken(40)
+
+      const [proposal] = await sql`
+        INSERT INTO proposals (
+          deal_id, proposal_number, title, status, version,
+          client_name, client_email, client_company, client_title,
+          executive_summary, speakers,
+          event_title, event_date, event_location, event_type, event_format,
+          attendee_count, event_description,
+          services, deliverables,
+          subtotal, discount_percentage, discount_amount, total_investment,
+          payment_terms, payment_schedule,
+          why_us, testimonials, case_studies, terms_conditions,
+          valid_until, access_token, created_by
+        ) VALUES (
+          ${proposalData.deal_id}, ${proposal_number}, ${proposalData.title},
+          ${proposalData.status || 'draft'}, ${proposalData.version || 1},
+          ${proposalData.client_name}, ${proposalData.client_email},
+          ${proposalData.client_company}, ${proposalData.client_title},
+          ${proposalData.executive_summary}, ${JSON.stringify(proposalData.speakers || [])},
+          ${proposalData.event_title}, ${proposalData.event_date},
+          ${proposalData.event_location}, ${proposalData.event_type}, ${proposalData.event_format},
+          ${proposalData.attendee_count}, ${proposalData.event_description},
+          ${JSON.stringify(proposalData.services || [])}, ${JSON.stringify(proposalData.deliverables || [])},
+          ${proposalData.subtotal}, ${proposalData.discount_percentage || 0},
+          ${proposalData.discount_amount || 0}, ${proposalData.total_investment},
+          ${proposalData.payment_terms}, ${JSON.stringify(proposalData.payment_schedule || [])},
+          ${proposalData.why_us}, ${JSON.stringify(proposalData.testimonials || [])},
+          ${JSON.stringify(proposalData.case_studies || [])}, ${proposalData.terms_conditions},
+          ${proposalData.valid_until}, ${access_token}, ${proposalData.created_by}
+        )
+        RETURNING *
+      `
+
+      console.log(`Proposal created successfully with number: ${proposal_number}`)
+
+      return {
+        ...proposal,
+        speakers: proposal.speakers || [],
+        services: proposal.services || [],
+        deliverables: proposal.deliverables || [],
+        payment_schedule: proposal.payment_schedule || [],
+        testimonials: proposal.testimonials || [],
+        case_studies: proposal.case_studies || []
+      } as Proposal
+    } catch (error: any) {
+      lastError = error
+
+      // Check if it's a duplicate key error
+      if (error.code === '23505' && error.constraint === 'proposals_proposal_number_key') {
+        console.warn(`Attempt ${attempt}: Duplicate proposal number, retrying...`)
+        // Wait a bit before retrying to reduce collision chance
+        await new Promise(resolve => setTimeout(resolve, 100 * attempt))
+        continue
+      }
+
+      // For other errors, don't retry
+      console.error("Error creating proposal:", error)
+      console.error("Error details:", {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      })
+      return null
+    }
   }
+
+  console.error("Failed to create proposal after all retries:", lastError)
+  return null
 }
 
 // Get all proposals
