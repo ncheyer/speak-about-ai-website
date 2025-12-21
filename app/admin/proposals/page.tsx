@@ -57,10 +57,16 @@ import { useToast } from "@/hooks/use-toast"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import type { Proposal } from "@/lib/proposals-db"
 
+interface Deal {
+  id: number
+  status: string
+}
+
 export default function ProposalsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [proposals, setProposals] = useState<Proposal[]>([])
+  const [deals, setDeals] = useState<Deal[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("all")
@@ -70,6 +76,7 @@ export default function ProposalsPage() {
 
   useEffect(() => {
     fetchProposals()
+    fetchDeals()
   }, [])
 
   const fetchProposals = async () => {
@@ -97,6 +104,18 @@ export default function ProposalsPage() {
     }
   }
 
+  const fetchDeals = async () => {
+    try {
+      const response = await fetch("/api/deals")
+      if (response.ok) {
+        const data = await response.json()
+        setDeals(data)
+      }
+    } catch (error) {
+      console.error("Error fetching deals:", error)
+    }
+  }
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "draft":
@@ -117,7 +136,7 @@ export default function ProposalsPage() {
   }
 
   const filteredProposals = proposals.filter(proposal => {
-    const matchesSearch = 
+    const matchesSearch =
       proposal.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       proposal.client_company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       proposal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -125,7 +144,14 @@ export default function ProposalsPage() {
 
     const matchesTab = activeTab === "all" || proposal.status === activeTab
 
-    return matchesSearch && matchesTab
+    // Filter out proposals linked to won/lost deals
+    // Keep proposals that:
+    // 1. Don't have a deal_id (standalone proposals), OR
+    // 2. Have a deal_id but the deal is still active (not won or lost)
+    const deal = proposal.deal_id ? deals.find(d => d.id === proposal.deal_id) : null
+    const isDealActive = !proposal.deal_id || !deal || !["won", "lost"].includes(deal.status)
+
+    return matchesSearch && matchesTab && isDealActive
   })
 
   const handleDeleteProposal = async () => {
@@ -201,10 +227,16 @@ export default function ProposalsPage() {
   }
 
   const getProposalStats = () => {
-    const total = proposals.length
-    const sent = proposals.filter(p => ["sent", "viewed", "accepted", "rejected"].includes(p.status)).length
-    const accepted = proposals.filter(p => p.status === "accepted").length
-    const totalValue = proposals
+    // Filter out proposals linked to won/lost deals for stats
+    const activeProposals = proposals.filter(proposal => {
+      const deal = proposal.deal_id ? deals.find(d => d.id === proposal.deal_id) : null
+      return !proposal.deal_id || !deal || !["won", "lost"].includes(deal.status)
+    })
+
+    const total = activeProposals.length
+    const sent = activeProposals.filter(p => ["sent", "viewed", "accepted", "rejected"].includes(p.status)).length
+    const accepted = activeProposals.filter(p => p.status === "accepted").length
+    const totalValue = activeProposals
       .filter(p => p.status === "accepted")
       .reduce((sum, p) => sum + p.total_investment, 0)
     const conversionRate = sent > 0 ? (accepted / sent) * 100 : 0

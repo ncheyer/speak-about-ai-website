@@ -57,6 +57,7 @@ function NewProposalPageContent() {
   const [showDealDialog, setShowDealDialog] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<string>("")
   const [speakerSearchOpen, setSpeakerSearchOpen] = useState<{ [key: number]: boolean }>({})
+  const [dealStatusFilter, setDealStatusFilter] = useState<"all" | "qualified" | "proposal" | "negotiation">("qualified")
   
   // Edit mode
   const editId = searchParams.get('edit')
@@ -159,11 +160,42 @@ function NewProposalPageContent() {
       const response = await fetch("/api/deals")
       if (response.ok) {
         const data = await response.json()
-        setDeals(data.filter((d: Deal) => ["qualified", "proposal", "negotiation"].includes(d.status)))
+        const filteredDeals = data.filter((d: Deal) => ["qualified", "proposal", "negotiation"].includes(d.status))
+
+        // Sort deals: qualified first, then by priority (urgent > high > medium > low), then by date
+        const sortedDeals = filteredDeals.sort((a: Deal, b: Deal) => {
+          // First priority: status (qualified > proposal > negotiation)
+          const statusOrder = { qualified: 0, proposal: 1, negotiation: 2 }
+          const statusDiff = statusOrder[a.status as keyof typeof statusOrder] - statusOrder[b.status as keyof typeof statusOrder]
+          if (statusDiff !== 0) return statusDiff
+
+          // Second priority: deal priority (urgent > high > medium > low)
+          const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 }
+          const priorityDiff = priorityOrder[a.priority as keyof typeof priorityOrder] - priorityOrder[b.priority as keyof typeof priorityOrder]
+          if (priorityDiff !== 0) return priorityDiff
+
+          // Third priority: event date (earlier first)
+          return new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+        })
+
+        setDeals(sortedDeals)
       }
     } catch (error) {
       console.error("Error fetching deals:", error)
     }
+  }
+
+  // Filter deals based on selected status
+  const filteredDeals = dealStatusFilter === "all"
+    ? deals
+    : deals.filter(d => d.status === dealStatusFilter)
+
+  // Get counts by status
+  const dealCounts = {
+    all: deals.length,
+    qualified: deals.filter(d => d.status === "qualified").length,
+    proposal: deals.filter(d => d.status === "proposal").length,
+    negotiation: deals.filter(d => d.status === "negotiation").length
   }
 
   const fetchSpeakers = async () => {
@@ -1332,15 +1364,33 @@ function NewProposalPageContent() {
       <Dialog open={showDealDialog} onOpenChange={setShowDealDialog}>
         <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle>Link to Existing Deal</DialogTitle>
+            <DialogTitle>Create Proposal for Deal</DialogTitle>
             <DialogDescription>
-              Select a deal to auto-fill proposal information, or start from scratch
+              Select a qualified deal to create a proposal, or start from scratch
             </DialogDescription>
           </DialogHeader>
-          
+
+          {/* Status Filter Tabs */}
+          <Tabs value={dealStatusFilter} onValueChange={(v) => setDealStatusFilter(v as typeof dealStatusFilter)} className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="qualified" className="text-xs">
+                Qualified ({dealCounts.qualified})
+              </TabsTrigger>
+              <TabsTrigger value="proposal" className="text-xs">
+                Proposal ({dealCounts.proposal})
+              </TabsTrigger>
+              <TabsTrigger value="negotiation" className="text-xs">
+                Negotiation ({dealCounts.negotiation})
+              </TabsTrigger>
+              <TabsTrigger value="all" className="text-xs">
+                All ({dealCounts.all})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           <div className="overflow-y-auto max-h-[60vh] pr-2">
             <div className="space-y-3">
-              <Card 
+              <Card
                 className="p-3 cursor-pointer hover:border-blue-500 transition-colors border-2 border-dashed"
                 onClick={() => handleDealSelect("none")}
               >
@@ -1349,21 +1399,43 @@ function NewProposalPageContent() {
                   <p className="text-xs text-gray-600">Create a proposal without linking to an existing deal</p>
                 </div>
               </Card>
-              
-              {deals.length > 0 ? (
+
+              {filteredDeals.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {deals.map(deal => (
-                    <Card 
+                  {filteredDeals.map(deal => (
+                    <Card
                       key={deal.id}
-                      className="p-3 cursor-pointer hover:border-blue-500 transition-colors"
+                      className={cn(
+                        "p-3 cursor-pointer hover:border-blue-500 transition-colors",
+                        deal.status === "qualified" && "border-green-200 bg-green-50/30",
+                        deal.priority === "urgent" && "border-red-300"
+                      )}
                       onClick={() => handleDealSelect(deal.id.toString())}
                     >
                       <div className="space-y-2">
-                        <div className="flex justify-between items-start">
-                          <h3 className="font-medium text-sm leading-tight">{deal.client_name}</h3>
-                          <Badge variant="secondary" className="text-xs ml-2">
-                            {deal.status}
-                          </Badge>
+                        <div className="flex justify-between items-start gap-2">
+                          <h3 className="font-medium text-sm leading-tight flex-1">{deal.client_name}</h3>
+                          <div className="flex gap-1 flex-shrink-0">
+                            {deal.priority === "urgent" && (
+                              <Badge variant="destructive" className="text-xs">
+                                Urgent
+                              </Badge>
+                            )}
+                            {deal.priority === "high" && (
+                              <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800">
+                                High
+                              </Badge>
+                            )}
+                            <Badge
+                              variant="secondary"
+                              className={cn(
+                                "text-xs",
+                                deal.status === "qualified" && "bg-green-100 text-green-800"
+                              )}
+                            >
+                              {deal.status}
+                            </Badge>
+                          </div>
                         </div>
                         
                         <div>
@@ -1372,6 +1444,11 @@ function NewProposalPageContent() {
                         </div>
                         
                         <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                          {deal.deal_value > 0 && (
+                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded font-semibold">
+                              💰 ${deal.deal_value.toLocaleString()}
+                            </span>
+                          )}
                           {deal.event_location && (
                             <span className="bg-gray-100 px-2 py-1 rounded">📍 {deal.event_location}</span>
                           )}
@@ -1379,7 +1456,7 @@ function NewProposalPageContent() {
                             <span className="bg-gray-100 px-2 py-1 rounded">📅 {new Date(deal.event_date).toLocaleDateString()}</span>
                           )}
                         </div>
-                        
+
                         {deal.speaker_requested && (
                           <div className="bg-blue-50 px-2 py-1 rounded text-xs">
                             🎤 {deal.speaker_requested}
@@ -1391,7 +1468,11 @@ function NewProposalPageContent() {
                 </div>
               ) : (
                 <div className="text-center py-6 text-gray-500">
-                  <p className="text-sm">No deals available. You can still create a proposal from scratch.</p>
+                  <p className="text-sm">
+                    {dealStatusFilter === "all"
+                      ? "No deals available. You can still create a proposal from scratch."
+                      : `No ${dealStatusFilter} deals found. Try selecting a different status or create from scratch.`}
+                  </p>
                 </div>
               )}
             </div>
