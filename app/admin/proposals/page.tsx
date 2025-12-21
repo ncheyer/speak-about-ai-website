@@ -50,7 +50,8 @@ import {
   ExternalLink,
   TrendingUp,
   Mail,
-  Download
+  Download,
+  Sparkles
 } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
@@ -267,10 +268,23 @@ export default function ProposalsPage() {
                 <h1 className="text-2xl font-bold">Proposals</h1>
                 <p className="text-gray-600 text-sm">Create and manage client proposals</p>
               </div>
-              <Button onClick={() => router.push("/admin/proposals/new")} className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                New Proposal
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button
+                  onClick={() => router.push("/admin/proposals/wizard")}
+                  className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  AI Wizard (New!)
+                </Button>
+                <Button
+                  onClick={() => router.push("/admin/proposals/new")}
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Manual Entry
+                </Button>
+              </div>
             </div>
 
       {/* Stats Cards */}
