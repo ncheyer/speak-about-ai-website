@@ -122,6 +122,15 @@ All expenses must be submitted with receipts within {{expense_submission_deadlin
 
 {{travel_arrangements}}
 
+**Travel Cost Arrangement:** {{travel_cost_type}}
+
+**Travel Buyout:**
+- **Buyout Amount:** {{travel_buyout_amount}} USD
+- **Buyout Covers:** {{travel_buyout_includes}}
+
+**Client-Covered Items:**
+{{client_covers_items}}
+
 **Travel Details:**
 - **Departure City:** {{departure_city}}
 - **Arrival Requirements:** {{arrival_requirements}}
@@ -135,7 +144,7 @@ All expenses must be submitted with receipts within {{expense_submission_deadlin
 **Meals & Per Diem:**
 {{meal_arrangements}}`,
         isEditable: true,
-        variables: ['travel_arrangements', 'departure_city', 'arrival_requirements', 'ground_transportation', 'hotel_arrangements', 'checkin_date', 'checkout_date', 'meal_arrangements']
+        variables: ['travel_arrangements', 'travel_cost_type', 'travel_buyout_amount', 'travel_buyout_includes', 'client_covers_items', 'departure_city', 'arrival_requirements', 'ground_transportation', 'hotel_arrangements', 'checkin_date', 'checkout_date', 'meal_arrangements']
       },
       {
         id: 'speaker-obligations',
@@ -396,9 +405,9 @@ Date: {{agency_signature_date}}`,
       { key: 'expense_submission_deadline', label: 'Expense Submission Deadline (days)', type: 'number', required: true, defaultValue: 30 },
       
       // Travel & Accommodation
-      { 
-        key: 'travel_arrangements', 
-        label: 'Travel Arrangements', 
+      {
+        key: 'travel_arrangements',
+        label: 'Travel Arrangements',
         type: 'select',
         required: true,
         options: [
@@ -408,6 +417,23 @@ Date: {{agency_signature_date}}`,
           { value: 'virtual', label: 'Virtual event' }
         ]
       },
+      {
+        key: 'travel_cost_type',
+        label: 'Travel Cost Type',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'buyout', label: 'Travel Buyout (fixed amount to speaker)' },
+          { value: 'client_covered', label: 'Client Covers All Travel' },
+          { value: 'split', label: 'Split (buyout + client covers some items)' },
+          { value: 'speaker_covered', label: 'Speaker Covers (included in fee)' },
+          { value: 'no_travel', label: 'No Travel Required' }
+        ],
+        defaultValue: 'client_covered'
+      },
+      { key: 'travel_buyout_amount', label: 'Travel Buyout Amount', type: 'currency', required: false },
+      { key: 'travel_buyout_includes', label: 'Buyout Includes', type: 'textarea', required: false, defaultValue: 'Airfare, ground transportation, hotel, and meals' },
+      { key: 'client_covers_items', label: 'Client Covers Items', type: 'textarea', required: false, defaultValue: 'The client will directly book and pay for:\n- Round-trip airfare (business class for flights over 4 hours)\n- Hotel accommodations (4-star or equivalent)\n- Ground transportation to/from airport and venue\n- Meals during the engagement' },
       { key: 'departure_city', label: 'Departure City', type: 'text', required: false },
       { key: 'arrival_requirements', label: 'Arrival Requirements', type: 'text', required: false, defaultValue: 'Arrive day before event' },
       { key: 'ground_transportation', label: 'Ground Transportation', type: 'text', required: false, defaultValue: 'Provided by client' },

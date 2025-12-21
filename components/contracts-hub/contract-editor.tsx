@@ -391,7 +391,7 @@ export function ContractEditor({ contractId, isCreating, onSave, onCancel }: Con
     speaker: ['speaker_name', 'speaker_email', 'speaker_phone', 'speaker_address'],
     event: ['event_title', 'event_date', 'event_time', 'presentation_duration', 'event_location', 'venue_name', 'attendee_count', 'event_type', 'presentation_title', 'presentation_format', 'presentation_description', 'additional_requirements'],
     financial: ['speaker_fee', 'payment_terms', 'additional_compensation', 'expense_coverage', 'expense_submission_deadline'],
-    travel: ['travel_arrangements', 'departure_city', 'arrival_requirements', 'ground_transportation', 'hotel_arrangements', 'checkin_date', 'checkout_date', 'meal_arrangements'],
+    travel: ['travel_arrangements', 'travel_cost_type', 'travel_buyout_amount', 'travel_buyout_includes', 'client_covers_items', 'departure_city', 'arrival_requirements', 'ground_transportation', 'hotel_arrangements', 'checkin_date', 'checkout_date', 'meal_arrangements'],
     terms: ['arrival_buffer', 'additional_activities', 'materials_deadline', 'bio_length', 'technical_requirements', 'venue_requirements', 'info_deadline', 'recording_rights', 'marketing_rights', 'distribution_rights'],
     cancellation: ['cancellation_period_1', 'cancellation_period_2', 'cancellation_fee_1', 'cancellation_fee_2', 'cancellation_fee_3'],
     legal: ['additional_confidentiality', 'insurance_requirements', 'governing_state', 'agency_signer_name', 'agency_signer_title']
