@@ -20,13 +20,6 @@ export default function TeamMembers() {
       bio: "Speak About AI was founded by author, speaker, and entertainer Robert Strong and is a division of Strong Entertainment, LLC. With 30+ years of experience booking speakers and entertainers globally, Robert brings unparalleled expertise to the AI speaking circuit. He's also a world-renowned magician who's performed at the White House twice, on Penn & Teller Fool Us, and for every major tech company in Silicon Valley. His Amazon best-selling book 'Amaze & Delight: Secrets to Creating Magic in Business' showcases his unique approach to business entertainment.",
       linkedin: "https://linkedin.com/in/robertstrong",
     },
-    {
-      name: "Noah Cheyer",
-      title: "Head of Marketing & Operations",
-      image: "/team/noah-cheyer-headshot.png",
-      bio: "Noah Cheyer is a co-founder and leads marketing and operations at Speak About AI. Since it's founding, Noah has had the chance to work with clients ranging from Fortune 100 to 150,000 person international conferences and provincial governments. Previously, he's worked in a wide range of industries including e-commerce, sports, and technology and graduated from Chapman University with a BA in Communication and Entrepreneurship. Having grown up alongside AI as the son of Siri Co-Founder Adam Cheyer, he's had a front-row seat to watching the current climate develop.",
-      linkedin: "https://linkedin.com/in/noah-cheyer",
-    },
   ]
 
   return (

@@ -5,7 +5,6 @@ import ClientLogos from "@/components/client-logos"
 import FeaturedSpeakers from "@/components/featured-speakers"
 import WhyChooseUs from "@/components/why-choose-us"
 import NavigateTheNoise from "@/components/navigate-the-noise"
-import FounderNextGen from "@/components/founder-next-gen"
 import BookingCTA from "@/components/booking-cta"
 import { Button } from "@/components/ui/button"
 import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
@@ -320,8 +319,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <FounderNextGen />
-        <BookingCTA />
+                <BookingCTA />
       </main>
     </>
   )

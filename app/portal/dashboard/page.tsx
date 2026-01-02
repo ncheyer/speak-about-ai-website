@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { 
-  Calendar, 
-  MapPin, 
-  Users, 
-  DollarSign, 
-  Clock, 
-  CheckCircle2, 
+import {
+  Calendar,
+  MapPin,
+  Users,
+  DollarSign,
+  Clock,
+  CheckCircle2,
   AlertTriangle,
   User,
   Building2,
@@ -21,7 +21,11 @@ import {
   Monitor,
   Plane,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  FileText,
+  Timer,
+  ArrowRight,
+  ClipboardList
 } from "lucide-react"
 
 interface Project {
@@ -81,6 +85,24 @@ interface ClientUser {
   projectCount: number
 }
 
+interface FirmOffer {
+  id: number
+  status: string
+  eventName: string
+  eventDate: string | null
+  speakerName: string
+  speakerFee: number
+  clientName: string
+  accessToken: string
+  createdAt: string
+  submittedAt: string | null
+  holdExpiration: {
+    expiresAt: string
+    daysRemaining: number
+    expired: boolean
+  }
+}
+
 const STATUS_COLORS = {
   "2plus_months": "bg-blue-500",
   "1to2_months": "bg-yellow-500", 
@@ -103,9 +125,24 @@ export default function ClientPortalDashboard() {
   const router = useRouter()
   const [user, setUser] = useState<ClientUser | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
+  const [firmOffers, setFirmOffers] = useState<FirmOffer[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState("")
+
+  const fetchFirmOffers = async (email: string) => {
+    try {
+      const response = await fetch(`/api/client-portal/firm-offers?email=${encodeURIComponent(email)}`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setFirmOffers(data.firmOffers || [])
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching firm offers:", error)
+    }
+  }
 
   useEffect(() => {
     const isClientLoggedIn = localStorage.getItem("clientLoggedIn")
@@ -121,9 +158,14 @@ export default function ClientPortalDashboard() {
     try {
       const parsedUser = JSON.parse(userData)
       const parsedProjects = projectsData ? JSON.parse(projectsData) : []
-      
+
       setUser(parsedUser)
       setProjects(parsedProjects)
+
+      // Fetch firm offers for this client
+      if (parsedUser.email) {
+        fetchFirmOffers(parsedUser.email)
+      }
     } catch (error) {
       console.error("Error parsing stored data:", error)
       handleLogout()
@@ -165,6 +207,9 @@ export default function ClientPortalDashboard() {
       } else {
         setError(data.error || "Failed to refresh projects")
       }
+
+      // Also refresh firm offers
+      await fetchFirmOffers(user.email)
     } catch (error) {
       console.error("Refresh error:", error)
       setError("Connection error. Please try again.")
@@ -272,7 +317,7 @@ export default function ClientPortalDashboard() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Events</CardTitle>
@@ -309,7 +354,96 @@ export default function ClientPortalDashboard() {
               <div className="text-2xl font-bold text-green-600">{completedProjects.length}</div>
             </CardContent>
           </Card>
+          <Card className={firmOffers.length > 0 ? "border-purple-200 bg-purple-50" : ""}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Forms</CardTitle>
+              <ClipboardList className="h-4 w-4 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600">{firmOffers.length}</div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Pending Firm Offers Section */}
+        {firmOffers.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="h-5 w-5 text-purple-600" />
+              <h2 className="text-xl font-bold text-gray-900">Action Required: Event Information Forms</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {firmOffers.map((offer) => (
+                <Card
+                  key={offer.id}
+                  className={`hover:shadow-lg transition-shadow cursor-pointer border-l-4 ${
+                    offer.holdExpiration.expired
+                      ? 'border-l-red-500 bg-red-50'
+                      : offer.holdExpiration.daysRemaining <= 3
+                      ? 'border-l-amber-500 bg-amber-50'
+                      : 'border-l-purple-500 bg-purple-50'
+                  }`}
+                  onClick={() => window.open(`/firm-offer/${offer.accessToken}`, '_blank')}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-lg">{offer.eventName}</CardTitle>
+                        <CardDescription className="mt-1">
+                          Speaker: {offer.speakerName}
+                        </CardDescription>
+                      </div>
+                      {offer.holdExpiration.expired ? (
+                        <Badge variant="destructive">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          Hold Expired
+                        </Badge>
+                      ) : (
+                        <Badge className={
+                          offer.holdExpiration.daysRemaining <= 3
+                            ? "bg-amber-500 text-white"
+                            : "bg-purple-500 text-white"
+                        }>
+                          <Timer className="h-3 w-3 mr-1" />
+                          {offer.holdExpiration.daysRemaining} days left
+                        </Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1 text-sm text-gray-600">
+                        {offer.eventDate && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            {new Date(offer.eventDate).toLocaleDateString()}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="h-4 w-4" />
+                          ${offer.speakerFee.toLocaleString()}
+                        </div>
+                      </div>
+                      <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                        Complete Form
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                    {!offer.holdExpiration.expired && offer.holdExpiration.daysRemaining <= 7 && (
+                      <Alert className="mt-3 py-2 bg-amber-100 border-amber-300">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-amber-800 text-xs">
+                          Speaker hold expires on {new Date(offer.holdExpiration.expiresAt).toLocaleDateString()}.
+                          Please complete this form soon to secure availability.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Events List */}
         <div className="space-y-6">

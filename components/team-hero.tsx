@@ -22,10 +22,10 @@ export default function TeamHero() {
             Robert Strong has been booking himself and other talent for 30+ years, and has called Silicon Valley home for 20 of them. Over the decades, he built deep relationships with pioneers in the AI space—people like Daniel Kraft—and ended up living down the street from Peter Norvig in Palo Alto, where they'd walk their Taiwanese street dogs together.
           </p>
           <p className="text-lg text-gray-600 font-montserrat leading-relaxed">
-            After ChatGPT launched and his friends in the AI space started getting flooded with speaking requests, Robert decided to turn it into an agency. He knew he needed the right partner, so he reached out to Noah Cheyer to help with marketing and operations. Noah had grown up immersed in the AI world—his father, Adam Cheyer, is a co-founder of Siri and a sought-after keynote speaker himself. The connection was instant, and the rest was history.
+            After ChatGPT launched and his friends in the AI space started getting flooded with speaking requests, Robert decided to turn it into an agency. With his decades of experience in talent booking and deep roots in Silicon Valley's tech community, he was uniquely positioned to build something special.
           </p>
           <p className="text-lg text-gray-600 font-montserrat leading-relaxed">
-            Noah joined full-time as a co-founder, and after two years of building together, Speak About AI has booked speakers everywhere from Silicon Valley to Singapore—helping organizations around the world bring the brightest minds and best speakers in artificial intelligence to their stages.
+            Today, Speak About AI has booked speakers everywhere from Silicon Valley to Singapore—helping organizations around the world bring the brightest minds and best speakers in artificial intelligence to their stages.
           </p>
         </div>
       </div>
