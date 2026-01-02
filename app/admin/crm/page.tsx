@@ -1397,20 +1397,11 @@ d) An immediate family member is stricken by serious injury, illness, or death.
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-full sm:max-w-3xl">
+            <TabsList className="grid w-full grid-cols-2 max-w-md">
               <TabsTrigger value="deals" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                 <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Deals Pipeline</span>
                 <span className="sm:hidden">Deals</span>
-              </TabsTrigger>
-              <TabsTrigger value="proposals" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
-                <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Proposals</span>
-                <span className="sm:hidden">Props</span>
-              </TabsTrigger>
-              <TabsTrigger value="contracts" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
-                <CheckSquare className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>Contracts</span>
               </TabsTrigger>
               <TabsTrigger value="past-deals" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                 <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -1733,129 +1724,6 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                   </CardContent>
                 </Card>
               )}
-            </TabsContent>
-
-            {/* Contracts Tab */}
-            <TabsContent value="contracts" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Contract Management</CardTitle>
-                  <CardDescription>
-                    Manage contracts generated from won deals
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Contract #</TableHead>
-                        <TableHead>Client</TableHead>
-                        <TableHead>Event</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Generated</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {contracts.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center text-gray-500 py-8">
-                            No contracts found. Create contracts from won deals.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        contracts.map((contract) => {
-                          const StatusIcon = CONTRACT_STATUSES[contract.status as keyof typeof CONTRACT_STATUSES].icon
-                          const statusColor = CONTRACT_STATUSES[contract.status as keyof typeof CONTRACT_STATUSES].color
-                          
-                          return (
-                            <TableRow key={contract.id}>
-                              <TableCell className="font-medium">{contract.contract_number}</TableCell>
-                              <TableCell>
-                                <div>
-                                  <p className="font-medium">{contract.client_name}</p>
-                                  <p className="text-sm text-gray-500">{contract.client_company}</p>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div>
-                                  <p className="font-medium">{contract.event_title}</p>
-                                  <p className="text-sm text-gray-500">{new Date(contract.event_date).toLocaleDateString()}</p>
-                                </div>
-                              </TableCell>
-                              <TableCell>${(contract.fee_amount || contract.speaker_fee || 0).toLocaleString()}</TableCell>
-                              <TableCell>
-                                <Badge className={`${statusColor} text-white`}>
-                                  <StatusIcon className="mr-1 h-3 w-3" />
-                                  {CONTRACT_STATUSES[contract.status as keyof typeof CONTRACT_STATUSES].label}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{new Date(contract.generated_at).toLocaleDateString()}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => router.push(`/admin/contracts/${contract.id}`)}
-                                  >
-                                    View
-                                  </Button>
-                                  {contract.status === 'draft' && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleSendContract(contract.id)}
-                                    >
-                                      <Send className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          )
-                        })
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Proposals Tab */}
-            <TabsContent value="proposals" className="space-y-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle>Proposal Management</CardTitle>
-                    <CardDescription>
-                      Create and manage client proposals
-                    </CardDescription>
-                  </div>
-                  <Button onClick={() => router.push("/admin/proposals")}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Manage Proposals
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12">
-                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Proposal Management</h3>
-                    <p className="text-gray-500 mb-4">
-                      Create professional proposals, track client views, and convert opportunities into projects.
-                    </p>
-                    <div className="flex justify-center gap-2">
-                      <Button onClick={() => router.push("/admin/proposals/new")}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create New Proposal
-                      </Button>
-                      <Button variant="outline" onClick={() => router.push("/admin/proposals")}>
-                        View All Proposals
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </TabsContent>
 
             {/* Past Deals Tab - Won and Lost Deals */}

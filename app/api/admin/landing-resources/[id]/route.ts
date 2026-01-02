@@ -3,7 +3,7 @@ import { neon } from '@neondatabase/serverless'
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const databaseUrl = process.env.DATABASE_URL
@@ -12,19 +12,35 @@ export async function DELETE(
     }
 
     const { id } = await params
-    const resourceId = parseInt(id) // Use ID directly
-    
+    const resourceId = parseInt(id)
+
+    console.log('DELETE request - Raw ID param:', id)
+    console.log('DELETE request - Parsed resourceId:', resourceId)
+
+    if (isNaN(resourceId)) {
+      return NextResponse.json({ error: 'Invalid resource ID' }, { status: 400 })
+    }
+
     const sql = neon(databaseUrl)
-    
+
+    // First, check what resources exist
+    const existingResources = await sql`
+      SELECT id, subject FROM landing_page_resources
+    `
+    console.log('Existing resources in database:', existingResources.map(r => ({ id: r.id, subject: r.subject })))
+
     // Delete the resource
     const result = await sql`
-      DELETE FROM landing_page_resources 
+      DELETE FROM landing_page_resources
       WHERE id = ${resourceId}
       RETURNING *
     `
-    
+
+    console.log('DELETE result:', result)
+
     if (result.length === 0) {
-      return NextResponse.json({ error: 'Resource not found' }, { status: 404 })
+      console.log('Resource not found with ID:', resourceId)
+      return NextResponse.json({ error: 'Resource not found', requestedId: resourceId, existingIds: existingResources.map(r => r.id) }, { status: 404 })
     }
     
     return NextResponse.json({ 

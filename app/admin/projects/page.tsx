@@ -708,7 +708,7 @@ export default function EnhancedProjectManagementPage() {
 
   const handleUpdateInvoiceStatus = async (invoiceId: number, newStatus: string) => {
     try {
-      const response = await authPatch(`/api/invoices/${invoiceId}`, {
+      const response = await authPut(`/api/invoices/${invoiceId}`, {
           status: newStatus,
           payment_date: newStatus === "paid" ? new Date() : null
       })
@@ -1505,7 +1505,7 @@ export default function EnhancedProjectManagementPage() {
                               value={project.status} 
                               onValueChange={async (newStatus) => {
                                 try {
-                                  const response = await authPatch(`/api/projects/${project.id}`, { status: newStatus })
+                                  const response = await authPut(`/api/projects/${project.id}`, { status: newStatus })
                                   
                                   if (response.ok) {
                                     toast({
@@ -2051,7 +2051,7 @@ export default function EnhancedProjectManagementPage() {
                                     if (task.isCustom) {
                                       // Handle custom task completion
                                       try {
-                                        const response = await authPatch(`/api/projects/${task.projectId}/tasks`, {
+                                        const response = await authPut(`/api/projects/${task.projectId}/tasks`, {
                                             taskId: task.customTaskId,
                                             completed: true,
                                             status: 'completed'

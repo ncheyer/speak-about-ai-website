@@ -35,21 +35,39 @@ export async function GET() {
       ORDER BY priority DESC, created_at DESC
     `
     
-    // If no resources in database, return the static config as initial data
+    // If no resources in database, auto-import from config
     if (resources.length === 0) {
       const { emailResources } = await import('@/lib/email-resources-config')
-      const configResources = emailResources.map((resource, index) => ({
-        id: index + 1,
-        url_patterns: resource.urlPatterns || [],
-        title_patterns: resource.titlePatterns || [],
-        subject: resource.subject || '',
-        resource_content: resource.resourceContent || '',
-        priority: 0,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }))
-      return NextResponse.json(configResources)
+
+      // Insert each config resource into the database
+      const insertedResources = []
+      for (const resource of emailResources) {
+        const result = await sql`
+          INSERT INTO landing_page_resources (
+            url_patterns,
+            title_patterns,
+            subject,
+            resource_content,
+            priority,
+            is_active,
+            created_by
+          ) VALUES (
+            ${resource.urlPatterns || []},
+            ${resource.titlePatterns || []},
+            ${resource.subject || ''},
+            ${resource.resourceContent || ''},
+            0,
+            true,
+            'auto-import'
+          )
+          RETURNING *
+        `
+        if (result[0]) {
+          insertedResources.push(result[0])
+        }
+      }
+
+      return NextResponse.json(insertedResources)
     }
     
     // Ensure all fields have proper defaults
@@ -60,8 +78,15 @@ export async function GET() {
       subject: resource.subject || '',
       resource_content: resource.resource_content || ''
     }))
-    
-    return NextResponse.json(sanitizedResources)
+
+    console.log('GET returning resources with IDs:', sanitizedResources.map(r => ({ id: r.id, subject: r.subject })))
+
+    return NextResponse.json(sanitizedResources, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
   } catch (error) {
     console.error('Error fetching resources:', error)
     return NextResponse.json({ error: 'Failed to fetch resources' }, { status: 500 })

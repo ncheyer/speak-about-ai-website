@@ -35,11 +35,11 @@ import {
   Globe,
   Megaphone,
   Building2,
-  Linkedin,
   Presentation,
   PenTool,
   Bot,
-  Sparkles
+  Sparkles,
+  Archive
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -100,52 +100,12 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       bgColor: "bg-blue-50",
       items: [
         {
-          title: "Leads",
-          href: "/admin/leads",
-          icon: Users,
-          description: "SQL Leads",
-          color: "text-purple-600",
-          bgColor: "bg-purple-50"
-        },
-        {
           title: "CRM",
           href: "/admin/crm",
           icon: BarChart3,
           description: "Active Deals",
           color: "text-blue-600",
           bgColor: "bg-blue-50"
-        },
-        {
-          title: "Proposals",
-          href: "/admin/proposals",
-          icon: FileText,
-          description: "Client Proposals",
-          color: "text-indigo-600",
-          bgColor: "bg-indigo-50"
-        },
-        {
-          title: "Firm Offers",
-          href: "/admin/firm-offers",
-          icon: FileSignature,
-          description: "Offer Sheets",
-          color: "text-amber-600",
-          bgColor: "bg-amber-50"
-        },
-        {
-          title: "Contracts Hub",
-          href: "/admin/contracts-hub",
-          icon: FileSignature,
-          description: "Contract Management",
-          color: "text-emerald-600",
-          bgColor: "bg-emerald-50"
-        },
-        {
-          title: "Kondo MQL",
-          href: "/admin/kondo",
-          icon: Linkedin,
-          description: "MQL Pipeline",
-          color: "text-orange-600",
-          bgColor: "bg-orange-50"
         }
       ]
     },
@@ -163,14 +123,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Live Projects",
           color: "text-orange-600",
           bgColor: "bg-orange-50"
-        },
-        {
-          title: "Tasks & Follow-ups",
-          href: "/admin/tasks",
-          icon: CheckSquare,
-          description: "Action Items",
-          color: "text-green-600",
-          bgColor: "bg-green-50"
         },
         {
           title: "Finances",
@@ -206,14 +158,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           bgColor: "bg-green-50"
         },
         {
-          title: "Activity Log",
-          href: "/admin/activity",
-          icon: Activity,
-          description: "Speaker Updates",
-          color: "text-indigo-600",
-          bgColor: "bg-indigo-50"
-        },
-        {
           title: "Analytics",
           href: "/admin/analytics",
           icon: TrendingUp,
@@ -238,14 +182,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       color: "text-pink-600",
       bgColor: "bg-pink-50",
       items: [
-        {
-          title: "SEO Dashboard",
-          href: "/admin/seo-analysis",
-          icon: TrendingUp,
-          description: "Semrush Analytics",
-          color: "text-pink-600",
-          bgColor: "bg-pink-50"
-        },
         {
           title: "Newsletter",
           href: "/admin/newsletter",
@@ -288,32 +224,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
         }
       ]
     },
-    {
-      title: "Tools",
-      icon: Sparkles,
-      sectionKey: "tools",
-      color: "text-violet-600",
-      bgColor: "bg-violet-50",
-      items: [
         {
-          title: "Content Studio",
-          href: "/admin/tools/content-studio",
-          icon: PenTool,
-          description: "AI Blog Writer",
-          color: "text-violet-600",
-          bgColor: "bg-violet-50"
-        },
-        {
-          title: "Speaker Chat",
-          href: "/admin/tools/speaker-chat",
-          icon: Bot,
-          description: "AI Speaker Assistant",
-          color: "text-emerald-600",
-          bgColor: "bg-emerald-50"
-        }
-      ]
-    },
-    {
       title: "System",
       icon: Settings,
       sectionKey: "system",
@@ -335,6 +246,87 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Invoice Management",
           color: "text-green-600",
           bgColor: "bg-green-50"
+        }
+      ]
+    },
+    {
+      title: "Unfinished / Sunsetted",
+      icon: Archive,
+      sectionKey: "sunsetted",
+      color: "text-slate-500",
+      bgColor: "bg-slate-100",
+      items: [
+        {
+          title: "Leads",
+          href: "/admin/leads",
+          icon: Users,
+          description: "SQL Leads",
+          color: "text-purple-600",
+          bgColor: "bg-purple-50"
+        },
+        {
+          title: "Proposals",
+          href: "/admin/proposals",
+          icon: FileText,
+          description: "Client Proposals",
+          color: "text-indigo-600",
+          bgColor: "bg-indigo-50"
+        },
+        {
+          title: "Firm Offers",
+          href: "/admin/firm-offers",
+          icon: FileSignature,
+          description: "Offer Sheets",
+          color: "text-amber-600",
+          bgColor: "bg-amber-50"
+        },
+        {
+          title: "Contracts Hub",
+          href: "/admin/contracts-hub",
+          icon: FileSignature,
+          description: "Contract Management",
+          color: "text-emerald-600",
+          bgColor: "bg-emerald-50"
+        },
+        {
+          title: "Tasks & Follow-ups",
+          href: "/admin/tasks",
+          icon: CheckSquare,
+          description: "Action Items",
+          color: "text-green-600",
+          bgColor: "bg-green-50"
+        },
+        {
+          title: "Activity Log",
+          href: "/admin/activity",
+          icon: Activity,
+          description: "Speaker Updates",
+          color: "text-indigo-600",
+          bgColor: "bg-indigo-50"
+        },
+        {
+          title: "SEO Dashboard",
+          href: "/admin/seo-analysis",
+          icon: TrendingUp,
+          description: "Semrush Analytics",
+          color: "text-pink-600",
+          bgColor: "bg-pink-50"
+        },
+        {
+          title: "Content Studio",
+          href: "/admin/tools/content-studio",
+          icon: PenTool,
+          description: "AI Blog Writer",
+          color: "text-violet-600",
+          bgColor: "bg-violet-50"
+        },
+        {
+          title: "Speaker Chat",
+          href: "/admin/tools/speaker-chat",
+          icon: Bot,
+          description: "AI Speaker Assistant",
+          color: "text-emerald-600",
+          bgColor: "bg-emerald-50"
         }
       ]
     }

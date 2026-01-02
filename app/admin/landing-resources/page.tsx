@@ -53,7 +53,10 @@ export default function LandingResourcesPage() {
   const fetchResources = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/admin/landing-resources')
+      // Add cache-busting parameter to prevent stale data
+      const response = await fetch(`/api/admin/landing-resources?_t=${Date.now()}`, {
+        cache: 'no-store'
+      })
       if (response.ok) {
         const data = await response.json()
         // Transform database format to component format
@@ -112,14 +115,28 @@ export default function LandingResourcesPage() {
         setSaveStatus({ type: 'error', message: 'Cannot delete unsaved resource' })
         return
       }
+      console.log('Deleting resource with ID:', resourceId)
       const response = await fetch(`/api/admin/landing-resources/${resourceId}`, {
         method: 'DELETE'
       })
-      
+
+      console.log('Delete response status:', response.status)
+
       if (response.ok) {
         setSaveStatus({ type: 'success', message: 'Resource deleted successfully!' })
         await fetchResources()
         setTimeout(() => setSaveStatus(null), 3000)
+      } else {
+        const responseText = await response.text()
+        console.error('Delete failed - Status:', response.status, 'Body:', responseText)
+        let errorMessage = 'Failed to delete resource'
+        try {
+          const errorData = JSON.parse(responseText)
+          errorMessage = errorData.error || errorMessage
+        } catch {
+          errorMessage = responseText || errorMessage
+        }
+        setSaveStatus({ type: 'error', message: errorMessage })
       }
     } catch (error) {
       console.error('Error deleting resource:', error)
