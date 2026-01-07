@@ -324,7 +324,7 @@ export default function WebsiteEditorPage() {
                 </div>
 
                 {/* Page Preview */}
-                <div className="overflow-auto max-h-[calc(100vh-320px)]">
+                <div>
                   <PagePreview
                     page={activeTab}
                     content={editedContent}
