@@ -151,7 +151,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       bgColor: "bg-purple-50",
       items: [
         {
-          title: "Website Editor",
+          title: "Page Editor",
           href: "/admin/website-editor",
           icon: FileEdit,
           description: "Edit Page Content",
