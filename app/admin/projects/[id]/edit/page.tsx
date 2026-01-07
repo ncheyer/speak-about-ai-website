@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { 
+import {
   ArrowLeft,
   Save,
   Loader2,
@@ -31,7 +31,8 @@ import {
   Plus,
   Trash2,
   CheckCircle,
-  Sparkles
+  Sparkles,
+  Timer
 } from "lucide-react"
 import Link from "next/link"
 import { generateDeliverablesFromProject, formatDeliverablesForStorage } from "@/lib/generate-deliverables"
@@ -45,7 +46,7 @@ interface Project {
   company?: string
   project_type: string
   description?: string
-  status: "2plus_months" | "1to2_months" | "less_than_month" | "final_week" | "completed" | "cancelled"
+  status: "contracts_signed" | "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled"
   priority: "low" | "medium" | "high" | "urgent"
   start_date: string
   end_date?: string
@@ -179,13 +180,78 @@ interface Project {
   updated_at: string
 }
 
-const PROJECT_STATUSES = {
-  "2plus_months": "2+ Months Out",
-  "1to2_months": "1-2 Months Out", 
-  "less_than_month": "< 1 Month Out",
-  "final_week": "Final Week",
-  "completed": "Completed",
+// Workflow stages (what's been completed)
+// Matches task-definitions.ts for consistency
+const WORKFLOW_STAGES = {
+  "contracts_signed": "1. Contracting",
+  "invoicing": "2. Invoicing",
+  "logistics_planning": "3. Logistics",
+  "pre_event": "4. Pre-Event",
+  "event_week": "5. Event Week",
+  "follow_up": "6. Follow-up",
+  "completed": "7. Completed",
   "cancelled": "Cancelled"
+}
+
+// Stage descriptions for reference
+const STAGE_DETAILS = {
+  contracts_signed: {
+    label: "Contracting",
+    description: "Client contract first (prepare → send → signed), then speaker agreement"
+  },
+  invoicing: {
+    label: "Invoicing",
+    description: "Deposit invoice (50%), kickoff meeting, confirm event specs"
+  },
+  logistics_planning: {
+    label: "Logistics Planning",
+    description: "Event details, A/V, travel/virtual setup, press pack, materials"
+  },
+  pre_event: {
+    label: "Pre-Event",
+    description: "48-hour verification, speaker prep, final materials delivered"
+  },
+  event_week: {
+    label: "Event Week",
+    description: "Day-before prep, event execution, real-time support"
+  },
+  follow_up: {
+    label: "Follow-up",
+    description: "Thank you, feedback, testimonials, lessons learned"
+  },
+  completed: {
+    label: "Completed",
+    description: "All tasks done, feedback collected, project archived"
+  },
+  cancelled: {
+    label: "Cancelled",
+    description: "Project cancelled or on hold"
+  }
+}
+
+// Helper to calculate time urgency from event date
+function getTimeUrgency(eventDate?: string): { text: string; urgency: string; color: string; bgColor: string } {
+  if (!eventDate) return { text: "No date set", urgency: "unknown", color: "text-gray-500", bgColor: "bg-gray-100" }
+
+  const event = new Date(eventDate)
+  const today = new Date()
+  event.setHours(0, 0, 0, 0)
+  today.setHours(0, 0, 0, 0)
+
+  const diffTime = event.getTime() - today.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+  if (diffDays < 0) {
+    return { text: `${Math.abs(diffDays)} days ago`, urgency: "past", color: "text-gray-500", bgColor: "bg-gray-100" }
+  } else if (diffDays === 0) {
+    return { text: "TODAY!", urgency: "today", color: "text-red-700", bgColor: "bg-red-100 border border-red-300" }
+  } else if (diffDays <= 7) {
+    return { text: `${diffDays} day${diffDays === 1 ? '' : 's'} left`, urgency: "urgent", color: "text-orange-700", bgColor: "bg-orange-100 border border-orange-300" }
+  } else if (diffDays <= 30) {
+    return { text: `${diffDays} days left`, urgency: "soon", color: "text-yellow-700", bgColor: "bg-yellow-100 border border-yellow-300" }
+  } else {
+    return { text: `${diffDays} days left`, urgency: "comfortable", color: "text-blue-600", bgColor: "bg-blue-50 border border-blue-200" }
+  }
 }
 
 const PRIORITY_LEVELS = ["low", "medium", "high", "urgent"]
@@ -355,6 +421,35 @@ export default function ProjectEditPage() {
               <h1 className="text-3xl font-bold text-gray-900">Edit Project</h1>
               <p className="text-gray-600 mt-1">{project.project_name}</p>
             </div>
+
+            {/* Status Summary - Workflow Stage & Time Urgency */}
+            <div className="flex items-center gap-4">
+              {/* Workflow Stage Badge */}
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-50 border border-purple-200">
+                <CheckCircle className="h-4 w-4 text-purple-600" />
+                <div className="text-left">
+                  <div className="text-xs text-purple-500 font-medium">Workflow Stage</div>
+                  <div className="text-sm font-semibold text-purple-700">
+                    {formData.status ? WORKFLOW_STAGES[formData.status as keyof typeof WORKFLOW_STAGES] || formData.status : 'Not set'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Time Urgency Indicator */}
+              {(() => {
+                const timeInfo = getTimeUrgency(formData.event_date)
+                return (
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${timeInfo.bgColor}`}>
+                    <Timer className={`h-4 w-4 ${timeInfo.color}`} />
+                    <div className="text-left">
+                      <div className="text-xs text-gray-500 font-medium">Time Until Event</div>
+                      <div className={`text-sm font-semibold ${timeInfo.color}`}>{timeInfo.text}</div>
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
+
             <div className="flex gap-3">
               <Button 
                 onClick={handleSendInvite} 
@@ -439,13 +534,13 @@ export default function ProjectEditPage() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="status">Status *</Label>
+                    <Label htmlFor="status">Workflow Stage *</Label>
                     <Select value={formData.status} onValueChange={(value) => updateField("status", value)}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(PROJECT_STATUSES).map(([key, label]) => (
+                        {Object.entries(WORKFLOW_STAGES).map(([key, label]) => (
                           <SelectItem key={key} value={key}>{label}</SelectItem>
                         ))}
                       </SelectContent>

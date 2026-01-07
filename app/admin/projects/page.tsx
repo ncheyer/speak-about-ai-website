@@ -66,7 +66,7 @@ import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
 import { InvoicePDFDialog } from "@/components/invoice-pdf-viewer"
 import { InvoiceEditorModal } from "@/components/invoice-editor-modal"
-import { TASK_DEFINITIONS, calculateTaskUrgency, getTaskOwnerLabel, getPriorityColor } from "@/lib/task-definitions"
+import { TASK_DEFINITIONS, calculateTaskUrgency, getTaskOwnerLabel, getPriorityColor, type EventClassification, type TaskDefinition } from "@/lib/task-definitions"
 import { ProjectDetailsManager } from "@/components/project-details-manager"
 import { ProjectDetails } from "@/lib/project-details-schema"
 import { authGet, authPost, authPut, authDelete, authFetch } from "@/lib/auth-fetch"
@@ -81,12 +81,14 @@ interface Project {
   company?: string
   speaker_name?: string
   speaker_email?: string
+  requested_speaker_name?: string
   event_title: string
   event_date: string
   event_location: string
   event_type: string
+  event_classification?: "virtual" | "local" | "travel"
   attendee_count?: number
-  status: "planning" | "contracts_signed" | "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled"
+  status: "contracts_signed" | "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled"
   priority: "low" | "medium" | "high" | "urgent"
   budget: string
   speaker_fee?: string
@@ -172,15 +174,10 @@ interface Invoice {
 }
 
 const PROJECT_STATUSES: Record<string, { label: string; color: string; description?: string }> = {
-  planning: {
-    label: "Planning",
-    color: "bg-slate-500",
-    description: "Initial planning and scoping"
-  },
   contracts_signed: {
-    label: "Contracts Signed",
+    label: "Contracting",
     color: "bg-emerald-500",
-    description: "Contracts finalized and signed"
+    description: "Send and sign contracts with client and speaker"
   },
   invoicing: {
     label: "Invoicing",
@@ -227,6 +224,118 @@ const INVOICE_STATUSES = {
   cancelled: { label: "Cancelled", color: "bg-gray-400" }
 }
 
+// Ordered workflow stages - this is the clear order of operations
+// Descriptions reflect actual tasks defined in lib/task-definitions.ts
+const WORKFLOW_STAGES = [
+  {
+    id: "contracts_signed",
+    step: 1,
+    label: "Contracting",
+    color: "bg-emerald-500",
+    borderColor: "border-emerald-500",
+    description: "Client contract first (prepare → send → signed), then speaker agreement",
+    tasks: [
+      "Prepare client contract",
+      "Send contract to client",
+      "Client contract signed",
+      "Prepare speaker agreement",
+      "Obtain speaker signature",
+      "File all signed contracts"
+    ]
+  },
+  {
+    id: "invoicing",
+    step: 2,
+    label: "Invoicing",
+    color: "bg-blue-500",
+    borderColor: "border-blue-500",
+    description: "Deposit invoice (50%), kickoff meeting, confirm event specs",
+    tasks: [
+      "Send internal contract to speaker",
+      "Send 50% deposit invoice (Net 30)",
+      "Send final balance invoice",
+      "Schedule client kickoff meeting",
+      "Confirm all event specifications"
+    ]
+  },
+  {
+    id: "logistics_planning",
+    step: 3,
+    label: "Logistics Planning",
+    color: "bg-purple-500",
+    borderColor: "border-purple-500",
+    description: "Event details, A/V, travel/virtual setup, press pack, materials",
+    tasks: [
+      "Final event details confirmation (in-person)",
+      "Virtual platform setup (virtual)",
+      "Tech check with speaker (virtual)",
+      "A/V requirements gathered (in-person)",
+      "Travel itinerary sent (travel)",
+      "Local logistics confirmed (local)",
+      "Virtual schedule confirmed (virtual)",
+      "Deliver speaker press pack",
+      "Establish day-of contact protocol",
+      "Prepare speaker presentation materials",
+      "Complete vendor onboarding"
+    ],
+    tasksByClassification: {
+      virtual: ["Virtual platform setup", "Tech check", "Virtual schedule confirmed", "Press pack", "Day-of contacts", "Materials ready", "Vendor onboarding"],
+      local: ["Final event details", "A/V requirements", "Local logistics confirmed", "Press pack", "Day-of contacts", "Materials ready", "Vendor onboarding"],
+      travel: ["Final event details", "A/V requirements", "Travel itinerary sent", "Press pack", "Day-of contacts", "Materials ready", "Vendor onboarding"]
+    }
+  },
+  {
+    id: "pre_event",
+    step: 4,
+    label: "Pre-Event",
+    color: "bg-yellow-500",
+    borderColor: "border-yellow-500",
+    description: "48-hour verification, speaker prep, final materials delivered",
+    tasks: [
+      "Final logistics verification (48 hrs before)",
+      "Speaker final preparation",
+      "Deliver final client materials",
+      "Event readiness checkpoint (go/no-go)"
+    ]
+  },
+  {
+    id: "event_week",
+    step: 5,
+    label: "Event Week",
+    color: "bg-orange-500",
+    borderColor: "border-orange-500",
+    description: "Day-before prep, event execution, real-time support",
+    tasks: [
+      "Complete day-before preparations",
+      "Execute event successfully",
+      "Provide real-time event support"
+    ]
+  },
+  {
+    id: "follow_up",
+    step: 6,
+    label: "Follow-up",
+    color: "bg-indigo-500",
+    borderColor: "border-indigo-500",
+    description: "Thank you, feedback, testimonials, lessons learned",
+    tasks: [
+      "Send post-event follow-up (within 24 hrs)",
+      "Request client feedback & testimonial",
+      "Collect speaker feedback",
+      "Document lessons learned"
+    ]
+  },
+  {
+    id: "completed",
+    step: 7,
+    label: "Completed",
+    color: "bg-green-500",
+    borderColor: "border-green-500",
+    description: "All tasks done, feedback collected, project archived",
+    tasks: []
+  }
+]
+
 export default function EnhancedProjectManagementPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -236,7 +345,9 @@ export default function EnhancedProjectManagementPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [viewMode, setViewMode] = useState<"table" | "cards">("table")
+  const [viewMode, setViewMode] = useState<"table" | "cards" | "stages">("stages")
+  const [stageSearchTerms, setStageSearchTerms] = useState<Record<string, string>>({})
+  const [expandedProjectId, setExpandedProjectId] = useState<number | null>(null)
   const [quickFilter, setQuickFilter] = useState<"all" | "this_week" | "urgent" | "overdue">("all")
   const [activeTab, setActiveTab] = useState("projects")
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
@@ -451,6 +562,61 @@ export default function EnhancedProjectManagementPage() {
     } else {
       return { text: formatTimeText(diffDays), color: "text-green-600", urgency: "future" }
     }
+  }
+
+  // Filter tasks based on event classification
+  const getFilteredTasks = (stageId: string, classification?: EventClassification) => {
+    const stageTasks = TASK_DEFINITIONS[stageId] || {}
+    return Object.entries(stageTasks).filter(([_, task]) => {
+      // If task has no classifications specified, it applies to all
+      if (!task.classifications || task.classifications.length === 0) {
+        return true
+      }
+      // If project has no classification, show all tasks
+      if (!classification) {
+        return true
+      }
+      // Filter based on classification
+      return task.classifications.includes(classification)
+    })
+  }
+
+  // Check if all tasks in a stage are complete and auto-advance to next stage
+  const checkAndAutoAdvanceStage = async (project: Project, stageId: string, updatedCompletion: Record<string, boolean>) => {
+    const filteredTasks = getFilteredTasks(stageId, project.event_classification)
+    const taskKeys = filteredTasks.map(([key]) => key)
+
+    // Check if all tasks are now complete
+    const allComplete = taskKeys.every(key => updatedCompletion[key] === true)
+
+    if (allComplete && taskKeys.length > 0) {
+      // Find the next stage
+      const currentIndex = WORKFLOW_STAGES.findIndex(s => s.id === stageId)
+      const nextStage = WORKFLOW_STAGES[currentIndex + 1]
+
+      if (nextStage && nextStage.id !== 'completed') {
+        // Auto-advance to next stage
+        try {
+          const response = await authPut(`/api/projects/${project.id}`, { status: nextStage.id })
+          if (response.ok) {
+            toast({
+              title: "Stage Complete! 🎉",
+              description: `All tasks done. Moved to ${nextStage.label}.`
+            })
+            loadData()
+            return true
+          }
+        } catch (error) {
+          console.error("Error auto-advancing stage:", error)
+        }
+      } else if (nextStage?.id === 'completed') {
+        toast({
+          title: "All Tasks Complete! 🎉",
+          description: "Ready to mark as Completed when finished."
+        })
+      }
+    }
+    return false
   }
 
   const handleUpdateStageCompletion = async (projectId: number, stage: string, task: string, completed: boolean) => {
@@ -988,10 +1154,9 @@ export default function EnhancedProjectManagementPage() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6 max-w-4xl">
+            <TabsList className="grid w-full grid-cols-5 max-w-3xl">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
               <TabsTrigger value="tasks">Tasks</TabsTrigger>
               <TabsTrigger value="logistics">Logistics</TabsTrigger>
               <TabsTrigger value="details">Details</TabsTrigger>
@@ -1066,101 +1231,13 @@ export default function EnhancedProjectManagementPage() {
               </div>
             </TabsContent>
 
-            {/* Timeline Tab */}
-            <TabsContent value="timeline" className="space-y-6">
-              {/* Time Until Event Overview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Event Timeline Overview</CardTitle>
-                  <CardDescription>Time remaining until events and completion status</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {activeProjects
-                      .sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
-                      .map((project) => {
-                        const timeInfo = getTimeUntilEvent(project.event_date)
-                        const stageCompletion = project.stage_completion || {}
-                        const currentStageData = PROJECT_STATUSES[project.status]
-                        
-                        return (
-                          <Card key={project.id} className={"border-l-4 " + (currentStageData?.color?.replace('bg-', 'border-l-') || 'border-l-gray-500')}>
-                            <CardHeader className="pb-3">
-                              <div className="flex items-center justify-between">
-                                <CardTitle className="text-lg">{project.event_name || project.event_title || project.project_name}</CardTitle>
-                                <Badge className={timeInfo.color + " bg-opacity-10 border-current"}>
-                                  <Timer className="h-3 w-3 mr-1" />
-                                  {timeInfo.text}
-                                </Badge>
-                              </div>
-                              <CardDescription className="flex items-center gap-2">
-                                <span>{project.client_name}</span>
-                                <Badge className={(currentStageData?.color || "bg-gray-500") + " text-white text-xs"}>
-                                  {currentStageData?.label || project.status}
-                                </Badge>
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              <div className="flex items-center gap-2 text-sm">
-                                <CalendarDays className="h-4 w-4 text-gray-500" />
-                                {formatEventDate(project.event_date)}
-                              </div>
-                              <div className="flex items-center gap-2 text-sm">
-                                <MapPin className="h-4 w-4 text-gray-500" />
-                                {project.event_location}
-                              </div>
-                              
-                              {/* Stage Progress */}
-                              <div className="pt-2">
-                                <div className="text-sm font-medium mb-2">Stage Progress</div>
-                                <div className="space-y-1">
-                                  {Object.entries(PROJECT_STATUSES)
-                                    .filter(([status]) => !["cancelled"].includes(status))
-                                    .map(([status, config]) => {
-                                      const isCurrentStage = project.status === status
-                                      const isCompleted = ["invoicing", "logistics_planning", "pre_event", "event_week", "follow_up"].indexOf(status) < ["invoicing", "logistics_planning", "pre_event", "event_week", "follow_up"].indexOf(project.status)
-                                      
-                                      return (
-                                        <div key={status} className={"flex items-center gap-2 text-xs p-1 rounded " + (isCurrentStage ? 'bg-blue-50' : '')}>
-                                          {isCompleted ? (
-                                            <Check className="h-3 w-3 text-green-500" />
-                                          ) : isCurrentStage ? (
-                                            <ClockIcon className="h-3 w-3 text-blue-500" />
-                                          ) : (
-                                            <div className="h-3 w-3 rounded-full border border-gray-300" />
-                                          )}
-                                          <span className={isCurrentStage ? 'font-medium' : ''}>{config?.label}</span>
-                                        </div>
-                                      )
-                                    })}
-                                </div>
-                              </div>
-                              
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="w-full"
-                                onClick={() => setSelectedProject(project)}
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                Manage Tasks
-                              </Button>
-                            </CardContent>
-                          </Card>
-                        )
-                      })}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
             {/* Projects Tab */}
             <TabsContent value="projects" className="space-y-6">
               {/* Filters and Actions */}
               <Card>
                 <CardContent className="pt-6">
-                  <div className="flex gap-4">
-                    <div className="flex-1">
+                  <div className="flex flex-wrap gap-3 items-center">
+                    <div className="flex-1 min-w-[200px]">
                       <div className="relative">
                         <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
@@ -1172,13 +1249,12 @@ export default function EnhancedProjectManagementPage() {
                       </div>
                     </div>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-48">
+                      <SelectTrigger className="w-40">
                         <SelectValue placeholder="Filter by status" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Stages</SelectItem>
-                        <SelectItem value="planning">Planning</SelectItem>
-                        <SelectItem value="contracts_signed">Contracts Signed</SelectItem>
+                        <SelectItem value="contracts_signed">Contracting</SelectItem>
                         <SelectItem value="invoicing">Invoicing</SelectItem>
                         <SelectItem value="logistics_planning">Logistics</SelectItem>
                         <SelectItem value="pre_event">Pre-Event</SelectItem>
@@ -1188,7 +1264,7 @@ export default function EnhancedProjectManagementPage() {
                         <SelectItem value="cancelled">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-wrap">
                       <Button
                         variant={quickFilter === "all" ? "default" : "outline"}
                         size="sm"
@@ -1210,7 +1286,7 @@ export default function EnhancedProjectManagementPage() {
                         onClick={() => setQuickFilter("urgent")}
                         className={quickFilter === "urgent" ? "" : "text-yellow-600 border-yellow-300 hover:bg-yellow-50"}
                       >
-                        ⚡ Within 30 Days
+                        ⚡ 30 Days
                       </Button>
                       <Button
                         variant={quickFilter === "overdue" ? "default" : "outline"}
@@ -1218,7 +1294,26 @@ export default function EnhancedProjectManagementPage() {
                         onClick={() => setQuickFilter("overdue")}
                         className={quickFilter === "overdue" ? "" : "text-gray-600 border-gray-300 hover:bg-gray-50"}
                       >
-                        📍 Past Events
+                        📍 Past
+                      </Button>
+                    </div>
+                    <div className="flex gap-1 border-l pl-3">
+                      <Button
+                        variant={viewMode === "stages" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setViewMode("stages")}
+                        title="Workflow View"
+                      >
+                        <Target className="h-4 w-4 mr-1" />
+                        Workflow
+                      </Button>
+                      <Button
+                        variant={viewMode === "table" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setViewMode("table")}
+                        title="Table View"
+                      >
+                        <List className="h-4 w-4" />
                       </Button>
                     </div>
                     <Dialog open={showCreateProject} onOpenChange={setShowCreateProject}>
@@ -1434,7 +1529,515 @@ export default function EnhancedProjectManagementPage() {
                 </CardContent>
               </Card>
 
+              {/* Workflow Stages View */}
+              {viewMode === "stages" && (
+                <div className="space-y-4">
+                  {/* Combined Overview: Workflow + Urgency */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {/* Workflow Progress Overview */}
+                    <Card className="lg:col-span-2 bg-gradient-to-r from-gray-50 to-gray-100">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold text-gray-800">📋 Workflow Stage</h3>
+                          <p className="text-sm text-gray-500">What's been completed</p>
+                        </div>
+                        <div className="flex items-center gap-1 overflow-x-auto pb-2">
+                          {WORKFLOW_STAGES.map((stage, index) => {
+                            const stageProjects = projects.filter(p => p.status === stage.id)
+                            return (
+                              <div key={stage.id} className="flex items-center">
+                                <div className={`flex flex-col items-center min-w-[90px] p-2 rounded-lg ${stageProjects.length > 0 ? 'bg-white shadow-sm' : 'opacity-60'}`}>
+                                  <div className={`w-8 h-8 rounded-full ${stage.color} text-white flex items-center justify-center text-sm font-bold mb-1`}>
+                                    {stage.step}
+                                  </div>
+                                  <span className="text-xs font-medium text-gray-700 text-center">{stage.label}</span>
+                                  <Badge variant="outline" className="mt-1 text-xs">
+                                    {stageProjects.length}
+                                  </Badge>
+                                </div>
+                                {index < WORKFLOW_STAGES.length - 1 && (
+                                  <div className="w-4 h-0.5 bg-gray-300 mx-0.5" />
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Urgency Overview */}
+                    <Card className="bg-gradient-to-r from-amber-50 to-orange-50">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold text-gray-800">⏰ Time Urgency</h3>
+                          <p className="text-sm text-gray-500">When events happen</p>
+                        </div>
+                        <div className="space-y-2">
+                          {(() => {
+                            const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'cancelled')
+                            const todayCount = activeProjects.filter(p => getTimeUntilEvent(p.event_date).urgency === 'today').length
+                            const urgentCount = activeProjects.filter(p => getTimeUntilEvent(p.event_date).urgency === 'urgent').length
+                            const soonCount = activeProjects.filter(p => getTimeUntilEvent(p.event_date).urgency === 'soon').length
+                            const futureCount = activeProjects.filter(p => getTimeUntilEvent(p.event_date).urgency === 'future').length
+                            return (
+                              <>
+                                <div className="flex items-center justify-between p-2 bg-red-100 rounded-lg border border-red-200">
+                                  <div className="flex items-center gap-2">
+                                    <Timer className="h-4 w-4 text-red-600" />
+                                    <span className="text-sm font-medium text-red-700">Today / Overdue</span>
+                                  </div>
+                                  <Badge className="bg-red-500">{todayCount}</Badge>
+                                </div>
+                                <div className="flex items-center justify-between p-2 bg-orange-100 rounded-lg border border-orange-200">
+                                  <div className="flex items-center gap-2">
+                                    <Timer className="h-4 w-4 text-orange-600" />
+                                    <span className="text-sm font-medium text-orange-700">This Week</span>
+                                  </div>
+                                  <Badge className="bg-orange-500">{urgentCount}</Badge>
+                                </div>
+                                <div className="flex items-center justify-between p-2 bg-yellow-100 rounded-lg border border-yellow-200">
+                                  <div className="flex items-center gap-2">
+                                    <Timer className="h-4 w-4 text-yellow-600" />
+                                    <span className="text-sm font-medium text-yellow-700">This Month</span>
+                                  </div>
+                                  <Badge className="bg-yellow-500">{soonCount}</Badge>
+                                </div>
+                                <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200">
+                                  <div className="flex items-center gap-2">
+                                    <Timer className="h-4 w-4 text-blue-600" />
+                                    <span className="text-sm font-medium text-blue-700">30+ Days</span>
+                                  </div>
+                                  <Badge className="bg-blue-500">{futureCount}</Badge>
+                                </div>
+                              </>
+                            )
+                          })()}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Stage-by-Stage Project Lists */}
+                  {WORKFLOW_STAGES.map((stage) => {
+                    const stageProjects = filteredProjects.filter(p => p.status === stage.id)
+                    const searchTerm = stageSearchTerms[stage.id] || ""
+                    const filteredStageProjects = stageProjects.filter(p =>
+                      !searchTerm ||
+                      p.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      p.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      p.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      p.event_location?.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+
+                    return (
+                      <Card key={stage.id} className={`border-l-4 ${stage.borderColor}`}>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-full ${stage.color} text-white flex items-center justify-center text-lg font-bold shadow-md`}>
+                                {stage.step}
+                              </div>
+                              <div>
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                  {stage.label}
+                                  <Badge variant="secondary" className="ml-2">
+                                    {filteredStageProjects.length} project{filteredStageProjects.length !== 1 ? 's' : ''}
+                                  </Badge>
+                                </CardTitle>
+                                <CardDescription className="text-sm">{stage.description}</CardDescription>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="relative w-64">
+                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                                <Input
+                                  placeholder={`Search in ${stage.label}...`}
+                                  value={searchTerm}
+                                  onChange={(e) => setStageSearchTerms(prev => ({ ...prev, [stage.id]: e.target.value }))}
+                                  className="pl-8 h-9"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        {filteredStageProjects.length > 0 && (
+                          <CardContent>
+                            <div className="grid gap-3">
+                              {filteredStageProjects.map((project) => {
+                                const timeInfo = getTimeUntilEvent(project.event_date)
+                                const isExpanded = expandedProjectId === project.id
+                                const stageCompletion = project.stage_completion?.[stage.id as keyof typeof project.stage_completion] || {}
+                                // Filter tasks based on project's event classification
+                                const taskEntries = getFilteredTasks(stage.id, project.event_classification)
+                                const completedCount = taskEntries.filter(([key]) => stageCompletion[key as keyof typeof stageCompletion]).length
+                                const totalTasks = taskEntries.length
+
+                                return (
+                                  <div key={project.id} className="space-y-0">
+                                    <div
+                                      className={`flex items-center justify-between p-4 rounded-lg border ${
+                                        timeInfo.urgency === 'today' ? 'bg-red-50 border-red-200' :
+                                        timeInfo.urgency === 'urgent' ? 'bg-orange-50 border-orange-200' :
+                                        timeInfo.urgency === 'soon' ? 'bg-yellow-50 border-yellow-200' :
+                                        'bg-white border-gray-200'
+                                      } ${isExpanded ? 'rounded-b-none border-b-0' : ''} hover:shadow-md transition-shadow`}
+                                    >
+                                      <div className="flex items-center gap-4">
+                                        <div>
+                                          <div className="font-medium text-gray-900 flex items-center gap-2">
+                                            {project.event_name || project.project_name}
+                                            {(project.requested_speaker_name || project.speaker_name) && (
+                                              <span className="text-sm font-normal bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                                                <Mic className="h-3 w-3 inline mr-1" />
+                                                {project.requested_speaker_name || project.speaker_name}
+                                              </span>
+                                            )}
+                                            {project.event_classification && (
+                                              <span className={`text-xs font-normal px-2 py-0.5 rounded ${
+                                                project.event_classification === 'virtual' ? 'bg-cyan-100 text-cyan-700' :
+                                                project.event_classification === 'local' ? 'bg-green-100 text-green-700' :
+                                                'bg-amber-100 text-amber-700'
+                                              }`}>
+                                                {project.event_classification === 'virtual' ? '🖥️ Virtual' :
+                                                 project.event_classification === 'local' ? '📍 Local' : '✈️ Travel'}
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div className="text-sm text-gray-500 flex items-center gap-2">
+                                            <span>{project.client_name}</span>
+                                            {project.company && <span className="text-gray-400">• {project.company}</span>}
+                                            {totalTasks > 0 && (
+                                              <span className={`text-xs ${completedCount === totalTasks ? 'text-green-600' : 'text-gray-400'}`}>
+                                                • {completedCount}/{totalTasks} tasks
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-4">
+                                        {/* Urgency Clock Indicator */}
+                                        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                                          timeInfo.urgency === 'past' ? 'bg-gray-100' :
+                                          timeInfo.urgency === 'today' ? 'bg-red-100 border border-red-300' :
+                                          timeInfo.urgency === 'urgent' ? 'bg-orange-100 border border-orange-300' :
+                                          timeInfo.urgency === 'soon' ? 'bg-yellow-100 border border-yellow-300' :
+                                          'bg-blue-50 border border-blue-200'
+                                        }`}>
+                                          <Timer className={`h-4 w-4 ${
+                                            timeInfo.urgency === 'past' ? 'text-gray-500' :
+                                            timeInfo.urgency === 'today' ? 'text-red-600' :
+                                            timeInfo.urgency === 'urgent' ? 'text-orange-600' :
+                                            timeInfo.urgency === 'soon' ? 'text-yellow-600' :
+                                            'text-blue-600'
+                                          }`} />
+                                          <div className="text-left">
+                                            <div className={`text-sm font-semibold ${
+                                              timeInfo.urgency === 'past' ? 'text-gray-600' :
+                                              timeInfo.urgency === 'today' ? 'text-red-700' :
+                                              timeInfo.urgency === 'urgent' ? 'text-orange-700' :
+                                              timeInfo.urgency === 'soon' ? 'text-yellow-700' :
+                                              'text-blue-700'
+                                            }`}>{timeInfo.text}</div>
+                                            <div className="text-xs text-gray-500">{formatEventDate(project.event_date)}</div>
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="text-sm font-medium text-green-600">
+                                            ${new Intl.NumberFormat('en-US').format(parseFloat(project.speaker_fee || project.budget || "0"))}
+                                          </div>
+                                          <div className="text-xs text-gray-500">{project.event_location || "Location TBD"}</div>
+                                        </div>
+                                        <div className="flex gap-1">
+                                          <Button
+                                            size="sm"
+                                            variant={isExpanded ? "default" : "ghost"}
+                                            onClick={() => setExpandedProjectId(isExpanded ? null : project.id)}
+                                            title="View Tasks"
+                                            className={isExpanded ? "bg-gray-900 text-white" : ""}
+                                          >
+                                            <Eye className="h-4 w-4" />
+                                          </Button>
+                                          <Button size="sm" variant="ghost" onClick={() => router.push(`/admin/projects/${project.id}/edit`)} title="Edit">
+                                            <Edit className="h-4 w-4" />
+                                          </Button>
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button size="sm" variant="ghost" title="Move to Stage">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                              <DropdownMenuLabel>Move to Stage</DropdownMenuLabel>
+                                              <DropdownMenuSeparator />
+                                              {WORKFLOW_STAGES.filter(s => s.id !== stage.id).map((targetStage) => (
+                                                <DropdownMenuItem
+                                                  key={targetStage.id}
+                                                  onClick={async () => {
+                                                    try {
+                                                      const response = await authPut(`/api/projects/${project.id}`, { status: targetStage.id })
+                                                      if (response.ok) {
+                                                        toast({ title: "Success", description: `Moved to ${targetStage.label}` })
+                                                        loadData()
+                                                      }
+                                                    } catch (error) {
+                                                      toast({ title: "Error", description: "Failed to update stage", variant: "destructive" })
+                                                    }
+                                                  }}
+                                                >
+                                                  <div className={`w-4 h-4 rounded-full ${targetStage.color} mr-2`} />
+                                                  Step {targetStage.step}: {targetStage.label}
+                                                </DropdownMenuItem>
+                                              ))}
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Expandable Task Panel */}
+                                    {isExpanded && (
+                                      <div className={`border border-t-0 rounded-b-lg p-4 ${
+                                        timeInfo.urgency === 'today' ? 'bg-red-50/50 border-red-200' :
+                                        timeInfo.urgency === 'urgent' ? 'bg-orange-50/50 border-orange-200' :
+                                        timeInfo.urgency === 'soon' ? 'bg-yellow-50/50 border-yellow-200' :
+                                        'bg-gray-50 border-gray-200'
+                                      }`}>
+                                        <div className="flex items-center justify-between mb-3">
+                                          <h4 className="font-medium text-gray-700 flex items-center gap-2">
+                                            <CheckSquare className="h-4 w-4" />
+                                            Step {stage.step} Tasks: {stage.label}
+                                            {project.event_classification && (
+                                              <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                                project.event_classification === 'virtual' ? 'bg-cyan-50 text-cyan-600' :
+                                                project.event_classification === 'local' ? 'bg-green-50 text-green-600' :
+                                                'bg-amber-50 text-amber-600'
+                                              }`}>
+                                                {project.event_classification} tasks
+                                              </span>
+                                            )}
+                                          </h4>
+                                          <div className="text-sm text-gray-500">
+                                            {completedCount} of {totalTasks} complete
+                                          </div>
+                                        </div>
+
+                                        {/* Progress bar */}
+                                        {totalTasks > 0 && (
+                                          <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                                            <div
+                                              className={`h-2 rounded-full transition-all ${
+                                                completedCount === totalTasks ? 'bg-green-500' :
+                                                completedCount > 0 ? 'bg-blue-500' : 'bg-gray-300'
+                                              }`}
+                                              style={{ width: `${totalTasks > 0 ? (completedCount / totalTasks) * 100 : 0}%` }}
+                                            />
+                                          </div>
+                                        )}
+
+                                        {totalTasks > 0 ? (
+                                          <div className="space-y-2">
+                                            {taskEntries.map(([taskKey, taskDef]) => {
+                                              const isCompleted = stageCompletion[taskKey as keyof typeof stageCompletion] || false
+                                              const daysUntilEvent = project.event_date ? Math.ceil((new Date(project.event_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null
+                                              const urgency = calculateTaskUrgency(stage.id, daysUntilEvent, taskKey)
+
+                                              return (
+                                                <div
+                                                  key={taskKey}
+                                                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                                                    isCompleted ? 'bg-green-50 border-green-200' :
+                                                    urgency === 'critical' ? 'bg-red-50 border-red-200' :
+                                                    urgency === 'high' ? 'bg-orange-50 border-orange-200' :
+                                                    'bg-white border-gray-200'
+                                                  }`}
+                                                >
+                                                  <div className="flex items-start gap-3">
+                                                    <button
+                                                      onClick={async () => {
+                                                        const newValue = !isCompleted
+                                                        // Build the updated completion state
+                                                        const currentStageCompletion = project.stage_completion?.[stage.id as keyof typeof project.stage_completion] || {}
+                                                        const updatedCompletion = {
+                                                          ...currentStageCompletion,
+                                                          [taskKey]: newValue
+                                                        }
+                                                        // Optimistic update - update local state immediately
+                                                        setProjects(prev => prev.map(p => {
+                                                          if (p.id !== project.id) return p
+                                                          return {
+                                                            ...p,
+                                                            stage_completion: {
+                                                              ...p.stage_completion,
+                                                              [stage.id]: updatedCompletion
+                                                            }
+                                                          }
+                                                        }))
+                                                        // Then update server in background
+                                                        const success = await handleUpdateStageCompletion(project.id, stage.id, taskKey, newValue)
+                                                        if (!success) {
+                                                          // Revert on failure
+                                                          setProjects(prev => prev.map(p => {
+                                                            if (p.id !== project.id) return p
+                                                            return {
+                                                              ...p,
+                                                              stage_completion: {
+                                                                ...p.stage_completion,
+                                                                [stage.id]: {
+                                                                  ...currentStageCompletion,
+                                                                  [taskKey]: !newValue
+                                                                }
+                                                              }
+                                                            }
+                                                          }))
+                                                        } else if (newValue) {
+                                                          // Check if all tasks complete and auto-advance
+                                                          await checkAndAutoAdvanceStage(project, stage.id, updatedCompletion as Record<string, boolean>)
+                                                        }
+                                                      }}
+                                                      className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                                                        isCompleted
+                                                          ? 'bg-green-500 border-green-500 text-white'
+                                                          : 'border-gray-300 hover:border-gray-400'
+                                                      }`}
+                                                    >
+                                                      {isCompleted && <Check className="h-3 w-3" />}
+                                                    </button>
+                                                    <div>
+                                                      <div className={`font-medium ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
+                                                        {taskDef.name}
+                                                      </div>
+                                                      <div className="text-xs text-gray-500 mt-0.5">
+                                                        {taskDef.description}
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                  <div className="flex items-center gap-2">
+                                                    {!isCompleted && urgency !== 'low' && (
+                                                      <Badge
+                                                        variant="outline"
+                                                        className={`text-xs ${getPriorityColor(urgency)}`}
+                                                      >
+                                                        {urgency}
+                                                      </Badge>
+                                                    )}
+                                                    {taskDef.owner && (
+                                                      <Badge variant="outline" className="text-xs text-gray-500">
+                                                        {getTaskOwnerLabel(taskDef.owner)}
+                                                      </Badge>
+                                                    )}
+                                                    {isCompleted && (
+                                                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              )
+                                            })}
+                                          </div>
+                                        ) : (
+                                          <div className="text-center py-4 text-gray-500">
+                                            <p className="text-sm">No predefined tasks for this stage</p>
+                                          </div>
+                                        )}
+
+                                        {/* Action buttons */}
+                                        <div className="flex justify-end mt-4 pt-3 border-t border-gray-200 gap-2">
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setSelectedProject(project)}
+                                          >
+                                            <Eye className="h-4 w-4 mr-1" />
+                                            Full Details
+                                          </Button>
+                                          {completedCount === totalTasks && totalTasks > 0 && stage.step < 8 && (
+                                            <Button
+                                              size="sm"
+                                              onClick={async () => {
+                                                const nextStage = WORKFLOW_STAGES.find(s => s.step === stage.step + 1)
+                                                if (nextStage) {
+                                                  try {
+                                                    const response = await authPut(`/api/projects/${project.id}`, { status: nextStage.id })
+                                                    if (response.ok) {
+                                                      toast({ title: "Success", description: `Moved to ${nextStage.label}` })
+                                                      setExpandedProjectId(null)
+                                                      loadData()
+                                                    }
+                                                  } catch (error) {
+                                                    toast({ title: "Error", description: "Failed to advance stage", variant: "destructive" })
+                                                  }
+                                                }
+                                              }}
+                                            >
+                                              Advance to Step {stage.step + 1}
+                                              <CheckCircle2 className="h-4 w-4 ml-1" />
+                                            </Button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </CardContent>
+                        )}
+                        {filteredStageProjects.length === 0 && (
+                          <CardContent>
+                            <div className="text-center py-6 text-gray-500">
+                              <Target className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                              <p className="text-sm">No projects in this stage</p>
+                            </div>
+                          </CardContent>
+                        )}
+                      </Card>
+                    )
+                  })}
+
+                  {/* Cancelled Projects Section */}
+                  {(() => {
+                    const cancelledProjects = filteredProjects.filter(p => p.status === "cancelled")
+                    if (cancelledProjects.length === 0) return null
+                    return (
+                      <Card className="border-l-4 border-red-500 bg-red-50/30">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg flex items-center gap-2 text-red-700">
+                            <X className="h-5 w-5" />
+                            Cancelled
+                            <Badge variant="outline" className="ml-2 border-red-300 text-red-700">
+                              {cancelledProjects.length}
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid gap-2">
+                            {cancelledProjects.map((project) => (
+                              <div key={project.id} className="flex items-center justify-between p-3 rounded-lg bg-white/50 border border-red-200">
+                                <div>
+                                  <div className="font-medium text-gray-600 flex items-center gap-2">
+                                    {project.event_name || project.project_name}
+                                    {(project.requested_speaker_name || project.speaker_name) && (
+                                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                                        {project.requested_speaker_name || project.speaker_name}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-sm text-gray-500">{project.client_name} • {formatEventDate(project.event_date)}</div>
+                                </div>
+                                <Button size="sm" variant="ghost" onClick={() => router.push(`/admin/projects/${project.id}/edit`)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })()}
+                </div>
+              )}
+
               {/* Projects Table */}
+              {viewMode === "table" && (
               <Card>
                 <CardHeader>
                   <CardTitle>All Projects</CardTitle>
@@ -1538,11 +2141,8 @@ export default function EnhancedProjectManagementPage() {
                                 </SelectValue>
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="planning">
-                                  <Badge className="bg-slate-500 text-white">Planning</Badge>
-                                </SelectItem>
                                 <SelectItem value="contracts_signed">
-                                  <Badge className="bg-emerald-500 text-white">Contracts</Badge>
+                                  <Badge className="bg-emerald-500 text-white">Contracting</Badge>
                                 </SelectItem>
                                 <SelectItem value="invoicing">
                                   <Badge className="bg-blue-500 text-white">Invoicing</Badge>
@@ -1791,6 +2391,7 @@ export default function EnhancedProjectManagementPage() {
                   </Table>
                 </CardContent>
               </Card>
+              )}
             </TabsContent>
 
             {/* Tasks Tab */}
@@ -2139,104 +2740,227 @@ export default function EnhancedProjectManagementPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Project Workflow Guide</CardTitle>
-                  <CardDescription>Detailed checklist for each project stage</CardDescription>
+                  <CardDescription>Complete checklist for each project stage - tasks auto-filter by event type (Virtual/Local/Travel)</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {/* Invoicing & Setup */}
+                    {/* Step 1: Contracting */}
+                    <Card className="border-l-4 border-l-emerald-500">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+                          <CardTitle className="text-lg">Contracting</CardTitle>
+                        </div>
+                        <CardDescription className="text-xs mt-1">Client contract first, then speaker</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Prepare client contract</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Send contract to client</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span className="font-medium text-emerald-700">Client contract signed ✓</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Prepare speaker agreement</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Obtain speaker signature</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>File all signed contracts</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Step 2: Invoicing */}
                     <Card className="border-l-4 border-l-blue-500">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">
-                          Invoicing & Setup
-                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">2</div>
+                          <CardTitle className="text-lg">Invoicing</CardTitle>
+                        </div>
+                        <CardDescription className="text-xs mt-1">Deposit, kickoff, confirm specs</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2">
                             <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Send initial invoice (Net 30)</span>
+                            <span>Send internal contract to speaker</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Send final invoice</span>
+                            <span className="font-medium">Send 50% deposit invoice (Net 30)</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Schedule kickoff meeting</span>
+                            <span>Send final balance invoice</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Document client contacts</span>
+                            <span>Schedule client kickoff meeting</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Create project folder</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Brief internal team</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Confirm event details</span>
+                            <span>Confirm all event specifications</span>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    {/* Logistics Planning */}
+                    {/* Step 3: Logistics Planning */}
                     <Card className="border-l-4 border-l-purple-500">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">
-                          Logistics Planning
-                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-bold">3</div>
+                          <CardTitle className="text-lg">Logistics</CardTitle>
+                        </div>
+                        <CardDescription className="text-xs mt-1">Tasks vary by event type</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Confirm all logistical details</span>
+                        <div className="space-y-3 text-sm">
+                          {/* All events */}
+                          <div className="space-y-1">
+                            <span className="text-xs font-medium text-gray-500">All Events:</span>
+                            <div className="flex items-center gap-2">
+                              <CheckSquare className="h-4 w-4 text-gray-400" />
+                              <span>Deliver speaker press pack</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <CheckSquare className="h-4 w-4 text-gray-400" />
+                              <span>Establish day-of contact protocol</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <CheckSquare className="h-4 w-4 text-gray-400" />
+                              <span>Prepare speaker materials</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <CheckSquare className="h-4 w-4 text-gray-400" />
+                              <span>Complete vendor onboarding</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Get A/V requirements</span>
+                          {/* Virtual */}
+                          <div className="space-y-1 bg-cyan-50 p-2 rounded">
+                            <span className="text-xs font-medium text-cyan-700">🖥️ Virtual Only:</span>
+                            <div className="flex items-center gap-2 text-cyan-800">
+                              <CheckSquare className="h-3 w-3" />
+                              <span className="text-xs">Platform setup, Tech check, Schedule confirmed</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Send press pack to client</span>
+                          {/* In-Person */}
+                          <div className="space-y-1 bg-amber-50 p-2 rounded">
+                            <span className="text-xs font-medium text-amber-700">📍 In-Person (Local/Travel):</span>
+                            <div className="flex items-center gap-2 text-amber-800">
+                              <CheckSquare className="h-3 w-3" />
+                              <span className="text-xs">Event details, A/V requirements</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Confirm event times in speaker's calendar</span>
+                          {/* Travel Only */}
+                          <div className="space-y-1 bg-orange-50 p-2 rounded">
+                            <span className="text-xs font-medium text-orange-700">✈️ Travel Only:</span>
+                            <div className="flex items-center gap-2 text-orange-800">
+                              <CheckSquare className="h-3 w-3" />
+                              <span className="text-xs">Travel itinerary sent</span>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    {/* Pre-Event */}
-                    <Card className="border-l-4 border-l-green-500">
+                    {/* Step 4: Pre-Event */}
+                    <Card className="border-l-4 border-l-yellow-500">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">
-                          Pre-Event
-                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-yellow-500 text-white flex items-center justify-center text-xs font-bold">4</div>
+                          <CardTitle className="text-lg">Pre-Event</CardTitle>
+                        </div>
+                        <CardDescription className="text-xs mt-1">48 hours before - final checks</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2">
                             <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Review talk & get approval</span>
+                            <span className="font-medium">Final logistics verification</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Join all prep calls</span>
+                            <span>Speaker final preparation</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Review session document</span>
+                            <span>Deliver final client materials</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <CheckSquare className="h-4 w-4 text-gray-400" />
-                            <span>Final prep meeting with speaker</span>
+                            <span className="font-medium text-yellow-700">Event readiness checkpoint (go/no-go)</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Step 5: Event Week */}
+                    <Card className="border-l-4 border-l-orange-500">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold">5</div>
+                          <CardTitle className="text-lg">Event Week</CardTitle>
+                        </div>
+                        <CardDescription className="text-xs mt-1">Execution & support</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Complete day-before preparations</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span className="font-medium text-orange-700">Execute event successfully 🎤</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Provide real-time event support</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Step 6: Follow-up */}
+                    <Card className="border-l-4 border-l-indigo-500">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-bold">6</div>
+                          <CardTitle className="text-lg">Follow-up</CardTitle>
+                        </div>
+                        <CardDescription className="text-xs mt-1">Within 24 hours post-event</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span className="font-medium">Send post-event follow-up</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Request client feedback & testimonial</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Collect speaker feedback</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-400" />
+                            <span>Document lessons learned</span>
                           </div>
                         </div>
                       </CardContent>

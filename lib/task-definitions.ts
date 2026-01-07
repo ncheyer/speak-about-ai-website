@@ -1,4 +1,6 @@
 // Detailed task definitions for project management
+export type EventClassification = 'local' | 'virtual' | 'travel'
+
 export interface TaskDefinition {
   key: string
   name: string
@@ -8,6 +10,8 @@ export interface TaskDefinition {
   priority: 'critical' | 'high' | 'medium' | 'low'
   estimatedTime?: string // e.g., "30 min", "2 hours"
   owner?: 'sales' | 'operations' | 'speaker' | 'client'
+  // Which event classifications this task applies to (omit for all)
+  classifications?: EventClassification[]
 }
 
 export interface StageTaskDefinitions {
@@ -99,6 +103,7 @@ export const TASK_DEFINITIONS: StageTaskDefinitions = {
   },
 
   contracts_signed: {
+    // External Client Contract (first)
     prepare_client_contract: {
       key: 'prepare_client_contract',
       name: 'Prepare Client Contract',
@@ -136,11 +141,29 @@ export const TASK_DEFINITIONS: StageTaskDefinitions = {
       estimatedTime: '30 min',
       owner: 'operations'
     },
+    client_contract_signed: {
+      key: 'client_contract_signed',
+      name: 'Client Contract Signed',
+      description: 'Confirm client has signed and returned the contract',
+      requirements: [
+        'Contract sent to client',
+        'Client reviewed terms'
+      ],
+      deliverables: [
+        'Signed contract received',
+        'Contract filed in system'
+      ],
+      priority: 'critical',
+      estimatedTime: '15 min',
+      owner: 'operations'
+    },
+    // Internal Speaker Contract (after client)
     prepare_speaker_agreement: {
       key: 'prepare_speaker_agreement',
       name: 'Prepare Speaker Agreement',
       description: 'Draft internal speaker agreement with event details and compensation',
       requirements: [
+        'Client contract signed',
         'Event details confirmed',
         'Speaker fee agreed',
         'Terms and conditions ready'
@@ -292,6 +315,7 @@ export const TASK_DEFINITIONS: StageTaskDefinitions = {
   },
   
   logistics_planning: {
+    // For in-person events (local and travel)
     details_confirmed: {
       key: 'details_confirmed',
       name: 'Final Event Details Confirmation',
@@ -310,7 +334,51 @@ export const TASK_DEFINITIONS: StageTaskDefinitions = {
       ],
       priority: 'critical',
       estimatedTime: '2 hours',
-      owner: 'operations'
+      owner: 'operations',
+      classifications: ['local', 'travel']
+    },
+    // For virtual events
+    virtual_platform_setup: {
+      key: 'virtual_platform_setup',
+      name: 'Virtual Platform Setup',
+      description: 'Configure virtual event platform (Zoom, Teams, Webex) with all required settings',
+      requirements: [
+        'Platform selected and confirmed',
+        'Meeting/webinar created',
+        'Registration enabled if needed',
+        'Recording settings configured'
+      ],
+      deliverables: [
+        'Event link generated',
+        'Host/co-host permissions set',
+        'Waiting room/security configured',
+        'Backup platform identified'
+      ],
+      priority: 'critical',
+      estimatedTime: '1 hour',
+      owner: 'operations',
+      classifications: ['virtual']
+    },
+    tech_check_scheduled: {
+      key: 'tech_check_scheduled',
+      name: 'Schedule & Complete Tech Check',
+      description: 'Arrange technical rehearsal with speaker to test audio, video, and presentation sharing',
+      requirements: [
+        'Speaker availability confirmed',
+        'Platform access provided',
+        'Test presentation ready',
+        'Client tech contact available'
+      ],
+      deliverables: [
+        'Tech check completed',
+        'Audio/video quality verified',
+        'Screen sharing tested',
+        'Backup plan confirmed'
+      ],
+      priority: 'critical',
+      estimatedTime: '1 hour',
+      owner: 'operations',
+      classifications: ['virtual']
     },
     av_requirements_gathered: {
       key: 'av_requirements_gathered',
@@ -330,7 +398,8 @@ export const TASK_DEFINITIONS: StageTaskDefinitions = {
       ],
       priority: 'high',
       estimatedTime: '1.5 hours',
-      owner: 'operations'
+      owner: 'operations',
+      classifications: ['local', 'travel']
     },
     press_pack_sent: {
       key: 'press_pack_sent',
@@ -351,26 +420,73 @@ export const TASK_DEFINITIONS: StageTaskDefinitions = {
       priority: 'medium',
       estimatedTime: '1 hour',
       owner: 'operations'
+      // No classifications = applies to all
     },
+    // Travel itinerary - only for travel events
     calendar_confirmed: {
       key: 'calendar_confirmed',
-      name: 'Lock Speaker Calendar',
-      description: 'Ensure speaker availability is confirmed and calendar is blocked',
+      name: 'Confirm & Send Travel Itinerary',
+      description: 'Finalize travel details including where to be and when, and send complete itinerary to speaker',
       requirements: [
-        'Travel dates confirmed',
-        'Rehearsal time scheduled',
-        'Buffer time included',
-        'Time zones verified'
+        'Flight details confirmed',
+        'Hotel/accommodation booked',
+        'Ground transportation arranged',
+        'Venue address and arrival time confirmed'
       ],
       deliverables: [
-        'Calendar invites sent',
-        'Travel itinerary drafted',
-        'Conflicts resolved',
-        'Backup dates identified'
+        'Complete itinerary sent to speaker',
+        'Calendar invites with all details sent',
+        'Speaker confirmation received',
+        'Travel documents shared (tickets, confirmations)'
       ],
       priority: 'critical',
-      estimatedTime: '45 min',
-      owner: 'speaker'
+      estimatedTime: '1 hour',
+      owner: 'operations',
+      classifications: ['travel']
+    },
+    // Local event logistics - simpler than travel
+    local_logistics_confirmed: {
+      key: 'local_logistics_confirmed',
+      name: 'Confirm Local Event Logistics',
+      description: 'Send venue address, parking info, and arrival time to speaker',
+      requirements: [
+        'Venue address confirmed',
+        'Parking arrangements made',
+        'Arrival time set',
+        'On-site contact identified'
+      ],
+      deliverables: [
+        'Location details sent to speaker',
+        'Calendar invite with address',
+        'Speaker confirmation received',
+        'Parking pass arranged if needed'
+      ],
+      priority: 'high',
+      estimatedTime: '30 min',
+      owner: 'operations',
+      classifications: ['local']
+    },
+    // Virtual event timing - simpler logistics
+    virtual_schedule_confirmed: {
+      key: 'virtual_schedule_confirmed',
+      name: 'Confirm Virtual Event Schedule',
+      description: 'Send meeting link, login time, and run of show to speaker',
+      requirements: [
+        'Meeting link created',
+        'Time zones confirmed',
+        'Run of show finalized',
+        'Login time set (15-30 min early)'
+      ],
+      deliverables: [
+        'Calendar invite with link sent',
+        'Time zone confirmed with speaker',
+        'Run of show shared',
+        'Speaker confirmation received'
+      ],
+      priority: 'high',
+      estimatedTime: '30 min',
+      owner: 'operations',
+      classifications: ['virtual']
     },
     client_contact_obtained: {
       key: 'client_contact_obtained',
@@ -391,6 +507,7 @@ export const TASK_DEFINITIONS: StageTaskDefinitions = {
       priority: 'high',
       estimatedTime: '30 min',
       owner: 'operations'
+      // No classifications = applies to all
     },
     speaker_materials_ready: {
       key: 'speaker_materials_ready',
@@ -411,6 +528,7 @@ export const TASK_DEFINITIONS: StageTaskDefinitions = {
       priority: 'high',
       estimatedTime: '3 hours',
       owner: 'speaker'
+      // No classifications = applies to all
     },
     vendor_onboarding_complete: {
       key: 'vendor_onboarding_complete',
@@ -431,6 +549,7 @@ export const TASK_DEFINITIONS: StageTaskDefinitions = {
       priority: 'medium',
       estimatedTime: '2 hours',
       owner: 'operations'
+      // No classifications = applies to all
     }
   },
   
@@ -740,4 +859,36 @@ export function getPriorityColor(priority: string): string {
     low: 'text-gray-600 bg-gray-50'
   }
   return colors[priority] || colors.low
+}
+
+// Helper to filter tasks by event classification
+export function filterTasksByClassification(
+  stageId: string,
+  classification?: EventClassification
+): [string, TaskDefinition][] {
+  const stageTasks = TASK_DEFINITIONS[stageId] || {}
+  return Object.entries(stageTasks).filter(([_, task]) => {
+    // If task has no classifications specified, it applies to all
+    if (!task.classifications || task.classifications.length === 0) {
+      return true
+    }
+    // If project has no classification, show all tasks
+    if (!classification) {
+      return true
+    }
+    // Filter based on classification
+    return task.classifications.includes(classification)
+  })
+}
+
+// Helper to get tasks for a specific classification with summary
+export function getTaskSummaryForClassification(
+  stageId: string,
+  classification?: EventClassification
+): { total: number; tasks: string[] } {
+  const filtered = filterTasksByClassification(stageId, classification)
+  return {
+    total: filtered.length,
+    tasks: filtered.map(([_, task]) => task.name)
+  }
 }

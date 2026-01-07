@@ -62,6 +62,10 @@ export async function POST(request: NextRequest) {
       image_url,
       image_alt,
       testimonial,
+      testimonial_author,
+      testimonial_title,
+      speaker_contribution,
+      video_url,
       impact_points,
       speaker_ids,
       display_order = 0,
@@ -70,7 +74,7 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Validate required fields
-    if (!company || !image_url || !image_alt || !testimonial || !impact_points) {
+    if (!company || !image_url || !image_alt || !impact_points) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
@@ -80,8 +84,8 @@ export async function POST(request: NextRequest) {
     // Insert case study
     const result = await sql`
       INSERT INTO case_studies
-        (company, logo_url, location, event_type, image_url, image_alt, testimonial, impact_points, display_order, active, featured)
-      VALUES (${company}, ${logo_url}, ${location}, ${event_type}, ${image_url}, ${image_alt}, ${testimonial}, ${impact_points}, ${display_order}, ${active}, ${featured})
+        (company, logo_url, location, event_type, image_url, image_alt, testimonial, testimonial_author, testimonial_title, speaker_contribution, video_url, impact_points, display_order, active, featured)
+      VALUES (${company}, ${logo_url}, ${location}, ${event_type}, ${image_url}, ${image_alt}, ${testimonial}, ${testimonial_author}, ${testimonial_title}, ${speaker_contribution}, ${video_url}, ${impact_points}, ${display_order}, ${active}, ${featured})
       RETURNING *
     `
 

@@ -39,7 +39,8 @@ import {
   PenTool,
   Bot,
   Sparkles,
-  Archive
+  Archive,
+  FileEdit
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -149,6 +150,22 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       color: "text-purple-600",
       bgColor: "bg-purple-50",
       items: [
+        {
+          title: "Website Editor",
+          href: "/admin/website-editor",
+          icon: FileEdit,
+          description: "Edit Page Content",
+          color: "text-cyan-600",
+          bgColor: "bg-cyan-50"
+        },
+        {
+          title: "Case Studies",
+          href: "/admin/case-studies",
+          icon: Building2,
+          description: "Testimonials & Success Stories",
+          color: "text-amber-600",
+          bgColor: "bg-amber-50"
+        },
         {
           title: "Speaker Management",
           href: "/admin/speakers",

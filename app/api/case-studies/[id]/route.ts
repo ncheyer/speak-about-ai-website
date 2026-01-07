@@ -66,6 +66,7 @@ export async function PUT(
       testimonial,
       testimonial_author,
       testimonial_title,
+      video_url,
       impact_points,
       speaker_ids,
       display_order,
@@ -79,7 +80,7 @@ export async function PUT(
       SET company = ${company}, logo_url = ${logo_url}, location = ${location}, event_type = ${event_type},
           image_url = ${image_url}, image_alt = ${image_alt}, speaker_contribution = ${speaker_contribution},
           testimonial = ${testimonial}, testimonial_author = ${testimonial_author}, testimonial_title = ${testimonial_title},
-          impact_points = ${impact_points}, display_order = ${display_order}, active = ${active}, featured = ${featured}
+          video_url = ${video_url}, impact_points = ${impact_points}, display_order = ${display_order}, active = ${active}, featured = ${featured}
       WHERE id = ${id}
       RETURNING *
     `

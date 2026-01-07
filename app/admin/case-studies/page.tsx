@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { AdminSidebar } from "@/components/admin-sidebar"
-import { Building2, Plus, Edit, Trash2, Upload, X, ArrowUp, ArrowDown, Eye, EyeOff } from "lucide-react"
+import { Building2, Plus, Edit, Trash2, Upload, X, ArrowUp, ArrowDown, Eye, EyeOff, Loader2, Image as ImageIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface Speaker {
@@ -52,6 +52,10 @@ interface CaseStudy {
   image_url: string
   image_alt: string
   testimonial: string
+  testimonial_author?: string
+  testimonial_title?: string
+  speaker_contribution?: string
+  video_url?: string
   impact_points: string[]
   speakers: Speaker[]
   display_order: number
@@ -59,6 +63,162 @@ interface CaseStudy {
   featured: boolean
   created_at: string
   updated_at: string
+}
+
+// Image Upload Field Component
+function ImageUploadField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  description,
+  uploadFolder = "uploads/case-studies"
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  description?: string
+  uploadFolder?: string
+}) {
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    setUploadError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', uploadFolder)
+
+      const response = await fetch('/api/admin/upload-image', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        onChange(result.path)
+      } else {
+        setUploadError(result.error || 'Upload failed')
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      setUploadError('Failed to upload image')
+    } finally {
+      setUploading(false)
+      if (e.target) {
+        e.target.value = ''
+      }
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-gray-300">{label}</Label>
+
+      {/* Image Preview */}
+      {value && (
+        <div className="relative w-full max-w-xs h-32 bg-gray-700 rounded-lg overflow-hidden group">
+          <img
+            src={value}
+            alt={label}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/placeholder.svg'
+            }}
+          />
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <label className="cursor-pointer bg-white text-gray-800 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              Replace
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Button (when no image) */}
+      {!value && (
+        <label className="cursor-pointer flex flex-col items-center justify-center w-full max-w-xs h-32 bg-gray-700 border-2 border-dashed border-gray-500 rounded-lg hover:border-blue-400 hover:bg-gray-600 transition-colors">
+          {uploading ? (
+            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+          ) : (
+            <>
+              <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
+              <span className="text-sm text-gray-400">Click to upload</span>
+              <span className="text-xs text-gray-500 mt-1">JPEG, PNG, GIF, WebP</span>
+            </>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            className="hidden"
+            disabled={uploading}
+          />
+        </label>
+      )}
+
+      {/* Upload Error */}
+      {uploadError && (
+        <div className="flex items-center gap-2 text-red-400 text-sm bg-red-900/20 p-2 rounded">
+          {uploadError}
+          <button onClick={() => setUploadError(null)} className="ml-auto">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* URL Input */}
+      <div className="flex gap-2">
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="bg-gray-700 border-gray-600 text-white flex-1"
+          placeholder={placeholder || "https://..."}
+        />
+        <label className="cursor-pointer">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={uploading}
+            className="h-10 border-gray-600 hover:bg-gray-700"
+            asChild
+          >
+            <span>
+              {uploading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
+            </span>
+          </Button>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            className="hidden"
+            disabled={uploading}
+          />
+        </label>
+      </div>
+      {description && <p className="text-xs text-gray-400">{description}</p>}
+    </div>
+  )
 }
 
 export default function CaseStudiesManagementPage() {
@@ -77,6 +237,10 @@ export default function CaseStudiesManagementPage() {
     image_url: "",
     image_alt: "",
     testimonial: "",
+    testimonial_author: "",
+    testimonial_title: "",
+    speaker_contribution: "",
+    video_url: "",
     impact_points: ["", "", ""],
     speaker_ids: [] as number[],
     display_order: 0,
@@ -135,11 +299,15 @@ export default function CaseStudiesManagementPage() {
         event_type: study.event_type,
         image_url: study.image_url,
         image_alt: study.image_alt,
-        testimonial: study.testimonial,
+        testimonial: study.testimonial || "",
+        testimonial_author: study.testimonial_author || "",
+        testimonial_title: study.testimonial_title || "",
+        speaker_contribution: study.speaker_contribution || "",
+        video_url: study.video_url || "",
         impact_points: study.impact_points.length >= 3
           ? study.impact_points
           : [...study.impact_points, "", "", ""].slice(0, 3),
-        speaker_ids: study.speakers?.map(s => s.id) || [],
+        speaker_ids: study.speakers?.map(s => s.id).filter((id): id is number => id !== undefined && id !== null) || [],
         display_order: study.display_order,
         active: study.active,
         featured: study.featured
@@ -154,6 +322,10 @@ export default function CaseStudiesManagementPage() {
         image_url: "",
         image_alt: "",
         testimonial: "",
+        testimonial_author: "",
+        testimonial_title: "",
+        speaker_contribution: "",
+        video_url: "",
         impact_points: ["", "", ""],
         speaker_ids: [],
         display_order: caseStudies.length,
@@ -496,29 +668,22 @@ export default function CaseStudiesManagementPage() {
               />
             </div>
 
-            <div>
-              <Label htmlFor="logo_url" className="text-gray-300">Logo URL</Label>
-              <Input
-                id="logo_url"
+            <div className="grid grid-cols-2 gap-4">
+              <ImageUploadField
+                label="Company Logo (optional)"
                 value={formData.logo_url}
-                onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                className="bg-gray-700 border-gray-600 text-white"
-                placeholder="https://..."
+                onChange={(value) => setFormData({ ...formData, logo_url: value })}
+                description="Company logo displayed on the case study"
+                uploadFolder="uploads/case-studies/logos"
               />
-              <p className="text-xs text-gray-400 mt-1">Company logo (optional)</p>
-            </div>
 
-            <div>
-              <Label htmlFor="image_url" className="text-gray-300">Event Image URL *</Label>
-              <Input
-                id="image_url"
+              <ImageUploadField
+                label="Event Image *"
                 value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                className="bg-gray-700 border-gray-600 text-white"
-                placeholder="https://..."
-                required
+                onChange={(value) => setFormData({ ...formData, image_url: value })}
+                description="Main event photo"
+                uploadFolder="uploads/case-studies"
               />
-              <p className="text-xs text-gray-400 mt-1">Main event photo</p>
             </div>
 
             <div>
@@ -535,7 +700,7 @@ export default function CaseStudiesManagementPage() {
             </div>
 
             <div>
-              <Label htmlFor="testimonial" className="text-gray-300">Testimonial *</Label>
+              <Label htmlFor="testimonial" className="text-gray-300">Testimonial Quote</Label>
               <Textarea
                 id="testimonial"
                 value={formData.testimonial}
@@ -543,8 +708,55 @@ export default function CaseStudiesManagementPage() {
                 className="bg-gray-700 border-gray-600 text-white"
                 rows={3}
                 placeholder="Client testimonial quote..."
-                required
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="testimonial_author" className="text-gray-300">Testimonial Author</Label>
+                <Input
+                  id="testimonial_author"
+                  value={formData.testimonial_author}
+                  onChange={(e) => setFormData({ ...formData, testimonial_author: e.target.value })}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="e.g., John Smith"
+                />
+              </div>
+              <div>
+                <Label htmlFor="testimonial_title" className="text-gray-300">Author Title/Role</Label>
+                <Input
+                  id="testimonial_title"
+                  value={formData.testimonial_title}
+                  onChange={(e) => setFormData({ ...formData, testimonial_title: e.target.value })}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="e.g., VP of Events, Acme Corp"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="speaker_contribution" className="text-gray-300">Speaker Contribution</Label>
+              <Textarea
+                id="speaker_contribution"
+                value={formData.speaker_contribution}
+                onChange={(e) => setFormData({ ...formData, speaker_contribution: e.target.value })}
+                className="bg-gray-700 border-gray-600 text-white"
+                rows={2}
+                placeholder="What the speaker provided for this event..."
+              />
+              <p className="text-xs text-gray-400 mt-1">Describe what the speaker delivered (e.g., keynote, workshop, panel moderation)</p>
+            </div>
+
+            <div>
+              <Label htmlFor="video_url" className="text-gray-300">Video URL (YouTube)</Label>
+              <Input
+                id="video_url"
+                value={formData.video_url}
+                onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                className="bg-gray-700 border-gray-600 text-white"
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+              <p className="text-xs text-gray-400 mt-1">Optional YouTube video highlighting the event</p>
             </div>
 
             <div>
@@ -591,7 +803,7 @@ export default function CaseStudiesManagementPage() {
             <div>
               <Label className="text-gray-300">Featured Speakers</Label>
               <Select
-                value={formData.speaker_ids.length > 0 ? formData.speaker_ids[0].toString() : ""}
+                value={formData.speaker_ids.length > 0 && formData.speaker_ids[0] != null ? formData.speaker_ids[0].toString() : ""}
                 onValueChange={(value) => {
                   const id = parseInt(value)
                   if (!formData.speaker_ids.includes(id)) {
