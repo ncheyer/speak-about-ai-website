@@ -359,27 +359,6 @@ export const TASK_DEFINITIONS: StageTaskDefinitions = {
       owner: 'operations',
       classifications: ['virtual']
     },
-    tech_check_scheduled: {
-      key: 'tech_check_scheduled',
-      name: 'Schedule & Complete Tech Check',
-      description: 'Arrange technical rehearsal with speaker to test audio, video, and presentation sharing',
-      requirements: [
-        'Speaker availability confirmed',
-        'Platform access provided',
-        'Test presentation ready',
-        'Client tech contact available'
-      ],
-      deliverables: [
-        'Tech check completed',
-        'Audio/video quality verified',
-        'Screen sharing tested',
-        'Backup plan confirmed'
-      ],
-      priority: 'critical',
-      estimatedTime: '1 hour',
-      owner: 'operations',
-      classifications: ['virtual']
-    },
     av_requirements_gathered: {
       key: 'av_requirements_gathered',
       name: 'Compile A/V Technical Requirements',
@@ -637,6 +616,27 @@ export const TASK_DEFINITIONS: StageTaskDefinitions = {
   },
   
   event_week: {
+    tech_check_scheduled: {
+      key: 'tech_check_scheduled',
+      name: 'Schedule & Complete Tech Check',
+      description: 'Arrange technical rehearsal with speaker to test audio, video, presentation sharing, and all AV equipment',
+      requirements: [
+        'Speaker availability confirmed',
+        'Platform/venue access ready',
+        'Test presentation ready',
+        'Client tech contact available'
+      ],
+      deliverables: [
+        'Tech check completed',
+        'Audio/video quality verified',
+        'Screen sharing/AV tested',
+        'Backup plan confirmed'
+      ],
+      priority: 'critical',
+      estimatedTime: '1 hour',
+      owner: 'operations'
+      // No classifications = applies to all event types
+    },
     final_preparations_complete: {
       key: 'final_preparations_complete',
       name: 'Complete Day-Before Preparations',
@@ -815,7 +815,7 @@ export function calculateTaskUrgency(
     },
     event_week: {
       thresholds: { critical: 0, high: 1, medium: 3 },
-      criticalTasks: ['final_preparations_complete', 'event_executed']
+      criticalTasks: ['tech_check_scheduled', 'final_preparations_complete', 'event_executed']
     },
     follow_up: {
       thresholds: { critical: -7, high: -3, medium: 0 }, // Negative = days after event
