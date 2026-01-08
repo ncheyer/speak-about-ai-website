@@ -1,7 +1,7 @@
 "use client"
 
 import { Award, MapPin, Globe, Shield, Clock, Users, Headphones, Target, DollarSign, Globe2, Check, Calendar, ArrowRight } from "lucide-react"
-import { EditableText, EditableImage } from "@/components/editable-text"
+import { EditableText, EditableImage, LogoListEditor } from "@/components/editable-text"
 import { Button } from "@/components/ui/button"
 
 interface PagePreviewProps {
@@ -313,6 +313,21 @@ function HomeClientLogosPreview({
   const ctaText = content['home.client-logos.cta_text'] || 'View Past Clients & Events'
   const ctaLink = content['home.client-logos.cta_link'] || '/our-services#testimonials'
 
+  // Parse logos from content or use defaults
+  const logosJson = content['home.client-logos.logos']
+  let logos = defaultLogos
+  if (logosJson) {
+    try {
+      logos = JSON.parse(logosJson)
+    } catch (e) {
+      // Use defaults if JSON parsing fails
+    }
+  }
+
+  const handleLogosChange = (newLogos: typeof defaultLogos) => {
+    onContentChange('home.client-logos.logos', JSON.stringify(newLogos))
+  }
+
   return (
     <section className="pt-4 pb-8 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -337,7 +352,7 @@ function HomeClientLogosPreview({
         </div>
         {/* Logo carousel preview - showing actual logos */}
         <div className="flex justify-center items-center gap-8 py-6 flex-wrap">
-          {defaultLogos.map((logo, i) => (
+          {logos.map((logo, i) => (
             <img
               key={i}
               src={logo.src}
@@ -347,7 +362,16 @@ function HomeClientLogosPreview({
             />
           ))}
         </div>
-        <p className="text-center text-xs text-gray-400 italic mb-4">Logo images are managed in /public/logos/ folder</p>
+
+        {/* Logo Editor */}
+        <div className="text-center mb-4">
+          <LogoListEditor
+            logos={logos}
+            onChange={handleLogosChange}
+            isModified={isModified('home.client-logos.logos', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
 
         {/* CTA Button */}
         <div className="text-center">
