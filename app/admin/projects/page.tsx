@@ -88,7 +88,7 @@ interface Project {
   event_type: string
   event_classification?: "virtual" | "local" | "travel"
   attendee_count?: number
-  status: "contracts_signed" | "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled"
+  status: "2plus_months" | "1to2_months" | "less_than_month" | "final_week" | "contracts_signed" | "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled"
   priority: "low" | "medium" | "high" | "urgent"
   budget: string
   speaker_fee?: string
@@ -174,6 +174,28 @@ interface Invoice {
 }
 
 const PROJECT_STATUSES: Record<string, { label: string; color: string; description?: string }> = {
+  // Time-based statuses (auto-assigned based on event date)
+  "2plus_months": {
+    label: "2+ Months Out",
+    color: "bg-blue-100 text-blue-800",
+    description: "Event is more than 2 months away"
+  },
+  "1to2_months": {
+    label: "1-2 Months Out",
+    color: "bg-green-100 text-green-800",
+    description: "Event is 1-2 months away"
+  },
+  "less_than_month": {
+    label: "< 1 Month",
+    color: "bg-yellow-100 text-yellow-800",
+    description: "Event is less than 1 month away"
+  },
+  "final_week": {
+    label: "Final Week",
+    color: "bg-red-100 text-red-800",
+    description: "Event is within the final week"
+  },
+  // Workflow statuses
   contracts_signed: {
     label: "Contracting",
     color: "bg-emerald-500",

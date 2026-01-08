@@ -7,16 +7,9 @@ let sql: any = null
 function getSQL() {
   if (!sql) {
     if (!process.env.DATABASE_URL) {
-      console.error("DATABASE_URL environment variable is not set")
       throw new Error("Database configuration error: DATABASE_URL not set")
     }
-    try {
-      sql = neon(process.env.DATABASE_URL)
-      console.log("Database connection initialized successfully")
-    } catch (error) {
-      console.error("Failed to initialize Neon client for projects:", error)
-      throw error
-    }
+    sql = neon(process.env.DATABASE_URL)
   }
   return sql
 }
@@ -177,22 +170,15 @@ export interface Project {
 export async function getAllProjects(): Promise<Project[]> {
   try {
     const sql = getSQL()
-    console.log("Fetching all projects from database...")
     const projects = await sql`
-      SELECT * FROM projects 
+      SELECT * FROM projects
       ORDER BY created_at DESC
     `
-    console.log(`Successfully fetched ${projects.length} projects`)
     return projects as Project[]
   } catch (error) {
-    console.error("Error fetching projects:", error)
-
-    // Check if it's a table doesn't exist error
     if (error instanceof Error && error.message.includes('relation "projects" does not exist')) {
-      console.error("The projects table doesn't exist. Please run the create-projects-table.sql script.")
       throw new Error("Database table 'projects' does not exist. Please run the setup script.")
     }
-
     throw error
   }
 }
@@ -201,12 +187,11 @@ export async function getProjectById(id: number): Promise<Project | null> {
   try {
     const sql = getSQL()
     const [project] = await sql`
-      SELECT * FROM projects 
+      SELECT * FROM projects
       WHERE id = ${id}
     `
     return project as Project || null
   } catch (error) {
-    console.error("Error fetching project by id:", error)
     throw error
   }
 }
@@ -214,8 +199,7 @@ export async function getProjectById(id: number): Promise<Project | null> {
 export async function createProject(projectData: Omit<Project, "id" | "created_at" | "updated_at">): Promise<Project | null> {
   try {
     const sql = getSQL()
-    console.log("Creating new project with data:", JSON.stringify(projectData, null, 2))
-    
+
     // Use the status provided or default to invoicing
     const finalProjectData = {
       ...projectData,
@@ -293,15 +277,8 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
       )
       RETURNING *
     `
-    console.log("Successfully created project with ID:", project.id)
     return project as Project
   } catch (error: any) {
-    console.error("Error creating project - Full error:", error)
-    console.error("Error message:", error.message)
-    console.error("Error code:", error.code)
-    if (error.message?.includes('column')) {
-      console.error("Database column error - the projects table may be missing some columns")
-    }
     // Return null instead of throwing to prevent 500 error
     return null
   }
@@ -310,66 +287,34 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
 export async function deleteProject(id: number): Promise<boolean> {
   try {
     const sql = getSQL()
-    console.log("Starting deletion of project ID:", id)
-    
+
     // First check if project exists
     const existingProject = await sql`
-      SELECT id FROM projects 
+      SELECT id FROM projects
       WHERE id = ${id}
     `
-    
+
     if (!existingProject || existingProject.length === 0) {
-      console.log(`Project with ID ${id} not found`)
       return false
     }
-    
+
     // Handle foreign key dependencies that don't have CASCADE
-    // Delete associated deals (financial records tied to this project)
-    console.log(`Deleting deals associated with project ${id}`)
-    await sql`
-      DELETE FROM deals 
-      WHERE project_id = ${id}
-    `
-    
-    // Update contracts_v2 to remove project reference
-    console.log(`Updating contracts_v2 to remove project ${id} reference`)
-    await sql`
-      UPDATE contracts_v2 
-      SET project_id = NULL 
-      WHERE project_id = ${id}
-    `
-    
-    // Delete client_portal_audit_log entries
-    console.log(`Deleting client_portal_audit_log entries for project ${id}`)
-    await sql`
-      DELETE FROM client_portal_audit_log 
-      WHERE project_id = ${id}
-    `
-    
+    await sql`DELETE FROM deals WHERE project_id = ${id}`
+    await sql`UPDATE contracts_v2 SET project_id = NULL WHERE project_id = ${id}`
+    await sql`DELETE FROM client_portal_audit_log WHERE project_id = ${id}`
+
     // Note: These tables have CASCADE delete, so they'll be handled automatically:
-    // - invoices
-    // - client_portal_invitations
-    // - project_client_accounts
-    // - project_speaker_accounts
-    // - project_tasks
-    // - admin_events (has SET NULL)
-    
-    // Delete the project
-    console.log(`Deleting project ${id}`)
+    // - invoices, client_portal_invitations, project_client_accounts,
+    // - project_speaker_accounts, project_tasks, admin_events (has SET NULL)
+
     const result = await sql`
-      DELETE FROM projects 
+      DELETE FROM projects
       WHERE id = ${id}
       RETURNING id
     `
-    
-    console.log(`Project ${id} deleted successfully:`, result.length > 0)
+
     return result.length > 0
   } catch (error) {
-    console.error("Error in deleteProject function:", {
-      projectId: id,
-      error: error instanceof Error ? error.message : error,
-      stack: error instanceof Error ? error.stack : undefined
-    })
     throw error
   }
 }
@@ -377,8 +322,7 @@ export async function deleteProject(id: number): Promise<boolean> {
 export async function updateProject(id: number, projectData: Partial<Project>): Promise<Project | null> {
   try {
     const sql = getSQL()
-    console.log("Updating project ID:", id)
-    
+
     // If event_date is being updated, automatically determine status
     let finalProjectData = { ...projectData }
     if (projectData.event_date) {
@@ -386,11 +330,10 @@ export async function updateProject(id: number, projectData: Partial<Project>): 
         projectData.event_date,
         projectData.status as ProjectStatus
       )
-      
+
       // Only update status if it's not manually set to completed or cancelled
       if (!projectData.status || (projectData.status !== "completed" && projectData.status !== "cancelled")) {
         finalProjectData.status = automaticStatus
-        console.log(`Auto-updating project ${id} status to: ${automaticStatus} based on event date: ${projectData.event_date}`)
       }
     }
     const [project] = await sql`
@@ -545,10 +488,8 @@ export async function updateProject(id: number, projectData: Partial<Project>): 
       WHERE id = ${id}
       RETURNING *
     `
-    console.log("Successfully updated project ID:", id)
     return project as Project
   } catch (error) {
-    console.error("Error updating project:", error)
     return null
   }
 }
@@ -557,16 +498,13 @@ export async function updateProject(id: number, projectData: Partial<Project>): 
 export async function getProjectsByStatus(status: string): Promise<Project[]> {
   try {
     const sql = getSQL()
-    console.log("Fetching projects by status:", status)
     const projects = await sql`
-      SELECT * FROM projects 
+      SELECT * FROM projects
       WHERE status = ${status}
       ORDER BY created_at DESC
     `
-    console.log(`Found ${projects.length} projects with status: ${status}`)
     return projects as Project[]
   } catch (error) {
-    console.error("Error fetching projects by status:", error)
     return []
   }
 }
@@ -574,20 +512,17 @@ export async function getProjectsByStatus(status: string): Promise<Project[]> {
 export async function searchProjects(searchTerm: string): Promise<Project[]> {
   try {
     const sql = getSQL()
-    console.log("Searching projects for term:", searchTerm)
     const projects = await sql`
-      SELECT * FROM projects 
-      WHERE 
+      SELECT * FROM projects
+      WHERE
         project_name ILIKE ${"%" + searchTerm + "%"} OR
         client_name ILIKE ${"%" + searchTerm + "%"} OR
         company ILIKE ${"%" + searchTerm + "%"} OR
         description ILIKE ${"%" + searchTerm + "%"}
       ORDER BY created_at DESC
     `
-    console.log(`Found ${projects.length} projects matching search term: ${searchTerm}`)
     return projects as Project[]
   } catch (error) {
-    console.error("Error searching projects:", error)
     return []
   }
 }
@@ -596,16 +531,13 @@ export async function searchProjects(searchTerm: string): Promise<Project[]> {
 export async function getActiveProjects(): Promise<Project[]> {
   try {
     const sql = getSQL()
-    console.log("Fetching active projects...")
     const projects = await sql`
-      SELECT * FROM projects 
+      SELECT * FROM projects
       WHERE status NOT IN ('completed', 'cancelled')
       ORDER BY deadline ASC, priority DESC
     `
-    console.log(`Found ${projects.length} active projects`)
     return projects as Project[]
   } catch (error) {
-    console.error("Error fetching active projects:", error)
     return []
   }
 }
@@ -613,43 +545,39 @@ export async function getActiveProjects(): Promise<Project[]> {
 // Update all project statuses based on their event dates
 export async function updateAllProjectStatuses(): Promise<{ updated: number, errors: number }> {
   try {
-    console.log("Updating all project statuses based on event dates...")
-    
+    const sql = getSQL()
+
     // Get all projects with event dates that aren't completed or cancelled
     const projects = await sql`
-      SELECT id, event_date, status FROM projects 
-      WHERE event_date IS NOT NULL 
+      SELECT id, event_date, status FROM projects
+      WHERE event_date IS NOT NULL
       AND status NOT IN ('completed', 'cancelled')
       ORDER BY event_date ASC
     `
-    
+
     let updated = 0
     let errors = 0
-    
+
     for (const project of projects) {
       try {
         const currentStatus = project.status as ProjectStatus
         const automaticStatus = getAutomaticProjectStatus(project.event_date, currentStatus)
-        
+
         if (automaticStatus !== currentStatus) {
           await sql`
-            UPDATE projects 
+            UPDATE projects
             SET status = ${automaticStatus}, updated_at = CURRENT_TIMESTAMP
             WHERE id = ${project.id}
           `
-          console.log(`Updated project ${project.id} from ${currentStatus} to ${automaticStatus}`)
           updated++
         }
       } catch (error) {
-        console.error(`Error updating project ${project.id}:`, error)
         errors++
       }
     }
-    
-    console.log(`Status update complete: ${updated} updated, ${errors} errors`)
+
     return { updated, errors }
   } catch (error) {
-    console.error("Error in bulk status update:", error)
     return { updated: 0, errors: 1 }
   }
 }
@@ -658,16 +586,13 @@ export async function updateAllProjectStatuses(): Promise<{ updated: number, err
 export async function getProjectsByPriority(priority: string): Promise<Project[]> {
   try {
     const sql = getSQL()
-    console.log("Fetching projects by priority:", priority)
     const projects = await sql`
-      SELECT * FROM projects 
+      SELECT * FROM projects
       WHERE priority = ${priority}
       ORDER BY deadline ASC
     `
-    console.log(`Found ${projects.length} projects with priority: ${priority}`)
     return projects as Project[]
   } catch (error) {
-    console.error("Error fetching projects by priority:", error)
     return []
   }
 }
@@ -676,31 +601,24 @@ export async function getProjectsByPriority(priority: string): Promise<Project[]
 export async function getOverdueProjects(): Promise<Project[]> {
   try {
     const sql = getSQL()
-    console.log("Fetching overdue projects...")
     const projects = await sql`
-      SELECT * FROM projects 
+      SELECT * FROM projects
       WHERE deadline < CURRENT_DATE AND status NOT IN ('completed', 'cancelled')
       ORDER BY deadline ASC
     `
-    console.log(`Found ${projects.length} overdue projects`)
     return projects as Project[]
   } catch (error) {
-    console.error("Error fetching overdue projects:", error)
     return []
   }
 }
 
 // Test connection function
 export async function testProjectsConnection(): Promise<boolean> {
-  if (!databaseAvailable || !sql) {
-    return false
-  }
-  
   try {
+    const sql = getSQL()
     await sql`SELECT 1`
     return true
   } catch (error) {
-    console.error("Projects database connection test failed:", error)
     return false
   }
 }
