@@ -225,6 +225,15 @@ function HomeWhyChooseUsPreview({
   )
 }
 
+// Default logos for preview
+const defaultLogos = [
+  { name: "Stanford University", src: "/logos/stanford-university-logo-1024x335-1.png" },
+  { name: "Google", src: "/logos/Google_2015_logo.svg.png" },
+  { name: "Amazon", src: "/logos/Amazon-Logo-2000.png" },
+  { name: "Visa", src: "/logos/Visa_Inc._logo.svg" },
+  { name: "KPMG", src: "/logos/KPMG_logo.svg.png" },
+]
+
 // Home Client Logos Preview
 function HomeClientLogosPreview({
   content,
@@ -234,6 +243,8 @@ function HomeClientLogosPreview({
 }: Omit<PagePreviewProps, 'page'>) {
   const title = content['home.client-logos.title'] || 'Trusted by Industry Leaders'
   const subtitle = content['home.client-logos.subtitle'] || 'Our speakers have worked with leading organizations around the world for their most important events.'
+  const ctaText = content['home.client-logos.cta_text'] || 'View Past Clients & Events'
+  const ctaLink = content['home.client-logos.cta_link'] || '/our-services#testimonials'
 
   return (
     <section className="pt-4 pb-8 bg-gray-50">
@@ -257,14 +268,43 @@ function HomeClientLogosPreview({
             editorMode={editorMode}
           />
         </div>
-        {/* Logo carousel preview placeholder */}
-        <div className="flex justify-center gap-8 py-6 opacity-60">
-          <div className="w-24 h-12 bg-gray-300 rounded flex items-center justify-center text-xs text-gray-500">Logo 1</div>
-          <div className="w-24 h-12 bg-gray-300 rounded flex items-center justify-center text-xs text-gray-500">Logo 2</div>
-          <div className="w-24 h-12 bg-gray-300 rounded flex items-center justify-center text-xs text-gray-500">Logo 3</div>
-          <div className="w-24 h-12 bg-gray-300 rounded flex items-center justify-center text-xs text-gray-500">Logo 4</div>
+        {/* Logo carousel preview - showing actual logos */}
+        <div className="flex justify-center items-center gap-8 py-6 flex-wrap">
+          {defaultLogos.map((logo, i) => (
+            <img
+              key={i}
+              src={logo.src}
+              alt={logo.name}
+              className="h-12 w-auto object-contain opacity-70"
+              title={logo.name}
+            />
+          ))}
         </div>
-        <p className="text-center text-xs text-gray-400 italic">Logo carousel - logos are hardcoded, only title/subtitle editable</p>
+        <p className="text-center text-xs text-gray-400 italic mb-4">Logo images are managed in /public/logos/ folder</p>
+
+        {/* CTA Button */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <span>CTA Text:</span>
+            <EditableText
+              value={ctaText}
+              onChange={(v) => onContentChange('home.client-logos.cta_text', v)}
+              className="font-semibold text-amber-600"
+              isModified={isModified('home.client-logos.cta_text', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+          <div className="text-xs text-gray-500">
+            CTA Link:
+            <EditableText
+              value={ctaLink}
+              onChange={(v) => onContentChange('home.client-logos.cta_link', v)}
+              className="ml-1 text-blue-600"
+              isModified={isModified('home.client-logos.cta_link', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+        </div>
       </div>
     </section>
   )
@@ -405,8 +445,13 @@ function HomeSEOContentPreview({
   const intro = content['home.seo-content.intro'] || 'Speak About AI is the premier AI keynote speakers bureau, representing over 70 of the world\'s most influential artificial intelligence speakers.'
   const whyTitle = content['home.seo-content.why_title'] || 'Why Choose Our AI Speakers Bureau?'
   const whyText = content['home.seo-content.why_text'] || 'As a speaker bureau focused exclusively on artificial intelligence, we provide unparalleled expertise in matching your event with the perfect AI keynote speaker.'
+  const industriesTitle = content['home.seo-content.industries_title'] || 'Industries We Serve'
+  const topicsTitle = content['home.seo-content.topics_title'] || 'Popular AI Speaking Topics'
   const bookTitle = content['home.seo-content.book_title'] || 'Book an AI Speaker for Your Next Event'
   const bookText = content['home.seo-content.book_text'] || 'From keynote presentations at major conferences to executive briefings and workshop facilitation, our AI speakers bring cutting-edge insights and practical applications to every engagement.'
+  const ctaText = content['home.seo-content.cta_text'] || 'Book an AI Speaker Today'
+  const ctaLink = content['home.seo-content.cta_link'] || '/contact?source=book_ai_speaker_seo_section'
+  const closing = content['home.seo-content.closing'] || 'Our clients include provincial governments, international conferences, Fortune 500 companies, leading universities, and innovative startups. When you book an AI keynote speaker through Speak About AI, you\'re partnering with the trusted leader in AI thought leadership.'
 
   return (
     <section className="py-16 bg-white">
@@ -448,25 +493,45 @@ function HomeSEOContentPreview({
             editorMode={editorMode}
           />
 
-          {/* Industries and Topics - static preview */}
-          <div className="grid md:grid-cols-2 gap-8 mt-8 opacity-70">
+          {/* Industries and Topics with editable titles */}
+          <div className="grid md:grid-cols-2 gap-8 mt-8">
             <div>
-              <h3 className="text-xl font-semibold text-black mb-3">Industries We Serve</h3>
-              <ul className="space-y-2 text-gray-700 text-sm">
+              <EditableText
+                value={industriesTitle}
+                onChange={(v) => onContentChange('home.seo-content.industries_title', v)}
+                as="h3"
+                className="text-xl font-semibold text-black mb-3"
+                isModified={isModified('home.seo-content.industries_title', content, originalContent)}
+                editorMode={editorMode}
+              />
+              <ul className="space-y-2 text-gray-700 text-sm opacity-70">
                 <li>• Technology & Software Companies</li>
                 <li>• Healthcare & Pharmaceutical</li>
                 <li>• Financial Services & Banking</li>
                 <li>• Manufacturing & Automotive</li>
+                <li>• Retail & E-commerce</li>
+                <li>• Education & Research Institutions</li>
               </ul>
+              <p className="text-xs text-gray-400 italic mt-2">List items managed via JSON in database</p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-black mb-3">Popular AI Speaking Topics</h3>
-              <ul className="space-y-2 text-gray-700 text-sm">
+              <EditableText
+                value={topicsTitle}
+                onChange={(v) => onContentChange('home.seo-content.topics_title', v)}
+                as="h3"
+                className="text-xl font-semibold text-black mb-3"
+                isModified={isModified('home.seo-content.topics_title', content, originalContent)}
+                editorMode={editorMode}
+              />
+              <ul className="space-y-2 text-gray-700 text-sm opacity-70">
                 <li>• Generative AI & Large Language Models</li>
                 <li>• AI Strategy & Digital Transformation</li>
                 <li>• Machine Learning Applications</li>
                 <li>• AI Ethics & Responsible AI</li>
+                <li>• Future of Work with AI</li>
+                <li>• AI in Healthcare & Life Sciences</li>
               </ul>
+              <p className="text-xs text-gray-400 italic mt-2">List items managed via JSON in database</p>
             </div>
           </div>
 
@@ -485,6 +550,38 @@ function HomeSEOContentPreview({
             className="text-lg text-gray-700 mb-4"
             multiline
             isModified={isModified('home.seo-content.book_text', content, originalContent)}
+            editorMode={editorMode}
+          />
+
+          {/* CTA Button */}
+          <div className="my-8 p-4 border border-dashed border-gray-300 rounded-lg">
+            <div className="flex items-center gap-4 text-sm">
+              <span className="text-gray-600">CTA Button:</span>
+              <EditableText
+                value={ctaText}
+                onChange={(v) => onContentChange('home.seo-content.cta_text', v)}
+                className="font-semibold text-amber-600"
+                isModified={isModified('home.seo-content.cta_text', content, originalContent)}
+                editorMode={editorMode}
+              />
+              <span className="text-gray-400">→</span>
+              <EditableText
+                value={ctaLink}
+                onChange={(v) => onContentChange('home.seo-content.cta_link', v)}
+                className="text-blue-600 text-xs"
+                isModified={isModified('home.seo-content.cta_link', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+          </div>
+
+          <EditableText
+            value={closing}
+            onChange={(v) => onContentChange('home.seo-content.closing', v)}
+            as="p"
+            className="text-lg text-gray-700 mb-4"
+            multiline
+            isModified={isModified('home.seo-content.closing', content, originalContent)}
             editorMode={editorMode}
           />
         </div>
