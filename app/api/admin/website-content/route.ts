@@ -13,10 +13,8 @@ const DEFAULT_CONTENT = [
   // Home Page - Client Logos (from components/client-logos.tsx)
   { page: 'home', section: 'client-logos', content_key: 'title', content_value: 'Trusted by Industry Leaders' },
   { page: 'home', section: 'client-logos', content_key: 'subtitle', content_value: 'Our speakers have worked with leading organizations around the world for their most important events.' },
-
-  // Home Page - Featured Speakers (from components/featured-speakers.tsx)
-  { page: 'home', section: 'featured-speakers', content_key: 'title', content_value: 'Featured AI Speakers' },
-  { page: 'home', section: 'featured-speakers', content_key: 'subtitle', content_value: 'Connect with world-renowned AI experts and thought leaders' },
+  { page: 'home', section: 'client-logos', content_key: 'cta_text', content_value: 'View Past Clients & Events' },
+  { page: 'home', section: 'client-logos', content_key: 'cta_link', content_value: '/our-services#testimonials' },
 
   // Home Page - Why Choose Us (from components/why-choose-us.tsx)
   { page: 'home', section: 'why-choose-us', content_key: 'section_title', content_value: 'Why Work with Speak About AI?' },

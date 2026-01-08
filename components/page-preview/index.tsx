@@ -270,54 +270,6 @@ function HomeClientLogosPreview({
   )
 }
 
-// Home Featured Speakers Preview
-function HomeFeaturedSpeakersPreview({
-  content,
-  originalContent,
-  onContentChange,
-  editorMode = true
-}: Omit<PagePreviewProps, 'page'>) {
-  const title = content['home.featured-speakers.title'] || 'Featured AI Speakers'
-  const subtitle = content['home.featured-speakers.subtitle'] || 'Connect with world-renowned AI experts and thought leaders'
-
-  return (
-    <section className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
-          <EditableText
-            value={title}
-            onChange={(v) => onContentChange('home.featured-speakers.title', v)}
-            as="h2"
-            className="text-4xl font-bold text-gray-900 mb-4 font-neue-haas"
-            isModified={isModified('home.featured-speakers.title', content, originalContent)}
-            editorMode={editorMode}
-          />
-          <EditableText
-            value={subtitle}
-            onChange={(v) => onContentChange('home.featured-speakers.subtitle', v)}
-            as="p"
-            className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat"
-            multiline
-            isModified={isModified('home.featured-speakers.subtitle', content, originalContent)}
-            editorMode={editorMode}
-          />
-        </div>
-        {/* Speaker cards preview placeholder */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-gray-100 rounded-xl p-6 opacity-60">
-              <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
-              <div className="h-4 bg-gray-300 rounded w-3/4 mx-auto mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
-            </div>
-          ))}
-        </div>
-        <p className="text-center text-xs text-gray-400 italic mt-4">Speaker cards - speakers loaded from database, only title/subtitle editable</p>
-      </div>
-    </section>
-  )
-}
-
 // Home Navigate The Noise Preview
 function HomeNavigateTheNoisePreview({
   content,
@@ -950,12 +902,6 @@ export function PagePreview({ page, content, originalContent, onContentChange, e
           editorMode={editorMode}
         />
         <HomeClientLogosPreview
-          content={content}
-          originalContent={originalContent}
-          onContentChange={onContentChange}
-          editorMode={editorMode}
-        />
-        <HomeFeaturedSpeakersPreview
           content={content}
           originalContent={originalContent}
           onContentChange={onContentChange}
