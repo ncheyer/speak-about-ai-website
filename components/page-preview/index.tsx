@@ -532,55 +532,55 @@ function HomeSEOContentPreview({
   onContentChange,
   editorMode = true
 }: Omit<PagePreviewProps, 'page'>) {
-  const mainTitle = content['home.seo-content.main_title'] || 'AI Keynote Speakers: Transform Your Event with Leading AI Experts'
-  const intro = content['home.seo-content.intro'] || 'Speak About AI is the premier AI keynote speakers bureau, representing over 70 of the world\'s most influential artificial intelligence speakers.'
-  const whyTitle = content['home.seo-content.why_title'] || 'Why Choose Our AI Speakers Bureau?'
-  const whyText = content['home.seo-content.why_text'] || 'As a speaker bureau focused exclusively on artificial intelligence, we provide unparalleled expertise in matching your event with the perfect AI keynote speaker.'
-  const industriesTitle = content['home.seo-content.industries_title'] || 'Industries We Serve'
-  const topicsTitle = content['home.seo-content.topics_title'] || 'Popular AI Speaking Topics'
-  const bookTitle = content['home.seo-content.book_title'] || 'Book an AI Speaker for Your Next Event'
-  const bookText = content['home.seo-content.book_text'] || 'From keynote presentations at major conferences to executive briefings and workshop facilitation, our AI speakers bring cutting-edge insights and practical applications to every engagement.'
-  const ctaText = content['home.seo-content.cta_text'] || 'Book an AI Speaker Today'
-  const ctaLink = content['home.seo-content.cta_link'] || '/contact?source=book_ai_speaker_seo_section'
-  const closing = content['home.seo-content.closing'] || 'Our clients include provincial governments, international conferences, Fortune 500 companies, leading universities, and innovative startups. When you book an AI keynote speaker through Speak About AI, you\'re partnering with the trusted leader in AI thought leadership.'
+  // Using correct keys that match API defaults
+  const mainHeading = content['home.seo-content.main_heading'] || 'AI Keynote Speakers: Transform Your Event with Leading AI Experts'
+  const introParagraph = content['home.seo-content.intro_paragraph'] || 'Speak About AI is the premier AI keynote speakers bureau, representing over 70 of the world\'s most influential artificial intelligence speakers.'
+  const whyHeading = content['home.seo-content.why_heading'] || 'Why Choose Our AI Speakers Bureau?'
+  const whyParagraph = content['home.seo-content.why_paragraph'] || 'As a speaker bureau focused exclusively on artificial intelligence, we provide unparalleled expertise in matching your event with the perfect AI keynote speaker.'
+  const industriesHeading = content['home.seo-content.industries_heading'] || 'Industries We Serve'
+  const topicsHeading = content['home.seo-content.topics_heading'] || 'Popular AI Speaking Topics'
+  const bookHeading = content['home.seo-content.book_heading'] || 'Book an AI Speaker for Your Next Event'
+  const bookParagraph = content['home.seo-content.book_paragraph'] || 'From keynote presentations at major conferences to executive briefings and workshop facilitation, our AI speakers bring cutting-edge insights and practical applications to every engagement.'
+  const ctaButtonText = content['home.seo-content.cta_button_text'] || 'Book an AI Speaker Today'
+  const closingParagraph = content['home.seo-content.closing_paragraph'] || 'Our clients include provincial governments, international conferences, Fortune 500 companies, leading universities, and innovative startups. When you book an AI keynote speaker through Speak About AI, you\'re partnering with the trusted leader in AI thought leadership.'
 
   return (
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="prose prose-lg max-w-none">
           <EditableText
-            value={mainTitle}
-            onChange={(v) => onContentChange('home.seo-content.main_title', v)}
+            value={mainHeading}
+            onChange={(v) => onContentChange('home.seo-content.main_heading', v)}
             as="h2"
             className="text-3xl font-bold text-black mb-6"
-            isModified={isModified('home.seo-content.main_title', content, originalContent)}
+            isModified={isModified('home.seo-content.main_heading', content, originalContent)}
             editorMode={editorMode}
           />
           <EditableText
-            value={intro}
-            onChange={(v) => onContentChange('home.seo-content.intro', v)}
+            value={introParagraph}
+            onChange={(v) => onContentChange('home.seo-content.intro_paragraph', v)}
             as="p"
             className="text-lg text-gray-700 mb-4"
             multiline
-            isModified={isModified('home.seo-content.intro', content, originalContent)}
+            isModified={isModified('home.seo-content.intro_paragraph', content, originalContent)}
             editorMode={editorMode}
           />
 
           <EditableText
-            value={whyTitle}
-            onChange={(v) => onContentChange('home.seo-content.why_title', v)}
+            value={whyHeading}
+            onChange={(v) => onContentChange('home.seo-content.why_heading', v)}
             as="h3"
             className="text-2xl font-semibold text-black mt-8 mb-4"
-            isModified={isModified('home.seo-content.why_title', content, originalContent)}
+            isModified={isModified('home.seo-content.why_heading', content, originalContent)}
             editorMode={editorMode}
           />
           <EditableText
-            value={whyText}
-            onChange={(v) => onContentChange('home.seo-content.why_text', v)}
+            value={whyParagraph}
+            onChange={(v) => onContentChange('home.seo-content.why_paragraph', v)}
             as="p"
             className="text-lg text-gray-700 mb-4"
             multiline
-            isModified={isModified('home.seo-content.why_text', content, originalContent)}
+            isModified={isModified('home.seo-content.why_paragraph', content, originalContent)}
             editorMode={editorMode}
           />
 
@@ -588,11 +588,11 @@ function HomeSEOContentPreview({
           <div className="grid md:grid-cols-2 gap-8 mt-8">
             <div>
               <EditableText
-                value={industriesTitle}
-                onChange={(v) => onContentChange('home.seo-content.industries_title', v)}
+                value={industriesHeading}
+                onChange={(v) => onContentChange('home.seo-content.industries_heading', v)}
                 as="h3"
                 className="text-xl font-semibold text-black mb-3"
-                isModified={isModified('home.seo-content.industries_title', content, originalContent)}
+                isModified={isModified('home.seo-content.industries_heading', content, originalContent)}
                 editorMode={editorMode}
               />
               <ul className="space-y-2 text-gray-700 text-sm opacity-70">
@@ -607,11 +607,11 @@ function HomeSEOContentPreview({
             </div>
             <div>
               <EditableText
-                value={topicsTitle}
-                onChange={(v) => onContentChange('home.seo-content.topics_title', v)}
+                value={topicsHeading}
+                onChange={(v) => onContentChange('home.seo-content.topics_heading', v)}
                 as="h3"
                 className="text-xl font-semibold text-black mb-3"
-                isModified={isModified('home.seo-content.topics_title', content, originalContent)}
+                isModified={isModified('home.seo-content.topics_heading', content, originalContent)}
                 editorMode={editorMode}
               />
               <ul className="space-y-2 text-gray-700 text-sm opacity-70">
@@ -627,20 +627,20 @@ function HomeSEOContentPreview({
           </div>
 
           <EditableText
-            value={bookTitle}
-            onChange={(v) => onContentChange('home.seo-content.book_title', v)}
+            value={bookHeading}
+            onChange={(v) => onContentChange('home.seo-content.book_heading', v)}
             as="h3"
             className="text-2xl font-semibold text-black mt-8 mb-4"
-            isModified={isModified('home.seo-content.book_title', content, originalContent)}
+            isModified={isModified('home.seo-content.book_heading', content, originalContent)}
             editorMode={editorMode}
           />
           <EditableText
-            value={bookText}
-            onChange={(v) => onContentChange('home.seo-content.book_text', v)}
+            value={bookParagraph}
+            onChange={(v) => onContentChange('home.seo-content.book_paragraph', v)}
             as="p"
             className="text-lg text-gray-700 mb-4"
             multiline
-            isModified={isModified('home.seo-content.book_text', content, originalContent)}
+            isModified={isModified('home.seo-content.book_paragraph', content, originalContent)}
             editorMode={editorMode}
           />
 
@@ -649,30 +649,22 @@ function HomeSEOContentPreview({
             <div className="flex items-center gap-4 text-sm">
               <span className="text-gray-600">CTA Button:</span>
               <EditableText
-                value={ctaText}
-                onChange={(v) => onContentChange('home.seo-content.cta_text', v)}
+                value={ctaButtonText}
+                onChange={(v) => onContentChange('home.seo-content.cta_button_text', v)}
                 className="font-semibold text-amber-600"
-                isModified={isModified('home.seo-content.cta_text', content, originalContent)}
-                editorMode={editorMode}
-              />
-              <span className="text-gray-400">→</span>
-              <EditableText
-                value={ctaLink}
-                onChange={(v) => onContentChange('home.seo-content.cta_link', v)}
-                className="text-blue-600 text-xs"
-                isModified={isModified('home.seo-content.cta_link', content, originalContent)}
+                isModified={isModified('home.seo-content.cta_button_text', content, originalContent)}
                 editorMode={editorMode}
               />
             </div>
           </div>
 
           <EditableText
-            value={closing}
-            onChange={(v) => onContentChange('home.seo-content.closing', v)}
+            value={closingParagraph}
+            onChange={(v) => onContentChange('home.seo-content.closing_paragraph', v)}
             as="p"
             className="text-lg text-gray-700 mb-4"
             multiline
-            isModified={isModified('home.seo-content.closing', content, originalContent)}
+            isModified={isModified('home.seo-content.closing_paragraph', content, originalContent)}
             editorMode={editorMode}
           />
         </div>

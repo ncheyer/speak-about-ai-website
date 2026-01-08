@@ -179,10 +179,22 @@ const DEFAULT_CONTENT = [
   { page: 'team', section: 'members', content_key: 'member1_linkedin', content_value: 'https://linkedin.com/in/robertstrong' },
   { page: 'team', section: 'members', content_key: 'member1_image', content_value: '/team/robert-strong-headshot.png' },
 
+  // Home Page - Featured Speakers (from components/featured-speakers.tsx)
+  { page: 'home', section: 'featured-speakers', content_key: 'title', content_value: 'Featured AI Keynote Speakers' },
+  { page: 'home', section: 'featured-speakers', content_key: 'subtitle', content_value: 'World-class artificial intelligence experts, machine learning pioneers, and tech visionaries who are shaping the future of AI across every industry.' },
+  { page: 'home', section: 'featured-speakers', content_key: 'cta_text', content_value: 'View All AI Speakers' },
+
   // Home Page - Booking CTA (from components/booking-cta.tsx)
   { page: 'home', section: 'booking-cta', content_key: 'title', content_value: 'Ready to Book Your AI Keynote Speaker?' },
   { page: 'home', section: 'booking-cta', content_key: 'subtitle', content_value: 'Connect with our expert team to find the perfect AI speaker for your event. We make the booking process seamless and efficient.' },
   { page: 'home', section: 'booking-cta', content_key: 'contact_info', content_value: 'Text or call us at +1 (510) 435-3947 on WhatsApp or reach out to human@speakabout.ai by email' },
+  { page: 'home', section: 'booking-cta', content_key: 'primary_cta_text', content_value: 'Get Speaker Recommendations' },
+  { page: 'home', section: 'booking-cta', content_key: 'primary_cta_link', content_value: '/contact?source=home_page_cta_main' },
+  { page: 'home', section: 'booking-cta', content_key: 'secondary_cta_text', content_value: 'Explore All Speakers' },
+  { page: 'home', section: 'booking-cta', content_key: 'secondary_cta_link', content_value: '/speakers' },
+  { page: 'home', section: 'booking-cta', content_key: 'whatsapp_number', content_value: '+1 (510) 435-3947' },
+  { page: 'home', section: 'booking-cta', content_key: 'whatsapp_link', content_value: 'https://wa.me/15104353947' },
+  { page: 'home', section: 'booking-cta', content_key: 'email', content_value: 'human@speakabout.ai' },
 
   // Images - Home Page
   { page: 'home', section: 'images', content_key: 'hero_image', content_value: '/robert-strong-adam-cheyer-peter-norvig-on-stage-at-microsoft.jpg' },

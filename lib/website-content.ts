@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless'
+import { getFlatDefaults, getDefaultByKey } from './content-defaults'
 
 interface ContentItem {
   id: number
@@ -9,13 +10,8 @@ interface ContentItem {
   updated_at: string
 }
 
-// Default values for content (fallbacks if database doesn't have the content)
-const defaults: Record<string, string> = {
-  // Home Hero
-  'home.hero.badge': '#1 AI-Exclusive Speaker Bureau',
-  'home.hero.title': 'Book an AI Speaker for Your Event',
-  'home.hero.subtitle': 'The #1 AI speaker bureau with exclusive access to 70+ AI pioneers including Siri Co-Founders, OpenAI Staff, and Stanford Researchers',
-}
+// Get all defaults as flat key-value pairs from centralized source
+const defaults = getFlatDefaults()
 
 // Cache for content to avoid hitting the database on every request
 let contentCache: Record<string, string> = {}
