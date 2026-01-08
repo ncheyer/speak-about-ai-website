@@ -1,5 +1,4 @@
 import { neon } from "@neondatabase/serverless"
-import { getAutomaticProjectStatus, type ProjectStatus } from "./project-status-utils"
 
 // Initialize Neon client with lazy loading
 let sql: any = null
@@ -323,19 +322,10 @@ export async function updateProject(id: number, projectData: Partial<Project>): 
   try {
     const sql = getSQL()
 
-    // If event_date is being updated, automatically determine status
-    let finalProjectData = { ...projectData }
-    if (projectData.event_date) {
-      const automaticStatus = getAutomaticProjectStatus(
-        projectData.event_date,
-        projectData.status as ProjectStatus
-      )
+    // Status is workflow-based only (contracts_signed, invoicing, etc.)
+    // Time urgency is calculated separately for display purposes
+    const finalProjectData = { ...projectData }
 
-      // Only update status if it's not manually set to completed or cancelled
-      if (!projectData.status || (projectData.status !== "completed" && projectData.status !== "cancelled")) {
-        finalProjectData.status = automaticStatus
-      }
-    }
     const [project] = await sql`
       UPDATE projects SET
         project_name = COALESCE(${projectData.project_name || null}, project_name),
@@ -542,45 +532,6 @@ export async function getActiveProjects(): Promise<Project[]> {
   }
 }
 
-// Update all project statuses based on their event dates
-export async function updateAllProjectStatuses(): Promise<{ updated: number, errors: number }> {
-  try {
-    const sql = getSQL()
-
-    // Get all projects with event dates that aren't completed or cancelled
-    const projects = await sql`
-      SELECT id, event_date, status FROM projects
-      WHERE event_date IS NOT NULL
-      AND status NOT IN ('completed', 'cancelled')
-      ORDER BY event_date ASC
-    `
-
-    let updated = 0
-    let errors = 0
-
-    for (const project of projects) {
-      try {
-        const currentStatus = project.status as ProjectStatus
-        const automaticStatus = getAutomaticProjectStatus(project.event_date, currentStatus)
-
-        if (automaticStatus !== currentStatus) {
-          await sql`
-            UPDATE projects
-            SET status = ${automaticStatus}, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ${project.id}
-          `
-          updated++
-        }
-      } catch (error) {
-        errors++
-      }
-    }
-
-    return { updated, errors }
-  } catch (error) {
-    return { updated: 0, errors: 1 }
-  }
-}
 
 // Get projects by priority
 export async function getProjectsByPriority(priority: string): Promise<Project[]> {
