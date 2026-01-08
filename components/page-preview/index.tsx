@@ -1,6 +1,6 @@
 "use client"
 
-import { Award, MapPin, Globe, Shield, Clock, Users, Headphones, Target } from "lucide-react"
+import { Award, MapPin, Globe, Shield, Clock, Users, Headphones, Target, DollarSign, Globe2, Check, Calendar, ArrowRight } from "lucide-react"
 import { EditableText, EditableImage } from "@/components/editable-text"
 import { Button } from "@/components/ui/button"
 
@@ -220,6 +220,439 @@ function HomeWhyChooseUsPreview({
             )
           })}
         </div>
+      </div>
+    </section>
+  )
+}
+
+// Home Client Logos Preview
+function HomeClientLogosPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const title = content['home.client-logos.title'] || 'Trusted by Industry Leaders'
+  const subtitle = content['home.client-logos.subtitle'] || 'Our speakers have worked with leading organizations around the world for their most important events.'
+
+  return (
+    <section className="pt-4 pb-8 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-3">
+          <EditableText
+            value={title}
+            onChange={(v) => onContentChange('home.client-logos.title', v)}
+            as="h2"
+            className="text-3xl font-bold text-gray-900 mb-2"
+            isModified={isModified('home.client-logos.title', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <EditableText
+            value={subtitle}
+            onChange={(v) => onContentChange('home.client-logos.subtitle', v)}
+            as="p"
+            className="text-lg text-gray-600"
+            multiline
+            isModified={isModified('home.client-logos.subtitle', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
+        {/* Logo carousel preview placeholder */}
+        <div className="flex justify-center gap-8 py-6 opacity-60">
+          <div className="w-24 h-12 bg-gray-300 rounded flex items-center justify-center text-xs text-gray-500">Logo 1</div>
+          <div className="w-24 h-12 bg-gray-300 rounded flex items-center justify-center text-xs text-gray-500">Logo 2</div>
+          <div className="w-24 h-12 bg-gray-300 rounded flex items-center justify-center text-xs text-gray-500">Logo 3</div>
+          <div className="w-24 h-12 bg-gray-300 rounded flex items-center justify-center text-xs text-gray-500">Logo 4</div>
+        </div>
+        <p className="text-center text-xs text-gray-400 italic">Logo carousel - logos are hardcoded, only title/subtitle editable</p>
+      </div>
+    </section>
+  )
+}
+
+// Home Featured Speakers Preview
+function HomeFeaturedSpeakersPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const title = content['home.featured-speakers.title'] || 'Featured AI Speakers'
+  const subtitle = content['home.featured-speakers.subtitle'] || 'Connect with world-renowned AI experts and thought leaders'
+
+  return (
+    <section className="py-16 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-10">
+          <EditableText
+            value={title}
+            onChange={(v) => onContentChange('home.featured-speakers.title', v)}
+            as="h2"
+            className="text-4xl font-bold text-gray-900 mb-4 font-neue-haas"
+            isModified={isModified('home.featured-speakers.title', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <EditableText
+            value={subtitle}
+            onChange={(v) => onContentChange('home.featured-speakers.subtitle', v)}
+            as="p"
+            className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat"
+            multiline
+            isModified={isModified('home.featured-speakers.subtitle', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
+        {/* Speaker cards preview placeholder */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-gray-100 rounded-xl p-6 opacity-60">
+              <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
+              <div className="h-4 bg-gray-300 rounded w-3/4 mx-auto mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
+            </div>
+          ))}
+        </div>
+        <p className="text-center text-xs text-gray-400 italic mt-4">Speaker cards - speakers loaded from database, only title/subtitle editable</p>
+      </div>
+    </section>
+  )
+}
+
+// Home Navigate The Noise Preview
+function HomeNavigateTheNoisePreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const sectionTitle = content['home.navigate.section_title'] || 'Navigate the AI Speaker Landscape'
+  const sectionSubtitle = content['home.navigate.section_subtitle'] || 'Clear guidance to help you make informed decisions faster'
+
+  const cards = [
+    {
+      id: 'budget',
+      icon: DollarSign,
+      color: 'blue',
+      defaultTitle: 'Budget Guidance',
+      ranges: [
+        { range: '$5k - $20k', desc: 'Rising AI experts, academics, and tech consultants' },
+        { range: '$20k - $50k', desc: 'Industry leaders, published authors, and proven speakers' },
+        { range: '$50k+', desc: 'AI pioneers, tech founders, and household names' }
+      ]
+    },
+    {
+      id: 'audience',
+      icon: Users,
+      color: 'amber',
+      defaultTitle: 'Audience Types',
+      items: ['Corporate & Enterprise', 'Public Sector & Government', 'Startups & Scale-ups', 'Academic & Research', 'Healthcare & Life Sciences', 'Financial Services', 'Technology Companies']
+    },
+    {
+      id: 'global',
+      icon: Globe2,
+      color: 'green',
+      defaultTitle: 'Global Delivery',
+      formats: [
+        { name: 'In-Person Events', desc: 'Worldwide coverage with speaker coordination and booking support' },
+        { name: 'Virtual Events', desc: 'Professional virtual keynotes optimized for online engagement' },
+        { name: 'Hybrid Format', desc: 'Seamless blend of in-person and remote engagement for maximum reach' }
+      ]
+    }
+  ]
+
+  return (
+    <section className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <EditableText
+            value={sectionTitle}
+            onChange={(v) => onContentChange('home.navigate.section_title', v)}
+            as="h2"
+            className="text-4xl font-bold text-gray-900 mb-4 font-neue-haas"
+            isModified={isModified('home.navigate.section_title', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <EditableText
+            value={sectionSubtitle}
+            onChange={(v) => onContentChange('home.navigate.section_subtitle', v)}
+            as="p"
+            className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat"
+            multiline
+            isModified={isModified('home.navigate.section_subtitle', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {cards.map((card) => {
+            const titleKey = `home.navigate.${card.id}_title`
+            const title = content[titleKey] || card.defaultTitle
+            const Icon = card.icon
+            const colorClasses = {
+              blue: 'border-blue-200 from-[#1E68C6] to-blue-600',
+              amber: 'border-amber-200 from-amber-400 to-amber-600',
+              green: 'border-green-200 from-green-500 to-green-700'
+            }
+
+            return (
+              <div key={card.id} className={`bg-white p-8 rounded-2xl shadow-xl border-2 ${colorClasses[card.color as keyof typeof colorClasses].split(' ')[0]}`}>
+                <div className="mb-6">
+                  <div className={`w-16 h-16 bg-gradient-to-br ${colorClasses[card.color as keyof typeof colorClasses].split(' ').slice(1).join(' ')} rounded-xl flex items-center justify-center mb-4 shadow-lg`}>
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+                  <EditableText
+                    value={title}
+                    onChange={(v) => onContentChange(titleKey, v)}
+                    as="h3"
+                    className="text-2xl font-bold text-gray-900 font-neue-haas"
+                    isModified={isModified(titleKey, content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                </div>
+                {/* Card content preview - simplified */}
+                <div className="space-y-3 opacity-70">
+                  {card.id === 'budget' && card.ranges?.map((r, i) => (
+                    <div key={i} className="border-l-4 border-blue-600 pl-4">
+                      <div className="font-bold text-gray-900 font-montserrat text-sm">{r.range}</div>
+                      <div className="text-xs text-gray-600">{r.desc}</div>
+                    </div>
+                  ))}
+                  {card.id === 'audience' && card.items?.map((item, i) => (
+                    <div key={i} className="flex items-center text-sm">
+                      <Check className="w-4 h-4 text-amber-600 mr-2" />
+                      <span className="text-gray-700">{item}</span>
+                    </div>
+                  ))}
+                  {card.id === 'global' && card.formats?.map((f, i) => (
+                    <div key={i}>
+                      <div className="font-bold text-gray-900 text-sm flex items-center">
+                        <Check className="w-4 h-4 text-green-600 mr-2" />
+                        {f.name}
+                      </div>
+                      <p className="text-xs text-gray-600 ml-6">{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Home SEO Content Preview
+function HomeSEOContentPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const mainTitle = content['home.seo-content.main_title'] || 'AI Keynote Speakers: Transform Your Event with Leading AI Experts'
+  const intro = content['home.seo-content.intro'] || 'Speak About AI is the premier AI keynote speakers bureau, representing over 70 of the world\'s most influential artificial intelligence speakers.'
+  const whyTitle = content['home.seo-content.why_title'] || 'Why Choose Our AI Speakers Bureau?'
+  const whyText = content['home.seo-content.why_text'] || 'As a speaker bureau focused exclusively on artificial intelligence, we provide unparalleled expertise in matching your event with the perfect AI keynote speaker.'
+  const bookTitle = content['home.seo-content.book_title'] || 'Book an AI Speaker for Your Next Event'
+  const bookText = content['home.seo-content.book_text'] || 'From keynote presentations at major conferences to executive briefings and workshop facilitation, our AI speakers bring cutting-edge insights and practical applications to every engagement.'
+
+  return (
+    <section className="py-16 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="prose prose-lg max-w-none">
+          <EditableText
+            value={mainTitle}
+            onChange={(v) => onContentChange('home.seo-content.main_title', v)}
+            as="h2"
+            className="text-3xl font-bold text-black mb-6"
+            isModified={isModified('home.seo-content.main_title', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <EditableText
+            value={intro}
+            onChange={(v) => onContentChange('home.seo-content.intro', v)}
+            as="p"
+            className="text-lg text-gray-700 mb-4"
+            multiline
+            isModified={isModified('home.seo-content.intro', content, originalContent)}
+            editorMode={editorMode}
+          />
+
+          <EditableText
+            value={whyTitle}
+            onChange={(v) => onContentChange('home.seo-content.why_title', v)}
+            as="h3"
+            className="text-2xl font-semibold text-black mt-8 mb-4"
+            isModified={isModified('home.seo-content.why_title', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <EditableText
+            value={whyText}
+            onChange={(v) => onContentChange('home.seo-content.why_text', v)}
+            as="p"
+            className="text-lg text-gray-700 mb-4"
+            multiline
+            isModified={isModified('home.seo-content.why_text', content, originalContent)}
+            editorMode={editorMode}
+          />
+
+          {/* Industries and Topics - static preview */}
+          <div className="grid md:grid-cols-2 gap-8 mt-8 opacity-70">
+            <div>
+              <h3 className="text-xl font-semibold text-black mb-3">Industries We Serve</h3>
+              <ul className="space-y-2 text-gray-700 text-sm">
+                <li>• Technology & Software Companies</li>
+                <li>• Healthcare & Pharmaceutical</li>
+                <li>• Financial Services & Banking</li>
+                <li>• Manufacturing & Automotive</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-black mb-3">Popular AI Speaking Topics</h3>
+              <ul className="space-y-2 text-gray-700 text-sm">
+                <li>• Generative AI & Large Language Models</li>
+                <li>• AI Strategy & Digital Transformation</li>
+                <li>• Machine Learning Applications</li>
+                <li>• AI Ethics & Responsible AI</li>
+              </ul>
+            </div>
+          </div>
+
+          <EditableText
+            value={bookTitle}
+            onChange={(v) => onContentChange('home.seo-content.book_title', v)}
+            as="h3"
+            className="text-2xl font-semibold text-black mt-8 mb-4"
+            isModified={isModified('home.seo-content.book_title', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <EditableText
+            value={bookText}
+            onChange={(v) => onContentChange('home.seo-content.book_text', v)}
+            as="p"
+            className="text-lg text-gray-700 mb-4"
+            multiline
+            isModified={isModified('home.seo-content.book_text', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Home FAQ Preview
+function HomeFAQPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const sectionTitle = content['home.seo-faq.section_title'] || 'Frequently Asked Questions About Booking AI Speakers'
+
+  const faqs = [
+    { id: 'faq1', defaultQ: 'How do I book an AI keynote speaker?', defaultA: 'Simply browse our speakers, select your preferred AI expert, and contact us through our booking form. Our team will handle all logistics and ensure a seamless experience.' },
+    { id: 'faq2', defaultQ: 'What makes Speak About AI different?', defaultA: 'We\'re the only speaker bureau focused exclusively on AI, giving us unmatched expertise in artificial intelligence thought leadership and deep relationships with top AI speakers.' },
+    { id: 'faq3', defaultQ: 'Do you offer virtual AI keynote speakers?', defaultA: 'Yes, many of our AI speakers offer both in-person and virtual keynote presentations, ensuring global accessibility for your events.' },
+    { id: 'faq4', defaultQ: 'What\'s the typical fee for an AI speaker?', defaultA: 'AI speaker fees typically range from $5K-$20K for emerging experts to $20K+ for industry leaders. Final pricing depends on format, location, date, and speaker requirements.' }
+  ]
+
+  return (
+    <section className="py-16 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <EditableText
+          value={sectionTitle}
+          onChange={(v) => onContentChange('home.seo-faq.section_title', v)}
+          as="h2"
+          className="text-3xl font-bold text-center text-black mb-12"
+          isModified={isModified('home.seo-faq.section_title', content, originalContent)}
+          editorMode={editorMode}
+        />
+        <div className="grid md:grid-cols-2 gap-8">
+          {faqs.map((faq) => {
+            const qKey = `home.seo-faq.${faq.id}_question`
+            const aKey = `home.seo-faq.${faq.id}_answer`
+            const question = content[qKey] || faq.defaultQ
+            const answer = content[aKey] || faq.defaultA
+
+            return (
+              <div key={faq.id}>
+                <EditableText
+                  value={question}
+                  onChange={(v) => onContentChange(qKey, v)}
+                  as="h3"
+                  className="text-xl font-semibold text-black mb-3"
+                  isModified={isModified(qKey, content, originalContent)}
+                  editorMode={editorMode}
+                />
+                <EditableText
+                  value={answer}
+                  onChange={(v) => onContentChange(aKey, v)}
+                  as="p"
+                  className="text-gray-700"
+                  multiline
+                  isModified={isModified(aKey, content, originalContent)}
+                  editorMode={editorMode}
+                />
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Home Booking CTA Preview
+function HomeBookingCTAPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const title = content['home.booking-cta.title'] || 'Ready to Book Your AI Keynote Speaker?'
+  const subtitle = content['home.booking-cta.subtitle'] || 'Connect with our expert team to find the perfect AI speaker for your event. We make the booking process seamless and efficient.'
+  const contactInfo = content['home.booking-cta.contact_info'] || 'Text or call us at +1 (510) 435-3947 on WhatsApp or reach out to human@speakabout.ai by email'
+
+  return (
+    <section className="bg-gradient-to-r from-blue-600 to-blue-800 py-20 text-white">
+      <div className="max-w-4xl mx-auto px-4 text-center">
+        <EditableText
+          value={title}
+          onChange={(v) => onContentChange('home.booking-cta.title', v)}
+          as="h2"
+          className="text-4xl font-bold mb-6 font-neue-haas leading-tight"
+          isModified={isModified('home.booking-cta.title', content, originalContent)}
+          editorMode={editorMode}
+        />
+        <EditableText
+          value={subtitle}
+          onChange={(v) => onContentChange('home.booking-cta.subtitle', v)}
+          as="p"
+          className="text-xl mb-10 text-blue-100 max-w-2xl mx-auto font-montserrat"
+          multiline
+          isModified={isModified('home.booking-cta.subtitle', content, originalContent)}
+          editorMode={editorMode}
+        />
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
+          <Button variant="gold" size="lg" className="pointer-events-none opacity-80">
+            <Calendar className="w-5 h-5 mr-2" />
+            Get Speaker Recommendations
+          </Button>
+          <Button variant="default" size="lg" className="bg-white text-blue-700 pointer-events-none opacity-80">
+            Explore All Speakers
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
+        <EditableText
+          value={contactInfo}
+          onChange={(v) => onContentChange('home.booking-cta.contact_info', v)}
+          as="p"
+          className="text-sm text-blue-200 font-montserrat"
+          multiline
+          isModified={isModified('home.booking-cta.contact_info', content, originalContent)}
+          editorMode={editorMode}
+        />
       </div>
     </section>
   )
@@ -516,7 +949,43 @@ export function PagePreview({ page, content, originalContent, onContentChange, e
           onContentChange={onContentChange}
           editorMode={editorMode}
         />
+        <HomeClientLogosPreview
+          content={content}
+          originalContent={originalContent}
+          onContentChange={onContentChange}
+          editorMode={editorMode}
+        />
+        <HomeFeaturedSpeakersPreview
+          content={content}
+          originalContent={originalContent}
+          onContentChange={onContentChange}
+          editorMode={editorMode}
+        />
         <HomeWhyChooseUsPreview
+          content={content}
+          originalContent={originalContent}
+          onContentChange={onContentChange}
+          editorMode={editorMode}
+        />
+        <HomeNavigateTheNoisePreview
+          content={content}
+          originalContent={originalContent}
+          onContentChange={onContentChange}
+          editorMode={editorMode}
+        />
+        <HomeSEOContentPreview
+          content={content}
+          originalContent={originalContent}
+          onContentChange={onContentChange}
+          editorMode={editorMode}
+        />
+        <HomeFAQPreview
+          content={content}
+          originalContent={originalContent}
+          onContentChange={onContentChange}
+          editorMode={editorMode}
+        />
+        <HomeBookingCTAPreview
           content={content}
           originalContent={originalContent}
           onContentChange={onContentChange}

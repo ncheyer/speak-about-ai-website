@@ -10,6 +10,14 @@ const DEFAULT_CONTENT = [
   { page: 'home', section: 'hero', content_key: 'title', content_value: 'Book an AI Speaker for Your Event' },
   { page: 'home', section: 'hero', content_key: 'subtitle', content_value: 'The #1 AI speaker bureau with exclusive access to 70+ AI pioneers including Siri Co-Founders, OpenAI Staff, and Stanford Researchers' },
 
+  // Home Page - Client Logos (from components/client-logos.tsx)
+  { page: 'home', section: 'client-logos', content_key: 'title', content_value: 'Trusted by Industry Leaders' },
+  { page: 'home', section: 'client-logos', content_key: 'subtitle', content_value: 'Our speakers have worked with leading organizations around the world for their most important events.' },
+
+  // Home Page - Featured Speakers (from components/featured-speakers.tsx)
+  { page: 'home', section: 'featured-speakers', content_key: 'title', content_value: 'Featured AI Speakers' },
+  { page: 'home', section: 'featured-speakers', content_key: 'subtitle', content_value: 'Connect with world-renowned AI experts and thought leaders' },
+
   // Home Page - Why Choose Us (from components/why-choose-us.tsx)
   { page: 'home', section: 'why-choose-us', content_key: 'section_title', content_value: 'Why Work with Speak About AI?' },
   { page: 'home', section: 'why-choose-us', content_key: 'section_subtitle', content_value: "We book artificial intelligence keynote speakers for your organization's event who don't just talk about the future—they're the innovators building the tech." },
@@ -172,6 +180,11 @@ const DEFAULT_CONTENT = [
   { page: 'team', section: 'members', content_key: 'member1_bio', content_value: "Speak About AI was founded by author, speaker, and entertainer Robert Strong and is a division of Strong Entertainment, LLC. With 30+ years of experience booking speakers and entertainers globally, Robert brings unparalleled expertise to the AI speaking circuit. He's also a world-renowned magician who's performed at the White House twice, on Penn & Teller Fool Us, and for every major tech company in Silicon Valley. His Amazon best-selling book 'Amaze & Delight: Secrets to Creating Magic in Business' showcases his unique approach to business entertainment." },
   { page: 'team', section: 'members', content_key: 'member1_linkedin', content_value: 'https://linkedin.com/in/robertstrong' },
   { page: 'team', section: 'members', content_key: 'member1_image', content_value: '/team/robert-strong-headshot.png' },
+
+  // Home Page - Booking CTA (from components/booking-cta.tsx)
+  { page: 'home', section: 'booking-cta', content_key: 'title', content_value: 'Ready to Book Your AI Keynote Speaker?' },
+  { page: 'home', section: 'booking-cta', content_key: 'subtitle', content_value: 'Connect with our expert team to find the perfect AI speaker for your event. We make the booking process seamless and efficient.' },
+  { page: 'home', section: 'booking-cta', content_key: 'contact_info', content_value: 'Text or call us at +1 (510) 435-3947 on WhatsApp or reach out to human@speakabout.ai by email' },
 
   // Images - Home Page
   { page: 'home', section: 'images', content_key: 'hero_image', content_value: '/robert-strong-adam-cheyer-peter-norvig-on-stage-at-microsoft.jpg' },
