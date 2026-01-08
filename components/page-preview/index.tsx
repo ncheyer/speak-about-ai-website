@@ -225,6 +225,68 @@ function HomeWhyChooseUsPreview({
   )
 }
 
+// Home Featured Speakers Preview
+function HomeFeaturedSpeakersPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const title = content['home.featured-speakers.title'] || 'Featured AI Keynote Speakers'
+  const subtitle = content['home.featured-speakers.subtitle'] || 'World-class artificial intelligence experts, machine learning pioneers, and tech visionaries who are shaping the future of AI across every industry.'
+  const ctaText = content['home.featured-speakers.cta_text'] || 'View All AI Speakers'
+
+  return (
+    <section className="py-16 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <EditableText
+            value={title}
+            onChange={(v) => onContentChange('home.featured-speakers.title', v)}
+            as="h2"
+            className="text-4xl font-bold text-black mb-4 font-neue-haas"
+            isModified={isModified('home.featured-speakers.title', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <EditableText
+            value={subtitle}
+            onChange={(v) => onContentChange('home.featured-speakers.subtitle', v)}
+            as="p"
+            className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat"
+            multiline
+            isModified={isModified('home.featured-speakers.subtitle', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
+
+        {/* Speaker cards placeholder */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-gray-100 rounded-xl p-6 h-64 flex items-center justify-center">
+              <span className="text-gray-400 text-sm">Speaker Card {i}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-center text-xs text-gray-400 italic mb-6">Speaker cards are loaded dynamically from the database</p>
+
+        {/* CTA Button */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <span>CTA Button Text:</span>
+            <EditableText
+              value={ctaText}
+              onChange={(v) => onContentChange('home.featured-speakers.cta_text', v)}
+              className="font-semibold text-amber-600"
+              isModified={isModified('home.featured-speakers.cta_text', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // Default logos for preview (matches client-logos.tsx)
 const defaultLogos = [
   { name: "Stanford University", src: "/logos/stanford-university-logo-1024x335-1.png" },
@@ -666,7 +728,12 @@ function HomeBookingCTAPreview({
 }: Omit<PagePreviewProps, 'page'>) {
   const title = content['home.booking-cta.title'] || 'Ready to Book Your AI Keynote Speaker?'
   const subtitle = content['home.booking-cta.subtitle'] || 'Connect with our expert team to find the perfect AI speaker for your event. We make the booking process seamless and efficient.'
-  const contactInfo = content['home.booking-cta.contact_info'] || 'Text or call us at +1 (510) 435-3947 on WhatsApp or reach out to human@speakabout.ai by email'
+  const primaryCtaText = content['home.booking-cta.primary_cta_text'] || 'Get Speaker Recommendations'
+  const primaryCtaLink = content['home.booking-cta.primary_cta_link'] || '/contact?source=home_page_cta_main'
+  const secondaryCtaText = content['home.booking-cta.secondary_cta_text'] || 'Explore All Speakers'
+  const secondaryCtaLink = content['home.booking-cta.secondary_cta_link'] || '/speakers'
+  const whatsappNumber = content['home.booking-cta.whatsapp_number'] || '+1 (510) 435-3947'
+  const email = content['home.booking-cta.email'] || 'human@speakabout.ai'
 
   return (
     <section className="bg-gradient-to-r from-blue-600 to-blue-800 py-20 text-white">
@@ -688,25 +755,78 @@ function HomeBookingCTAPreview({
           isModified={isModified('home.booking-cta.subtitle', content, originalContent)}
           editorMode={editorMode}
         />
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
-          <Button variant="gold" size="lg" className="pointer-events-none opacity-80">
-            <Calendar className="w-5 h-5 mr-2" />
-            Get Speaker Recommendations
-          </Button>
-          <Button variant="default" size="lg" className="bg-white text-blue-700 pointer-events-none opacity-80">
-            Explore All Speakers
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
+
+        {/* CTA Buttons with editable text */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
+          <div className="flex items-center gap-2 bg-amber-500/20 px-4 py-2 rounded-lg">
+            <Calendar className="w-5 h-5 text-amber-300" />
+            <EditableText
+              value={primaryCtaText}
+              onChange={(v) => onContentChange('home.booking-cta.primary_cta_text', v)}
+              className="text-white font-semibold"
+              isModified={isModified('home.booking-cta.primary_cta_text', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+          <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+            <EditableText
+              value={secondaryCtaText}
+              onChange={(v) => onContentChange('home.booking-cta.secondary_cta_text', v)}
+              className="text-white font-semibold"
+              isModified={isModified('home.booking-cta.secondary_cta_text', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <ArrowRight className="w-5 h-5 text-white" />
+          </div>
         </div>
-        <EditableText
-          value={contactInfo}
-          onChange={(v) => onContentChange('home.booking-cta.contact_info', v)}
-          as="p"
-          className="text-sm text-blue-200 font-montserrat"
-          multiline
-          isModified={isModified('home.booking-cta.contact_info', content, originalContent)}
-          editorMode={editorMode}
-        />
+
+        {/* CTA Links */}
+        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8 text-xs text-blue-300">
+          <div className="flex items-center gap-1">
+            <span>Primary Link:</span>
+            <EditableText
+              value={primaryCtaLink}
+              onChange={(v) => onContentChange('home.booking-cta.primary_cta_link', v)}
+              className="text-blue-200"
+              isModified={isModified('home.booking-cta.primary_cta_link', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <span>Secondary Link:</span>
+            <EditableText
+              value={secondaryCtaLink}
+              onChange={(v) => onContentChange('home.booking-cta.secondary_cta_link', v)}
+              className="text-blue-200"
+              isModified={isModified('home.booking-cta.secondary_cta_link', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+        </div>
+
+        {/* Contact Info */}
+        <div className="text-sm text-blue-200 font-montserrat space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            <span>WhatsApp:</span>
+            <EditableText
+              value={whatsappNumber}
+              onChange={(v) => onContentChange('home.booking-cta.whatsapp_number', v)}
+              className="font-semibold text-white"
+              isModified={isModified('home.booking-cta.whatsapp_number', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <span>Email:</span>
+            <EditableText
+              value={email}
+              onChange={(v) => onContentChange('home.booking-cta.email', v)}
+              className="font-semibold text-white"
+              isModified={isModified('home.booking-cta.email', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+        </div>
       </div>
     </section>
   )
@@ -1004,6 +1124,12 @@ export function PagePreview({ page, content, originalContent, onContentChange, e
           editorMode={editorMode}
         />
         <HomeClientLogosPreview
+          content={content}
+          originalContent={originalContent}
+          onContentChange={onContentChange}
+          editorMode={editorMode}
+        />
+        <HomeFeaturedSpeakersPreview
           content={content}
           originalContent={originalContent}
           onContentChange={onContentChange}

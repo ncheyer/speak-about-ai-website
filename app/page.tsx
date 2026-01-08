@@ -8,6 +8,7 @@ import SEOContent from "@/components/seo-content"
 import HomeFAQSection from "@/components/home-faq-section"
 import BookingCTA from "@/components/booking-cta"
 import { getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
+import { getPageContent, getFromContent } from "@/lib/website-content"
 
 export const metadata: Metadata = {
   title: "AI Keynote Speakers | Book Artificial Intelligence Speakers for Events",
@@ -147,6 +148,7 @@ const serviceSchema = {
 }
 
 export default async function HomePage() {
+  // Fetch featured speakers
   let featuredSpeakers: Speaker[] = []
   try {
     featuredSpeakers = await getFeaturedSpeakers(6)
@@ -158,6 +160,12 @@ export default async function HomePage() {
   } catch (error) {
     console.error("HomePage: Failed to load featured speakers:", error)
   }
+
+  // Fetch content for featured speakers section
+  const content = await getPageContent('home')
+  const featuredTitle = getFromContent(content, 'home', 'featured-speakers', 'title') || 'Featured AI Keynote Speakers'
+  const featuredSubtitle = getFromContent(content, 'home', 'featured-speakers', 'subtitle') || 'World-class artificial intelligence experts, machine learning pioneers, and tech visionaries who are shaping the future of AI across every industry.'
+  const featuredCtaText = getFromContent(content, 'home', 'featured-speakers', 'cta_text') || 'View All AI Speakers'
 
   return (
     <>
@@ -182,7 +190,12 @@ export default async function HomePage() {
       <main className="min-h-screen">
         <Hero />
         <ClientLogos />
-        <FeaturedSpeakers initialSpeakers={featuredSpeakers} />
+        <FeaturedSpeakers
+          initialSpeakers={featuredSpeakers}
+          title={featuredTitle}
+          subtitle={featuredSubtitle}
+          ctaText={featuredCtaText}
+        />
         <WhyChooseUs />
         <NavigateTheNoise />
         <SEOContent />
