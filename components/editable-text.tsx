@@ -121,6 +121,7 @@ interface EditableImageProps {
   className?: string
   isModified?: boolean
   editorMode?: boolean
+  uploadFolder?: string
 }
 
 export function EditableImage({
@@ -130,7 +131,8 @@ export function EditableImage({
   onAltChange,
   className,
   isModified = false,
-  editorMode = true
+  editorMode = true,
+  uploadFolder = 'uploads/website'
 }: EditableImageProps) {
   const [showEditor, setShowEditor] = useState(false)
   const [localSrc, setLocalSrc] = useState(src)
@@ -148,7 +150,7 @@ export function EditableImage({
 
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('folder', 'uploads/website')
+    formData.append('folder', uploadFolder)
 
     try {
       const response = await fetch('/api/admin/upload-image', {

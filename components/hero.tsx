@@ -11,6 +11,10 @@ export default async function Hero() {
   const title = getFromContent(content, 'home', 'hero', 'title')
   const subtitle = getFromContent(content, 'home', 'hero', 'subtitle')
 
+  // Hero image from database
+  const heroImage = getFromContent(content, 'home', 'images', 'hero_image') || '/robert-strong-adam-cheyer-peter-norvig-on-stage-at-microsoft.jpg'
+  const heroImageAlt = getFromContent(content, 'home', 'images', 'hero_image_alt') || 'Robert Strong, Adam Cheyer (Siri Co-Founder), and Peter Norvig (Google & Stanford AI Researcher) on stage at a Microsoft event'
+
   return (
     <section className="bg-gradient-to-br from-[#EAEAEE] to-white py-16 lg:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -97,8 +101,8 @@ export default async function Hero() {
           <div className="relative">
             <div className="relative rounded-xl overflow-hidden shadow-2xl">
               <Image
-                src="/robert-strong-adam-cheyer-peter-norvig-on-stage-at-microsoft.jpg"
-                alt="Robert Strong, Adam Cheyer (Siri Co-Founder), and Peter Norvig (Google & Stanford AI Researcher) on stage at a Microsoft event"
+                src={heroImage}
+                alt={heroImageAlt}
                 width={700}
                 height={467}
                 className="w-full h-auto object-cover"

@@ -28,6 +28,10 @@ function HomeHeroPreview({
   const title = content['home.hero.title'] || 'Book an AI Speaker for Your Event'
   const subtitle = content['home.hero.subtitle'] || 'The #1 AI speaker bureau with exclusive access to 70+ AI pioneers'
 
+  // Hero image from database
+  const heroImage = content['home.images.hero_image'] || '/robert-strong-adam-cheyer-peter-norvig-on-stage-at-microsoft.jpg'
+  const heroImageAlt = content['home.images.hero_image_alt'] || 'Robert Strong, Adam Cheyer, and Peter Norvig on stage'
+
   return (
     <section className="bg-gradient-to-br from-[#EAEAEE] to-white py-12 lg:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -88,15 +92,18 @@ function HomeHeroPreview({
             </div>
           </div>
 
-          {/* Hero Image */}
+          {/* Hero Image - Editable */}
           <div className="relative">
-            <div className="relative rounded-xl overflow-hidden shadow-2xl">
-              <img
-                src="/robert-strong-adam-cheyer-peter-norvig-on-stage-at-microsoft.jpg"
-                alt="Robert Strong, Adam Cheyer, and Peter Norvig on stage"
-                className="w-full h-auto object-cover"
-              />
-            </div>
+            <EditableImage
+              src={heroImage}
+              alt={heroImageAlt}
+              onChange={(newSrc) => onContentChange('home.images.hero_image', newSrc)}
+              onAltChange={(newAlt) => onContentChange('home.images.hero_image_alt', newAlt)}
+              isModified={isModified('home.images.hero_image', content, originalContent)}
+              editorMode={editorMode}
+              className="w-full h-auto object-cover rounded-xl shadow-2xl"
+              uploadFolder="hero"
+            />
           </div>
         </div>
       </div>
