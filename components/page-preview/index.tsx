@@ -225,12 +225,17 @@ function HomeWhyChooseUsPreview({
   )
 }
 
-// Default logos for preview
+// Default logos for preview (matches client-logos.tsx)
 const defaultLogos = [
   { name: "Stanford University", src: "/logos/stanford-university-logo-1024x335-1.png" },
   { name: "Google", src: "/logos/Google_2015_logo.svg.png" },
   { name: "Amazon", src: "/logos/Amazon-Logo-2000.png" },
   { name: "Visa", src: "/logos/Visa_Inc._logo.svg" },
+  { name: "Rio Innovation Week", src: "/logos/rio-innovation-week-new.png" },
+  { name: "NICE", src: "/logos/nice-logo.png" },
+  { name: "ST Engineering", src: "/logos/st-engineering-logo.png" },
+  { name: "Government of Korea", src: "/logos/korea-government-logo.png" },
+  { name: "Juniper Networks", src: "/logos/juniper-networks-logo.svg" },
   { name: "KPMG", src: "/logos/KPMG_logo.svg.png" },
 ]
 
