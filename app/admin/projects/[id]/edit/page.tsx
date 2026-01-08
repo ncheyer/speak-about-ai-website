@@ -36,6 +36,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { generateDeliverablesFromProject, formatDeliverablesForStorage } from "@/lib/generate-deliverables"
+import { authFetch } from "@/lib/auth-fetch"
 
 interface Project {
   id: number
@@ -46,7 +47,7 @@ interface Project {
   company?: string
   project_type: string
   description?: string
-  status: "contracts_signed" | "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled"
+  status: "2plus_months" | "1to2_months" | "less_than_month" | "final_week" | "contracts_signed" | "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled"
   priority: "low" | "medium" | "high" | "urgent"
   start_date: string
   end_date?: string
@@ -183,6 +184,12 @@ interface Project {
 // Workflow stages (what's been completed)
 // Matches task-definitions.ts for consistency
 const WORKFLOW_STAGES = {
+  // Time-based statuses (auto-assigned based on event date)
+  "2plus_months": "2+ Months Out",
+  "1to2_months": "1-2 Months Out",
+  "less_than_month": "< 1 Month",
+  "final_week": "Final Week",
+  // Workflow statuses
   "contracts_signed": "1. Contracting",
   "invoicing": "2. Invoicing",
   "logistics_planning": "3. Logistics",
@@ -275,16 +282,17 @@ export default function ProjectEditPage() {
 
   const loadProject = async () => {
     try {
-      const response = await fetch(`/api/projects/${params.id}`)
+      const response = await authFetch(`/api/projects/${params.id}`)
       if (response.ok) {
         const projectData = await response.json()
         setProject(projectData)
         setFormData(projectData)
+      } else if (response.status === 401) {
+        setError("Not authenticated. Please log in.")
       } else {
         setError("Failed to load project")
       }
     } catch (error) {
-      console.error("Error loading project:", error)
       setError("Failed to load project")
     } finally {
       setIsLoading(false)
@@ -297,11 +305,8 @@ export default function ProjectEditPage() {
     setSuccess("")
 
     try {
-      const response = await fetch(`/api/projects/${params.id}`, {
+      const response = await authFetch(`/api/projects/${params.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(formData),
       })
 
@@ -310,12 +315,13 @@ export default function ProjectEditPage() {
         setTimeout(() => {
           router.push("/admin/projects")
         }, 1500)
+      } else if (response.status === 401) {
+        setError("Not authenticated. Please log in.")
       } else {
         const errorData = await response.json()
         setError(errorData.error || "Failed to update project")
       }
     } catch (error) {
-      console.error("Error updating project:", error)
       setError("Failed to update project")
     } finally {
       setIsSaving(false)
@@ -324,7 +330,7 @@ export default function ProjectEditPage() {
 
   const handleSendInvite = async () => {
     const emailToUse = inviteEmail || formData.client_email || project?.client_email
-    
+
     if (!emailToUse) {
       setError("Please provide a client email address")
       return
@@ -335,11 +341,8 @@ export default function ProjectEditPage() {
     setSuccess("")
 
     try {
-      const response = await fetch("/api/client-portal/invite", {
+      const response = await authFetch("/api/client-portal/invite", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           projectId: params.id,
           clientEmail: emailToUse,
@@ -356,7 +359,6 @@ export default function ProjectEditPage() {
         setError(data.error || "Failed to send invitation")
       }
     } catch (error) {
-      console.error("Error sending invitation:", error)
       setError("Failed to send invitation")
     } finally {
       setIsSendingInvite(false)
