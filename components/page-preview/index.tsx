@@ -1,7 +1,7 @@
 "use client"
 
 import { Award, MapPin, Globe, Shield, Clock, Users, Headphones, Target, DollarSign, Globe2, Check, Calendar, ArrowRight } from "lucide-react"
-import { EditableText, EditableImage, LogoListEditor, OfferingsListEditor, type ServiceOffering } from "@/components/editable-text"
+import { EditableText, EditableImage, LogoListEditor, OfferingsListEditor, SimpleListEditor, type ServiceOffering } from "@/components/editable-text"
 import { Button } from "@/components/ui/button"
 
 interface PagePreviewProps {
@@ -546,6 +546,38 @@ function HomeSEOContentPreview({
   const whyParagraph = content['home.seo-content.why_paragraph'] || 'As a speaker bureau focused exclusively on artificial intelligence, we provide unparalleled expertise in matching your event with the perfect AI keynote speaker.'
   const industriesHeading = content['home.seo-content.industries_heading'] || 'Industries We Serve'
   const topicsHeading = content['home.seo-content.topics_heading'] || 'Popular AI Speaking Topics'
+
+  // Default industries and topics
+  const defaultIndustries = [
+    'Technology & Software Companies',
+    'Healthcare & Pharmaceutical',
+    'Financial Services & Banking',
+    'Manufacturing & Automotive',
+    'Retail & E-commerce',
+    'Education & Research Institutions'
+  ]
+  const defaultTopics = [
+    'Generative AI & Large Language Models',
+    'AI Strategy & Digital Transformation',
+    'Machine Learning Applications',
+    'AI Ethics & Responsible AI',
+    'Future of Work with AI',
+    'AI in Healthcare & Life Sciences'
+  ]
+
+  // Parse from JSON or use defaults
+  const industriesJson = content['home.seo-content.industries_list']
+  let industries = defaultIndustries
+  if (industriesJson) {
+    try { industries = JSON.parse(industriesJson) } catch (e) {}
+  }
+
+  const topicsJson = content['home.seo-content.topics_list']
+  let topics = defaultTopics
+  if (topicsJson) {
+    try { topics = JSON.parse(topicsJson) } catch (e) {}
+  }
+
   const bookHeading = content['home.seo-content.book_heading'] || 'Book an AI Speaker for Your Next Event'
   const bookParagraph = content['home.seo-content.book_paragraph'] || 'From keynote presentations at major conferences to executive briefings and workshop facilitation, our AI speakers bring cutting-edge insights and practical applications to every engagement.'
   const ctaButtonText = content['home.seo-content.cta_button_text'] || 'Book an AI Speaker Today'
@@ -591,7 +623,7 @@ function HomeSEOContentPreview({
             editorMode={editorMode}
           />
 
-          {/* Industries and Topics with editable titles */}
+          {/* Industries and Topics with editable titles and lists */}
           <div className="grid md:grid-cols-2 gap-8 mt-8">
             <div>
               <EditableText
@@ -602,15 +634,21 @@ function HomeSEOContentPreview({
                 isModified={isModified('home.seo-content.industries_heading', content, originalContent)}
                 editorMode={editorMode}
               />
-              <ul className="space-y-2 text-gray-700 text-sm opacity-70">
-                <li>• Technology & Software Companies</li>
-                <li>• Healthcare & Pharmaceutical</li>
-                <li>• Financial Services & Banking</li>
-                <li>• Manufacturing & Automotive</li>
-                <li>• Retail & E-commerce</li>
-                <li>• Education & Research Institutions</li>
+              <ul className="space-y-2 text-gray-700 text-sm">
+                {industries.map((item, i) => (
+                  <li key={i}>• {item}</li>
+                ))}
               </ul>
-              <p className="text-xs text-gray-400 italic mt-2">List items managed via JSON in database</p>
+              <div className="mt-3">
+                <SimpleListEditor
+                  items={industries}
+                  onChange={(newItems) => onContentChange('home.seo-content.industries_list', JSON.stringify(newItems))}
+                  isModified={isModified('home.seo-content.industries_list', content, originalContent)}
+                  editorMode={editorMode}
+                  title="Edit Industries"
+                  buttonText="Edit Industries"
+                />
+              </div>
             </div>
             <div>
               <EditableText
@@ -621,15 +659,21 @@ function HomeSEOContentPreview({
                 isModified={isModified('home.seo-content.topics_heading', content, originalContent)}
                 editorMode={editorMode}
               />
-              <ul className="space-y-2 text-gray-700 text-sm opacity-70">
-                <li>• Generative AI & Large Language Models</li>
-                <li>• AI Strategy & Digital Transformation</li>
-                <li>• Machine Learning Applications</li>
-                <li>• AI Ethics & Responsible AI</li>
-                <li>• Future of Work with AI</li>
-                <li>• AI in Healthcare & Life Sciences</li>
+              <ul className="space-y-2 text-gray-700 text-sm">
+                {topics.map((item, i) => (
+                  <li key={i}>• {item}</li>
+                ))}
               </ul>
-              <p className="text-xs text-gray-400 italic mt-2">List items managed via JSON in database</p>
+              <div className="mt-3">
+                <SimpleListEditor
+                  items={topics}
+                  onChange={(newItems) => onContentChange('home.seo-content.topics_list', JSON.stringify(newItems))}
+                  isModified={isModified('home.seo-content.topics_list', content, originalContent)}
+                  editorMode={editorMode}
+                  title="Edit Topics"
+                  buttonText="Edit Topics"
+                />
+              </div>
             </div>
           </div>
 

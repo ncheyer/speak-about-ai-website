@@ -36,14 +36,14 @@ export default async function SEOContent() {
   const industriesJson = getFromContent(content, 'home', 'seo-content', 'industries_list')
   let industries = defaultIndustries
   if (industriesJson) {
-    try { industries = industriesJson.split(', ') } catch (e) {}
+    try { industries = JSON.parse(industriesJson) } catch (e) {}
   }
 
   const topicsTitle = getFromContent(content, 'home', 'seo-content', 'topics_heading') || 'Popular AI Speaking Topics'
   const topicsJson = getFromContent(content, 'home', 'seo-content', 'topics_list')
   let topics = defaultTopics
   if (topicsJson) {
-    try { topics = topicsJson.split(', ') } catch (e) {}
+    try { topics = JSON.parse(topicsJson) } catch (e) {}
   }
 
   const bookTitle = getFromContent(content, 'home', 'seo-content', 'book_heading') || 'Book an AI Speaker for Your Next Event'
