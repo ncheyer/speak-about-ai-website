@@ -26,8 +26,6 @@ import {
   Plane,
   DollarSign,
   FileText,
-  Mail,
-  Send,
   Plus,
   Trash2,
   CheckCircle,
@@ -143,6 +141,8 @@ interface Project {
   
   // Financial Details
   speaker_fee?: number
+  commission_percentage?: number
+  commission_amount?: number
   travel_expenses_type?: string
   travel_expenses_amount?: number
   travel_buyout?: number
@@ -273,8 +273,6 @@ export default function ProjectEditPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
-  const [isSendingInvite, setIsSendingInvite] = useState(false)
-  const [inviteEmail, setInviteEmail] = useState("")
 
   useEffect(() => {
     loadProject()
@@ -325,43 +323,6 @@ export default function ProjectEditPage() {
       setError("Failed to update project")
     } finally {
       setIsSaving(false)
-    }
-  }
-
-  const handleSendInvite = async () => {
-    const emailToUse = inviteEmail || formData.client_email || project?.client_email
-
-    if (!emailToUse) {
-      setError("Please provide a client email address")
-      return
-    }
-
-    setIsSendingInvite(true)
-    setError("")
-    setSuccess("")
-
-    try {
-      const response = await authFetch("/api/client-portal/invite", {
-        method: "POST",
-        body: JSON.stringify({
-          projectId: params.id,
-          clientEmail: emailToUse,
-          adminEmail: "admin@speakaboutai.com"
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setSuccess(`Client portal invitation sent to ${emailToUse}`)
-        setInviteEmail("")
-      } else {
-        setError(data.error || "Failed to send invitation")
-      }
-    } catch (error) {
-      setError("Failed to send invitation")
-    } finally {
-      setIsSendingInvite(false)
     }
   }
 
@@ -452,28 +413,14 @@ export default function ProjectEditPage() {
               })()}
             </div>
 
-            <div className="flex gap-3">
-              <Button 
-                onClick={handleSendInvite} 
-                disabled={isSendingInvite}
-                variant="outline"
-              >
-                {isSendingInvite ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="mr-2 h-4 w-4" />
-                )}
-                {isSendingInvite ? "Sending..." : "Send Client Portal Invite"}
-              </Button>
-              <Button onClick={handleSave} disabled={isSaving}>
-                {isSaving ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-2 h-4 w-4" />
-                )}
-                {isSaving ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </div>
 
@@ -963,10 +910,9 @@ export default function ProjectEditPage() {
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
                   Speaker Information
-                  <Badge variant="outline" className="ml-2">Speaker Provided</Badge>
                 </CardTitle>
                 <CardDescription>
-                  Information that will be provided by the speaker through their portal
+                  Speaker materials for this engagement
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -978,20 +924,16 @@ export default function ProjectEditPage() {
                       value={formData.speaker_bio || ""}
                       onChange={(e) => updateField("speaker_bio", e.target.value)}
                       rows={4}
-                      placeholder="Speaker will provide their professional biography"
-                      className="bg-gray-50"
-                      readOnly
+                      placeholder="Enter speaker biography"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="speaker_headshot">Speaker Headshot</Label>
+                    <Label htmlFor="speaker_headshot">Speaker Headshot URL</Label>
                     <Input
                       id="speaker_headshot"
                       value={formData.speaker_headshot || ""}
                       onChange={(e) => updateField("speaker_headshot", e.target.value)}
-                      placeholder="Speaker will upload professional headshot"
-                      className="bg-gray-50"
-                      readOnly
+                      placeholder="URL to speaker headshot"
                     />
                   </div>
                   <div>
@@ -1000,9 +942,7 @@ export default function ProjectEditPage() {
                       id="speaker_presentation_title"
                       value={formData.speaker_presentation_title || ""}
                       onChange={(e) => updateField("speaker_presentation_title", e.target.value)}
-                      placeholder="Speaker will provide final presentation title"
-                      className="bg-gray-50"
-                      readOnly
+                      placeholder="Enter presentation title"
                     />
                   </div>
                   <div>
@@ -1012,16 +952,9 @@ export default function ProjectEditPage() {
                       value={formData.speaker_av_requirements || ""}
                       onChange={(e) => updateField("speaker_av_requirements", e.target.value)}
                       rows={3}
-                      placeholder="Speaker will specify their technical requirements"
-                      className="bg-gray-50"
-                      readOnly
+                      placeholder="Enter speaker's technical requirements"
                     />
                   </div>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>Note:</strong> These fields will be automatically populated when the speaker completes their information through the speaker portal. This ensures the most accurate and up-to-date information directly from the speaker.
-                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -1505,16 +1438,99 @@ export default function ProjectEditPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Commission Calculation Section */}
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-blue-900 mb-3">Fee & Commission Calculation</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                      <Label htmlFor="budget">Deal Value ($) *</Label>
+                      <Input
+                        id="budget"
+                        type="number"
+                        step="0.01"
+                        value={formData.budget || ""}
+                        onChange={(e) => {
+                          const newBudget = parseFloat(e.target.value) || 0
+                          const percentage = formData.commission_percentage || 20
+                          const commission = newBudget * percentage / 100
+                          const speakerFee = newBudget - commission
+                          setFormData(prev => ({
+                            ...prev,
+                            budget: newBudget,
+                            commission_amount: commission,
+                            speaker_fee: speakerFee
+                          }))
+                        }}
+                        placeholder="Total client pays"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Total amount client pays</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="commission_percentage">Commission %</Label>
+                      <div className="relative">
+                        <Input
+                          id="commission_percentage"
+                          type="number"
+                          step="1"
+                          min="0"
+                          max="100"
+                          value={formData.commission_percentage ?? 20}
+                          onChange={(e) => {
+                            const newPercentage = parseFloat(e.target.value) || 0
+                            const budget = formData.budget || 0
+                            const commission = budget * newPercentage / 100
+                            const speakerFee = budget - commission
+                            setFormData(prev => ({
+                              ...prev,
+                              commission_percentage: newPercentage,
+                              commission_amount: commission,
+                              speaker_fee: speakerFee
+                            }))
+                          }}
+                          className="pr-7"
+                        />
+                        <span className="absolute right-3 top-2.5 text-gray-500">%</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Our commission rate</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="commission_amount">Our Commission ($)</Label>
+                      <Input
+                        id="commission_amount"
+                        type="number"
+                        value={(formData.commission_amount || ((formData.budget || 0) * (formData.commission_percentage || 20) / 100)).toFixed(2)}
+                        readOnly
+                        className="bg-gray-100"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Deal × Commission %</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="speaker_fee">Speaker Fee ($)</Label>
+                      <Input
+                        id="speaker_fee"
+                        type="number"
+                        value={(formData.speaker_fee || ((formData.budget || 0) - ((formData.budget || 0) * (formData.commission_percentage || 20) / 100))).toFixed(2)}
+                        readOnly
+                        className="bg-gray-100"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Deal − Commission</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Other Financial Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="speaker_fee">Speaker Fee ($)</Label>
+                    <Label htmlFor="travel_buyout">Travel Buyout ($)</Label>
                     <Input
-                      id="speaker_fee"
+                      id="travel_buyout"
                       type="number"
                       step="0.01"
-                      value={formData.speaker_fee || ""}
-                      onChange={(e) => updateField("speaker_fee", parseFloat(e.target.value) || undefined)}
+                      value={formData.travel_buyout || ""}
+                      onChange={(e) => updateField("travel_buyout", parseFloat(e.target.value) || 0)}
+                      placeholder="Flat travel buyout amount"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Pass-through to speaker, added to total</p>
                   </div>
                   <div>
                     <Label htmlFor="travel_expenses_amount">Travel Expenses ($)</Label>
@@ -1560,17 +1576,6 @@ export default function ProjectEditPage() {
                       onChange={(e) => updateField("invoice_number", e.target.value)}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="travel_buyout">Travel Buyout ($)</Label>
-                    <Input
-                      id="travel_buyout"
-                      type="number"
-                      step="0.01"
-                      value={formData.travel_buyout || ""}
-                      onChange={(e) => updateField("travel_buyout", parseFloat(e.target.value) || 0)}
-                      placeholder="Flat travel buyout amount"
-                    />
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1587,10 +1592,14 @@ export default function ProjectEditPage() {
                 {/* Financial Summary */}
                 <div className="bg-gray-50 p-4 rounded-lg border">
                   <h4 className="font-semibold mb-3">Financial Summary</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                     <div>
                       <span className="text-gray-500">Deal Value</span>
                       <p className="font-semibold text-lg">${(formData.budget || 0).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Commission Rate</span>
+                      <p className="font-semibold text-lg">{formData.commission_percentage ?? 20}%</p>
                     </div>
                     <div>
                       <span className="text-gray-500">Speaker Fee</span>
@@ -1614,10 +1623,10 @@ export default function ProjectEditPage() {
                     </div>
                     <div>
                       <span className="text-gray-500">Net Commission</span>
-                      <p className={`font-semibold text-lg ${((formData.budget || 0) - (formData.speaker_fee || 0)) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${((formData.budget || 0) - (formData.speaker_fee || 0)).toLocaleString()}
+                      <p className={`font-semibold text-lg ${(formData.commission_amount || ((formData.budget || 0) - (formData.speaker_fee || 0))) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        ${(formData.commission_amount || ((formData.budget || 0) - (formData.speaker_fee || 0))).toLocaleString()}
                       </p>
-                      <span className="text-xs text-gray-400">Deal − Speaker Fee</span>
+                      <span className="text-xs text-gray-400">{formData.commission_percentage ?? 20}% of deal</span>
                     </div>
                   </div>
                 </div>

@@ -113,20 +113,10 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Portals */}
+          {/* For Speakers */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Portals</h3>
+            <h3 className="text-lg font-semibold mb-4">For Speakers</h3>
             <ul className="space-y-2">
-              <li>
-                <Link href="/portal/client" className="text-[#EAEAEE] hover:text-white">
-                  Client Portal
-                </Link>
-              </li>
-              <li>
-                <Link href="/portal/speaker" className="text-[#EAEAEE] hover:text-white">
-                  Speaker Portal
-                </Link>
-              </li>
               <li>
                 <Link href="/apply" className="text-[#EAEAEE] hover:text-white">
                   Apply to Be a Speaker
