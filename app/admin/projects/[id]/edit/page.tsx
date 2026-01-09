@@ -1498,7 +1498,7 @@ export default function ProjectEditPage() {
                       <Input
                         id="commission_amount"
                         type="number"
-                        value={(formData.commission_amount || ((formData.budget || 0) * (formData.commission_percentage || 20) / 100)).toFixed(2)}
+                        value={Number(formData.commission_amount || ((formData.budget || 0) * (formData.commission_percentage || 20) / 100)).toFixed(2)}
                         readOnly
                         className="bg-gray-100"
                       />
@@ -1509,7 +1509,7 @@ export default function ProjectEditPage() {
                       <Input
                         id="speaker_fee"
                         type="number"
-                        value={(formData.speaker_fee || ((formData.budget || 0) - ((formData.budget || 0) * (formData.commission_percentage || 20) / 100))).toFixed(2)}
+                        value={Number(formData.speaker_fee || ((formData.budget || 0) - ((formData.budget || 0) * (formData.commission_percentage || 20) / 100))).toFixed(2)}
                         readOnly
                         className="bg-gray-100"
                       />
