@@ -74,22 +74,29 @@ export function WonDealModal({ isOpen, onClose, onSubmit, deal }: WonDealModalPr
   // Pre-fill form when deal changes
   useEffect(() => {
     if (deal) {
-      setDealValue(deal.deal_value?.toString() || "")
+      const totalValue = deal.deal_value || 0
+      setDealValue(totalValue.toString())
       setSpeakerName(deal.speaker_requested || "")
-      setSpeakerFee(deal.deal_value?.toString() || "")
-      // Calculate commission based on default 20%
-      const fee = parseFloat(deal.deal_value?.toString() || "0")
-      setCommissionAmount((fee * 0.2).toFixed(2))
+      // Calculate commission and speaker fee based on default 20%
+      // Commission = deal_value × percentage, speaker_fee = deal_value - commission
+      const percentage = 20
+      const commission = totalValue * percentage / 100
+      const fee = totalValue - commission
+      setCommissionAmount(commission.toFixed(2))
+      setSpeakerFee(fee.toFixed(2))
     }
   }, [deal])
 
-  // Recalculate commission when fee or percentage changes
+  // Recalculate commission and speaker fee when deal value or percentage changes
+  // Formula: commission = dealValue × percentage / 100, speakerFee = dealValue - commission
   useEffect(() => {
-    const fee = parseFloat(speakerFee) || 0
+    const totalValue = parseFloat(dealValue) || 0
     const percentage = parseFloat(commissionPercentage) || 0
-    const commission = (fee * percentage / 100).toFixed(2)
-    setCommissionAmount(commission)
-  }, [speakerFee, commissionPercentage])
+    const commission = totalValue * percentage / 100
+    const fee = totalValue - commission
+    setCommissionAmount(commission.toFixed(2))
+    setSpeakerFee(fee.toFixed(2))
+  }, [dealValue, commissionPercentage])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -102,8 +109,10 @@ export function WonDealModal({ isOpen, onClose, onSubmit, deal }: WonDealModalPr
       newErrors.speakerName = "Speaker name is required"
     }
 
-    if (!speakerFee || parseFloat(speakerFee) <= 0) {
-      newErrors.speakerFee = "Speaker fee is required"
+    // Validate commission percentage is reasonable
+    const pct = parseFloat(commissionPercentage) || 0
+    if (pct < 0 || pct > 100) {
+      newErrors.commissionPercentage = "Commission must be between 0-100%"
     }
 
     setErrors(newErrors)
@@ -228,7 +237,7 @@ export function WonDealModal({ isOpen, onClose, onSubmit, deal }: WonDealModalPr
 
               <div className="space-y-2">
                 <Label htmlFor="speakerFee">
-                  Speaker Fee <span className="text-red-500">*</span>
+                  Speaker Fee (calculated)
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-2.5 text-gray-500">$</span>
@@ -236,14 +245,12 @@ export function WonDealModal({ isOpen, onClose, onSubmit, deal }: WonDealModalPr
                     id="speakerFee"
                     type="number"
                     value={speakerFee}
-                    onChange={(e) => setSpeakerFee(e.target.value)}
+                    readOnly
                     placeholder="0.00"
-                    className={`pl-7 ${errors.speakerFee ? "border-red-500" : ""}`}
+                    className="pl-7 bg-gray-50"
                   />
                 </div>
-                {errors.speakerFee && (
-                  <p className="text-xs text-red-500">{errors.speakerFee}</p>
-                )}
+                <p className="text-xs text-gray-500">= Deal Value - Commission</p>
               </div>
             </div>
 

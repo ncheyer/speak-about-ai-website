@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
         p.status,
         p.budget,
         p.speaker_fee,
+        p.commission_percentage,
+        p.commission_amount,
         p.travel_buyout,
         p.payment_status,
         p.payment_date,
@@ -42,6 +44,8 @@ export async function GET(request: NextRequest) {
       const budget = Number(project.budget) || 0
       const speakerFee = Number(project.speaker_fee) || 0
       const travelBuyout = Number(project.travel_buyout) || 0
+      const commissionPercentage = Number(project.commission_percentage) || 20
+      const storedCommission = Number(project.commission_amount) || 0
 
       // Travel buyout is paid by client ON TOP of the deal value, then passed through to speaker
       // Total to collect from client = deal value + travel buyout
@@ -50,8 +54,9 @@ export async function GET(request: NextRequest) {
       // Speaker gets their fee + travel buyout
       const speakerPayout = speakerFee + travelBuyout
 
-      // Net commission = deal value - speaker fee (travel is pass-through, doesn't affect commission)
-      const netCommission = budget - speakerFee
+      // Net commission: prefer stored value, fallback to calculation (budget - speaker_fee)
+      // This ensures existing projects without stored commission still work correctly
+      const netCommission = storedCommission > 0 ? storedCommission : (budget - speakerFee)
 
       return {
         id: Number(project.id),
@@ -67,6 +72,8 @@ export async function GET(request: NextRequest) {
         // Financial data
         budget: budget,
         speaker_fee: speakerFee,
+        commission_percentage: commissionPercentage,
+        commission_amount: netCommission,
         travel_buyout: travelBuyout,
         total_to_collect: totalToCollect,
         speaker_payout: speakerPayout,

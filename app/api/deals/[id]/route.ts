@@ -87,6 +87,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     // If deal status changed to "won", create a project
     if (originalDeal && originalDeal.status !== "won" && deal.status === "won") {
       try {
+        // Extract financial data from WonDealModal (passed in request body)
+        // If not provided, calculate defaults: commission = 20% of deal_value, speaker_fee = deal_value - commission
+        const dealValue = body.deal_value || deal.deal_value || 0
+        const commissionPercentage = body.commission_percentage ?? 20
+        const commissionAmount = body.commission_amount ?? (dealValue * commissionPercentage / 100)
+        const speakerFee = body.speaker_fee ?? (dealValue - commissionAmount)
+
         const projectData = {
           // Basic project fields
           project_name: deal.event_title,
@@ -103,7 +110,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           priority: deal.priority,
           start_date: new Date().toISOString().split('T')[0],
           deadline: deal.event_date,
-          budget: deal.deal_value,
+          budget: dealValue,
           spent: 0,
           completion_percentage: 0,
 
@@ -125,14 +132,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           event_type: deal.event_type,
 
           // Speaker Program Details
-          requested_speaker_name: deal.speaker_requested,
+          requested_speaker_name: body.speaker_name || deal.speaker_requested,
           program_topic: `${deal.event_title} - ${deal.event_type}`,
           program_type: deal.event_type,
           audience_size: deal.attendee_count,
           audience_demographics: "To be determined during planning",
 
-          // Financial Details
-          speaker_fee: deal.deal_value,
+          // Financial Details (from WonDealModal)
+          speaker_fee: speakerFee,
+          commission_percentage: commissionPercentage,
+          commission_amount: commissionAmount,
 
           // Basic event fields (existing)
           attendee_count: deal.attendee_count,
@@ -141,7 +150,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           tags: [deal.event_type, deal.source],
 
           // Status tracking (initialized for new project)
-          contract_signed: false,
+          contract_signed: body.contract_signed || false,
           invoice_sent: false,
           payment_received: false,
           presentation_ready: false,
@@ -214,6 +223,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     // If deal status changed to "won", create a project
     if (originalDeal && originalDeal.status !== "won" && deal.status === "won") {
       try {
+        // Extract financial data from WonDealModal (passed in request body)
+        // If not provided, calculate defaults: commission = 20% of deal_value, speaker_fee = deal_value - commission
+        const dealValue = body.deal_value || deal.deal_value || 0
+        const commissionPercentage = body.commission_percentage ?? 20
+        const commissionAmount = body.commission_amount ?? (dealValue * commissionPercentage / 100)
+        const speakerFee = body.speaker_fee ?? (dealValue - commissionAmount)
+
         const projectData = {
           // Basic project fields
           project_name: deal.event_title,
@@ -221,7 +237,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           client_email: deal.client_email,
           client_phone: deal.client_phone,
           company: deal.company,
-          project_type: deal.event_type === "Workshop" ? "Workshop" : 
+          project_type: deal.event_type === "Workshop" ? "Workshop" :
                        deal.event_type === "Keynote" ? "Speaking" :
                        deal.event_type === "Consulting" ? "Consulting" : "Other",
           description: `Event: ${deal.event_title}\nLocation: ${deal.event_location}\nAttendees: ${deal.attendee_count}\n\n${deal.notes}`,
@@ -230,55 +246,57 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           priority: deal.priority,
           start_date: new Date().toISOString().split('T')[0],
           deadline: deal.event_date,
-          budget: deal.deal_value,
+          budget: dealValue,
           spent: 0,
           completion_percentage: 0,
-          
+
           // Event Overview - Billing Contact (from deal client info)
           billing_contact_name: deal.client_name,
           billing_contact_email: deal.client_email,
           billing_contact_phone: deal.client_phone,
-          
+
           // Event Overview - Logistics Contact (same as billing for now)
           logistics_contact_name: deal.client_name,
           logistics_contact_email: deal.client_email,
           logistics_contact_phone: deal.client_phone,
-          
+
           // Event Overview - Additional Fields
           end_client_name: deal.company,
           event_name: deal.event_title,
           event_date: deal.event_date,
           event_location: deal.event_location,
           event_type: deal.event_type,
-          
+
           // Speaker Program Details
-          requested_speaker_name: deal.speaker_requested,
+          requested_speaker_name: body.speaker_name || deal.speaker_requested,
           program_topic: `${deal.event_title} - ${deal.event_type}`,
           program_type: deal.event_type,
           audience_size: deal.attendee_count,
           audience_demographics: "To be determined during planning",
-          
-          // Financial Details
-          speaker_fee: deal.deal_value,
-          
+
+          // Financial Details (from WonDealModal)
+          speaker_fee: speakerFee,
+          commission_percentage: commissionPercentage,
+          commission_amount: commissionAmount,
+
           // Basic event fields (existing)
           attendee_count: deal.attendee_count,
           contact_person: deal.client_name,
           notes: `Deal ID: ${deal.id}\nSource: ${deal.source}\nBudget Range: ${deal.budget_range}\nOriginal notes: ${deal.notes}`,
           tags: [deal.event_type, deal.source],
-          
+
           // Status tracking (initialized for new project)
-          contract_signed: false,
+          contract_signed: body.contract_signed || false,
           invoice_sent: false,
           payment_received: false,
           presentation_ready: false,
           materials_sent: false,
-          
+
           // Event classification based on type
           event_classification: deal.event_type?.toLowerCase().includes('virtual') || deal.event_type?.toLowerCase().includes('webinar') ? 'virtual' :
                               deal.event_location?.toLowerCase().includes('remote') ? 'virtual' : 'local'
         }
-        
+
         const project = await createProject(projectData)
         if (project) {
           console.log(`Successfully created project "${project.project_name}" from won deal #${deal.id}`)

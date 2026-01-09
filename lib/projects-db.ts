@@ -123,6 +123,8 @@ export interface Project {
   
   // Financial Details
   speaker_fee?: number
+  commission_percentage?: number
+  commission_amount?: number
   travel_expenses_type?: string
   travel_expenses_amount?: number
   travel_buyout?: number
@@ -220,19 +222,19 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
     // Insert with all essential and event fields
     const [project] = await sql`
       INSERT INTO projects (
-        project_name, 
-        client_name, 
+        project_name,
+        client_name,
         client_email,
         client_phone,
         company,
         project_type,
         description,
-        status, 
-        priority, 
+        status,
+        priority,
         start_date,
         deadline,
-        budget, 
-        spent, 
+        budget,
+        spent,
         completion_percentage,
         event_name,
         event_date,
@@ -240,6 +242,8 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         event_type,
         attendee_count,
         speaker_fee,
+        commission_percentage,
+        commission_amount,
         notes,
         billing_contact_name,
         billing_contact_email,
@@ -247,19 +251,19 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         requested_speaker_name,
         stage_completion
       ) VALUES (
-        ${finalProjectData.project_name}, 
-        ${finalProjectData.client_name}, 
+        ${finalProjectData.project_name},
+        ${finalProjectData.client_name},
         ${finalProjectData.client_email || null},
         ${finalProjectData.client_phone || null},
         ${finalProjectData.company || null},
         ${finalProjectData.project_type},
         ${finalProjectData.description || null},
-        ${finalProjectData.status}, 
-        ${finalProjectData.priority}, 
+        ${finalProjectData.status},
+        ${finalProjectData.priority},
         ${finalProjectData.start_date},
         ${finalProjectData.deadline || null},
-        ${finalProjectData.budget}, 
-        ${finalProjectData.spent}, 
+        ${finalProjectData.budget},
+        ${finalProjectData.spent},
         ${finalProjectData.completion_percentage},
         ${finalProjectData.event_name || finalProjectData.project_name},
         ${finalProjectData.event_date ? (typeof finalProjectData.event_date === 'string' ? finalProjectData.event_date.split('T')[0] : finalProjectData.event_date) : finalProjectData.deadline ? (typeof finalProjectData.deadline === 'string' ? finalProjectData.deadline.split('T')[0] : finalProjectData.deadline) : null},
@@ -267,6 +271,8 @@ export async function createProject(projectData: Omit<Project, "id" | "created_a
         ${finalProjectData.event_type || finalProjectData.project_type},
         ${finalProjectData.attendee_count || finalProjectData.audience_size || 0},
         ${finalProjectData.speaker_fee || 0},
+        ${finalProjectData.commission_percentage || 20},
+        ${finalProjectData.commission_amount || 0},
         ${finalProjectData.notes || null},
         ${finalProjectData.billing_contact_name || finalProjectData.client_name},
         ${finalProjectData.billing_contact_email || finalProjectData.client_email || null},

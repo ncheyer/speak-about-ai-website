@@ -874,10 +874,14 @@ d) An immediate family member is stricken by serious injury, illness, or death.
           status: 'won',
           deal_value: wonData.deal_value,
           speaker_requested: wonData.speaker_name,
+          speaker_name: wonData.speaker_name,
           notes: updatedNotes,
-          // Store financial details
+          // Financial details for project creation
+          speaker_fee: wonData.speaker_fee,
           commission_percentage: wonData.commission_percentage,
           commission_amount: wonData.commission_amount,
+          contract_signed: wonData.contract_signed,
+          // Payment tracking
           payment_status: wonData.deposit_received ? 'partial' : 'pending',
           partial_payment_amount: wonData.deposit_received ? wonData.deposit_amount : null,
           contract_signed_date: wonData.contract_signed ? new Date().toISOString() : null,
