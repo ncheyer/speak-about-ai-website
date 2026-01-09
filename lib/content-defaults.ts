@@ -164,6 +164,17 @@ export const CONTENT_DEFAULTS = {
       newsletter_description: 'Sign up with your email address to stay up to date on our upcoming events.',
       event_image: '/events/robert-strong-on-stage-at-microsoft.jpg',
     },
+    faq: {
+      section_title: 'Frequently Asked Questions',
+      faq1_question: 'How long are typical speaking engagements?',
+      faq1_answer: "The duration can vary based on your needs. Keynotes typically range from 30-60 minutes, while workshops can be half-day or full-day events. We're flexible and can adjust the format to fit your schedule.",
+      faq2_question: 'Can we book multiple services for a single event?',
+      faq2_answer: 'Yes, many clients combine our services. For example, you might book a keynote speaker for a large session, followed by a smaller workshop or fireside chat. We can help you design a program that maximizes value for your audience.',
+      faq3_question: 'Can your speakers create custom content for our event?',
+      faq3_answer: 'Absolutely. Our speakers are happy to tailor their presentations to your specific needs, industry, and audience. This ensures that the content is relevant and valuable to your attendees.',
+      faq4_question: 'How do you tailor your services to different industries?',
+      faq4_answer: "Our diverse roster of AI experts allows us to match speakers and content to your specific industry. Whether you're in healthcare, finance, technology, or any other sector, we can provide relevant insights and applications of AI to your field.",
+    },
     cta: {
       title: 'Ready to Elevate Your Event?',
       subtitle: 'Let us connect you with the perfect AI expert to inspire your audience and drive meaningful conversations about the future of artificial intelligence.',

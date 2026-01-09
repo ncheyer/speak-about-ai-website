@@ -999,6 +999,363 @@ function ServicesOfferingsPreview({
   )
 }
 
+// Services Process Preview
+function ServicesProcessPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const sectionTitle = content['services.process.section_title'] || 'Our Process'
+  const sectionSubtitle = content['services.process.section_subtitle'] || 'From initial consultation to final delivery, we ensure a seamless experience that brings world-class AI expertise to your event.'
+
+  const steps = [
+    { id: 'step1', defaultTitle: 'Contact Us', defaultDesc: 'Fill out our online form to request a free consultation. One of our team members will contact you within 24 hours to discuss your event needs.' },
+    { id: 'step2', defaultTitle: 'Pick Your Speaker', defaultDesc: "Based on your event goals, audience, and budget, we'll provide a curated list of AI experts for you to consider." },
+    { id: 'step3', defaultTitle: 'Enjoy Your Event', defaultDesc: "Once you've selected your speaker, we handle all the details—from booking to logistics to post-event follow-up." },
+  ]
+
+  return (
+    <section className="py-16 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <EditableText
+            value={sectionTitle}
+            onChange={(v) => onContentChange('services.process.section_title', v)}
+            as="h2"
+            className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas"
+            isModified={isModified('services.process.section_title', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <EditableText
+            value={sectionSubtitle}
+            onChange={(v) => onContentChange('services.process.section_subtitle', v)}
+            as="p"
+            className="text-lg text-gray-600 max-w-3xl mx-auto font-montserrat"
+            multiline
+            isModified={isModified('services.process.section_subtitle', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {steps.map((step, index) => {
+            const titleKey = `services.process.${step.id}_title`
+            const descKey = `services.process.${step.id}_description`
+            const title = content[titleKey] || step.defaultTitle
+            const description = content[descKey] || step.defaultDesc
+
+            return (
+              <div key={step.id} className="text-center">
+                <div className="relative mb-6">
+                  <div className="w-16 h-16 bg-[#1E68C6] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-white font-bold text-2xl">{index + 1}</span>
+                  </div>
+                </div>
+                <EditableText
+                  value={title}
+                  onChange={(v) => onContentChange(titleKey, v)}
+                  as="h3"
+                  className="text-xl font-bold text-gray-900 mb-3 font-neue-haas"
+                  isModified={isModified(titleKey, content, originalContent)}
+                  editorMode={editorMode}
+                />
+                <EditableText
+                  value={description}
+                  onChange={(v) => onContentChange(descKey, v)}
+                  as="p"
+                  className="text-gray-600 font-montserrat"
+                  multiline
+                  isModified={isModified(descKey, content, originalContent)}
+                  editorMode={editorMode}
+                />
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Services Events Preview
+function ServicesEventsPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const sectionTitle = content['services.events.section_title'] || 'Our In-Person Events'
+  const sectionSubtitle = content['services.events.section_subtitle'] || 'In addition to helping others find keynote speakers for their events, we also host our own event series in the Bay Area, showcasing the speakers on our roster.'
+  const latestEventTitle = content['services.events.latest_event_title'] || 'Latest Event'
+  const latestEventDescription = content['services.events.latest_event_description'] || 'Our last event, hosted at Microsoft HQ in Silicon Valley, featured speakers such as Adam Cheyer, Peter Norvig, Maya Ackerman, Murray Newlands, Jeremiah Owyang, Katie McMahon, Max Sills, and many more.'
+  const latestEventCta = content['services.events.latest_event_cta'] || "Whether you're an event planner, an executive, or just interested in AI, these events are a great way to get an overview of the current AI landscape!"
+  const newsletterTitle = content['services.events.newsletter_title'] || 'Stay Updated'
+  const newsletterDescription = content['services.events.newsletter_description'] || 'Sign up with your email address to stay up to date on our upcoming events.'
+
+  return (
+    <section className="py-16 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <EditableText
+            value={sectionTitle}
+            onChange={(v) => onContentChange('services.events.section_title', v)}
+            as="h2"
+            className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas"
+            isModified={isModified('services.events.section_title', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <EditableText
+            value={sectionSubtitle}
+            onChange={(v) => onContentChange('services.events.section_subtitle', v)}
+            as="p"
+            className="text-lg text-gray-600 max-w-3xl mx-auto font-montserrat"
+            multiline
+            isModified={isModified('services.events.section_subtitle', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          <div className="bg-white p-8 rounded-xl shadow-lg">
+            <EditableText
+              value={latestEventTitle}
+              onChange={(v) => onContentChange('services.events.latest_event_title', v)}
+              as="h3"
+              className="text-2xl font-bold text-gray-900 mb-4 font-neue-haas"
+              isModified={isModified('services.events.latest_event_title', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <EditableText
+              value={latestEventDescription}
+              onChange={(v) => onContentChange('services.events.latest_event_description', v)}
+              as="p"
+              className="text-gray-600 mb-6 font-montserrat"
+              multiline
+              isModified={isModified('services.events.latest_event_description', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <div className="h-32 bg-gray-200 rounded-lg mb-4 flex items-center justify-center text-gray-400 text-sm">
+              Event Image
+            </div>
+            <EditableText
+              value={latestEventCta}
+              onChange={(v) => onContentChange('services.events.latest_event_cta', v)}
+              as="p"
+              className="text-gray-600 font-montserrat"
+              multiline
+              isModified={isModified('services.events.latest_event_cta', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+
+          <div className="bg-white p-8 rounded-xl shadow-lg">
+            <EditableText
+              value={newsletterTitle}
+              onChange={(v) => onContentChange('services.events.newsletter_title', v)}
+              as="h3"
+              className="text-2xl font-bold text-gray-900 mb-4 font-neue-haas"
+              isModified={isModified('services.events.newsletter_title', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <EditableText
+              value={newsletterDescription}
+              onChange={(v) => onContentChange('services.events.newsletter_description', v)}
+              as="p"
+              className="text-gray-600 mb-6 font-montserrat"
+              multiline
+              isModified={isModified('services.events.newsletter_description', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <div className="space-y-3 opacity-70">
+              <div className="h-10 bg-gray-100 rounded border border-gray-200"></div>
+              <div className="h-10 bg-gray-100 rounded border border-gray-200"></div>
+              <div className="h-10 bg-[#1E68C6] rounded flex items-center justify-center text-white text-sm">Subscribe</div>
+            </div>
+            <p className="text-xs text-gray-400 mt-4 text-center italic">Newsletter form preview</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Services FAQ Preview
+function ServicesFAQPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const sectionTitle = content['services.faq.section_title'] || 'Frequently Asked Questions'
+
+  const faqs = [
+    { id: 'faq1', defaultQ: 'How long are typical speaking engagements?', defaultA: "The duration can vary based on your needs. Keynotes typically range from 30-60 minutes, while workshops can be half-day or full-day events. We're flexible and can adjust the format to fit your schedule." },
+    { id: 'faq2', defaultQ: 'Can we book multiple services for a single event?', defaultA: 'Yes, many clients combine our services. For example, you might book a keynote speaker for a large session, followed by a smaller workshop or fireside chat. We can help you design a program that maximizes value for your audience.' },
+    { id: 'faq3', defaultQ: 'Can your speakers create custom content for our event?', defaultA: 'Absolutely. Our speakers are happy to tailor their presentations to your specific needs, industry, and audience. This ensures that the content is relevant and valuable to your attendees.' },
+    { id: 'faq4', defaultQ: 'How do you tailor your services to different industries?', defaultA: "Our diverse roster of AI experts allows us to match speakers and content to your specific industry. Whether you're in healthcare, finance, technology, or any other sector, we can provide relevant insights and applications of AI to your field." }
+  ]
+
+  return (
+    <section className="py-16 bg-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <EditableText
+            value={sectionTitle}
+            onChange={(v) => onContentChange('services.faq.section_title', v)}
+            as="h2"
+            className="text-3xl font-bold text-gray-900 mb-4 font-neue-haas"
+            isModified={isModified('services.faq.section_title', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
+
+        <div className="space-y-4">
+          {faqs.map((faq) => {
+            const qKey = `services.faq.${faq.id}_question`
+            const aKey = `services.faq.${faq.id}_answer`
+            const question = content[qKey] || faq.defaultQ
+            const answer = content[aKey] || faq.defaultA
+
+            return (
+              <div key={faq.id} className="bg-gray-50 rounded-lg p-6">
+                <EditableText
+                  value={question}
+                  onChange={(v) => onContentChange(qKey, v)}
+                  as="h3"
+                  className="text-lg font-semibold text-gray-900 mb-2 font-neue-haas"
+                  isModified={isModified(qKey, content, originalContent)}
+                  editorMode={editorMode}
+                />
+                <EditableText
+                  value={answer}
+                  onChange={(v) => onContentChange(aKey, v)}
+                  as="p"
+                  className="text-gray-600 font-montserrat"
+                  multiline
+                  isModified={isModified(aKey, content, originalContent)}
+                  editorMode={editorMode}
+                />
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Services Contact Preview
+function ServicesContactPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const title = content['services.cta.title'] || 'Ready to Elevate Your Event?'
+  const subtitle = content['services.cta.subtitle'] || 'Let us connect you with the perfect AI expert to inspire your audience and drive meaningful conversations about the future of artificial intelligence.'
+  const buttonText = content['services.cta.button_text'] || 'Book Speaker Today'
+  const stat1Value = content['services.cta.stat1_value'] || '24 Hours'
+  const stat1Label = content['services.cta.stat1_label'] || 'Average Response Time'
+  const stat2Value = content['services.cta.stat2_value'] || '67+'
+  const stat2Label = content['services.cta.stat2_label'] || 'AI Experts Available'
+  const stat3Value = content['services.cta.stat3_value'] || '500+'
+  const stat3Label = content['services.cta.stat3_label'] || 'Successful Events'
+
+  return (
+    <section className="py-16 bg-[#1E68C6]">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <EditableText
+          value={title}
+          onChange={(v) => onContentChange('services.cta.title', v)}
+          as="h2"
+          className="text-3xl font-bold text-white mb-6 font-neue-haas"
+          isModified={isModified('services.cta.title', content, originalContent)}
+          editorMode={editorMode}
+        />
+        <EditableText
+          value={subtitle}
+          onChange={(v) => onContentChange('services.cta.subtitle', v)}
+          as="p"
+          className="text-lg text-white text-opacity-90 mb-10 max-w-3xl mx-auto font-montserrat"
+          multiline
+          isModified={isModified('services.cta.subtitle', content, originalContent)}
+          editorMode={editorMode}
+        />
+
+        <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
+          <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-3 rounded-lg">
+            <EditableText
+              value={buttonText}
+              onChange={(v) => onContentChange('services.cta.button_text', v)}
+              className="text-white font-semibold"
+              isModified={isModified('services.cta.button_text', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div>
+            <EditableText
+              value={stat1Value}
+              onChange={(v) => onContentChange('services.cta.stat1_value', v)}
+              as="div"
+              className="text-3xl font-bold text-white mb-2 font-neue-haas"
+              isModified={isModified('services.cta.stat1_value', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <EditableText
+              value={stat1Label}
+              onChange={(v) => onContentChange('services.cta.stat1_label', v)}
+              as="div"
+              className="text-white text-opacity-90 font-montserrat"
+              isModified={isModified('services.cta.stat1_label', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+          <div>
+            <EditableText
+              value={stat2Value}
+              onChange={(v) => onContentChange('services.cta.stat2_value', v)}
+              as="div"
+              className="text-3xl font-bold text-white mb-2 font-neue-haas"
+              isModified={isModified('services.cta.stat2_value', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <EditableText
+              value={stat2Label}
+              onChange={(v) => onContentChange('services.cta.stat2_label', v)}
+              as="div"
+              className="text-white text-opacity-90 font-montserrat"
+              isModified={isModified('services.cta.stat2_label', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+          <div>
+            <EditableText
+              value={stat3Value}
+              onChange={(v) => onContentChange('services.cta.stat3_value', v)}
+              as="div"
+              className="text-3xl font-bold text-white mb-2 font-neue-haas"
+              isModified={isModified('services.cta.stat3_value', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <EditableText
+              value={stat3Label}
+              onChange={(v) => onContentChange('services.cta.stat3_label', v)}
+              as="div"
+              className="text-white text-opacity-90 font-montserrat"
+              isModified={isModified('services.cta.stat3_label', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // Team Hero Preview
 function TeamHeroPreview({
   content,
@@ -1202,6 +1559,30 @@ export function PagePreview({ page, content, originalContent, onContentChange, e
           editorMode={editorMode}
         />
         <ServicesOfferingsPreview
+          content={content}
+          originalContent={originalContent}
+          onContentChange={onContentChange}
+          editorMode={editorMode}
+        />
+        <ServicesProcessPreview
+          content={content}
+          originalContent={originalContent}
+          onContentChange={onContentChange}
+          editorMode={editorMode}
+        />
+        <ServicesEventsPreview
+          content={content}
+          originalContent={originalContent}
+          onContentChange={onContentChange}
+          editorMode={editorMode}
+        />
+        <ServicesFAQPreview
+          content={content}
+          originalContent={originalContent}
+          onContentChange={onContentChange}
+          editorMode={editorMode}
+        />
+        <ServicesContactPreview
           content={content}
           originalContent={originalContent}
           onContentChange={onContentChange}
