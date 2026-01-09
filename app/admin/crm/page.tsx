@@ -1902,7 +1902,8 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                         )
 
                         return filteredPastDeals.map((deal) => (
-                          <TableRow key={deal.id}>
+                          <React.Fragment key={deal.id}>
+                          <TableRow>
                             <TableCell>
                               <Badge 
                                 className={deal.status === "won" 
@@ -1958,10 +1959,10 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  onClick={() => setSelectedDeal(deal)}
-                                  title="View deal"
+                                  onClick={() => toggleDealExpansion(deal.id)}
+                                  title="View deal details"
                                 >
-                                  <Eye className="h-4 w-4" />
+                                  {expandedDeals.has(deal.id) ? <ChevronUp className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -1984,6 +1985,99 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                               </div>
                             </TableCell>
                           </TableRow>
+                          {/* Expandable Details Row for Past Deals */}
+                          {expandedDeals.has(deal.id) && (
+                            <TableRow className="bg-gray-50 border-t-0">
+                              <TableCell colSpan={8} className="py-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
+                                  {/* Contact Info */}
+                                  <div className="space-y-3">
+                                    <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                                      <User className="h-4 w-4" />
+                                      Contact Information
+                                    </h4>
+                                    <div className="space-y-2 text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <Mail className="h-3 w-3 text-gray-400" />
+                                        <a href={`mailto:${deal.client_email}`} className="text-blue-600 hover:underline">
+                                          {deal.client_email}
+                                        </a>
+                                      </div>
+                                      {deal.client_phone && (
+                                        <div className="flex items-center gap-2">
+                                          <Phone className="h-3 w-3 text-gray-400" />
+                                          <a href={`tel:${deal.client_phone}`} className="text-blue-600 hover:underline">
+                                            {deal.client_phone}
+                                          </a>
+                                        </div>
+                                      )}
+                                      <div className="flex items-center gap-2">
+                                        <MapPin className="h-3 w-3 text-gray-400" />
+                                        <span className="text-gray-600">{deal.event_location || 'No location specified'}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Event Details */}
+                                  <div className="space-y-3">
+                                    <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                                      <Calendar className="h-4 w-4" />
+                                      Event Details
+                                    </h4>
+                                    <div className="space-y-2 text-sm">
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-gray-500">Event Type:</span>
+                                        <span className="font-medium">{deal.event_type}</span>
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-gray-500">Attendees:</span>
+                                        <span className="font-medium">{deal.attendee_count}</span>
+                                      </div>
+                                      {deal.speaker_requested && (
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-gray-500">Speaker:</span>
+                                          <span className="font-medium">{deal.speaker_requested}</span>
+                                        </div>
+                                      )}
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-gray-500">Budget:</span>
+                                        <span className="font-medium">{deal.budget_range}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Notes & Outcome */}
+                                  <div className="space-y-3">
+                                    <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                                      {deal.status === "won" ? <CheckCircle className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-600" />}
+                                      {deal.status === "won" ? "Won Deal Details" : "Lost Deal Details"}
+                                    </h4>
+                                    <div className="space-y-2 text-sm">
+                                      {deal.status === "lost" && deal.lost_reason && (
+                                        <div>
+                                          <span className="text-gray-500">Lost Reason:</span>
+                                          <p className="font-medium mt-1">{deal.lost_reason}</p>
+                                        </div>
+                                      )}
+                                      {deal.status === "lost" && deal.competitor_name && (
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-gray-500">Competitor:</span>
+                                          <span className="font-medium">{deal.competitor_name}</span>
+                                        </div>
+                                      )}
+                                      {deal.notes && (
+                                        <div>
+                                          <span className="text-gray-500">Notes:</span>
+                                          <p className="mt-1 text-gray-600 bg-white p-2 rounded border">{deal.notes}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </React.Fragment>
                         ))
                       })()}
                     </TableBody>
