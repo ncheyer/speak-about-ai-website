@@ -1,11 +1,11 @@
 "use client"
 
 import { Award, MapPin, Globe, Shield, Clock, Users, Headphones, Target, DollarSign, Globe2, Check, Calendar, ArrowRight } from "lucide-react"
-import { EditableText, EditableImage, LogoListEditor, OfferingsListEditor, SimpleListEditor, type ServiceOffering } from "@/components/editable-text"
+import { EditableText, EditableImage, LogoListEditor, OfferingsListEditor, SimpleListEditor, TeamMembersListEditor, type ServiceOffering, type TeamMember } from "@/components/editable-text"
 import { Button } from "@/components/ui/button"
 
 interface PagePreviewProps {
-  page: "home" | "services" | "team"
+  page: "home" | "services" | "team" | "speakers" | "workshops"
   content: Record<string, string>
   originalContent: Record<string, string>
   onContentChange: (key: string, value: string) => void
@@ -1491,6 +1491,18 @@ function TeamHeroPreview({
   )
 }
 
+// Default team members for preview
+const defaultTeamMembers: TeamMember[] = [
+  {
+    id: 'member1',
+    name: 'Robert Strong',
+    title: 'CEO',
+    image: '/team/robert-strong-headshot.png',
+    bio: "Speak About AI was founded by author, speaker, and entertainer Robert Strong and is a division of Strong Entertainment, LLC. With 30+ years of experience booking speakers and entertainers globally, Robert brings unparalleled expertise to the AI speaking circuit.",
+    linkedin: 'https://linkedin.com/in/robertstrong',
+  },
+]
+
 // Team Members Preview
 function TeamMembersPreview({
   content,
@@ -1498,56 +1510,494 @@ function TeamMembersPreview({
   onContentChange,
   editorMode = true
 }: Omit<PagePreviewProps, 'page'>) {
-  const name = content['team.members.member1_name'] || 'Robert Strong'
-  const title = content['team.members.member1_title'] || 'Founder & CEO'
-  const bio = content['team.members.member1_bio'] || 'Robert has been booking talent for 30+ years and has called Silicon Valley home for 20 of them.'
+  // Parse members from content or use defaults
+  const membersJson = content['team.members.list']
+  let members = defaultTeamMembers
+  if (membersJson) {
+    try {
+      members = JSON.parse(membersJson)
+    } catch (e) {
+      // Use defaults if JSON parsing fails
+    }
+  }
+
+  const handleMembersChange = (newMembers: TeamMember[]) => {
+    onContentChange('team.members.list', JSON.stringify(newMembers))
+  }
 
   return (
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-10 text-center font-neue-haas">Meet the Team</h2>
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-gray-50 rounded-2xl p-8 shadow-lg">
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              <div className="w-48 h-48 rounded-xl overflow-hidden flex-shrink-0 bg-gray-200">
-                <img
-                  src={content['team.members.member1_image'] || '/placeholder.svg'}
-                  alt={name}
-                  className="w-full h-full object-cover"
-                />
+        <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center font-neue-haas">Meet the Team</h2>
+
+        {/* Team Members Editor Button */}
+        <div className="text-center mb-8">
+          <TeamMembersListEditor
+            members={members}
+            onChange={handleMembersChange}
+            isModified={isModified('team.members.list', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
+
+        <div className="max-w-4xl mx-auto space-y-6">
+          {members.map((member) => (
+            <div key={member.id} className="bg-gray-50 rounded-2xl p-6 shadow-lg">
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                <div className="w-32 h-32 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
+                  <img
+                    src={member.image || '/placeholder.svg'}
+                    alt={member.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900 mb-1 font-neue-haas">{member.name}</h3>
+                  <p className="text-[#1E68C6] font-semibold mb-3 font-montserrat text-sm">{member.title}</p>
+                  <p className="text-gray-600 leading-relaxed font-montserrat text-sm">{member.bio}</p>
+                </div>
               </div>
-              <div className="flex-1">
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Join Team / CTA Preview
+function JoinTeamPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const title = content['team.cta.title'] || 'Get In Touch'
+  const subtitle = content['team.cta.subtitle'] || "Interested in working with Speak About AI or have questions about our services? We'd love to hear from you."
+  const buttonText = content['team.cta.button_text'] || 'Email Us'
+  const email = content['team.cta.email'] || 'human@speakabout.ai'
+
+  return (
+    <section className="py-16 bg-[#1E68C6]">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <EditableText
+          value={title}
+          onChange={(v) => onContentChange('team.cta.title', v)}
+          as="h2"
+          className="text-2xl font-bold text-white mb-4 font-neue-haas"
+          isModified={isModified('team.cta.title', content, originalContent)}
+          editorMode={editorMode}
+        />
+        <EditableText
+          value={subtitle}
+          onChange={(v) => onContentChange('team.cta.subtitle', v)}
+          as="p"
+          className="text-lg text-white text-opacity-90 mb-6 max-w-3xl mx-auto font-montserrat"
+          multiline
+          isModified={isModified('team.cta.subtitle', content, originalContent)}
+          editorMode={editorMode}
+        />
+
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          <EditableText
+            value={buttonText}
+            onChange={(v) => onContentChange('team.cta.button_text', v)}
+            className="bg-amber-500 px-6 py-3 rounded-lg text-white font-semibold"
+            isModified={isModified('team.cta.button_text', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <div className="text-white text-sm">
+            Email: <EditableText
+              value={email}
+              onChange={(v) => onContentChange('team.cta.email', v)}
+              className="underline"
+              isModified={isModified('team.cta.email', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Speakers Directory Preview
+function SpeakersDirectoryPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const heroTitle = content['speakers.hero.title'] || 'All AI Keynote Speakers'
+  const heroSubtitle = content['speakers.hero.subtitle'] || 'Browse our complete directory of world-class artificial intelligence experts, tech visionaries, and industry practitioners.'
+  const searchPlaceholder = content['speakers.filters.search_placeholder'] || 'Search speakers by name, expertise, or industry...'
+  const allIndustries = content['speakers.filters.all_industries'] || 'All Industries'
+  const allFees = content['speakers.filters.all_fees'] || 'All Fee Ranges'
+  const allLocations = content['speakers.filters.all_locations'] || 'All Locations'
+  const showingText = content['speakers.filters.showing_text'] || 'Showing {displayed} of {total} speakers'
+  const loadingText = content['speakers.results.loading_text'] || 'Loading speakers...'
+  const noResults = content['speakers.results.no_results'] || 'No speakers found matching your criteria. Try adjusting your search or filters.'
+  const clearFilters = content['speakers.results.clear_filters'] || 'Clear Filters'
+  const loadMore = content['speakers.buttons.load_more'] || 'Load More Speakers ({remaining} remaining)'
+
+  return (
+    <div className="space-y-0">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-[#EAEAEE] to-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <EditableText
+              value={heroTitle}
+              onChange={(v) => onContentChange('speakers.hero.title', v)}
+              as="h1"
+              className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-neue-haas"
+              isModified={isModified('speakers.hero.title', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <EditableText
+              value={heroSubtitle}
+              onChange={(v) => onContentChange('speakers.hero.subtitle', v)}
+              as="p"
+              className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat"
+              multiline
+              isModified={isModified('speakers.hero.subtitle', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+
+          {/* Search & Filters Preview */}
+          <div className="max-w-5xl mx-auto">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="relative mb-4">
+                <div className="flex items-center gap-2 border-2 border-[#1E68C6]/30 rounded px-3 py-2">
+                  <span className="text-[#1E68C6] text-sm">🔍</span>
+                  <EditableText
+                    value={searchPlaceholder}
+                    onChange={(v) => onContentChange('speakers.filters.search_placeholder', v)}
+                    className="text-gray-400 text-sm"
+                    isModified={isModified('speakers.filters.search_placeholder', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="border rounded px-3 py-2 bg-gray-50">
+                  <span className="text-xs text-gray-500 block">Industry:</span>
+                  <EditableText
+                    value={allIndustries}
+                    onChange={(v) => onContentChange('speakers.filters.all_industries', v)}
+                    className="text-sm text-gray-700"
+                    isModified={isModified('speakers.filters.all_industries', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                </div>
+                <div className="border rounded px-3 py-2 bg-gray-50">
+                  <span className="text-xs text-gray-500 block">Fee Range:</span>
+                  <EditableText
+                    value={allFees}
+                    onChange={(v) => onContentChange('speakers.filters.all_fees', v)}
+                    className="text-sm text-gray-700"
+                    isModified={isModified('speakers.filters.all_fees', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                </div>
+                <div className="border rounded px-3 py-2 bg-gray-50">
+                  <span className="text-xs text-gray-500 block">Location:</span>
+                  <EditableText
+                    value={allLocations}
+                    onChange={(v) => onContentChange('speakers.filters.all_locations', v)}
+                    className="text-sm text-gray-700"
+                    isModified={isModified('speakers.filters.all_locations', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between text-sm">
                 <EditableText
-                  value={name}
-                  onChange={(v) => onContentChange('team.members.member1_name', v)}
-                  as="h3"
-                  className="text-2xl font-bold text-gray-900 mb-1 font-neue-haas"
-                  isModified={isModified('team.members.member1_name', content, originalContent)}
-                  editorMode={editorMode}
-                />
-                <EditableText
-                  value={title}
-                  onChange={(v) => onContentChange('team.members.member1_title', v)}
-                  as="p"
-                  className="text-[#1E68C6] font-semibold mb-4 font-montserrat"
-                  isModified={isModified('team.members.member1_title', content, originalContent)}
-                  editorMode={editorMode}
-                />
-                <EditableText
-                  value={bio}
-                  onChange={(v) => onContentChange('team.members.member1_bio', v)}
-                  as="p"
-                  className="text-gray-600 leading-relaxed font-montserrat"
-                  multiline
-                  isModified={isModified('team.members.member1_bio', content, originalContent)}
+                  value={showingText}
+                  onChange={(v) => onContentChange('speakers.filters.showing_text', v)}
+                  className="text-gray-600"
+                  isModified={isModified('speakers.filters.showing_text', content, originalContent)}
                   editorMode={editorMode}
                 />
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Results Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-gray-100 rounded-xl p-4 h-72 flex items-center justify-center">
+                <span className="text-gray-400 text-sm">Speaker Card {i}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-xs text-gray-400 italic mb-6">Speaker cards are loaded dynamically from the database</p>
+
+          <div className="space-y-4">
+            <div className="text-center">
+              <span className="text-sm text-gray-500">Loading Text:</span>
+              <EditableText
+                value={loadingText}
+                onChange={(v) => onContentChange('speakers.results.loading_text', v)}
+                className="text-gray-600 ml-2"
+                isModified={isModified('speakers.results.loading_text', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+            <div className="text-center">
+              <span className="text-sm text-gray-500">No Results:</span>
+              <EditableText
+                value={noResults}
+                onChange={(v) => onContentChange('speakers.results.no_results', v)}
+                className="text-gray-600 ml-2"
+                multiline
+                isModified={isModified('speakers.results.no_results', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+            <div className="text-center">
+              <span className="text-sm text-gray-500">Clear Filters Button:</span>
+              <EditableText
+                value={clearFilters}
+                onChange={(v) => onContentChange('speakers.results.clear_filters', v)}
+                className="text-blue-600 ml-2 font-semibold"
+                isModified={isModified('speakers.results.clear_filters', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+            <div className="text-center">
+              <span className="text-sm text-gray-500">Load More Button:</span>
+              <EditableText
+                value={loadMore}
+                onChange={(v) => onContentChange('speakers.buttons.load_more', v)}
+                className="text-blue-600 ml-2 font-semibold"
+                isModified={isModified('speakers.buttons.load_more', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+// Workshops Directory Preview
+function WorkshopsDirectoryPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const heroTitle = content['workshops.hero.title'] || 'AI Workshops'
+  const heroSubtitle = content['workshops.hero.subtitle'] || 'Discover hands-on AI workshops led by industry experts. Interactive training programs covering machine learning, generative AI, and practical implementation strategies for your team.'
+  const searchPlaceholder = content['workshops.filters.search_placeholder'] || 'Search workshops by name, topic, or instructor...'
+  const showFilters = content['workshops.filters.show_filters'] || 'Show Filters'
+  const hideFilters = content['workshops.filters.hide_filters'] || 'Hide Filters'
+  const allFormats = content['workshops.filters.all_formats'] || 'All Formats'
+  const allLengths = content['workshops.filters.all_lengths'] || 'All Lengths'
+  const allLocations = content['workshops.filters.all_locations'] || 'All Locations'
+  const allAudiences = content['workshops.filters.all_audiences'] || 'All Audiences'
+  const showingText = content['workshops.filters.showing_text'] || 'Showing {displayed} of {total} workshops'
+  const clearFilters = content['workshops.filters.clear_filters'] || 'Clear All Filters'
+  const loadingText = content['workshops.results.loading_text'] || 'Loading workshops...'
+  const noResults = content['workshops.results.no_results'] || 'No workshops found matching your criteria.'
+  const inquireButton = content['workshops.buttons.inquire'] || 'Inquire About Workshop'
+  const viewDetailsButton = content['workshops.buttons.view_details'] || 'View Details'
+
+  return (
+    <div className="space-y-0">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-[#EAEAEE] to-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <EditableText
+              value={heroTitle}
+              onChange={(v) => onContentChange('workshops.hero.title', v)}
+              as="h1"
+              className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-neue-haas"
+              isModified={isModified('workshops.hero.title', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <EditableText
+              value={heroSubtitle}
+              onChange={(v) => onContentChange('workshops.hero.subtitle', v)}
+              as="p"
+              className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat"
+              multiline
+              isModified={isModified('workshops.hero.subtitle', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+
+          {/* Search & Filters Preview */}
+          <div className="max-w-6xl mx-auto">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex gap-4 mb-4">
+                <div className="flex-1 flex items-center gap-2 border-2 border-[#1E68C6]/30 rounded px-3 py-2">
+                  <span className="text-[#1E68C6] text-sm">🔍</span>
+                  <EditableText
+                    value={searchPlaceholder}
+                    onChange={(v) => onContentChange('workshops.filters.search_placeholder', v)}
+                    className="text-gray-400 text-sm"
+                    isModified={isModified('workshops.filters.search_placeholder', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                </div>
+                <div className="flex items-center gap-2 border rounded px-3 py-2 bg-gray-50">
+                  <span className="text-sm text-gray-600">Toggle Button:</span>
+                  <EditableText
+                    value={showFilters}
+                    onChange={(v) => onContentChange('workshops.filters.show_filters', v)}
+                    className="text-sm text-blue-600"
+                    isModified={isModified('workshops.filters.show_filters', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                  <span className="text-gray-400">/</span>
+                  <EditableText
+                    value={hideFilters}
+                    onChange={(v) => onContentChange('workshops.filters.hide_filters', v)}
+                    className="text-sm text-blue-600"
+                    isModified={isModified('workshops.filters.hide_filters', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-3">
+                <div className="border rounded px-3 py-2 bg-gray-50">
+                  <span className="text-xs text-gray-500 block">Format:</span>
+                  <EditableText
+                    value={allFormats}
+                    onChange={(v) => onContentChange('workshops.filters.all_formats', v)}
+                    className="text-sm text-gray-700"
+                    isModified={isModified('workshops.filters.all_formats', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                </div>
+                <div className="border rounded px-3 py-2 bg-gray-50">
+                  <span className="text-xs text-gray-500 block">Length:</span>
+                  <EditableText
+                    value={allLengths}
+                    onChange={(v) => onContentChange('workshops.filters.all_lengths', v)}
+                    className="text-sm text-gray-700"
+                    isModified={isModified('workshops.filters.all_lengths', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                </div>
+                <div className="border rounded px-3 py-2 bg-gray-50">
+                  <span className="text-xs text-gray-500 block">Location:</span>
+                  <EditableText
+                    value={allLocations}
+                    onChange={(v) => onContentChange('workshops.filters.all_locations', v)}
+                    className="text-sm text-gray-700"
+                    isModified={isModified('workshops.filters.all_locations', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                </div>
+                <div className="border rounded px-3 py-2 bg-gray-50">
+                  <span className="text-xs text-gray-500 block">Audience:</span>
+                  <EditableText
+                    value={allAudiences}
+                    onChange={(v) => onContentChange('workshops.filters.all_audiences', v)}
+                    className="text-sm text-gray-700"
+                    isModified={isModified('workshops.filters.all_audiences', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between text-sm">
+                <EditableText
+                  value={showingText}
+                  onChange={(v) => onContentChange('workshops.filters.showing_text', v)}
+                  className="text-gray-600"
+                  isModified={isModified('workshops.filters.showing_text', content, originalContent)}
+                  editorMode={editorMode}
+                />
+                <EditableText
+                  value={clearFilters}
+                  onChange={(v) => onContentChange('workshops.filters.clear_filters', v)}
+                  className="text-blue-600"
+                  isModified={isModified('workshops.filters.clear_filters', content, originalContent)}
+                  editorMode={editorMode}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Results Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-gray-100 rounded-xl overflow-hidden">
+                <div className="h-40 bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-400 text-sm">Workshop Image</span>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-full"></div>
+                  <div className="flex gap-2 pt-2">
+                    <div className="flex-1 bg-amber-500 text-white text-xs py-2 rounded text-center">
+                      <EditableText
+                        value={inquireButton}
+                        onChange={(v) => onContentChange('workshops.buttons.inquire', v)}
+                        className="text-white"
+                        isModified={isModified('workshops.buttons.inquire', content, originalContent)}
+                        editorMode={editorMode}
+                      />
+                    </div>
+                    <div className="flex-1 bg-gray-200 text-gray-700 text-xs py-2 rounded text-center">
+                      <EditableText
+                        value={viewDetailsButton}
+                        onChange={(v) => onContentChange('workshops.buttons.view_details', v)}
+                        className="text-gray-700"
+                        isModified={isModified('workshops.buttons.view_details', content, originalContent)}
+                        editorMode={editorMode}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-xs text-gray-400 italic mb-6">Workshop cards are loaded dynamically from the database</p>
+
+          <div className="space-y-4">
+            <div className="text-center">
+              <span className="text-sm text-gray-500">Loading Text:</span>
+              <EditableText
+                value={loadingText}
+                onChange={(v) => onContentChange('workshops.results.loading_text', v)}
+                className="text-gray-600 ml-2"
+                isModified={isModified('workshops.results.loading_text', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+            <div className="text-center">
+              <span className="text-sm text-gray-500">No Results:</span>
+              <EditableText
+                value={noResults}
+                onChange={(v) => onContentChange('workshops.results.no_results', v)}
+                className="text-gray-600 ml-2"
+                isModified={isModified('workshops.results.no_results', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   )
 }
 
@@ -1666,7 +2116,35 @@ export function PagePreview({ page, content, originalContent, onContentChange, e
           onContentChange={onContentChange}
           editorMode={editorMode}
         />
+        <JoinTeamPreview
+          content={content}
+          originalContent={originalContent}
+          onContentChange={onContentChange}
+          editorMode={editorMode}
+        />
       </div>
+    )
+  }
+
+  if (page === 'speakers') {
+    return (
+      <SpeakersDirectoryPreview
+        content={content}
+        originalContent={originalContent}
+        onContentChange={onContentChange}
+        editorMode={editorMode}
+      />
+    )
+  }
+
+  if (page === 'workshops') {
+    return (
+      <WorkshopsDirectoryPreview
+        content={content}
+        originalContent={originalContent}
+        onContentChange={onContentChange}
+        editorMode={editorMode}
+      />
     )
   }
 

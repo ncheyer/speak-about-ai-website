@@ -204,6 +204,72 @@ export const CONTENT_DEFAULTS = {
       og_description: 'Full range of AI speaker services for your events - keynotes, panels, workshops, and more from world-class AI experts.',
     },
   },
+  speakers: {
+    hero: {
+      title: 'All AI Keynote Speakers',
+      subtitle: 'Browse our complete directory of world-class artificial intelligence experts, tech visionaries, and industry practitioners.',
+    },
+    filters: {
+      search_placeholder: 'Search speakers by name, expertise, or industry...',
+      industry_label: 'Industry',
+      all_industries: 'All Industries',
+      fee_label: 'Fee Range',
+      all_fees: 'All Fee Ranges',
+      location_label: 'Location',
+      all_locations: 'All Locations',
+      showing_text: 'Showing {displayed} of {total} speakers',
+    },
+    results: {
+      loading_text: 'Loading speakers...',
+      no_results: 'No speakers found matching your criteria. Try adjusting your search or filters.',
+      clear_filters: 'Clear Filters',
+    },
+    buttons: {
+      load_more: 'Load More Speakers ({remaining} remaining)',
+    },
+    meta: {
+      title: 'AI Keynote Speakers | Browse All AI Speakers',
+      description: 'Browse our complete directory of AI keynote speakers. 70+ artificial intelligence experts including Siri co-founders, Stanford researchers, and tech pioneers.',
+      keywords: 'AI speakers, AI keynote speakers, artificial intelligence speakers, tech speakers, AI experts',
+    },
+  },
+  workshops: {
+    hero: {
+      title: 'AI Workshops',
+      subtitle: 'Discover hands-on AI workshops led by industry experts. Interactive training programs covering machine learning, generative AI, and practical implementation strategies for your team.',
+    },
+    filters: {
+      search_placeholder: 'Search workshops by name, topic, or instructor...',
+      show_filters: 'Show Filters',
+      hide_filters: 'Hide Filters',
+      format_label: 'Format',
+      all_formats: 'All Formats',
+      length_label: 'Length',
+      all_lengths: 'All Lengths',
+      short_length: 'Short (< 1 hour)',
+      medium_length: 'Medium (1-2 hours)',
+      long_length: 'Long (> 2 hours)',
+      location_label: 'Instructor Location',
+      all_locations: 'All Locations',
+      audience_label: 'Target Audience',
+      all_audiences: 'All Audiences',
+      showing_text: 'Showing {displayed} of {total} workshops',
+      clear_filters: 'Clear All Filters',
+    },
+    results: {
+      loading_text: 'Loading workshops...',
+      no_results: 'No workshops found matching your criteria.',
+    },
+    buttons: {
+      inquire: 'Inquire About Workshop',
+      view_details: 'View Details',
+    },
+    meta: {
+      title: 'AI Workshops | Hands-On AI Training Programs',
+      description: 'Discover hands-on AI workshops led by industry experts. Interactive training programs covering machine learning, generative AI, and practical implementation strategies.',
+      keywords: 'AI workshops, AI training, machine learning workshops, generative AI training, corporate AI training',
+    },
+  },
   team: {
     hero: {
       badge: 'Our Story',
@@ -218,6 +284,12 @@ export const CONTENT_DEFAULTS = {
       member1_bio: "Speak About AI was founded by author, speaker, and entertainer Robert Strong and is a division of Strong Entertainment, LLC. With 30+ years of experience booking speakers and entertainers globally, Robert brings unparalleled expertise to the AI speaking circuit. He's also a world-renowned magician who's performed at the White House twice, on Penn & Teller Fool Us, and for every major tech company in Silicon Valley. His Amazon best-selling book 'Amaze & Delight: Secrets to Creating Magic in Business' showcases his unique approach to business entertainment.",
       member1_linkedin: 'https://linkedin.com/in/robertstrong',
       member1_image: '/team/robert-strong-headshot.png',
+    },
+    cta: {
+      title: 'Get In Touch',
+      subtitle: "Interested in working with Speak About AI or have questions about our services? We'd love to hear from you.",
+      button_text: 'Email Us',
+      email: 'human@speakabout.ai',
     },
     meta: {
       title: 'Our Team | Speak About AI - AI Speaker Bureau',

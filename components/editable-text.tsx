@@ -683,6 +683,283 @@ export function SimpleListEditor({
   )
 }
 
+// Team member type for the team members list editor
+export interface TeamMember {
+  id: string
+  name: string
+  title: string
+  image: string
+  bio: string
+  linkedin?: string
+  twitter?: string
+  website?: string
+}
+
+interface TeamMembersListEditorProps {
+  members: TeamMember[]
+  onChange: (members: TeamMember[]) => void
+  isModified?: boolean
+  editorMode?: boolean
+}
+
+export function TeamMembersListEditor({
+  members,
+  onChange,
+  isModified = false,
+  editorMode = true
+}: TeamMembersListEditorProps) {
+  const [showEditor, setShowEditor] = useState(false)
+  const [localMembers, setLocalMembers] = useState<TeamMember[]>(members)
+
+  useEffect(() => {
+    setLocalMembers(members)
+  }, [members])
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('folder', 'team')
+
+    try {
+      const response = await fetch('/api/admin/upload-image', {
+        method: 'POST',
+        body: formData
+      })
+      const result = await response.json()
+      if (result.success) {
+        const updated = [...localMembers]
+        updated[index] = { ...updated[index], image: result.path }
+        setLocalMembers(updated)
+      }
+    } catch (error) {
+      console.error('Upload failed:', error)
+    }
+  }
+
+  const handleAddMember = () => {
+    const newId = `member${localMembers.length + 1}`
+    const newMember: TeamMember = {
+      id: newId,
+      name: 'New Team Member',
+      title: 'Title',
+      image: '/team/placeholder.png',
+      bio: 'Bio goes here...',
+    }
+    setLocalMembers([...localMembers, newMember])
+  }
+
+  const handleRemoveMember = (index: number) => {
+    const updated = localMembers.filter((_, i) => i !== index)
+    const reindexed = updated.map((m, i) => ({ ...m, id: `member${i + 1}` }))
+    setLocalMembers(reindexed)
+  }
+
+  const handleUpdateMember = (index: number, field: keyof TeamMember, value: string) => {
+    const updated = [...localMembers]
+    updated[index] = { ...updated[index], [field]: value }
+    setLocalMembers(updated)
+  }
+
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return
+    const updated = [...localMembers]
+    const temp = updated[index - 1]
+    updated[index - 1] = updated[index]
+    updated[index] = temp
+    const reindexed = updated.map((m, i) => ({ ...m, id: `member${i + 1}` }))
+    setLocalMembers(reindexed)
+  }
+
+  const handleMoveDown = (index: number) => {
+    if (index === localMembers.length - 1) return
+    const updated = [...localMembers]
+    const temp = updated[index + 1]
+    updated[index + 1] = updated[index]
+    updated[index] = temp
+    const reindexed = updated.map((m, i) => ({ ...m, id: `member${i + 1}` }))
+    setLocalMembers(reindexed)
+  }
+
+  const handleSave = () => {
+    onChange(localMembers)
+    setShowEditor(false)
+  }
+
+  if (!editorMode) {
+    return null
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setShowEditor(true)}
+        className={cn(
+          "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+          "bg-blue-600 text-white hover:bg-blue-700",
+          isModified && "ring-2 ring-amber-400 ring-offset-2"
+        )}
+      >
+        Edit Team Members ({members.length})
+      </button>
+
+      {showEditor && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowEditor(false)}>
+          <div
+            className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Edit Team Members</h3>
+              <button
+                onClick={() => setShowEditor(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {localMembers.map((member, index) => (
+                  <div key={member.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-start gap-4">
+                      {/* Image preview */}
+                      <div className="w-24 h-24 bg-white rounded-full border flex items-center justify-center overflow-hidden flex-shrink-0 relative group">
+                        <img
+                          src={member.image}
+                          alt={member.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/placeholder.svg'
+                          }}
+                        />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleFileUpload(e, index)}
+                          className="hidden"
+                          id={`member-upload-${index}`}
+                        />
+                        <label
+                          htmlFor={`member-upload-${index}`}
+                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer rounded-full"
+                        >
+                          <span className="text-white text-xs font-medium">Change</span>
+                        </label>
+                      </div>
+
+                      {/* Member details */}
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={member.name}
+                            onChange={(e) => handleUpdateMember(index, 'name', e.target.value)}
+                            className="text-sm font-medium border rounded px-2 py-1"
+                            placeholder="Name"
+                          />
+                          <input
+                            type="text"
+                            value={member.title}
+                            onChange={(e) => handleUpdateMember(index, 'title', e.target.value)}
+                            className="text-sm border rounded px-2 py-1"
+                            placeholder="Title"
+                          />
+                        </div>
+                        <textarea
+                          value={member.bio}
+                          onChange={(e) => handleUpdateMember(index, 'bio', e.target.value)}
+                          className="w-full text-sm border rounded px-2 py-1 resize-y min-h-[80px]"
+                          placeholder="Bio"
+                        />
+                        <div className="grid grid-cols-3 gap-2">
+                          <input
+                            type="text"
+                            value={member.linkedin || ''}
+                            onChange={(e) => handleUpdateMember(index, 'linkedin', e.target.value)}
+                            className="text-xs border rounded px-2 py-1"
+                            placeholder="LinkedIn URL"
+                          />
+                          <input
+                            type="text"
+                            value={member.twitter || ''}
+                            onChange={(e) => handleUpdateMember(index, 'twitter', e.target.value)}
+                            className="text-xs border rounded px-2 py-1"
+                            placeholder="Twitter URL"
+                          />
+                          <input
+                            type="text"
+                            value={member.website || ''}
+                            onChange={(e) => handleUpdateMember(index, 'website', e.target.value)}
+                            className="text-xs border rounded px-2 py-1"
+                            placeholder="Website URL"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => handleMoveUp(index)}
+                          disabled={index === 0}
+                          className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          onClick={() => handleMoveDown(index)}
+                          disabled={index === localMembers.length - 1}
+                          className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          onClick={() => handleRemoveMember(index)}
+                          className="text-xs text-red-600 hover:text-red-800 px-2 py-1 bg-red-50 hover:bg-red-100 rounded"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={handleAddMember}
+                className="mt-4 w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+              >
+                + Add New Team Member
+              </button>
+            </div>
+
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setLocalMembers(members)
+                  setShowEditor(false)
+                }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function LogoListEditor({
   logos,
   onChange,

@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import TeamHero from "@/components/team-hero"
 import TeamMembers from "@/components/team-members"
 import JoinTeam from "@/components/join-team"
+import { getPageContent, getFromContent } from "@/lib/website-content"
 
 export const metadata: Metadata = {
   title: "Meet Our Team | Speak About AI",
@@ -14,12 +15,23 @@ export const metadata: Metadata = {
   },
 }
 
-export default function OurTeamPage() {
+export default async function OurTeamPage() {
+  // Fetch content for client components
+  const content = await getPageContent('team')
+
+  // JoinTeam (CTA) section props
+  const joinTeamProps = {
+    title: getFromContent(content, 'team', 'cta', 'title'),
+    subtitle: getFromContent(content, 'team', 'cta', 'subtitle'),
+    buttonText: getFromContent(content, 'team', 'cta', 'button_text'),
+    email: getFromContent(content, 'team', 'cta', 'email'),
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <TeamHero />
       <TeamMembers />
-      <JoinTeam />
+      <JoinTeam {...joinTeamProps} />
     </div>
   )
 }

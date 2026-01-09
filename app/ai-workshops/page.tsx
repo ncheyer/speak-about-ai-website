@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import WorkshopDirectory from "@/components/workshop-directory"
+import { getPageContent, getFromContent } from "@/lib/website-content"
 
 // Force dynamic rendering to always fetch fresh workshop data
 export const dynamic = 'force-dynamic'
@@ -36,6 +37,43 @@ export const metadata: Metadata = {
   },
 }
 
-export default function WorkshopsPage() {
-  return <WorkshopDirectory />
+export default async function WorkshopsPage() {
+  // Fetch content from database
+  const pageContent = await getPageContent('workshops')
+
+  // Build content object for the directory component
+  const directoryContent = {
+    hero: {
+      title: getFromContent(pageContent, 'workshops', 'hero', 'title'),
+      subtitle: getFromContent(pageContent, 'workshops', 'hero', 'subtitle'),
+    },
+    filters: {
+      search_placeholder: getFromContent(pageContent, 'workshops', 'filters', 'search_placeholder'),
+      show_filters: getFromContent(pageContent, 'workshops', 'filters', 'show_filters'),
+      hide_filters: getFromContent(pageContent, 'workshops', 'filters', 'hide_filters'),
+      format_label: getFromContent(pageContent, 'workshops', 'filters', 'format_label'),
+      all_formats: getFromContent(pageContent, 'workshops', 'filters', 'all_formats'),
+      length_label: getFromContent(pageContent, 'workshops', 'filters', 'length_label'),
+      all_lengths: getFromContent(pageContent, 'workshops', 'filters', 'all_lengths'),
+      short_length: getFromContent(pageContent, 'workshops', 'filters', 'short_length'),
+      medium_length: getFromContent(pageContent, 'workshops', 'filters', 'medium_length'),
+      long_length: getFromContent(pageContent, 'workshops', 'filters', 'long_length'),
+      location_label: getFromContent(pageContent, 'workshops', 'filters', 'location_label'),
+      all_locations: getFromContent(pageContent, 'workshops', 'filters', 'all_locations'),
+      audience_label: getFromContent(pageContent, 'workshops', 'filters', 'audience_label'),
+      all_audiences: getFromContent(pageContent, 'workshops', 'filters', 'all_audiences'),
+      showing_text: getFromContent(pageContent, 'workshops', 'filters', 'showing_text'),
+      clear_filters: getFromContent(pageContent, 'workshops', 'filters', 'clear_filters'),
+    },
+    results: {
+      loading_text: getFromContent(pageContent, 'workshops', 'results', 'loading_text'),
+      no_results: getFromContent(pageContent, 'workshops', 'results', 'no_results'),
+    },
+    buttons: {
+      inquire: getFromContent(pageContent, 'workshops', 'buttons', 'inquire'),
+      view_details: getFromContent(pageContent, 'workshops', 'buttons', 'view_details'),
+    },
+  }
+
+  return <WorkshopDirectory content={directoryContent} />
 }

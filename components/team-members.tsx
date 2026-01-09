@@ -1,7 +1,9 @@
 import Image from "next/image"
 import { Linkedin, Twitter, Globe } from "lucide-react"
+import { getPageContent, getFromContent } from "@/lib/website-content"
 
 interface TeamMember {
+  id: string
   name: string
   title: string
   image: string
@@ -11,16 +13,33 @@ interface TeamMember {
   website?: string
 }
 
-export default function TeamMembers() {
-  const teamMembers: TeamMember[] = [
-    {
-      name: "Robert Strong",
-      title: "CEO",
-      image: "/team/robert-strong-headshot.png",
-      bio: "Speak About AI was founded by author, speaker, and entertainer Robert Strong and is a division of Strong Entertainment, LLC. With 30+ years of experience booking speakers and entertainers globally, Robert brings unparalleled expertise to the AI speaking circuit. He's also a world-renowned magician who's performed at the White House twice, on Penn & Teller Fool Us, and for every major tech company in Silicon Valley. His Amazon best-selling book 'Amaze & Delight: Secrets to Creating Magic in Business' showcases his unique approach to business entertainment.",
-      linkedin: "https://linkedin.com/in/robertstrong",
-    },
-  ]
+// Default team members
+const defaultMembers: TeamMember[] = [
+  {
+    id: "member1",
+    name: "Robert Strong",
+    title: "CEO",
+    image: "/team/robert-strong-headshot.png",
+    bio: "Speak About AI was founded by author, speaker, and entertainer Robert Strong and is a division of Strong Entertainment, LLC. With 30+ years of experience booking speakers and entertainers globally, Robert brings unparalleled expertise to the AI speaking circuit. He's also a world-renowned magician who's performed at the White House twice, on Penn & Teller Fool Us, and for every major tech company in Silicon Valley. His Amazon best-selling book 'Amaze & Delight: Secrets to Creating Magic in Business' showcases his unique approach to business entertainment.",
+    linkedin: "https://linkedin.com/in/robertstrong",
+  },
+]
+
+export default async function TeamMembers() {
+  // Fetch content from database
+  const content = await getPageContent('team')
+
+  // Try to get members from JSON list, fall back to defaults
+  const membersJson = getFromContent(content, 'team', 'members', 'list')
+  let teamMembers: TeamMember[] = defaultMembers
+
+  if (membersJson) {
+    try {
+      teamMembers = JSON.parse(membersJson)
+    } catch (e) {
+      // Use defaults if JSON parsing fails
+    }
+  }
 
   return (
     <section className="py-20 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">

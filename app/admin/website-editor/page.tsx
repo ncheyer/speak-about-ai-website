@@ -17,7 +17,9 @@ import {
   Edit2,
   Info,
   Loader2,
-  ExternalLink
+  ExternalLink,
+  Mic,
+  BookOpen
 } from "lucide-react"
 import { EditHistoryPanel } from "@/components/edit-history-panel"
 
@@ -39,7 +41,7 @@ export default function WebsiteEditorPage() {
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [activeTab, setActiveTab] = useState<"home" | "services" | "team">("home")
+  const [activeTab, setActiveTab] = useState<"home" | "services" | "team" | "speakers" | "workshops">("home")
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   useEffect(() => {
@@ -162,6 +164,8 @@ export default function WebsiteEditorPage() {
     if (page === 'home') return '/'
     if (page === 'services') return '/services'
     if (page === 'team') return '/our-team'
+    if (page === 'speakers') return '/speakers'
+    if (page === 'workshops') return '/ai-workshops'
     return '/'
   }
 
@@ -274,6 +278,20 @@ export default function WebsiteEditorPage() {
                 >
                   <Users className="w-4 h-4 mr-2" />
                   Our Team
+                </TabsTrigger>
+                <TabsTrigger
+                  value="speakers"
+                  className="h-12 px-6 data-[state=active]:bg-gray-100 data-[state=active]:shadow-none rounded-t-lg border-b-2 data-[state=active]:border-blue-600 border-transparent"
+                >
+                  <Mic className="w-4 h-4 mr-2" />
+                  Speakers
+                </TabsTrigger>
+                <TabsTrigger
+                  value="workshops"
+                  className="h-12 px-6 data-[state=active]:bg-gray-100 data-[state=active]:shadow-none rounded-t-lg border-b-2 data-[state=active]:border-blue-600 border-transparent"
+                >
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  Workshops
                 </TabsTrigger>
               </TabsList>
             </Tabs>

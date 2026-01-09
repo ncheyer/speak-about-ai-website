@@ -207,6 +207,74 @@ const DEFAULT_CONTENT = [
   { page: 'services', section: 'images', content_key: 'offering4_image', content_value: '/services/tatyana-mamut-speaking.jpg' },
   { page: 'services', section: 'images', content_key: 'offering5_image', content_value: '/services/sharon-zhou-headshot.png' },
   { page: 'services', section: 'images', content_key: 'offering6_image', content_value: '/services/simon-pierro-youtube.jpg' },
+
+  // Speakers Page - Hero
+  { page: 'speakers', section: 'hero', content_key: 'title', content_value: 'All AI Keynote Speakers' },
+  { page: 'speakers', section: 'hero', content_key: 'subtitle', content_value: 'Browse our complete directory of world-class artificial intelligence experts, tech visionaries, and industry practitioners.' },
+
+  // Speakers Page - Filters
+  { page: 'speakers', section: 'filters', content_key: 'search_placeholder', content_value: 'Search speakers by name, expertise, or industry...' },
+  { page: 'speakers', section: 'filters', content_key: 'industry_label', content_value: 'Industry' },
+  { page: 'speakers', section: 'filters', content_key: 'all_industries', content_value: 'All Industries' },
+  { page: 'speakers', section: 'filters', content_key: 'fee_label', content_value: 'Fee Range' },
+  { page: 'speakers', section: 'filters', content_key: 'all_fees', content_value: 'All Fee Ranges' },
+  { page: 'speakers', section: 'filters', content_key: 'location_label', content_value: 'Location' },
+  { page: 'speakers', section: 'filters', content_key: 'all_locations', content_value: 'All Locations' },
+  { page: 'speakers', section: 'filters', content_key: 'showing_text', content_value: 'Showing {displayed} of {total} speakers' },
+
+  // Speakers Page - Results
+  { page: 'speakers', section: 'results', content_key: 'loading_text', content_value: 'Loading speakers...' },
+  { page: 'speakers', section: 'results', content_key: 'no_results', content_value: 'No speakers found matching your criteria. Try adjusting your search or filters.' },
+  { page: 'speakers', section: 'results', content_key: 'clear_filters', content_value: 'Clear Filters' },
+
+  // Speakers Page - Buttons
+  { page: 'speakers', section: 'buttons', content_key: 'load_more', content_value: 'Load More Speakers ({remaining} remaining)' },
+
+  // Speakers Page - Meta
+  { page: 'speakers', section: 'meta', content_key: 'title', content_value: 'AI Keynote Speakers | Browse All AI Speakers' },
+  { page: 'speakers', section: 'meta', content_key: 'description', content_value: 'Browse our complete directory of AI keynote speakers. 70+ artificial intelligence experts including Siri co-founders, Stanford researchers, and tech pioneers.' },
+  { page: 'speakers', section: 'meta', content_key: 'keywords', content_value: 'AI speakers, AI keynote speakers, artificial intelligence speakers, tech speakers, AI experts' },
+
+  // Workshops Page - Hero
+  { page: 'workshops', section: 'hero', content_key: 'title', content_value: 'AI Workshops' },
+  { page: 'workshops', section: 'hero', content_key: 'subtitle', content_value: 'Discover hands-on AI workshops led by industry experts. Interactive training programs covering machine learning, generative AI, and practical implementation strategies for your team.' },
+
+  // Workshops Page - Filters
+  { page: 'workshops', section: 'filters', content_key: 'search_placeholder', content_value: 'Search workshops by name, topic, or instructor...' },
+  { page: 'workshops', section: 'filters', content_key: 'show_filters', content_value: 'Show Filters' },
+  { page: 'workshops', section: 'filters', content_key: 'hide_filters', content_value: 'Hide Filters' },
+  { page: 'workshops', section: 'filters', content_key: 'format_label', content_value: 'Format' },
+  { page: 'workshops', section: 'filters', content_key: 'all_formats', content_value: 'All Formats' },
+  { page: 'workshops', section: 'filters', content_key: 'length_label', content_value: 'Length' },
+  { page: 'workshops', section: 'filters', content_key: 'all_lengths', content_value: 'All Lengths' },
+  { page: 'workshops', section: 'filters', content_key: 'short_length', content_value: 'Short (< 1 hour)' },
+  { page: 'workshops', section: 'filters', content_key: 'medium_length', content_value: 'Medium (1-2 hours)' },
+  { page: 'workshops', section: 'filters', content_key: 'long_length', content_value: 'Long (> 2 hours)' },
+  { page: 'workshops', section: 'filters', content_key: 'location_label', content_value: 'Instructor Location' },
+  { page: 'workshops', section: 'filters', content_key: 'all_locations', content_value: 'All Locations' },
+  { page: 'workshops', section: 'filters', content_key: 'audience_label', content_value: 'Target Audience' },
+  { page: 'workshops', section: 'filters', content_key: 'all_audiences', content_value: 'All Audiences' },
+  { page: 'workshops', section: 'filters', content_key: 'showing_text', content_value: 'Showing {displayed} of {total} workshops' },
+  { page: 'workshops', section: 'filters', content_key: 'clear_filters', content_value: 'Clear All Filters' },
+
+  // Workshops Page - Results
+  { page: 'workshops', section: 'results', content_key: 'loading_text', content_value: 'Loading workshops...' },
+  { page: 'workshops', section: 'results', content_key: 'no_results', content_value: 'No workshops found matching your criteria.' },
+
+  // Workshops Page - Buttons
+  { page: 'workshops', section: 'buttons', content_key: 'inquire', content_value: 'Inquire About Workshop' },
+  { page: 'workshops', section: 'buttons', content_key: 'view_details', content_value: 'View Details' },
+
+  // Workshops Page - Meta
+  { page: 'workshops', section: 'meta', content_key: 'title', content_value: 'AI Workshops | Hands-On AI Training Programs' },
+  { page: 'workshops', section: 'meta', content_key: 'description', content_value: 'Discover hands-on AI workshops led by industry experts. Interactive training programs covering machine learning, generative AI, and practical implementation strategies.' },
+  { page: 'workshops', section: 'meta', content_key: 'keywords', content_value: 'AI workshops, AI training, machine learning workshops, generative AI training, corporate AI training' },
+
+  // Team Page - CTA
+  { page: 'team', section: 'cta', content_key: 'title', content_value: 'Get In Touch' },
+  { page: 'team', section: 'cta', content_key: 'subtitle', content_value: "Interested in working with Speak About AI or have questions about our services? We'd love to hear from you." },
+  { page: 'team', section: 'cta', content_key: 'button_text', content_value: 'Email Us' },
+  { page: 'team', section: 'cta', content_key: 'email', content_value: 'human@speakabout.ai' },
 ]
 
 export async function GET(request: Request) {
@@ -359,6 +427,8 @@ export async function PUT(request: Request) {
       revalidatePath('/', 'layout')
       revalidatePath('/services', 'layout')
       revalidatePath('/team', 'layout')
+      revalidatePath('/speakers', 'layout')
+      revalidatePath('/ai-workshops', 'layout')
 
       return NextResponse.json({ success: true, updated: results.length })
     }
@@ -394,6 +464,8 @@ export async function PUT(request: Request) {
     revalidatePath('/', 'layout')
     revalidatePath('/services', 'layout')
     revalidatePath('/team', 'layout')
+    revalidatePath('/speakers', 'layout')
+    revalidatePath('/ai-workshops', 'layout')
 
     return NextResponse.json({ success: true, content: result[0] })
   } catch (error) {

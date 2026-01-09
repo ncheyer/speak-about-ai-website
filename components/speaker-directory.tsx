@@ -126,11 +126,62 @@ const INDUSTRY_BUCKETS: Record<string, string[]> = {
 
 const industryBucketKeys = Object.keys(INDUSTRY_BUCKETS)
 
-interface SpeakerDirectoryProps {
-  initialSpeakers: Speaker[]
+interface SpeakerDirectoryContent {
+  hero: {
+    title: string
+    subtitle: string
+  }
+  filters: {
+    search_placeholder: string
+    industry_label: string
+    all_industries: string
+    fee_label: string
+    all_fees: string
+    location_label: string
+    all_locations: string
+    showing_text: string
+  }
+  results: {
+    loading_text: string
+    no_results: string
+    clear_filters: string
+  }
+  buttons: {
+    load_more: string
+  }
 }
 
-export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryProps) {
+interface SpeakerDirectoryProps {
+  initialSpeakers: Speaker[]
+  content?: SpeakerDirectoryContent
+}
+
+const DEFAULT_CONTENT: SpeakerDirectoryContent = {
+  hero: {
+    title: 'All AI Keynote Speakers',
+    subtitle: 'Browse our complete directory of world-class artificial intelligence experts, tech visionaries, and industry practitioners.',
+  },
+  filters: {
+    search_placeholder: 'Search speakers by name, expertise, or industry...',
+    industry_label: 'Industry',
+    all_industries: 'All Industries',
+    fee_label: 'Fee Range',
+    all_fees: 'All Fee Ranges',
+    location_label: 'Location',
+    all_locations: 'All Locations',
+    showing_text: 'Showing {displayed} of {total} speakers',
+  },
+  results: {
+    loading_text: 'Loading speakers...',
+    no_results: 'No speakers found matching your criteria. Try adjusting your search or filters.',
+    clear_filters: 'Clear Filters',
+  },
+  buttons: {
+    load_more: 'Load More Speakers ({remaining} remaining)',
+  },
+}
+
+export default function SpeakerDirectory({ initialSpeakers, content = DEFAULT_CONTENT }: SpeakerDirectoryProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedIndustry, setSelectedIndustry] = useState("all")
   const [selectedFeeRange, setSelectedFeeRange] = useState("all")
@@ -344,11 +395,10 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-neue-haas">
-              All AI Keynote Speakers
+              {content.hero.title}
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat">
-              Browse our complete directory of world-class artificial intelligence experts, tech visionaries, and
-              industry practitioners.
+              {content.hero.subtitle}
             </p>
           </div>
 
@@ -359,7 +409,7 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1E68C6] w-5 h-5" />
                 <Input
                   type="text"
-                  placeholder="Search speakers by name, expertise, or industry..."
+                  placeholder={content.filters.search_placeholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 font-montserrat border-2 border-[#1E68C6]/30 shadow-lg hover:shadow-xl focus:shadow-xl focus:border-[#1E68C6] transition-all"
@@ -373,10 +423,10 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
                   <Filter className="text-[#1E68C6] w-4 h-4 flex-shrink-0" />
                   <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
                     <SelectTrigger className="w-full font-montserrat text-sm">
-                      <SelectValue placeholder="Industry" />
+                      <SelectValue placeholder={content.filters.industry_label} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Industries</SelectItem>
+                      <SelectItem value="all">{content.filters.all_industries}</SelectItem>
                       {industryBucketKeys.map((bucket) => (
                         <SelectItem key={bucket} value={bucket}>
                           {bucket}
@@ -391,10 +441,10 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
                   <DollarSign className="text-[#1E68C6] w-4 h-4 flex-shrink-0" />
                   <Select value={selectedFeeRange} onValueChange={setSelectedFeeRange}>
                     <SelectTrigger className="w-full font-montserrat text-sm">
-                      <SelectValue placeholder="Fee Range" />
+                      <SelectValue placeholder={content.filters.fee_label} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Fee Ranges</SelectItem>
+                      <SelectItem value="all">{content.filters.all_fees}</SelectItem>
                       {Object.entries(FEE_RANGES).map(([key, { label }]) => (
                         <SelectItem key={key} value={key}>
                           {label}
@@ -409,10 +459,10 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
                   <MapPin className="text-[#1E68C6] w-4 h-4 flex-shrink-0" />
                   <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                     <SelectTrigger className="w-full font-montserrat text-sm">
-                      <SelectValue placeholder="Location" />
+                      <SelectValue placeholder={content.filters.location_label} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Locations</SelectItem>
+                      <SelectItem value="all">{content.filters.all_locations}</SelectItem>
                       {Object.keys(LOCATION_REGIONS).map((region) => (
                         <SelectItem key={region} value={region}>
                           {region}
@@ -424,7 +474,7 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
               </div>
 
               <div className="mt-4 text-sm text-gray-600 font-montserrat">
-                Showing {displayedSpeakers.length} of {filteredSpeakers.length} speakers
+                {content.filters.showing_text.replace('{displayed}', String(displayedSpeakers.length)).replace('{total}', String(filteredSpeakers.length))}
               </div>
             </div>
           </div>
@@ -433,12 +483,12 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
 
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {isLoading && <div className="text-center py-12 font-montserrat text-gray-600">Loading speakers...</div>}
+          {isLoading && <div className="text-center py-12 font-montserrat text-gray-600">{content.results.loading_text}</div>}
 
           {!isLoading && !error && filteredSpeakers.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-600 mb-4 font-montserrat">
-                No speakers found matching your criteria. Try adjusting your search or filters.
+                {content.results.no_results}
               </p>
               <Button
                 onClick={() => {
@@ -449,7 +499,7 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
                 }}
                 className="bg-blue-600 hover:bg-blue-700 font-montserrat"
               >
-                Clear Filters
+                {content.results.clear_filters}
               </Button>
             </div>
           )}
@@ -469,7 +519,7 @@ export default function SpeakerDirectory({ initialSpeakers }: SpeakerDirectoryPr
                     variant="default"
                     className="font-montserrat"
                   >
-                    Load More Speakers ({filteredSpeakers.length - displayCount} remaining)
+                    {content.buttons.load_more.replace('{remaining}', String(filteredSpeakers.length - displayCount))}
                   </Button>
                 </div>
               )}

@@ -31,7 +31,77 @@ interface Workshop {
   active: boolean
 }
 
-export default function WorkshopDirectory() {
+interface WorkshopDirectoryContent {
+  hero: {
+    title: string
+    subtitle: string
+  }
+  filters: {
+    search_placeholder: string
+    show_filters: string
+    hide_filters: string
+    format_label: string
+    all_formats: string
+    length_label: string
+    all_lengths: string
+    short_length: string
+    medium_length: string
+    long_length: string
+    location_label: string
+    all_locations: string
+    audience_label: string
+    all_audiences: string
+    showing_text: string
+    clear_filters: string
+  }
+  results: {
+    loading_text: string
+    no_results: string
+  }
+  buttons: {
+    inquire: string
+    view_details: string
+  }
+}
+
+interface WorkshopDirectoryProps {
+  content?: WorkshopDirectoryContent
+}
+
+const DEFAULT_CONTENT: WorkshopDirectoryContent = {
+  hero: {
+    title: 'AI Workshops',
+    subtitle: 'Discover hands-on AI workshops led by industry experts. Interactive training programs covering machine learning, generative AI, and practical implementation strategies for your team.',
+  },
+  filters: {
+    search_placeholder: 'Search workshops by name, topic, or instructor...',
+    show_filters: 'Show Filters',
+    hide_filters: 'Hide Filters',
+    format_label: 'Format',
+    all_formats: 'All Formats',
+    length_label: 'Length',
+    all_lengths: 'All Lengths',
+    short_length: 'Short (< 1 hour)',
+    medium_length: 'Medium (1-2 hours)',
+    long_length: 'Long (> 2 hours)',
+    location_label: 'Instructor Location',
+    all_locations: 'All Locations',
+    audience_label: 'Target Audience',
+    all_audiences: 'All Audiences',
+    showing_text: 'Showing {displayed} of {total} workshops',
+    clear_filters: 'Clear All Filters',
+  },
+  results: {
+    loading_text: 'Loading workshops...',
+    no_results: 'No workshops found matching your criteria.',
+  },
+  buttons: {
+    inquire: 'Inquire About Workshop',
+    view_details: 'View Details',
+  },
+}
+
+export default function WorkshopDirectory({ content = DEFAULT_CONTENT }: WorkshopDirectoryProps) {
   const [workshops, setWorkshops] = useState<Workshop[]>([])
   const [filteredWorkshops, setFilteredWorkshops] = useState<Workshop[]>([])
   const [loading, setLoading] = useState(false)
@@ -160,11 +230,10 @@ export default function WorkshopDirectory() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-neue-haas">
-              AI Workshops
+              {content.hero.title}
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-montserrat">
-              Discover hands-on AI workshops led by industry experts. Interactive training programs covering machine
-              learning, generative AI, and practical implementation strategies for your team.
+              {content.hero.subtitle}
             </p>
           </div>
 
@@ -177,7 +246,7 @@ export default function WorkshopDirectory() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1E68C6] w-5 h-5" />
                   <Input
                     type="text"
-                    placeholder="Search workshops by name, topic, or instructor..."
+                    placeholder={content.filters.search_placeholder}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 font-montserrat border-2 border-[#1E68C6]/30 shadow-lg hover:shadow-xl focus:shadow-xl focus:border-[#1E68C6] transition-all"
@@ -189,7 +258,7 @@ export default function WorkshopDirectory() {
                   className="font-montserrat flex items-center gap-2"
                 >
                   <Filter className="w-4 h-4" />
-                  {showFilters ? "Hide Filters" : "Show Filters"}
+                  {showFilters ? content.filters.hide_filters : content.filters.show_filters}
                 </Button>
               </div>
 
@@ -199,11 +268,11 @@ export default function WorkshopDirectory() {
                   {/* Format Filter */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block font-montserrat">
-                      Format
+                      {content.filters.format_label}
                     </label>
                     <Select value={selectedFormat} onValueChange={setSelectedFormat}>
                       <SelectTrigger className="font-montserrat">
-                        <SelectValue placeholder="All Formats" />
+                        <SelectValue placeholder={content.filters.all_formats} />
                       </SelectTrigger>
                       <SelectContent>
                         {formatOptions.map((option) => (
@@ -218,17 +287,17 @@ export default function WorkshopDirectory() {
                   {/* Duration Filter */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block font-montserrat">
-                      Length
+                      {content.filters.length_label}
                     </label>
                     <Select value={selectedDuration} onValueChange={setSelectedDuration}>
                       <SelectTrigger className="font-montserrat">
-                        <SelectValue placeholder="All Lengths" />
+                        <SelectValue placeholder={content.filters.all_lengths} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Lengths</SelectItem>
-                        <SelectItem value="short">Short (&lt; 1 hour)</SelectItem>
-                        <SelectItem value="medium">Medium (1-2 hours)</SelectItem>
-                        <SelectItem value="long">Long (&gt; 2 hours)</SelectItem>
+                        <SelectItem value="all">{content.filters.all_lengths}</SelectItem>
+                        <SelectItem value="short">{content.filters.short_length}</SelectItem>
+                        <SelectItem value="medium">{content.filters.medium_length}</SelectItem>
+                        <SelectItem value="long">{content.filters.long_length}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -236,14 +305,14 @@ export default function WorkshopDirectory() {
                   {/* Location Filter */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block font-montserrat">
-                      Instructor Location
+                      {content.filters.location_label}
                     </label>
                     <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                       <SelectTrigger className="font-montserrat">
-                        <SelectValue placeholder="All Locations" />
+                        <SelectValue placeholder={content.filters.all_locations} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Locations</SelectItem>
+                        <SelectItem value="all">{content.filters.all_locations}</SelectItem>
                         {locations.filter(l => l !== "all").map((location) => (
                           <SelectItem key={location} value={location}>
                             {location}
@@ -256,14 +325,14 @@ export default function WorkshopDirectory() {
                   {/* Audience Filter */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block font-montserrat">
-                      Target Audience
+                      {content.filters.audience_label}
                     </label>
                     <Select value={selectedAudience} onValueChange={setSelectedAudience}>
                       <SelectTrigger className="font-montserrat">
-                        <SelectValue placeholder="All Audiences" />
+                        <SelectValue placeholder={content.filters.all_audiences} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Audiences</SelectItem>
+                        <SelectItem value="all">{content.filters.all_audiences}</SelectItem>
                         {audiences.filter(a => a !== "all").map((audience) => (
                           <SelectItem key={audience} value={audience}>
                             {audience}
@@ -278,7 +347,7 @@ export default function WorkshopDirectory() {
               {/* Results Count and Clear Filters */}
               <div className="mt-4 flex items-center justify-between">
                 <div className="text-sm text-gray-600 font-montserrat">
-                  Showing {filteredWorkshops.length} of {workshops.length} workshops
+                  {content.filters.showing_text.replace('{displayed}', String(filteredWorkshops.length)).replace('{total}', String(workshops.length))}
                 </div>
                 {(selectedFormat !== "all" || selectedDuration !== "all" || selectedLocation !== "all" || selectedAudience !== "all" || searchQuery) && (
                   <Button
@@ -293,7 +362,7 @@ export default function WorkshopDirectory() {
                     }}
                     className="font-montserrat text-[#1E68C6] hover:text-blue-700"
                   >
-                    Clear All Filters
+                    {content.filters.clear_filters}
                   </Button>
                 )}
               </div>
@@ -308,11 +377,12 @@ export default function WorkshopDirectory() {
           {loading ? (
             <div className="flex justify-center items-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-[#1E68C6]" />
+              <span className="ml-2 text-gray-600 font-montserrat">{content.results.loading_text}</span>
             </div>
           ) : filteredWorkshops.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-600 text-lg font-montserrat">
-                No workshops found matching your criteria.
+                {content.results.no_results}
               </p>
             </div>
           ) : (
@@ -428,12 +498,12 @@ export default function WorkshopDirectory() {
                       <div className="mt-auto pt-4 flex flex-col gap-3">
                         <Link href={`/contact?workshop=${workshop.id}`}>
                           <Button className="w-full font-montserrat font-bold text-sm" variant="gold">
-                            Inquire About Workshop
+                            {content.buttons.inquire}
                           </Button>
                         </Link>
                         <Link href={`/ai-workshops/${workshop.slug}`}>
                           <Button className="w-full font-montserrat text-sm" variant="outline">
-                            View Details
+                            {content.buttons.view_details}
                             <ChevronRight className="w-4 h-4 ml-1" />
                           </Button>
                         </Link>

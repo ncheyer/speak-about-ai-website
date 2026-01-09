@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import SpeakerDirectory from "@/components/speaker-directory"
 import { getAllSpeakers, getFeaturedSpeakers, type Speaker } from "@/lib/speakers-data"
+import { getPageContent, getFromContent } from "@/lib/website-content"
 
 export async function generateMetadata(): Promise<Metadata> {
   // Get featured speakers for dynamic metadata
@@ -60,6 +61,35 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SpeakersPage() {
+  // Fetch content from database
+  const pageContent = await getPageContent('speakers')
+
+  // Build content object for the directory component
+  const directoryContent = {
+    hero: {
+      title: getFromContent(pageContent, 'speakers', 'hero', 'title'),
+      subtitle: getFromContent(pageContent, 'speakers', 'hero', 'subtitle'),
+    },
+    filters: {
+      search_placeholder: getFromContent(pageContent, 'speakers', 'filters', 'search_placeholder'),
+      industry_label: getFromContent(pageContent, 'speakers', 'filters', 'industry_label'),
+      all_industries: getFromContent(pageContent, 'speakers', 'filters', 'all_industries'),
+      fee_label: getFromContent(pageContent, 'speakers', 'filters', 'fee_label'),
+      all_fees: getFromContent(pageContent, 'speakers', 'filters', 'all_fees'),
+      location_label: getFromContent(pageContent, 'speakers', 'filters', 'location_label'),
+      all_locations: getFromContent(pageContent, 'speakers', 'filters', 'all_locations'),
+      showing_text: getFromContent(pageContent, 'speakers', 'filters', 'showing_text'),
+    },
+    results: {
+      loading_text: getFromContent(pageContent, 'speakers', 'results', 'loading_text'),
+      no_results: getFromContent(pageContent, 'speakers', 'results', 'no_results'),
+      clear_filters: getFromContent(pageContent, 'speakers', 'results', 'clear_filters'),
+    },
+    buttons: {
+      load_more: getFromContent(pageContent, 'speakers', 'buttons', 'load_more'),
+    },
+  }
+
   let allSpeakers: Speaker[] = []
   try {
     const fullSpeakers = await getAllSpeakers()
@@ -112,7 +142,7 @@ export default async function SpeakersPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <SpeakerDirectory initialSpeakers={allSpeakers} />
+      <SpeakerDirectory initialSpeakers={allSpeakers} content={directoryContent} />
     </>
   )
 }
