@@ -19,6 +19,7 @@ import {
   Loader2,
   ExternalLink
 } from "lucide-react"
+import { EditHistoryPanel } from "@/components/edit-history-panel"
 
 interface ContentItem {
   id: number
@@ -193,6 +194,10 @@ export default function WebsiteEditorPage() {
               </div>
 
               <div className="flex items-center gap-3">
+                <EditHistoryPanel
+                  activePage={activeTab}
+                  onRollback={fetchContent}
+                />
                 <Button
                   variant="outline"
                   size="sm"

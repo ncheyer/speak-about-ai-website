@@ -273,6 +273,43 @@ export async function GET(request: Request) {
   }
 }
 
+// Helper to ensure history table exists
+async function ensureHistoryTable(sql: ReturnType<typeof neon>) {
+  await sql`
+    CREATE TABLE IF NOT EXISTS website_content_history (
+      id SERIAL PRIMARY KEY,
+      content_id INTEGER,
+      page VARCHAR(50) NOT NULL,
+      section VARCHAR(100) NOT NULL,
+      content_key VARCHAR(100) NOT NULL,
+      old_value TEXT,
+      new_value TEXT NOT NULL,
+      changed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      changed_by VARCHAR(255) DEFAULT 'admin',
+      action VARCHAR(20) DEFAULT 'update'
+    )
+  `
+}
+
+// Helper to log content change to history
+async function logContentChange(
+  sql: ReturnType<typeof neon>,
+  page: string,
+  section: string,
+  content_key: string,
+  old_value: string | null,
+  new_value: string,
+  content_id?: number
+) {
+  // Only log if value actually changed
+  if (old_value !== new_value) {
+    await sql`
+      INSERT INTO website_content_history (content_id, page, section, content_key, old_value, new_value, action)
+      VALUES (${content_id || null}, ${page}, ${section}, ${content_key}, ${old_value}, ${new_value}, 'update')
+    `
+  }
+}
+
 export async function PUT(request: Request) {
   try {
     const databaseUrl = process.env.DATABASE_URL
@@ -283,11 +320,22 @@ export async function PUT(request: Request) {
     const sql = neon(databaseUrl)
     const body = await request.json()
 
+    // Ensure history table exists
+    await ensureHistoryTable(sql)
+
     // Handle batch updates
     if (Array.isArray(body)) {
       const results = []
       for (const item of body) {
         const { page, section, content_key, content_value } = item
+
+        // Get current value before update
+        const current = await sql`
+          SELECT id, content_value FROM website_content
+          WHERE page = ${page} AND section = ${section} AND content_key = ${content_key}
+        `
+        const oldValue = current.length > 0 ? current[0].content_value : null
+
         const result = await sql`
           INSERT INTO website_content (page, section, content_key, content_value, updated_at, updated_by)
           VALUES (${page}, ${section}, ${content_key}, ${content_value}, CURRENT_TIMESTAMP, 'admin')
@@ -298,7 +346,12 @@ export async function PUT(request: Request) {
             updated_by = 'admin'
           RETURNING *
         `
-        if (result[0]) results.push(result[0])
+
+        // Log the change
+        if (result[0]) {
+          await logContentChange(sql, page, section, content_key, oldValue, content_value, result[0].id)
+          results.push(result[0])
+        }
       }
 
       // Clear cache and revalidate pages after updates
@@ -313,6 +366,13 @@ export async function PUT(request: Request) {
     // Handle single update
     const { page, section, content_key, content_value } = body
 
+    // Get current value before update
+    const current = await sql`
+      SELECT id, content_value FROM website_content
+      WHERE page = ${page} AND section = ${section} AND content_key = ${content_key}
+    `
+    const oldValue = current.length > 0 ? current[0].content_value : null
+
     const result = await sql`
       INSERT INTO website_content (page, section, content_key, content_value, updated_at, updated_by)
       VALUES (${page}, ${section}, ${content_key}, ${content_value}, CURRENT_TIMESTAMP, 'admin')
@@ -323,6 +383,11 @@ export async function PUT(request: Request) {
         updated_by = 'admin'
       RETURNING *
     `
+
+    // Log the change
+    if (result[0]) {
+      await logContentChange(sql, page, section, content_key, oldValue, content_value, result[0].id)
+    }
 
     // Clear cache and revalidate pages after single update
     clearContentCache()
