@@ -1,7 +1,7 @@
 "use client"
 
 import { Award, MapPin, Globe, Shield, Clock, Users, Headphones, Target, DollarSign, Globe2, Check, Calendar, ArrowRight } from "lucide-react"
-import { EditableText, EditableImage, LogoListEditor } from "@/components/editable-text"
+import { EditableText, EditableImage, LogoListEditor, OfferingsListEditor, type ServiceOffering } from "@/components/editable-text"
 import { Button } from "@/components/ui/button"
 
 interface PagePreviewProps {
@@ -906,6 +906,46 @@ function ServicesHeroPreview({
   )
 }
 
+// Default offerings for preview
+const defaultOfferings: ServiceOffering[] = [
+  {
+    id: 'offering1',
+    image: '/services/adam-cheyer-stadium.jpg',
+    title: 'Keynote Speeches',
+    description: 'Inspire your audience with engaging and informative keynote speeches on the future of technology.'
+  },
+  {
+    id: 'offering2',
+    image: '/services/sharon-zhou-panel.jpg',
+    title: 'Panel Discussions',
+    description: 'Facilitate insightful and dynamic panel discussions on industry trends and challenges.'
+  },
+  {
+    id: 'offering3',
+    image: '/services/allie-k-miller-fireside.jpg',
+    title: 'Fireside Chats',
+    description: 'Create intimate and engaging conversations with industry leaders in a fireside chat format.'
+  },
+  {
+    id: 'offering4',
+    image: '/services/tatyana-mamut-speaking.jpg',
+    title: 'Workshops',
+    description: 'Provide hands-on learning experiences with interactive workshops tailored to your audience\'s needs.'
+  },
+  {
+    id: 'offering5',
+    image: '/services/sharon-zhou-headshot.png',
+    title: 'Virtual Presentations',
+    description: 'Reach a global audience with engaging and professional virtual presentations.'
+  },
+  {
+    id: 'offering6',
+    image: '/services/simon-pierro-youtube.jpg',
+    title: 'Custom Video Content',
+    description: 'Create compelling video content for marketing, training, and internal communications.'
+  },
+]
+
 // Services Offerings Preview
 function ServicesOfferingsPreview({
   content,
@@ -913,86 +953,54 @@ function ServicesOfferingsPreview({
   onContentChange,
   editorMode = true
 }: Omit<PagePreviewProps, 'page'>) {
-  const offerings = [
-    {
-      id: 'offering1',
-      image: '/services/adam-cheyer-stadium.jpg',
-      defaultTitle: 'Keynote Speeches',
-      defaultDesc: 'Inspire your audience with engaging and informative keynote speeches on the future of technology.'
-    },
-    {
-      id: 'offering2',
-      image: '/services/sharon-zhou-panel.jpg',
-      defaultTitle: 'Panel Discussions',
-      defaultDesc: 'Facilitate insightful and dynamic panel discussions on industry trends and challenges.'
-    },
-    {
-      id: 'offering3',
-      image: '/services/allie-k-miller-fireside.jpg',
-      defaultTitle: 'Fireside Chats',
-      defaultDesc: 'Create intimate and engaging conversations with industry leaders in a fireside chat format.'
-    },
-    {
-      id: 'offering4',
-      image: '/services/tatyana-mamut-speaking.jpg',
-      defaultTitle: 'Workshops',
-      defaultDesc: 'Provide hands-on learning experiences with interactive workshops tailored to your audience\'s needs.'
-    },
-    {
-      id: 'offering5',
-      image: '/services/sharon-zhou-headshot.png',
-      defaultTitle: 'Virtual Presentations',
-      defaultDesc: 'Reach a global audience with engaging and professional virtual presentations.'
-    },
-    {
-      id: 'offering6',
-      image: '/services/simon-pierro-youtube.jpg',
-      defaultTitle: 'Custom Video Content',
-      defaultDesc: 'Create compelling video content for marketing, training, and internal communications.'
-    },
-  ]
+  // Parse offerings from content or use defaults
+  const offeringsJson = content['services.offerings.list']
+  let offerings = defaultOfferings
+  if (offeringsJson) {
+    try {
+      offerings = JSON.parse(offeringsJson)
+    } catch (e) {
+      // Use defaults if JSON parsing fails
+    }
+  }
+
+  const handleOfferingsChange = (newOfferings: ServiceOffering[]) => {
+    onContentChange('services.offerings.list', JSON.stringify(newOfferings))
+  }
 
   return (
     <section className="bg-gray-100 py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {offerings.map((offering) => {
-            const titleKey = `services.offerings.${offering.id}_title`
-            const descKey = `services.offerings.${offering.id}_description`
-            const title = content[titleKey] || offering.defaultTitle
-            const description = content[descKey] || offering.defaultDesc
+        {/* Offerings Editor Button */}
+        <div className="text-center mb-6">
+          <OfferingsListEditor
+            offerings={offerings}
+            onChange={handleOfferingsChange}
+            isModified={isModified('services.offerings.list', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
 
-            return (
-              <div key={offering.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div className="relative w-full aspect-[4/3] bg-gray-200">
-                  <img
-                    src={offering.image}
-                    alt={title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-5">
-                  <EditableText
-                    value={title}
-                    onChange={(v) => onContentChange(titleKey, v)}
-                    as="h2"
-                    className="text-lg font-bold text-gray-900 mb-2 font-neue-haas"
-                    isModified={isModified(titleKey, content, originalContent)}
-                    editorMode={editorMode}
-                  />
-                  <EditableText
-                    value={description}
-                    onChange={(v) => onContentChange(descKey, v)}
-                    as="p"
-                    className="text-gray-700 font-montserrat text-sm"
-                    multiline
-                    isModified={isModified(descKey, content, originalContent)}
-                    editorMode={editorMode}
-                  />
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {offerings.map((offering) => (
+            <div key={offering.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="relative w-full aspect-[4/3] bg-gray-200">
+                <img
+                  src={offering.image}
+                  alt={offering.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
-            )
-          })}
+              <div className="p-5">
+                <h2 className="text-lg font-bold text-gray-900 mb-2 font-neue-haas">
+                  {offering.title}
+                </h2>
+                <p className="text-gray-700 font-montserrat text-sm">
+                  {offering.description}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -1090,6 +1098,7 @@ function ServicesEventsPreview({
   const latestEventTitle = content['services.events.latest_event_title'] || 'Latest Event'
   const latestEventDescription = content['services.events.latest_event_description'] || 'Our last event, hosted at Microsoft HQ in Silicon Valley, featured speakers such as Adam Cheyer, Peter Norvig, Maya Ackerman, Murray Newlands, Jeremiah Owyang, Katie McMahon, Max Sills, and many more.'
   const latestEventCta = content['services.events.latest_event_cta'] || "Whether you're an event planner, an executive, or just interested in AI, these events are a great way to get an overview of the current AI landscape!"
+  const eventImage = content['services.events.event_image'] || '/events/robert-strong-on-stage-at-microsoft.jpg'
   const newsletterTitle = content['services.events.newsletter_title'] || 'Stay Updated'
   const newsletterDescription = content['services.events.newsletter_description'] || 'Sign up with your email address to stay up to date on our upcoming events.'
 
@@ -1135,9 +1144,15 @@ function ServicesEventsPreview({
               isModified={isModified('services.events.latest_event_description', content, originalContent)}
               editorMode={editorMode}
             />
-            <div className="h-32 bg-gray-200 rounded-lg mb-4 flex items-center justify-center text-gray-400 text-sm">
-              Event Image
-            </div>
+            <EditableImage
+              src={eventImage}
+              alt="Event photo"
+              onChange={(newSrc) => onContentChange('services.events.event_image', newSrc)}
+              isModified={isModified('services.events.event_image', content, originalContent)}
+              editorMode={editorMode}
+              className="w-full h-48 object-cover rounded-lg mb-4"
+              uploadFolder="events"
+            />
             <EditableText
               value={latestEventCta}
               onChange={(v) => onContentChange('services.events.latest_event_cta', v)}

@@ -1,43 +1,51 @@
 import Image from "next/image"
 import { getPageContent, getFromContent } from "@/lib/website-content"
 
+// Service offering type
+interface ServiceOffering {
+  id: string
+  image: string
+  title: string
+  description: string
+}
+
 // Default service data structure
-const defaultServices = [
+const defaultServices: ServiceOffering[] = [
   {
     id: "offering1",
     image: "/services/adam-cheyer-stadium.jpg",
-    defaultTitle: "Keynote Speeches",
-    defaultDescription: "Inspire your audience with engaging and informative keynote speeches on the future of technology.",
+    title: "Keynote Speeches",
+    description: "Inspire your audience with engaging and informative keynote speeches on the future of technology.",
   },
   {
     id: "offering2",
     image: "/services/sharon-zhou-panel.jpg",
-    defaultTitle: "Panel Discussions",
-    defaultDescription: "Facilitate insightful and dynamic panel discussions on industry trends and challenges.",
+    title: "Panel Discussions",
+    description: "Facilitate insightful and dynamic panel discussions on industry trends and challenges.",
   },
   {
     id: "offering3",
     image: "/services/allie-k-miller-fireside.jpg",
-    defaultTitle: "Fireside Chats",
-    defaultDescription: "Create intimate and engaging conversations with industry leaders in a fireside chat format.",
+    title: "Fireside Chats",
+    description: "Create intimate and engaging conversations with industry leaders in a fireside chat format.",
   },
   {
     id: "offering4",
     image: "/services/tatyana-mamut-speaking.jpg",
-    defaultTitle: "Workshops",
-    defaultDescription: "Provide hands-on learning experiences with interactive workshops tailored to your audience's needs.",
+    title: "Workshops",
+    description: "Provide hands-on learning experiences with interactive workshops tailored to your audience's needs.",
   },
   {
     id: "offering5",
     image: "/services/sharon-zhou-headshot.png",
-    defaultTitle: "Virtual Presentations",
-    defaultDescription: "Reach a global audience with engaging and professional virtual presentations.",
+    title: "Virtual Presentations",
+    description: "Reach a global audience with engaging and professional virtual presentations.",
   },
   {
     id: "offering6",
     image: "/services/simon-pierro-youtube.jpg",
-    defaultTitle: "Custom Video Content",
-    defaultDescription: "Create compelling video content for marketing, training, and internal communications.",
+    title: "Custom Video Content",
+    description: "Create compelling video content for marketing, training, and internal communications.",
   },
 ]
 
@@ -45,13 +53,17 @@ export default async function ServiceOfferings() {
   // Fetch content from database
   const content = await getPageContent('services')
 
-  // Build services with database content
-  const services = defaultServices.map(service => ({
-    id: service.id,
-    image: service.image,
-    title: getFromContent(content, 'services', 'offerings', `${service.id}_title`) || service.defaultTitle,
-    description: getFromContent(content, 'services', 'offerings', `${service.id}_description`) || service.defaultDescription,
-  }))
+  // Try to get offerings from JSON list, fall back to defaults
+  const offeringsJson = getFromContent(content, 'services', 'offerings', 'list')
+  let services: ServiceOffering[] = defaultServices
+
+  if (offeringsJson) {
+    try {
+      services = JSON.parse(offeringsJson)
+    } catch (e) {
+      // Use defaults if JSON parsing fails
+    }
+  }
 
   return (
     <section className="bg-gray-100 py-12">

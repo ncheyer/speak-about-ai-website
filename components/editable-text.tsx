@@ -268,6 +268,259 @@ interface LogoListEditorProps {
   editorMode?: boolean
 }
 
+// Offering type for the offerings list editor
+export interface ServiceOffering {
+  id: string
+  image: string
+  title: string
+  description: string
+}
+
+interface OfferingsListEditorProps {
+  offerings: ServiceOffering[]
+  onChange: (offerings: ServiceOffering[]) => void
+  isModified?: boolean
+  editorMode?: boolean
+}
+
+export function OfferingsListEditor({
+  offerings,
+  onChange,
+  isModified = false,
+  editorMode = true
+}: OfferingsListEditorProps) {
+  const [showEditor, setShowEditor] = useState(false)
+  const [localOfferings, setLocalOfferings] = useState<ServiceOffering[]>(offerings)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadingForIndex, setUploadingForIndex] = useState<number | null>(null)
+
+  useEffect(() => {
+    setLocalOfferings(offerings)
+  }, [offerings])
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('folder', 'services')
+
+    try {
+      const response = await fetch('/api/admin/upload-image', {
+        method: 'POST',
+        body: formData
+      })
+      const result = await response.json()
+      if (result.success) {
+        const updated = [...localOfferings]
+        updated[index] = { ...updated[index], image: result.path }
+        setLocalOfferings(updated)
+      }
+    } catch (error) {
+      console.error('Upload failed:', error)
+    }
+    setUploadingForIndex(null)
+  }
+
+  const handleAddOffering = () => {
+    const newId = `offering${localOfferings.length + 1}`
+    const newOffering: ServiceOffering = {
+      id: newId,
+      image: '/services/placeholder.jpg',
+      title: 'New Service',
+      description: 'Description of the new service offering.'
+    }
+    setLocalOfferings([...localOfferings, newOffering])
+  }
+
+  const handleRemoveOffering = (index: number) => {
+    const updated = localOfferings.filter((_, i) => i !== index)
+    // Re-index the offerings
+    const reindexed = updated.map((o, i) => ({ ...o, id: `offering${i + 1}` }))
+    setLocalOfferings(reindexed)
+  }
+
+  const handleUpdateOffering = (index: number, field: keyof ServiceOffering, value: string) => {
+    const updated = [...localOfferings]
+    updated[index] = { ...updated[index], [field]: value }
+    setLocalOfferings(updated)
+  }
+
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return
+    const updated = [...localOfferings]
+    const temp = updated[index - 1]
+    updated[index - 1] = updated[index]
+    updated[index] = temp
+    // Re-index
+    const reindexed = updated.map((o, i) => ({ ...o, id: `offering${i + 1}` }))
+    setLocalOfferings(reindexed)
+  }
+
+  const handleMoveDown = (index: number) => {
+    if (index === localOfferings.length - 1) return
+    const updated = [...localOfferings]
+    const temp = updated[index + 1]
+    updated[index + 1] = updated[index]
+    updated[index] = temp
+    // Re-index
+    const reindexed = updated.map((o, i) => ({ ...o, id: `offering${i + 1}` }))
+    setLocalOfferings(reindexed)
+  }
+
+  const handleSave = () => {
+    onChange(localOfferings)
+    setShowEditor(false)
+  }
+
+  if (!editorMode) {
+    return null
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setShowEditor(true)}
+        className={cn(
+          "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+          "bg-blue-600 text-white hover:bg-blue-700",
+          isModified && "ring-2 ring-amber-400 ring-offset-2"
+        )}
+      >
+        Edit Offerings ({offerings.length})
+      </button>
+
+      {showEditor && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowEditor(false)}>
+          <div
+            className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Edit Service Offerings</h3>
+              <button
+                onClick={() => setShowEditor(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {localOfferings.map((offering, index) => (
+                  <div key={offering.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-start gap-4">
+                      {/* Image preview */}
+                      <div className="w-32 h-24 bg-white rounded border flex items-center justify-center overflow-hidden flex-shrink-0 relative group">
+                        <img
+                          src={offering.image}
+                          alt={offering.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/placeholder.svg'
+                          }}
+                        />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleFileUpload(e, index)}
+                          className="hidden"
+                          id={`offering-upload-${index}`}
+                        />
+                        <label
+                          htmlFor={`offering-upload-${index}`}
+                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                        >
+                          <span className="text-white text-xs font-medium">Change</span>
+                        </label>
+                      </div>
+
+                      {/* Offering details */}
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <input
+                          type="text"
+                          value={offering.title}
+                          onChange={(e) => handleUpdateOffering(index, 'title', e.target.value)}
+                          className="w-full text-sm font-medium border rounded px-2 py-1"
+                          placeholder="Service title"
+                        />
+                        <textarea
+                          value={offering.description}
+                          onChange={(e) => handleUpdateOffering(index, 'description', e.target.value)}
+                          className="w-full text-sm border rounded px-2 py-1 resize-y min-h-[60px]"
+                          placeholder="Service description"
+                        />
+                        <input
+                          type="text"
+                          value={offering.image}
+                          onChange={(e) => handleUpdateOffering(index, 'image', e.target.value)}
+                          className="w-full text-xs border rounded px-2 py-1 font-mono text-gray-500"
+                          placeholder="/services/filename.jpg"
+                        />
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => handleMoveUp(index)}
+                          disabled={index === 0}
+                          className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          onClick={() => handleMoveDown(index)}
+                          disabled={index === localOfferings.length - 1}
+                          className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          onClick={() => handleRemoveOffering(index)}
+                          className="text-xs text-red-600 hover:text-red-800 px-2 py-1 bg-red-50 hover:bg-red-100 rounded"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={handleAddOffering}
+                className="mt-4 w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+              >
+                + Add New Service Offering
+              </button>
+            </div>
+
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setLocalOfferings(offerings)
+                  setShowEditor(false)
+                }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function LogoListEditor({
   logos,
   onChange,
