@@ -132,14 +132,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           description: "Revenue & Commissions",
           color: "text-emerald-600",
           bgColor: "bg-emerald-50"
-        },
-        {
-          title: "Client Portal",
-          href: "/admin/clients",
-          icon: Users,
-          description: "Client Access",
-          color: "text-cyan-600",
-          bgColor: "bg-cyan-50"
         }
       ]
     },
@@ -273,6 +265,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       color: "text-slate-500",
       bgColor: "bg-slate-100",
       items: [
+        {
+          title: "Client Portal",
+          href: "/admin/clients",
+          icon: Users,
+          description: "Client Access",
+          color: "text-cyan-600",
+          bgColor: "bg-cyan-50"
+        },
         {
           title: "Leads",
           href: "/admin/leads",
