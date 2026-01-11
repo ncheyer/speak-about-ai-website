@@ -1,7 +1,7 @@
 "use client"
 
 import { Award, MapPin, Globe, Shield, Clock, Users, Headphones, Target, DollarSign, Globe2, Check, Calendar, ArrowRight } from "lucide-react"
-import { EditableText, EditableImage, LogoListEditor, OfferingsListEditor, SimpleListEditor, TeamMembersListEditor, type ServiceOffering, type TeamMember } from "@/components/editable-text"
+import { EditableText, EditableImage, LogoListEditor, OfferingsListEditor, SimpleListEditor, TeamMembersListEditor, BudgetRangesListEditor, DeliveryOptionsListEditor, type ServiceOffering, type TeamMember, type BudgetRange, type DeliveryOption } from "@/components/editable-text"
 import { Button } from "@/components/ui/button"
 
 interface PagePreviewProps {
@@ -418,37 +418,55 @@ function HomeNavigateTheNoisePreview({
   const sectionTitle = content['home.navigate.section_title'] || 'Navigate the AI Speaker Landscape'
   const sectionSubtitle = content['home.navigate.section_subtitle'] || 'Clear guidance to help you make informed decisions faster'
 
-  const cards = [
-    {
-      id: 'budget',
-      icon: DollarSign,
-      color: 'blue',
-      defaultTitle: 'Budget Guidance',
-      ranges: [
-        { range: '$5k - $20k', desc: 'Rising AI experts, academics, and tech consultants' },
-        { range: '$20k - $50k', desc: 'Industry leaders, published authors, and proven speakers' },
-        { range: '$50k+', desc: 'AI pioneers, tech founders, and household names' }
-      ]
-    },
-    {
-      id: 'audience',
-      icon: Users,
-      color: 'amber',
-      defaultTitle: 'Audience Types',
-      items: ['Corporate & Enterprise', 'Public Sector & Government', 'Startups & Scale-ups', 'Academic & Research', 'Healthcare & Life Sciences', 'Financial Services', 'Technology Companies']
-    },
-    {
-      id: 'global',
-      icon: Globe2,
-      color: 'green',
-      defaultTitle: 'Global Delivery',
-      formats: [
-        { name: 'In-Person Events', desc: 'Worldwide coverage with speaker coordination and booking support' },
-        { name: 'Virtual Events', desc: 'Professional virtual keynotes optimized for online engagement' },
-        { name: 'Hybrid Format', desc: 'Seamless blend of in-person and remote engagement for maximum reach' }
-      ]
-    }
+  // Default values for lists
+  const defaultBudgetRanges: BudgetRange[] = [
+    { range: '$5k - $20k', description: 'Rising AI experts, academics, and tech consultants' },
+    { range: '$20k - $50k', description: 'Industry leaders, published authors, and proven speakers' },
+    { range: '$50k+', description: 'AI pioneers, tech founders, and household names' }
   ]
+
+  const defaultAudienceTypes = [
+    'Corporate & Enterprise',
+    'Public Sector & Government',
+    'Startups & Scale-ups',
+    'Academic & Research',
+    'Healthcare & Life Sciences',
+    'Financial Services',
+    'Technology Companies'
+  ]
+
+  const defaultDeliveryOptions: DeliveryOption[] = [
+    { title: 'In-Person Events', description: 'Worldwide coverage with speaker coordination and booking support' },
+    { title: 'Virtual Events', description: 'Professional virtual keynotes optimized for online engagement' },
+    { title: 'Hybrid Format', description: 'Seamless blend of in-person and remote engagement for maximum reach' }
+  ]
+
+  // Parse JSON from content or use defaults
+  let budgetRanges: BudgetRange[] = defaultBudgetRanges
+  let audienceTypes: string[] = defaultAudienceTypes
+  let deliveryOptions: DeliveryOption[] = defaultDeliveryOptions
+
+  try {
+    if (content['home.navigate.budget_ranges']) {
+      budgetRanges = JSON.parse(content['home.navigate.budget_ranges'])
+    }
+  } catch (e) {}
+
+  try {
+    if (content['home.navigate.audience_types']) {
+      audienceTypes = JSON.parse(content['home.navigate.audience_types'])
+    }
+  } catch (e) {}
+
+  try {
+    if (content['home.navigate.delivery_options']) {
+      deliveryOptions = JSON.parse(content['home.navigate.delivery_options'])
+    }
+  } catch (e) {}
+
+  const budgetTitle = content['home.navigate.budget_title'] || 'Budget Guidance'
+  const audienceTitle = content['home.navigate.audience_title'] || 'Audience Types'
+  const globalTitle = content['home.navigate.global_title'] || 'Global Delivery'
 
   return (
     <section className="py-20 bg-white">
@@ -474,58 +492,115 @@ function HomeNavigateTheNoisePreview({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {cards.map((card) => {
-            const titleKey = `home.navigate.${card.id}_title`
-            const title = content[titleKey] || card.defaultTitle
-            const Icon = card.icon
-            const colorClasses = {
-              blue: 'border-blue-200 from-[#1E68C6] to-blue-600',
-              amber: 'border-amber-200 from-amber-400 to-amber-600',
-              green: 'border-green-200 from-green-500 to-green-700'
-            }
-
-            return (
-              <div key={card.id} className={`bg-white p-8 rounded-2xl shadow-xl border-2 ${colorClasses[card.color as keyof typeof colorClasses].split(' ')[0]}`}>
-                <div className="mb-6">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${colorClasses[card.color as keyof typeof colorClasses].split(' ').slice(1).join(' ')} rounded-xl flex items-center justify-center mb-4 shadow-lg`}>
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
-                  <EditableText
-                    value={title}
-                    onChange={(v) => onContentChange(titleKey, v)}
-                    as="h3"
-                    className="text-2xl font-bold text-gray-900 font-neue-haas"
-                    isModified={isModified(titleKey, content, originalContent)}
-                    editorMode={editorMode}
-                  />
-                </div>
-                {/* Card content preview - simplified */}
-                <div className="space-y-3 opacity-70">
-                  {card.id === 'budget' && card.ranges?.map((r, i) => (
-                    <div key={i} className="border-l-4 border-blue-600 pl-4">
-                      <div className="font-bold text-gray-900 font-montserrat text-sm">{r.range}</div>
-                      <div className="text-xs text-gray-600">{r.desc}</div>
-                    </div>
-                  ))}
-                  {card.id === 'audience' && card.items?.map((item, i) => (
-                    <div key={i} className="flex items-center text-sm">
-                      <Check className="w-4 h-4 text-amber-600 mr-2" />
-                      <span className="text-gray-700">{item}</span>
-                    </div>
-                  ))}
-                  {card.id === 'global' && card.formats?.map((f, i) => (
-                    <div key={i}>
-                      <div className="font-bold text-gray-900 text-sm flex items-center">
-                        <Check className="w-4 h-4 text-green-600 mr-2" />
-                        {f.name}
-                      </div>
-                      <p className="text-xs text-gray-600 ml-6">{f.desc}</p>
-                    </div>
-                  ))}
-                </div>
+          {/* Budget Ranges Card */}
+          <div className="bg-white p-8 rounded-2xl shadow-xl border-2 border-blue-200">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#1E68C6] to-blue-600 rounded-xl flex items-center justify-center mb-4 shadow-lg">
+                <DollarSign className="w-8 h-8 text-white" />
               </div>
-            )
-          })}
+              <EditableText
+                value={budgetTitle}
+                onChange={(v) => onContentChange('home.navigate.budget_title', v)}
+                as="h3"
+                className="text-2xl font-bold text-gray-900 font-neue-haas"
+                isModified={isModified('home.navigate.budget_title', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+            <div className="space-y-3">
+              {budgetRanges.map((r, i) => (
+                <div key={i} className="border-l-4 border-blue-600 pl-4">
+                  <div className="font-bold text-gray-900 font-montserrat text-sm">{r.range}</div>
+                  <div className="text-xs text-gray-600">{r.description}</div>
+                </div>
+              ))}
+            </div>
+            {editorMode && (
+              <div className="mt-4 pt-4 border-t">
+                <BudgetRangesListEditor
+                  ranges={budgetRanges}
+                  onChange={(newRanges) => onContentChange('home.navigate.budget_ranges', JSON.stringify(newRanges))}
+                  isModified={isModified('home.navigate.budget_ranges', content, originalContent)}
+                  editorMode={editorMode}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Audience Types Card */}
+          <div className="bg-white p-8 rounded-2xl shadow-xl border-2 border-amber-200">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center mb-4 shadow-lg">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <EditableText
+                value={audienceTitle}
+                onChange={(v) => onContentChange('home.navigate.audience_title', v)}
+                as="h3"
+                className="text-2xl font-bold text-gray-900 font-neue-haas"
+                isModified={isModified('home.navigate.audience_title', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+            <div className="space-y-3">
+              {audienceTypes.map((item, i) => (
+                <div key={i} className="flex items-center text-sm">
+                  <Check className="w-4 h-4 text-amber-600 mr-2" />
+                  <span className="text-gray-700">{item}</span>
+                </div>
+              ))}
+            </div>
+            {editorMode && (
+              <div className="mt-4 pt-4 border-t">
+                <SimpleListEditor
+                  items={audienceTypes}
+                  onChange={(newItems) => onContentChange('home.navigate.audience_types', JSON.stringify(newItems))}
+                  isModified={isModified('home.navigate.audience_types', content, originalContent)}
+                  editorMode={editorMode}
+                  title="Edit Audience Types"
+                  buttonText={`Edit Audience Types (${audienceTypes.length})`}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Global Delivery Card */}
+          <div className="bg-white p-8 rounded-2xl shadow-xl border-2 border-green-200">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-700 rounded-xl flex items-center justify-center mb-4 shadow-lg">
+                <Globe2 className="w-8 h-8 text-white" />
+              </div>
+              <EditableText
+                value={globalTitle}
+                onChange={(v) => onContentChange('home.navigate.global_title', v)}
+                as="h3"
+                className="text-2xl font-bold text-gray-900 font-neue-haas"
+                isModified={isModified('home.navigate.global_title', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+            <div className="space-y-3">
+              {deliveryOptions.map((f, i) => (
+                <div key={i}>
+                  <div className="font-bold text-gray-900 text-sm flex items-center">
+                    <Check className="w-4 h-4 text-green-600 mr-2" />
+                    {f.title}
+                  </div>
+                  <p className="text-xs text-gray-600 ml-6">{f.description}</p>
+                </div>
+              ))}
+            </div>
+            {editorMode && (
+              <div className="mt-4 pt-4 border-t">
+                <DeliveryOptionsListEditor
+                  options={deliveryOptions}
+                  onChange={(newOptions) => onContentChange('home.navigate.delivery_options', JSON.stringify(newOptions))}
+                  isModified={isModified('home.navigate.delivery_options', content, originalContent)}
+                  editorMode={editorMode}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>

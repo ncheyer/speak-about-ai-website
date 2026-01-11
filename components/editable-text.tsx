@@ -1164,3 +1164,367 @@ export function LogoListEditor({
     </div>
   )
 }
+
+// Budget range type for the budget ranges list editor
+export interface BudgetRange {
+  range: string
+  description: string
+}
+
+interface BudgetRangesListEditorProps {
+  ranges: BudgetRange[]
+  onChange: (ranges: BudgetRange[]) => void
+  isModified?: boolean
+  editorMode?: boolean
+}
+
+export function BudgetRangesListEditor({
+  ranges,
+  onChange,
+  isModified = false,
+  editorMode = true
+}: BudgetRangesListEditorProps) {
+  const [showEditor, setShowEditor] = useState(false)
+  const [localRanges, setLocalRanges] = useState<BudgetRange[]>(ranges)
+
+  useEffect(() => {
+    setLocalRanges(ranges)
+  }, [ranges])
+
+  const handleAddRange = () => {
+    setLocalRanges([...localRanges, { range: '$XX,XXX', description: 'Description of this budget tier' }])
+  }
+
+  const handleRemoveRange = (index: number) => {
+    setLocalRanges(localRanges.filter((_, i) => i !== index))
+  }
+
+  const handleUpdateRange = (index: number, field: keyof BudgetRange, value: string) => {
+    const updated = [...localRanges]
+    updated[index] = { ...updated[index], [field]: value }
+    setLocalRanges(updated)
+  }
+
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return
+    const updated = [...localRanges]
+    const temp = updated[index - 1]
+    updated[index - 1] = updated[index]
+    updated[index] = temp
+    setLocalRanges(updated)
+  }
+
+  const handleMoveDown = (index: number) => {
+    if (index === localRanges.length - 1) return
+    const updated = [...localRanges]
+    const temp = updated[index + 1]
+    updated[index + 1] = updated[index]
+    updated[index] = temp
+    setLocalRanges(updated)
+  }
+
+  const handleSave = () => {
+    onChange(localRanges)
+    setShowEditor(false)
+  }
+
+  if (!editorMode) {
+    return null
+  }
+
+  return (
+    <div className="relative inline-block">
+      <button
+        onClick={() => setShowEditor(true)}
+        className={cn(
+          "px-3 py-1 rounded text-xs font-medium transition-all",
+          "bg-blue-600 text-white hover:bg-blue-700",
+          isModified && "ring-2 ring-amber-400 ring-offset-1"
+        )}
+      >
+        Edit Budget Ranges ({ranges.length})
+      </button>
+
+      {showEditor && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowEditor(false)}>
+          <div
+            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Edit Budget Ranges</h3>
+              <button
+                onClick={() => setShowEditor(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {localRanges.map((item, index) => (
+                  <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Price Range</label>
+                          <input
+                            type="text"
+                            value={item.range}
+                            onChange={(e) => handleUpdateRange(index, 'range', e.target.value)}
+                            className="w-full text-sm border rounded px-3 py-2"
+                            placeholder="e.g., $5k - $20k"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
+                          <input
+                            type="text"
+                            value={item.description}
+                            onChange={(e) => handleUpdateRange(index, 'description', e.target.value)}
+                            className="w-full text-sm border rounded px-3 py-2"
+                            placeholder="Description of speakers in this range"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => handleMoveUp(index)}
+                          disabled={index === 0}
+                          className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          onClick={() => handleMoveDown(index)}
+                          disabled={index === localRanges.length - 1}
+                          className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          onClick={() => handleRemoveRange(index)}
+                          className="text-xs text-red-600 hover:text-red-800 px-2 py-1 bg-red-50 hover:bg-red-100 rounded"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={handleAddRange}
+                className="mt-4 w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+              >
+                + Add Budget Range
+              </button>
+            </div>
+
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setLocalRanges(ranges)
+                  setShowEditor(false)
+                }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Delivery option type for the delivery options list editor
+export interface DeliveryOption {
+  title: string
+  description: string
+}
+
+interface DeliveryOptionsListEditorProps {
+  options: DeliveryOption[]
+  onChange: (options: DeliveryOption[]) => void
+  isModified?: boolean
+  editorMode?: boolean
+}
+
+export function DeliveryOptionsListEditor({
+  options,
+  onChange,
+  isModified = false,
+  editorMode = true
+}: DeliveryOptionsListEditorProps) {
+  const [showEditor, setShowEditor] = useState(false)
+  const [localOptions, setLocalOptions] = useState<DeliveryOption[]>(options)
+
+  useEffect(() => {
+    setLocalOptions(options)
+  }, [options])
+
+  const handleAddOption = () => {
+    setLocalOptions([...localOptions, { title: 'New Option', description: 'Description goes here' }])
+  }
+
+  const handleRemoveOption = (index: number) => {
+    setLocalOptions(localOptions.filter((_, i) => i !== index))
+  }
+
+  const handleUpdateOption = (index: number, field: keyof DeliveryOption, value: string) => {
+    const updated = [...localOptions]
+    updated[index] = { ...updated[index], [field]: value }
+    setLocalOptions(updated)
+  }
+
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return
+    const updated = [...localOptions]
+    const temp = updated[index - 1]
+    updated[index - 1] = updated[index]
+    updated[index] = temp
+    setLocalOptions(updated)
+  }
+
+  const handleMoveDown = (index: number) => {
+    if (index === localOptions.length - 1) return
+    const updated = [...localOptions]
+    const temp = updated[index + 1]
+    updated[index + 1] = updated[index]
+    updated[index] = temp
+    setLocalOptions(updated)
+  }
+
+  const handleSave = () => {
+    onChange(localOptions)
+    setShowEditor(false)
+  }
+
+  if (!editorMode) {
+    return null
+  }
+
+  return (
+    <div className="relative inline-block">
+      <button
+        onClick={() => setShowEditor(true)}
+        className={cn(
+          "px-3 py-1 rounded text-xs font-medium transition-all",
+          "bg-blue-600 text-white hover:bg-blue-700",
+          isModified && "ring-2 ring-amber-400 ring-offset-1"
+        )}
+      >
+        Edit Delivery Options ({options.length})
+      </button>
+
+      {showEditor && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowEditor(false)}>
+          <div
+            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Edit Delivery Options</h3>
+              <button
+                onClick={() => setShowEditor(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {localOptions.map((item, index) => (
+                  <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Title</label>
+                          <input
+                            type="text"
+                            value={item.title}
+                            onChange={(e) => handleUpdateOption(index, 'title', e.target.value)}
+                            className="w-full text-sm border rounded px-3 py-2"
+                            placeholder="e.g., In-Person Events"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
+                          <input
+                            type="text"
+                            value={item.description}
+                            onChange={(e) => handleUpdateOption(index, 'description', e.target.value)}
+                            className="w-full text-sm border rounded px-3 py-2"
+                            placeholder="Description of this delivery option"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => handleMoveUp(index)}
+                          disabled={index === 0}
+                          className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          onClick={() => handleMoveDown(index)}
+                          disabled={index === localOptions.length - 1}
+                          className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          onClick={() => handleRemoveOption(index)}
+                          className="text-xs text-red-600 hover:text-red-800 px-2 py-1 bg-red-50 hover:bg-red-100 rounded"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={handleAddOption}
+                className="mt-4 w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+              >
+                + Add Delivery Option
+              </button>
+            </div>
+
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setLocalOptions(options)
+                  setShowEditor(false)
+                }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
