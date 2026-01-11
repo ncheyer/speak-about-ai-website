@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { upload } from '@vercel/blob/client'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -45,6 +45,11 @@ export function WorkshopMediaManager({
   const [uploadingImage, setUploadingImage] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [uploadingTestimonialPhoto, setUploadingTestimonialPhoto] = useState<number | null>(null)
+
+  // Refs for file inputs to trigger programmatically
+  const thumbnailInputRef = useRef<HTMLInputElement>(null)
+  const imagesInputRef = useRef<HTMLInputElement>(null)
+  const logosInputRef = useRef<HTMLInputElement>(null)
 
   const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -224,6 +229,15 @@ export function WorkshopMediaManager({
       return
     }
 
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image must be under 10MB",
+        variant: "destructive"
+      })
+      return
+    }
+
     setUploadingTestimonialPhoto(index)
     try {
       const blob = await upload(file.name, file, {
@@ -306,6 +320,16 @@ export function WorkshopMediaManager({
           <CardDescription>Main thumbnail for workshop card display</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Hidden file input for thumbnail */}
+          <input
+            ref={thumbnailInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleThumbnailUpload}
+            disabled={uploadingThumbnail}
+            className="hidden"
+          />
+
           {thumbnailUrl ? (
             <div className="space-y-3">
               <div className="relative p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
@@ -326,22 +350,25 @@ export function WorkshopMediaManager({
                   <X className="h-4 w-4 mr-1" />
                   Remove
                 </Button>
-                <Label htmlFor="thumbnail-upload" className="cursor-pointer">
-                  <Button type="button" variant="outline" size="sm" asChild>
-                    <div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => thumbnailInputRef.current?.click()}
+                  disabled={uploadingThumbnail}
+                >
+                  {uploadingThumbnail ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
                       <Upload className="h-4 w-4 mr-2" />
                       Replace
-                    </div>
-                  </Button>
-                  <Input
-                    id="thumbnail-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleThumbnailUpload}
-                    disabled={uploadingThumbnail}
-                    className="hidden"
-                  />
-                </Label>
+                    </>
+                  )}
+                </Button>
                 <ImageLibraryPicker
                   onSelect={onThumbnailChange}
                   title="Select Thumbnail"
@@ -357,32 +384,25 @@ export function WorkshopMediaManager({
             </div>
           ) : (
             <div className="space-y-3">
-              <Label htmlFor="thumbnail-upload" className="cursor-pointer">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 hover:bg-blue-50 transition-colors">
-                  {uploadingThumbnail ? (
-                    <div className="flex flex-col items-center">
-                      <Loader2 className="h-8 w-8 text-gray-400 animate-spin mb-2" />
-                      <p className="text-sm text-gray-600">Uploading...</p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center">
-                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600 mb-1">
-                        <span className="font-semibold text-blue-600">Click to upload</span> thumbnail
-                      </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 10MB</p>
-                    </div>
-                  )}
-                </div>
-                <Input
-                  id="thumbnail-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleThumbnailUpload}
-                  disabled={uploadingThumbnail}
-                  className="hidden"
-                />
-              </Label>
+              <div
+                onClick={() => !uploadingThumbnail && thumbnailInputRef.current?.click()}
+                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer"
+              >
+                {uploadingThumbnail ? (
+                  <div className="flex flex-col items-center">
+                    <Loader2 className="h-8 w-8 text-gray-400 animate-spin mb-2" />
+                    <p className="text-sm text-gray-600">Uploading...</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-600 mb-1">
+                      <span className="font-semibold text-blue-600">Click to upload</span> thumbnail
+                    </p>
+                    <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 10MB</p>
+                  </div>
+                )}
+              </div>
               <div className="text-center">
                 <span className="text-sm text-gray-500">or</span>
               </div>
@@ -473,33 +493,37 @@ export function WorkshopMediaManager({
             </div>
           )}
 
+          {/* Hidden file input for images */}
+          <input
+            ref={imagesInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImagesUpload}
+            disabled={uploadingImage}
+            className="hidden"
+          />
+
           <div className="flex gap-2 flex-wrap">
-            <Label htmlFor="images-upload" className="cursor-pointer">
-              <Button type="button" variant="outline" size="sm" asChild disabled={uploadingImage}>
-                <div>
-                  {uploadingImage ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Images
-                    </>
-                  )}
-                </div>
-              </Button>
-              <Input
-                id="images-upload"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImagesUpload}
-                disabled={uploadingImage}
-                className="hidden"
-              />
-            </Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => imagesInputRef.current?.click()}
+              disabled={uploadingImage}
+            >
+              {uploadingImage ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Images
+                </>
+              )}
+            </Button>
             <ImageLibraryPicker
               multiple
               onSelect={(url) => onImagesChange([...imageUrls, url])}
@@ -686,33 +710,37 @@ export function WorkshopMediaManager({
             </div>
           )}
 
+          {/* Hidden file input for logos */}
+          <input
+            ref={logosInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleLogoUpload}
+            disabled={uploadingLogo}
+            className="hidden"
+          />
+
           <div className="flex gap-2 flex-wrap">
-            <Label htmlFor="logos-upload" className="cursor-pointer">
-              <Button type="button" variant="outline" size="sm" asChild disabled={uploadingLogo}>
-                <div>
-                  {uploadingLogo ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Logos
-                    </>
-                  )}
-                </div>
-              </Button>
-              <Input
-                id="logos-upload"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleLogoUpload}
-                disabled={uploadingLogo}
-                className="hidden"
-              />
-            </Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => logosInputRef.current?.click()}
+              disabled={uploadingLogo}
+            >
+              {uploadingLogo ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Logos
+                </>
+              )}
+            </Button>
             <ImageLibraryPicker
               multiple
               onSelect={(url) => onClientLogosChange([...clientLogos, url])}

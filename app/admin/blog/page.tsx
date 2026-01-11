@@ -101,6 +101,16 @@ interface OutrankConfig {
   total_synced: number
 }
 
+interface WebhookLog {
+  id: number
+  event_type: string
+  status: 'success' | 'error' | 'pending'
+  payload?: Record<string, unknown>
+  response?: Record<string, unknown>
+  error_message?: string
+  created_at: string
+}
+
 export default function AdminBlogPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -126,10 +136,10 @@ export default function AdminBlogPage() {
   const [savingConfig, setSavingConfig] = useState(false)
   
   // Webhook logs state
-  const [webhookLogs, setWebhookLogs] = useState<any[]>([])
+  const [webhookLogs, setWebhookLogs] = useState<WebhookLog[]>([])
   const [logsLoading, setLogsLoading] = useState(false)
   const [logsStatusFilter, setLogsStatusFilter] = useState('all')
-  const [selectedLog, setSelectedLog] = useState<any>(null)
+  const [selectedLog, setSelectedLog] = useState<WebhookLog | null>(null)
 
   // Stats
   const [stats, setStats] = useState({

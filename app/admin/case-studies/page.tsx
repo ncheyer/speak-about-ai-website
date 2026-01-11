@@ -261,6 +261,9 @@ export default function CaseStudiesManagementPage() {
   const fetchCaseStudies = async () => {
     try {
       const response = await fetch("/api/case-studies")
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
       const data = await response.json()
       if (data.success) {
         setCaseStudies(data.data)
@@ -280,6 +283,9 @@ export default function CaseStudiesManagementPage() {
   const fetchSpeakers = async () => {
     try {
       const response = await fetch("/api/speakers")
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
       const data = await response.json()
       if (data.success) {
         setSpeakers(data.speakers)

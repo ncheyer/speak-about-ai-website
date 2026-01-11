@@ -10,13 +10,30 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import Papa from "papaparse"
 
+interface VendorCSVRow {
+  name?: string
+  email?: string
+  company?: string
+  category?: string
+  website?: string
+  phone?: string
+  [key: string]: string | undefined
+}
+
+interface ImportResults {
+  success: boolean
+  imported: number
+  failed: number
+  errors?: Array<{ row: number; error: string }>
+}
+
 export function VendorCSVImport() {
   const { toast } = useToast()
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [autoApprove, setAutoApprove] = useState(false)
-  const [preview, setPreview] = useState<any[]>([])
-  const [importResults, setImportResults] = useState<any>(null)
+  const [preview, setPreview] = useState<VendorCSVRow[]>([])
+  const [importResults, setImportResults] = useState<ImportResults | null>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]

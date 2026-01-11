@@ -402,7 +402,7 @@ export async function updateWorkshop(id: number, input: UpdateWorkshopInput): Pr
       WHERE id = ${id}
       RETURNING *
     `
-    return workshops[0] as Workshop || null
+    return workshops.length > 0 ? (workshops[0] as Workshop) : null
   } catch (error) {
     console.error("Error updating workshop:", error)
     throw error

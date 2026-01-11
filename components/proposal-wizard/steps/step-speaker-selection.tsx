@@ -9,10 +9,25 @@ import { Loader2, Search, Filter, Sparkles } from "lucide-react"
 import { SpeakerCard } from "../speaker-card"
 import { useWizard } from "../wizard-context"
 
+interface SpeakerRecommendation {
+  id: number
+  name: string
+  slug?: string
+  title?: string
+  bio?: string
+  short_bio?: string
+  headshot_url?: string
+  speaking_fee_range?: string
+  match_score?: number
+  match_reasons?: string[]
+  topics?: string[]
+  industries?: string[]
+}
+
 export function StepSpeakerSelection() {
   const { wizardData, updateWizardData, goToNextStep, goToPreviousStep } = useWizard()
   const [loading, setLoading] = useState(true)
-  const [speakers, setSpeakers] = useState<any[]>([])
+  const [speakers, setSpeakers] = useState<SpeakerRecommendation[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [filterBudget, setFilterBudget] = useState(true)
 
@@ -50,7 +65,7 @@ export function StepSpeakerSelection() {
     }
   }
 
-  const handleSelectSpeaker = (speaker: any) => {
+  const handleSelectSpeaker = (speaker: SpeakerRecommendation) => {
     const isSelected = wizardData.selected_speakers.some(s => s.id === speaker.id)
 
     if (isSelected) {

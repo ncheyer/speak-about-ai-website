@@ -6,6 +6,75 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { TrendingUp, TrendingDown, Target, Award, Search, BarChart3, CheckSquare, ListTodo, FileText } from 'lucide-react'
 
+interface KeywordData {
+  Keyword: string
+  Position: string
+  'Search Volume': string
+  CPC: string
+  Url: string
+  'Traffic (%)': string
+  Competition: string
+  Ph?: string
+  Po?: string
+  Nq?: string
+}
+
+interface CompetitorAnalysis {
+  domain: string
+  error?: boolean
+  overview?: {
+    'Organic Traffic'?: string
+    'Organic Keywords'?: string
+    'Organic Cost'?: string
+    Ot?: string
+    Or?: string
+    Oc?: string
+  }
+  bestKeywords?: KeywordData[]
+  keywordGap?: KeywordData[]
+}
+
+interface SEORecommendation {
+  title: string
+  action: string
+  priority: 'high' | 'medium' | 'low'
+  competitor?: string
+  keywords?: Array<{ keyword: string; volume: string; position?: string }>
+  metrics?: { traffic: number; keywords: number }
+}
+
+interface CompetitorData {
+  recommendations?: SEORecommendation[]
+  detailedAnalysis?: CompetitorAnalysis[]
+}
+
+interface PageListItem {
+  title: string
+  urlSlug: string
+  intent: string
+}
+
+interface ActionPlanPhase {
+  phase: string
+  priority: string
+  trafficGoal: string
+  actions: Array<{ action: string; tasks: string[] }>
+}
+
+interface ActionPlanData {
+  yourDomain?: {
+    overview?: { Ot?: number; Or?: number }
+  }
+  competitorAnalysis?: Array<{ overview?: { Ot?: string } }>
+  actionPlan?: ActionPlanPhase[]
+  pageList?: {
+    total: number
+    critical?: PageListItem[]
+    highPriority?: PageListItem[]
+    mediumPriority?: PageListItem[]
+  }
+}
+
 interface SemrushData {
   overview: {
     Domain: string
@@ -16,19 +85,11 @@ interface SemrushData {
     'Adwords Keywords': string
     'Adwords Traffic': string
   }
-  keywords: Array<{
-    Keyword: string
-    Position: string
-    'Search Volume': string
-    CPC: string
-    Url: string
-    'Traffic (%)': string
-    Competition: string
-  }>
+  keywords: KeywordData[]
   analysis: {
-    lowHangingFruit: any[]
-    highValueOpportunities: any[]
-    topKeywords: any[]
+    lowHangingFruit: KeywordData[]
+    highValueOpportunities: KeywordData[]
+    topKeywords: KeywordData[]
     positionRanges: {
       top3: number
       top10: number
@@ -49,8 +110,8 @@ interface SemrushData {
 
 export default function SEOAnalysisPage() {
   const [data, setData] = useState<SemrushData | null>(null)
-  const [competitorData, setCompetitorData] = useState<any>(null)
-  const [actionPlan, setActionPlan] = useState<any>(null)
+  const [competitorData, setCompetitorData] = useState<CompetitorData | null>(null)
+  const [actionPlan, setActionPlan] = useState<ActionPlanData | null>(null)
   const [loading, setLoading] = useState(true)
   const [competitorLoading, setCompetitorLoading] = useState(true)
   const [actionPlanLoading, setActionPlanLoading] = useState(true)

@@ -24,8 +24,51 @@ interface IntegratedAnalyticsProps {
   timeRange?: string
 }
 
+interface SearchPerformanceTotals {
+  impressions: number
+  clicks: number
+  ctr?: number
+  position?: number
+}
+
+interface UserBehaviorData {
+  pageViews: number
+  uniqueVisitors: number
+  bounceRate?: number
+  avgSessionDuration?: number
+}
+
+interface CorrelationItem {
+  searchClicks: number
+  actualVisits: number
+  url: string
+  searchCTR: number
+  conversionRate: number
+}
+
+interface LandingPagePerformance {
+  page: string
+  impressions: number
+  clicks: number
+  visits: number
+  bounceRate?: number
+}
+
+interface IntegratedAnalyticsData {
+  searchPerformance: {
+    totals: SearchPerformanceTotals
+    topQueries?: Array<{ query: string; clicks: number; impressions: number }>
+    topPages?: Array<{ page: string; clicks: number; impressions: number }>
+  }
+  userBehavior: UserBehaviorData
+  correlations: {
+    searchToVisit: CorrelationItem[]
+    landingPagePerformance: LandingPagePerformance[]
+  }
+}
+
 export default function IntegratedAnalyticsDashboard({ timeRange = '7' }: IntegratedAnalyticsProps) {
-  const [data, setData] = useState<any>(null)
+  const [data, setData] = useState<IntegratedAnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeView, setActiveView] = useState('overview')
 
@@ -94,7 +137,7 @@ export default function IntegratedAnalyticsDashboard({ timeRange = '7' }: Integr
   ]
 
   // Prepare correlation scatter data
-  const correlationData = data.correlations.searchToVisit.map((item: any) => ({
+  const correlationData = data.correlations.searchToVisit.map((item: CorrelationItem) => ({
     searchClicks: item.searchClicks,
     actualVisits: item.actualVisits,
     url: item.url,

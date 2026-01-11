@@ -84,6 +84,57 @@ export default function AdminAddSpeakerPage() {
   const [newVideo, setNewVideo] = useState({ title: "", url: "" })
   const [newTestimonial, setNewTestimonial] = useState({ quote: "", author: "", position: "", company: "" })
 
+  // Validation state
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
+
+  // Field validators
+  const validateEmail = (email: string): string => {
+    if (!email) return "Email is required"
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) return "Invalid email format"
+    return ""
+  }
+
+  const validateName = (name: string): string => {
+    if (!name.trim()) return "Name is required"
+    if (name.trim().length < 2) return "Name must be at least 2 characters"
+    return ""
+  }
+
+  const validateUrl = (url: string): string => {
+    if (!url) return "" // Optional field
+    try {
+      new URL(url.startsWith('http') ? url : `https://${url}`)
+      return ""
+    } catch {
+      return "Invalid URL format"
+    }
+  }
+
+  const validateSlug = (slug: string): string => {
+    if (!slug) return "" // Optional - will be auto-generated
+    const slugRegex = /^[a-z0-9-]+$/
+    if (!slugRegex.test(slug)) return "Slug can only contain lowercase letters, numbers, and hyphens"
+    return ""
+  }
+
+  const validateField = (name: string, value: string): string => {
+    switch (name) {
+      case "name": return validateName(value)
+      case "email": return validateEmail(value)
+      case "website": return validateUrl(value)
+      case "slug": return validateSlug(value)
+      default: return ""
+    }
+  }
+
+  const handleBlur = (name: string) => {
+    setTouched(prev => ({ ...prev, [name]: true }))
+    const error = validateField(name, formData[name as keyof typeof formData] as string)
+    setFieldErrors(prev => ({ ...prev, [name]: error }))
+  }
+
   // Check authentication
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")
@@ -100,6 +151,11 @@ export default function AdminAddSpeakerPage() {
       ...prev,
       [name]: value
     }))
+    // Validate on change if field has been touched
+    if (touched[name]) {
+      const error = validateField(name, value)
+      setFieldErrors(prev => ({ ...prev, [name]: error }))
+    }
   }
 
   const handleSwitchChange = (name: string) => (checked: boolean) => {
@@ -219,11 +275,28 @@ export default function AdminAddSpeakerPage() {
   }
 
   const handleSave = async () => {
-    // Validate required fields
-    if (!formData.name || !formData.email) {
+    // Validate all fields
+    const nameError = validateName(formData.name)
+    const emailError = validateEmail(formData.email)
+    const websiteError = validateUrl(formData.website)
+    const slugError = validateSlug(formData.slug)
+
+    const errors = {
+      name: nameError,
+      email: emailError,
+      website: websiteError,
+      slug: slugError
+    }
+
+    // Mark all fields as touched
+    setTouched({ name: true, email: true, website: true, slug: true })
+    setFieldErrors(errors)
+
+    // Check for any errors
+    if (nameError || emailError || websiteError || slugError) {
       toast({
-        title: "Error",
-        description: "Name and email are required",
+        title: "Validation Error",
+        description: "Please fix the highlighted errors before saving",
         variant: "destructive",
       })
       return
@@ -370,8 +443,13 @@ export default function AdminAddSpeakerPage() {
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
+                        onBlur={() => handleBlur("name")}
+                        className={touched.name && fieldErrors.name ? "border-red-500" : ""}
                         required
                       />
+                      {touched.name && fieldErrors.name && (
+                        <p className="text-sm text-red-500 mt-1">{fieldErrors.name}</p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="email">Email Address *</Label>
@@ -381,8 +459,13 @@ export default function AdminAddSpeakerPage() {
                         type="email"
                         value={formData.email}
                         onChange={handleInputChange}
+                        onBlur={() => handleBlur("email")}
+                        className={touched.email && fieldErrors.email ? "border-red-500" : ""}
                         required
                       />
+                      {touched.email && fieldErrors.email && (
+                        <p className="text-sm text-red-500 mt-1">{fieldErrors.email}</p>
+                      )}
                     </div>
                   </div>
 
@@ -436,8 +519,13 @@ export default function AdminAddSpeakerPage() {
                       name="website"
                       value={formData.website}
                       onChange={handleInputChange}
+                      onBlur={() => handleBlur("website")}
+                      className={touched.website && fieldErrors.website ? "border-red-500" : ""}
                       placeholder="https://..."
                     />
+                    {touched.website && fieldErrors.website && (
+                      <p className="text-sm text-red-500 mt-1">{fieldErrors.website}</p>
+                    )}
                   </div>
 
                   <div>
@@ -493,9 +581,15 @@ export default function AdminAddSpeakerPage() {
                       name="slug"
                       value={formData.slug}
                       onChange={handleInputChange}
+                      onBlur={() => handleBlur("slug")}
+                      className={touched.slug && fieldErrors.slug ? "border-red-500" : ""}
                       placeholder="speaker-name (auto-generated if empty)"
                     />
-                    <p className="text-sm text-gray-500 mt-1">Used for speaker profile URL: /speakers/{formData.slug || 'speaker-name'}</p>
+                    {touched.slug && fieldErrors.slug ? (
+                      <p className="text-sm text-red-500 mt-1">{fieldErrors.slug}</p>
+                    ) : (
+                      <p className="text-sm text-gray-500 mt-1">Used for speaker profile URL: /speakers/{formData.slug || 'speaker-name'}</p>
+                    )}
                   </div>
 
                   {/* Topics */}

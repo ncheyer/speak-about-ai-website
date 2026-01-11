@@ -48,10 +48,8 @@ interface Project {
   status: "2plus_months" | "1to2_months" | "less_than_month" | "final_week" | "contracts_signed" | "invoicing" | "logistics_planning" | "pre_event" | "event_week" | "follow_up" | "completed" | "cancelled"
   priority: "low" | "medium" | "high" | "urgent"
   start_date: string
-  end_date?: string
   deadline?: string
   budget: number
-  spent: number
   completion_percentage: number
   
   // Event Overview - Billing Contact
@@ -67,7 +65,6 @@ interface Project {
   logistics_contact_phone?: string
   
   // Event Overview - Additional Fields
-  end_client_name?: string
   event_name?: string
   event_date?: string
   event_location?: string
@@ -81,7 +78,6 @@ interface Project {
   // Speaker Program Details
   requested_speaker_name?: string
   program_topic?: string
-  program_type?: string
   audience_size?: number
   audience_demographics?: string
   speaker_attire?: string
@@ -160,12 +156,10 @@ interface Project {
   prep_call_requested?: boolean
   prep_call_date?: string
   prep_call_time?: string
-  additional_notes?: string
   
   // Status Tracking
   contract_signed?: boolean
   invoice_sent?: boolean
-  payment_received?: boolean
   presentation_ready?: boolean
   materials_sent?: boolean
   
@@ -527,16 +521,6 @@ export default function ProjectEditPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="budget">Budget ($)</Label>
-                    <Input
-                      id="budget"
-                      type="number"
-                      step="0.01"
-                      value={formData.budget || ""}
-                      onChange={(e) => updateField("budget", parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div>
                     <Label htmlFor="completion_percentage">Completion %</Label>
                     <Input
                       id="completion_percentage"
@@ -756,7 +740,24 @@ export default function ProjectEditPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h4 className="font-semibold mb-3">Billing Contact</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold">Billing Contact</h4>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          billing_contact_name: prev.client_name || "",
+                          billing_contact_email: prev.client_email || "",
+                          billing_contact_phone: prev.client_phone || ""
+                        }))
+                      }}
+                    >
+                      Copy from Client
+                    </Button>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="billing_contact_name">Name</Label>
@@ -804,7 +805,24 @@ export default function ProjectEditPage() {
                 </div>
 
                 <div>
-                  <h4 className="font-semibold mb-3">Logistics Contact</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold">Logistics Contact</h4>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          logistics_contact_name: prev.client_name || "",
+                          logistics_contact_email: prev.client_email || "",
+                          logistics_contact_phone: prev.client_phone || ""
+                        }))
+                      }}
+                    >
+                      Copy from Client
+                    </Button>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="logistics_contact_name">Name</Label>
@@ -856,16 +874,7 @@ export default function ProjectEditPage() {
                       onChange={(e) => updateField("requested_speaker_name", e.target.value)}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="program_type">Program Type</Label>
-                    <Input
-                      id="program_type"
-                      value={formData.program_type || ""}
-                      onChange={(e) => updateField("program_type", e.target.value)}
-                      placeholder="Keynote, Workshop, Panel, etc."
-                    />
-                  </div>
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-1">
                     <Label htmlFor="program_topic">Program Topic</Label>
                     <Input
                       id="program_topic"
@@ -1135,9 +1144,11 @@ export default function ProjectEditPage() {
                     <Input
                       id="total_program_length"
                       type="number"
-                      value={formData.total_program_length || ""}
-                      onChange={(e) => updateField("total_program_length", parseInt(e.target.value) || undefined)}
+                      value={(formData.program_length || 0) + (formData.qa_length || 0) || ""}
+                      readOnly
+                      className="bg-gray-100"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Auto-calculated</p>
                   </div>
                 </div>
 
@@ -1811,14 +1822,6 @@ export default function ProjectEditPage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id="payment_received"
-                      checked={formData.payment_received || false}
-                      onCheckedChange={(checked) => updateField("payment_received", checked)}
-                    />
-                    <Label htmlFor="payment_received">Payment Received</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
                       id="presentation_ready"
                       checked={formData.presentation_ready || false}
                       onCheckedChange={(checked) => updateField("presentation_ready", checked)}
@@ -1844,23 +1847,15 @@ export default function ProjectEditPage() {
                   Notes
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
                 <div>
-                  <Label htmlFor="additional_notes">Additional Notes</Label>
-                  <Textarea
-                    id="additional_notes"
-                    value={formData.additional_notes || ""}
-                    onChange={(e) => updateField("additional_notes", e.target.value)}
-                    rows={4}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="notes">General Notes</Label>
+                  <Label htmlFor="notes">Project Notes</Label>
                   <Textarea
                     id="notes"
                     value={formData.notes || ""}
                     onChange={(e) => updateField("notes", e.target.value)}
-                    rows={4}
+                    rows={6}
+                    placeholder="Internal notes, special instructions, important details..."
                   />
                 </div>
               </CardContent>

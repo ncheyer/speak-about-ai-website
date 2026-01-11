@@ -39,6 +39,11 @@ interface BankingConfig {
   source?: string
 }
 
+interface MaskedBankingValues {
+  account_number?: string
+  routing_number?: string
+}
+
 export default function BankingSettingsPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -58,7 +63,7 @@ export default function BankingSettingsPage() {
     payment_terms_deposit: 'Net 30 days from issue date',
     payment_terms_final: 'Due on event date'
   })
-  const [maskedValues, setMaskedValues] = useState<any>({})
+  const [maskedValues, setMaskedValues] = useState<MaskedBankingValues>({})
 
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("adminLoggedIn")

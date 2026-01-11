@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { WorkshopMediaManager } from "@/components/workshop-media-manager"
 import { Plus, Edit, Trash2, Search, Eye, Star, Users, Clock, Loader2, CheckCircle, XCircle } from "lucide-react"
+import { TableSkeleton } from "@/components/admin-loading-skeletons"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 import { Testimonial, PricingTier } from "@/lib/workshops-db"
@@ -55,6 +56,38 @@ export default function AdminWorkshopsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingWorkshop, setEditingWorkshop] = useState<Workshop | null>(null)
+
+  // Validation state
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
+
+  // Validators
+  const validateTitle = (title: string): string => {
+    if (!title.trim()) return "Title is required"
+    if (title.trim().length < 3) return "Title must be at least 3 characters"
+    return ""
+  }
+
+  const validateSlug = (slug: string): string => {
+    if (!slug.trim()) return "Slug is required"
+    const slugRegex = /^[a-z0-9-]+$/
+    if (!slugRegex.test(slug)) return "Slug can only contain lowercase letters, numbers, and hyphens"
+    return ""
+  }
+
+  const validateField = (name: string, value: string): string => {
+    switch (name) {
+      case "title": return validateTitle(value)
+      case "slug": return validateSlug(value)
+      default: return ""
+    }
+  }
+
+  const handleBlur = (name: string) => {
+    setTouched(prev => ({ ...prev, [name]: true }))
+    const error = validateField(name, formData[name as keyof typeof formData] as string)
+    setFieldErrors(prev => ({ ...prev, [name]: error }))
+  }
 
   const [formData, setFormData] = useState({
     title: "",
@@ -146,14 +179,41 @@ export default function AdminWorkshopsPage() {
           return idStr !== ""
         })
         setSpeakers(validSpeakers)
+      } else {
+        toast({
+          title: "Warning",
+          description: "Failed to load speakers list",
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error("Error loading speakers:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load speakers list",
+        variant: "destructive"
+      })
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validate required fields
+    const titleError = validateTitle(formData.title)
+    const slugError = validateSlug(formData.slug)
+
+    setTouched({ title: true, slug: true })
+    setFieldErrors({ title: titleError, slug: slugError })
+
+    if (titleError || slugError) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the highlighted errors before saving",
+        variant: "destructive"
+      })
+      return
+    }
 
     try {
       const token = localStorage.getItem("adminSessionToken")
@@ -165,6 +225,11 @@ export default function AdminWorkshopsPage() {
           roiStats = JSON.parse(formData.roi_stats)
         } catch (e) {
           console.error("Invalid ROI stats JSON:", e)
+          toast({
+            title: "Warning",
+            description: "ROI stats contains invalid JSON and will be ignored",
+            variant: "destructive"
+          })
         }
       }
 
@@ -451,9 +516,19 @@ export default function AdminWorkshopsPage() {
                       <Input
                         id="title"
                         value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, title: e.target.value })
+                          if (touched.title) {
+                            setFieldErrors(prev => ({ ...prev, title: validateTitle(e.target.value) }))
+                          }
+                        }}
+                        onBlur={() => handleBlur("title")}
+                        className={touched.title && fieldErrors.title ? "border-red-500" : ""}
                         required
                       />
+                      {touched.title && fieldErrors.title && (
+                        <p className="text-sm text-red-500 mt-1">{fieldErrors.title}</p>
+                      )}
                     </div>
 
                     <div>
@@ -461,10 +536,20 @@ export default function AdminWorkshopsPage() {
                       <Input
                         id="slug"
                         value={formData.slug}
-                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, slug: e.target.value })
+                          if (touched.slug) {
+                            setFieldErrors(prev => ({ ...prev, slug: validateSlug(e.target.value) }))
+                          }
+                        }}
+                        onBlur={() => handleBlur("slug")}
+                        className={touched.slug && fieldErrors.slug ? "border-red-500" : ""}
                         placeholder="ai-for-executives"
                         required
                       />
+                      {touched.slug && fieldErrors.slug && (
+                        <p className="text-sm text-red-500 mt-1">{fieldErrors.slug}</p>
+                      )}
                     </div>
 
                     <div>
@@ -832,9 +917,7 @@ export default function AdminWorkshopsPage() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="text-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-                </div>
+                <TableSkeleton rows={5} />
               ) : (
                 <Table>
                   <TableHeader>

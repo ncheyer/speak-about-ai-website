@@ -41,6 +41,7 @@ import {
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { TableSkeleton, ListItemSkeleton } from "@/components/admin-loading-skeletons"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
@@ -129,6 +130,16 @@ interface SpeakerApplication {
   reviewed_by?: string
 }
 
+interface SpeakerAnalytics {
+  name: string
+  slug?: string
+  location?: string
+  views: number
+  bookClicks: number
+  conversionRate: string | number
+  topics?: string
+}
+
 export default function AdminSpeakersPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -156,7 +167,7 @@ export default function AdminSpeakersPage() {
   })
   const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null)
   const [sendingInvite, setSendingInvite] = useState(false)
-  const [speakerAnalytics, setSpeakerAnalytics] = useState<any[]>([])
+  const [speakerAnalytics, setSpeakerAnalytics] = useState<SpeakerAnalytics[]>([])
   const [loadingAnalytics, setLoadingAnalytics] = useState(false)
 
   // Check authentication and load data
@@ -861,10 +872,7 @@ export default function AdminSpeakersPage() {
 
               {/* Applications List */}
               {loadingApplications ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                  <span className="ml-2">Loading applications...</span>
-                </div>
+                <ListItemSkeleton count={5} />
               ) : (
                 <div className="space-y-4">
                   {filteredApplications.map((application) => (
@@ -1122,9 +1130,7 @@ export default function AdminSpeakersPage() {
                 </CardHeader>
                 <CardContent>
                   {loadingAnalytics ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                    </div>
+                    <TableSkeleton rows={5} />
                   ) : speakerAnalytics.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       No analytics data available yet. Speaker profile views will appear here once tracked.

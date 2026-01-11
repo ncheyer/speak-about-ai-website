@@ -97,6 +97,57 @@ import {
 import { formatCurrency, formatDate } from "@/lib/utils"
 import type { Proposal } from "@/lib/proposals-db"
 import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
+import { StatsSkeleton, TableSkeleton, CardGridSkeleton } from "@/components/admin-loading-skeletons"
+
+// Analytics data types
+interface AnalyticsOverviewData {
+  totalVisitors?: number
+  pageViews?: number
+  bounceRate?: number
+  avgSessionDuration?: number
+  topPages?: Array<{ path: string; views: number }>
+}
+
+interface RealTimeAnalyticsData {
+  activeUsers?: number
+  topActivePages?: Array<{ path: string; activeUsers: number }>
+}
+
+interface AnalyticsData {
+  overview?: AnalyticsOverviewData
+}
+
+interface SEOKeywordData {
+  Keyword: string
+  Position: string
+  'Search Volume': string
+  CPC?: string
+  Url?: string
+  'Traffic (%)'?: string
+}
+
+interface SEOAnalysisData {
+  lowHangingFruit: SEOKeywordData[]
+  highValueOpportunities: SEOKeywordData[]
+  positionRanges: {
+    top3: number
+    top10: number
+    top20: number
+    top50: number
+    top100: number
+  }
+}
+
+interface SEOData {
+  overview: {
+    Rank: string
+    'Organic Keywords': string
+    'Organic Traffic': string
+    'Organic Cost': string
+  }
+  analysis: SEOAnalysisData
+  error?: string
+}
 
 // Type definitions
 interface Speaker {
@@ -216,8 +267,11 @@ const PRIORITY_COLORS = {
 export default function MasterAdminPanel() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="space-y-6">
+          <StatsSkeleton />
+          <TableSkeleton rows={5} />
+        </div>
       </div>
     }>
       <MasterAdminPanelContent />
@@ -243,8 +297,8 @@ function MasterAdminPanelContent() {
   const [projects, setProjects] = useState<Project[]>([])
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [invoices, setInvoices] = useState<Invoice[]>([])
-  const [analyticsData, setAnalyticsData] = useState<any>(null)
-  const [realTimeData, setRealTimeData] = useState<any>(null)
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+  const [realTimeData, setRealTimeData] = useState<RealTimeAnalyticsData | null>(null)
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
   
   // Loading states
@@ -1721,7 +1775,7 @@ function MasterAdminPanelContent() {
 
 // SEO Dashboard Embed Component
 function SEODashboardEmbed() {
-  const [seoData, setSeoData] = useState<any>(null)
+  const [seoData, setSeoData] = useState<SEOData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -1847,7 +1901,7 @@ function SEODashboardEmbed() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {analysis.lowHangingFruit.slice(0, 5).map((kw: any, i: number) => (
+              {analysis.lowHangingFruit.slice(0, 5).map((kw: SEOKeywordData, i: number) => (
                 <div key={i} className="border-b pb-3 last:border-0">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-sm">{kw.Keyword}</span>
@@ -1882,7 +1936,7 @@ function SEODashboardEmbed() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {analysis.highValueOpportunities.slice(0, 5).map((kw: any, i: number) => (
+              {analysis.highValueOpportunities.slice(0, 5).map((kw: SEOKeywordData, i: number) => (
                 <div key={i} className="border-b pb-3 last:border-0">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-sm">{kw.Keyword}</span>

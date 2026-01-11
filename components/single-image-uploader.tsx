@@ -1,11 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { upload } from '@vercel/blob/client'
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react"
+import { Upload, X, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { createImagePathname, addTimestampSuffix } from "@/lib/image-naming"
 
@@ -34,6 +33,7 @@ export function SingleImageUploader({
 }: SingleImageUploaderProps) {
   const { toast } = useToast()
   const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -105,6 +105,16 @@ export function SingleImageUploader({
 
   return (
     <div className="space-y-3">
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleUpload}
+        disabled={uploading}
+        className="hidden"
+      />
+
       <div className="flex items-center justify-between">
         <div>
           <Label>{label}</Label>
@@ -137,58 +147,49 @@ export function SingleImageUploader({
         </div>
       ) : (
         /* Upload Area */
-        <Label htmlFor={`upload-${label.replace(/\s+/g, '-').toLowerCase()}`} className="cursor-pointer">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition-colors">
-            {uploading ? (
-              <div className="flex flex-col items-center">
-                <Loader2 className="h-8 w-8 text-gray-400 animate-spin mb-2" />
-                <p className="text-sm text-gray-600">Uploading...</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center">
-                <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                <p className="text-sm text-gray-600 mb-1">
-                  <span className="font-semibold text-blue-600">Click to upload</span> or drag and drop
-                </p>
-                <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 10MB</p>
-              </div>
-            )}
-          </div>
-          <Input
-            id={`upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
-            type="file"
-            accept="image/*"
-            onChange={handleUpload}
-            disabled={uploading}
-            className="hidden"
-          />
-        </Label>
+        <div
+          onClick={() => !uploading && fileInputRef.current?.click()}
+          className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer"
+        >
+          {uploading ? (
+            <div className="flex flex-col items-center">
+              <Loader2 className="h-8 w-8 text-gray-400 animate-spin mb-2" />
+              <p className="text-sm text-gray-600">Uploading...</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center">
+              <Upload className="h-8 w-8 text-gray-400 mb-2" />
+              <p className="text-sm text-gray-600 mb-1">
+                <span className="font-semibold text-blue-600">Click to upload</span> or drag and drop
+              </p>
+              <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 10MB</p>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Replace Button (when image exists) */}
-      {imageUrl && !uploading && (
-        <Label htmlFor={`upload-${label.replace(/\s+/g, '-').toLowerCase()}`} className="cursor-pointer">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-full"
-            asChild
-          >
-            <div>
+      {imageUrl && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Uploading...
+            </>
+          ) : (
+            <>
               <Upload className="h-4 w-4 mr-2" />
               Replace Image
-            </div>
-          </Button>
-          <Input
-            id={`upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
-            type="file"
-            accept="image/*"
-            onChange={handleUpload}
-            disabled={uploading}
-            className="hidden"
-          />
-        </Label>
+            </>
+          )}
+        </Button>
       )}
     </div>
   )

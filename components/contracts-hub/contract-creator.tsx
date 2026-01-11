@@ -29,12 +29,6 @@ import { useToast } from "@/hooks/use-toast"
 import type { Deal } from "@/lib/deals-db"
 import { generateContractHTML } from "@/lib/contract-processor"
 
-interface ContractCreatorProps {
-  dealId?: number
-  onSave?: (contractData: any) => void
-  onCancel?: () => void
-}
-
 interface DynamicField {
   key: string
   label: string
@@ -43,13 +37,46 @@ interface DynamicField {
   required: boolean
 }
 
+interface ContractTemplate {
+  id: string
+  name: string
+  description?: string
+  content: string
+  dynamicFields: DynamicField[]
+  variables?: string[]
+}
+
+interface ContractFormData {
+  client_company?: string
+  client_signer_name?: string
+  event_name?: string
+  event_date?: string
+  event_location?: string
+  speaking_fee?: string | number
+  deposit_amount?: string | number
+  [key: string]: string | number | undefined
+}
+
+interface ContractData extends ContractFormData {
+  template_id: string
+  deal_id?: number
+  html_content?: string
+  status?: string
+}
+
+interface ContractCreatorProps {
+  dealId?: number
+  onSave?: (contractData: ContractData) => void
+  onCancel?: () => void
+}
+
 export function ContractCreator({ dealId, onSave, onCancel }: ContractCreatorProps) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deal, setDeal] = useState<Deal | null>(null)
-  const [template, setTemplate] = useState<any>(null)
-  const [formData, setFormData] = useState<Record<string, any>>({})
+  const [template, setTemplate] = useState<ContractTemplate | null>(null)
+  const [formData, setFormData] = useState<ContractFormData>({})
   const [preview, setPreview] = useState<string>("")
   const [activeTab, setActiveTab] = useState("details")
   const [errors, setErrors] = useState<string[]>([])
@@ -66,12 +93,12 @@ export function ContractCreator({ dealId, onSave, onCancel }: ContractCreatorPro
     const templates = localStorage.getItem('contractTemplates')
     if (templates) {
       const parsedTemplates = JSON.parse(templates)
-      const standardTemplate = parsedTemplates.find((t: any) => t.id === 'standard-speaking-agreement')
+      const standardTemplate = parsedTemplates.find((t: ContractTemplate) => t.id === 'standard-speaking-agreement')
       if (standardTemplate) {
         setTemplate(standardTemplate)
         
         // Initialize form data with default values
-        const initialData: Record<string, any> = {}
+        const initialData: ContractFormData = {}
         standardTemplate.dynamicFields.forEach((field: DynamicField) => {
           if (field.defaultValue) {
             initialData[field.key] = field.defaultValue

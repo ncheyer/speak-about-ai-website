@@ -487,6 +487,7 @@ export default function FinancesPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Project</TableHead>
+                    <TableHead>Speaker</TableHead>
                     <TableHead>Event Date</TableHead>
                     <TableHead className="text-right">Deal Value</TableHead>
                     <TableHead className="text-right">Speaker Fee</TableHead>
@@ -513,6 +514,16 @@ export default function FinancesPage() {
                             {project.company && ` - ${project.company}`}
                           </div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {project.speaker_name ? (
+                          <div className="flex items-center gap-2">
+                            <Mic className="h-4 w-4 text-gray-400" />
+                            <span className="font-medium">{project.speaker_name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">Not assigned</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         {project.event_date ? formatDate(project.event_date) : '-'}
@@ -587,7 +598,7 @@ export default function FinancesPage() {
                   ))}
                   {filteredProjects.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                         No projects match your filters
                       </TableCell>
                     </TableRow>

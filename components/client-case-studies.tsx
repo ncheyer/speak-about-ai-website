@@ -29,13 +29,25 @@ interface CaseStudy {
   impact_points: string[]
 }
 
+interface SpeakerDetails {
+  name: string
+  slug: string
+  title: string
+  bio?: string
+  short_bio?: string
+  headshot_url?: string
+  topics?: string[]
+  industries?: string[]
+  speaking_fee_range?: string
+}
+
 export default function ClientCaseStudies() {
   const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([])
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [expandedSpeaker, setExpandedSpeaker] = useState<{speaker: Speaker, caseStudyId: number} | null>(null)
   const [expandedCaseStudy, setExpandedCaseStudy] = useState<CaseStudy | null>(null)
-  const [speakerDetails, setSpeakerDetails] = useState<any>(null)
+  const [speakerDetails, setSpeakerDetails] = useState<SpeakerDetails | null>(null)
   const [loadingSpeaker, setLoadingSpeaker] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
