@@ -187,12 +187,24 @@ export async function getAllProjects(): Promise<Project[]> {
 export async function getProjectById(id: number): Promise<Project | null> {
   try {
     const sql = getSQL()
-    const [project] = await sql`
+    console.log('getProjectById - Querying for ID:', id, 'Type:', typeof id)
+
+    const result = await sql`
       SELECT * FROM projects
       WHERE id = ${id}
     `
+    console.log('getProjectById - Query result count:', result.length)
+
+    const project = result[0]
+    if (project) {
+      console.log('getProjectById - Found project:', project.id, project.project_name)
+    } else {
+      console.log('getProjectById - No project found with ID:', id)
+    }
+
     return project as Project || null
   } catch (error) {
+    console.error('getProjectById - Error:', error)
     throw error
   }
 }

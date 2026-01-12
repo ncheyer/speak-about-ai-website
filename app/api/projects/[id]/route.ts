@@ -11,18 +11,24 @@ export async function GET(
     // Require admin authentication
     const authError = requireAdminAuth(request)
     if (authError) return authError
-    
+
     const { id: idString } = await params
+    console.log('GET /api/projects/[id] - Raw ID string:', idString, 'Type:', typeof idString)
+
     const id = parseInt(idString)
+    console.log('GET /api/projects/[id] - Parsed ID:', id, 'isNaN:', isNaN(id))
+
     if (isNaN(id)) {
-      return NextResponse.json({ error: "Invalid project ID" }, { status: 400 })
+      return NextResponse.json({ error: "Invalid project ID", receivedId: idString }, { status: 400 })
     }
-    
+
     const project = await getProjectById(id)
+    console.log('GET /api/projects/[id] - Project found:', project ? `Yes (ID: ${project.id})` : 'No')
+
     if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 })
+      return NextResponse.json({ error: "Project not found", requestedId: id }, { status: 404 })
     }
-    
+
     return NextResponse.json(project)
   } catch (error) {
     console.error("Error fetching project:", error)
