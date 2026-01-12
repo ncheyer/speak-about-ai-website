@@ -94,24 +94,29 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
 }
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  console.log('GET /api/admin/speakers/[id] - Starting request')
   try {
     // Await params as required in Next.js 15
     const params = await context.params
-    
+    console.log('GET /api/admin/speakers/[id] - Raw params.id:', params.id, 'Type:', typeof params.id)
+
     // Check authentication - allows dev bypass with x-dev-admin-bypass header
     const authError = requireAdminAuth(request)
     if (authError) {
       console.log('Admin speaker detail: Authentication failed')
       return authError
     }
-    
+
     const speakerId = parseInt(params.id)
+    console.log('GET /api/admin/speakers/[id] - Parsed speakerId:', speakerId, 'isNaN:', isNaN(speakerId))
+
     if (isNaN(speakerId)) {
       return NextResponse.json({
-        error: 'Invalid speaker ID'
+        error: 'Invalid speaker ID',
+        receivedId: params.id
       }, { status: 400 })
     }
-    
+
     console.log(`Admin speaker detail: Fetching speaker ${speakerId}`)
     // Get SQL client
     const sql = getSqlClient()
