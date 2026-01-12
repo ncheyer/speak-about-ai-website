@@ -181,6 +181,14 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Project ID required' }, { status: 400 })
     }
 
+    // Log the travel_buyout value for debugging
+    console.log('PATCH finances - travel_buyout:', {
+      received: travel_buyout,
+      type: typeof travel_buyout,
+      isNull: travel_buyout === null,
+      isUndefined: travel_buyout === undefined
+    })
+
     // Use tagged template literal for the update with all fields
     const result = await sql`
       UPDATE projects

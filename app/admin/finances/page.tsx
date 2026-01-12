@@ -186,6 +186,15 @@ export default function FinancesPage() {
       setSaving(true)
       const token = localStorage.getItem("adminSessionToken")
 
+      // Ensure travel_buyout is a proper number
+      const travelBuyoutValue = Number(editingProject.travel_buyout) || 0
+
+      console.log('Saving travel_buyout:', {
+        original: editingProject.travel_buyout,
+        converted: travelBuyoutValue,
+        type: typeof travelBuyoutValue
+      })
+
       const response = await fetch("/api/admin/finances", {
         method: 'PATCH',
         headers: {
@@ -198,7 +207,7 @@ export default function FinancesPage() {
           payment_date: editingProject.payment_date,
           speaker_payment_status: editingProject.speaker_payment_status,
           speaker_payment_date: editingProject.speaker_payment_date,
-          travel_buyout: editingProject.travel_buyout,
+          travel_buyout: travelBuyoutValue,
           invoice_number: editingProject.invoice_number,
           purchase_order_number: editingProject.purchase_order_number
         })
@@ -643,13 +652,22 @@ export default function FinancesPage() {
                 <Input
                   id="travel_buyout"
                   type="number"
-                  step="0.01"
-                  value={editingProject.travel_buyout || ''}
-                  onChange={(e) => setEditingProject({
-                    ...editingProject,
-                    travel_buyout: parseFloat(e.target.value) || 0
-                  })}
+                  step="1"
+                  min="0"
+                  value={editingProject.travel_buyout > 0 ? editingProject.travel_buyout : ''}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    const numValue = value === '' ? 0 : Number(value)
+                    setEditingProject({
+                      ...editingProject,
+                      travel_buyout: numValue
+                    })
+                  }}
+                  placeholder="Enter whole dollar amount (e.g., 1500)"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Current: {formatCurrency(editingProject.travel_buyout || 0)}
+                </p>
               </div>
 
               {/* Client Payment */}
