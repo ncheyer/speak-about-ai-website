@@ -193,15 +193,13 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     console.log(`Admin speaker detail: Querying speaker ${speakerId}...`)
     const speakers = await sql`
       SELECT
-        id, name, email, title, slug,
+        id, name, email, slug,
         bio, short_bio, one_liner, headshot_url, website,
         location, programs, topics, industries, videos, testimonials,
         speaking_fee_range, travel_preferences, technical_requirements,
         dietary_restrictions, featured, active, listed, ranking,
         created_at, updated_at, email_verified,
-        image_position, image_offset, social_media,
-        company, phone, linkedin_url, twitter_url, youtube_url, instagram_url,
-        publications, achievements, education, certifications, languages, available_formats
+        image_position, image_offset, social_media
       FROM speakers
       WHERE id = ${speakerId}
       LIMIT 1
@@ -240,9 +238,13 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     speaker.industries = parseFieldAsArray(speaker.industries, 'industries')
     speaker.videos = parseFieldAsArray(speaker.videos, 'videos')
     speaker.testimonials = parseFieldAsArray(speaker.testimonials, 'testimonials')
-    speaker.publications = parseFieldAsArray(speaker.publications, 'publications')
-    // Map achievements to awards for the edit page
-    speaker.awards = parseFieldAsArray(speaker.achievements, 'achievements')
+
+    // Parse social media links from social_media JSONB field
+    const socialMedia = speaker.social_media || {}
+    speaker.linkedin_url = socialMedia.linkedin_url || ''
+    speaker.twitter_url = socialMedia.twitter_url || ''
+    speaker.youtube_url = socialMedia.youtube_url || ''
+    speaker.instagram_url = socialMedia.instagram_url || ''
 
     return NextResponse.json({
       success: true,
@@ -334,13 +336,22 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     }
     console.log('Database client obtained')
 
+    // Prepare social_media JSONB from individual social fields
+    const currentSpeakerData = await sql`SELECT social_media FROM speakers WHERE id = ${parseInt(speakerId)}`
+    const currentSocialMedia = currentSpeakerData[0]?.social_media || {}
+    const socialMedia = {
+      linkedin_url: updateData.linkedin_url !== undefined ? updateData.linkedin_url : currentSocialMedia.linkedin_url,
+      twitter_url: updateData.twitter_url !== undefined ? updateData.twitter_url : currentSocialMedia.twitter_url,
+      youtube_url: updateData.youtube_url !== undefined ? updateData.youtube_url : currentSocialMedia.youtube_url,
+      instagram_url: updateData.instagram_url !== undefined ? updateData.instagram_url : currentSocialMedia.instagram_url
+    }
+
     // Update speaker profile with all fields
     console.log(`Attempting to update speaker ${speakerId} in database`)
     const [updatedSpeaker] = await sql`
       UPDATE speakers SET
         name = COALESCE(${updateData.name || null}, name),
         email = COALESCE(${updateData.email || null}, email),
-        title = COALESCE(${updateData.title || null}, title),
         slug = COALESCE(${updateData.slug || null}, slug),
         bio = COALESCE(${updateData.bio || null}, bio),
         short_bio = COALESCE(${updateData.short_bio || null}, short_bio),
@@ -348,19 +359,12 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         headshot_url = COALESCE(${updateData.headshot_url || null}, headshot_url),
         website = COALESCE(${updateData.website || null}, website),
         location = COALESCE(${updateData.location || null}, location),
-        company = COALESCE(${updateData.company || null}, company),
-        phone = COALESCE(${updateData.phone || null}, phone),
-        linkedin_url = COALESCE(${updateData.linkedin_url || null}, linkedin_url),
-        twitter_url = COALESCE(${updateData.twitter_url || null}, twitter_url),
-        youtube_url = COALESCE(${updateData.youtube_url || null}, youtube_url),
-        instagram_url = COALESCE(${updateData.instagram_url || null}, instagram_url),
+        social_media = ${JSON.stringify(socialMedia)},
         programs = COALESCE(${JSON.stringify(updateData.programs) || null}, programs),
         topics = COALESCE(${JSON.stringify(updateData.topics) || null}, topics),
         industries = COALESCE(${JSON.stringify(updateData.industries) || null}, industries),
         videos = COALESCE(${JSON.stringify(updateData.videos) || null}, videos),
         testimonials = COALESCE(${JSON.stringify(updateData.testimonials) || null}, testimonials),
-        publications = COALESCE(${JSON.stringify(updateData.publications) || null}, publications),
-        achievements = COALESCE(${JSON.stringify(updateData.awards) || null}, achievements),
         speaking_fee_range = COALESCE(${updateData.speaking_fee_range || null}, speaking_fee_range),
         travel_preferences = COALESCE(${updateData.travel_preferences || null}, travel_preferences),
         technical_requirements = COALESCE(${updateData.technical_requirements || null}, technical_requirements),
@@ -372,11 +376,9 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${parseInt(speakerId)}
       RETURNING
-        id, name, email, title, slug, bio, short_bio, one_liner,
-        headshot_url, website, company, phone,
-        linkedin_url, twitter_url, youtube_url, instagram_url,
+        id, name, email, slug, bio, short_bio, one_liner,
+        headshot_url, website, social_media,
         location, programs, topics, industries, videos, testimonials,
-        publications, achievements,
         speaking_fee_range, travel_preferences, technical_requirements,
         dietary_restrictions, featured, active, listed, ranking, created_at, updated_at
     `
@@ -410,27 +412,23 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         id: updatedSpeaker.id,
         name: updatedSpeaker.name,
         email: updatedSpeaker.email,
-        title: updatedSpeaker.title,
         slug: updatedSpeaker.slug,
-        company: updatedSpeaker.company,
-        phone: updatedSpeaker.phone,
         bio: updatedSpeaker.bio,
         short_bio: updatedSpeaker.short_bio,
         one_liner: updatedSpeaker.one_liner,
         headshot_url: updatedSpeaker.headshot_url,
         website: updatedSpeaker.website,
-        linkedin_url: updatedSpeaker.linkedin_url,
-        twitter_url: updatedSpeaker.twitter_url,
-        youtube_url: updatedSpeaker.youtube_url,
-        instagram_url: updatedSpeaker.instagram_url,
+        linkedin_url: updatedSpeaker.social_media?.linkedin_url || '',
+        twitter_url: updatedSpeaker.social_media?.twitter_url || '',
+        youtube_url: updatedSpeaker.social_media?.youtube_url || '',
+        instagram_url: updatedSpeaker.social_media?.instagram_url || '',
+        social_media: updatedSpeaker.social_media,
         location: updatedSpeaker.location,
         programs: updatedSpeaker.programs,
         topics: updatedSpeaker.topics || [],
         industries: updatedSpeaker.industries || [],
         videos: updatedSpeaker.videos || [],
         testimonials: updatedSpeaker.testimonials || [],
-        publications: updatedSpeaker.publications || [],
-        awards: updatedSpeaker.achievements || [],
         speaking_fee_range: updatedSpeaker.speaking_fee_range,
         travel_preferences: updatedSpeaker.travel_preferences,
         technical_requirements: updatedSpeaker.technical_requirements,
