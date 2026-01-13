@@ -34,11 +34,23 @@ interface SpeakerDetails {
   slug: string
   title: string
   bio?: string
-  short_bio?: string
-  headshot_url?: string
-  topics?: string[]
+  image?: string
+  programs?: any[]
   industries?: string[]
-  speaking_fee_range?: string
+  fee?: string
+  feeRange?: string
+  location?: string
+  linkedin?: string
+  twitter?: string
+  website?: string
+  featured?: boolean
+  videos?: any[]
+  testimonials?: any[]
+  topics?: string[]
+  listed?: boolean
+  ranking?: number
+  youtube?: string
+  instagram?: string
 }
 
 export default function ClientCaseStudies() {
