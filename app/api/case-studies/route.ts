@@ -26,7 +26,7 @@ export async function GET() {
         json_agg(
           json_build_object(
             'name', s.name,
-            'slug', LOWER(REPLACE(s.name, ' ', '-')),
+            'slug', s.slug,
             'title', s.one_liner,
             'headshot', s.headshot_url
           ) ORDER BY css.display_order
