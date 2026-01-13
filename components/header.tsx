@@ -31,10 +31,7 @@ export default function Header() {
               Home
             </Link>
             <Link href="/speakers" className="font-semibold transition-colors hover:opacity-80" style={{ color: '#ffffff' }}>
-              Our Speakers
-            </Link>
-            <Link href="/ai-search" className="font-semibold transition-colors hover:opacity-80" style={{ color: '#ffffff' }}>
-              AI Search
+              Speakers
             </Link>
             <Link href="/ai-workshops" className="font-semibold transition-colors hover:opacity-80" style={{ color: '#ffffff' }}>
               AI Workshops
@@ -86,15 +83,7 @@ export default function Header() {
                 style={{ color: '#ffffff' }}
                 onClick={() => setIsMenuOpen(false)}
               >
-                Our Speakers
-              </Link>
-              <Link
-                href="/ai-search"
-                className="font-semibold hover:opacity-80"
-                style={{ color: '#ffffff' }}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                AI Search
+                Speakers
               </Link>
               <Link
                 href="/ai-workshops"
