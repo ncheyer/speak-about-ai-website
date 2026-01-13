@@ -453,7 +453,7 @@ export default function ClientCaseStudies() {
                   )}
 
                   {/* Topics */}
-                  {speakerDetails.topics && speakerDetails.topics.length > 0 && (
+                  {speakerDetails.topics && Array.isArray(speakerDetails.topics) && speakerDetails.topics.length > 0 && (
                     <div className="mb-8">
                       <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">Speaking Topics</h4>
                       <div className="flex flex-wrap gap-2">
@@ -470,7 +470,7 @@ export default function ClientCaseStudies() {
                   )}
 
                   {/* Programs */}
-                  {speakerDetails.programs && speakerDetails.programs.length > 0 && (
+                  {speakerDetails.programs && Array.isArray(speakerDetails.programs) && speakerDetails.programs.length > 0 && (
                     <div className="mb-8">
                       <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">Signature Programs</h4>
                       <div className="grid gap-4">
@@ -496,7 +496,7 @@ export default function ClientCaseStudies() {
                   )}
 
                   {/* Videos */}
-                  {speakerDetails.videos && speakerDetails.videos.length > 0 && (
+                  {speakerDetails.videos && Array.isArray(speakerDetails.videos) && speakerDetails.videos.length > 0 && (
                     <div className="mb-8">
                       <h4 className="text-xl font-bold text-gray-900 font-neue-haas mb-4">Videos</h4>
                       <div className="grid md:grid-cols-2 gap-4">
