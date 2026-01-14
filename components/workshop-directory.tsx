@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Clock, Users, ChevronRight, Loader2, MapPin, Filter } from "lucide-react"
+import { Search, Clock, Users, ChevronRight, Loader2, MapPin, Filter, Star, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -29,6 +29,8 @@ interface Workshop {
   thumbnail_position: string | null
   featured: boolean
   active: boolean
+  popularity_score: number
+  badge_text: string | null
 }
 
 interface WorkshopDirectoryContent {
@@ -224,6 +226,15 @@ export default function WorkshopDirectory({ content = DEFAULT_CONTENT }: Worksho
   const locations = ["all", ...Array.from(new Set(workshopsArray.map((w) => w.speaker_location).filter(Boolean)))]
   const audiences = ["all", ...Array.from(new Set(workshopsArray.map((w) => w.target_audience).filter(Boolean)))]
 
+  // Calculate popularity threshold (top 25% of workshops by popularity_score)
+  const popularityThreshold = workshopsArray.length > 0
+    ? workshopsArray
+        .map(w => w.popularity_score || 0)
+        .sort((a, b) => b - a)[Math.floor(workshopsArray.length * 0.25)] || 10
+    : 10
+
+  const isPopular = (workshop: Workshop) => (workshop.popularity_score || 0) >= popularityThreshold && popularityThreshold > 0
+
   return (
     <div className="min-h-screen bg-white">
       <section className="bg-gradient-to-br from-[#EAEAEE] to-white py-20">
@@ -406,19 +417,43 @@ export default function WorkshopDirectory({ content = DEFAULT_CONTENT }: Worksho
                           <span className="text-gray-400 text-4xl">🎓</span>
                         </div>
                       )}
-                      {workshop.format && (
-                        <Badge className="absolute top-3 left-3 bg-[#1E68C6] text-white font-montserrat text-xs px-3 py-1.5 rounded-md shadow-md z-10">
-                          {workshop.format}
-                        </Badge>
-                      )}
-                      {workshop.price_range && (
-                        <Badge
-                          variant="secondary"
-                          className="absolute top-3 right-3 bg-black/75 text-white backdrop-blur-sm text-xs px-2.5 py-1.5 font-montserrat rounded-md shadow-md z-10"
-                        >
-                          {workshop.price_range}
-                        </Badge>
-                      )}
+                      {/* Top-left badges: Format */}
+                      <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+                        {workshop.format && (
+                          <Badge className="bg-[#1E68C6] text-white font-montserrat text-xs px-3 py-1.5 rounded-md shadow-md">
+                            {workshop.format}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Top-right badges: Price, Featured, Popular, Custom */}
+                      <div className="absolute top-3 right-3 flex flex-col gap-2 items-end z-10">
+                        {workshop.price_range && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-black/75 text-white backdrop-blur-sm text-xs px-2.5 py-1.5 font-montserrat rounded-md shadow-md"
+                          >
+                            {workshop.price_range}
+                          </Badge>
+                        )}
+                        {workshop.featured && (
+                          <Badge className="bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900 font-montserrat text-xs px-2.5 py-1.5 rounded-md shadow-lg flex items-center gap-1 font-bold">
+                            <Star className="h-3 w-3 fill-yellow-900" />
+                            Featured
+                          </Badge>
+                        )}
+                        {!workshop.featured && isPopular(workshop) && (
+                          <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-montserrat text-xs px-2.5 py-1.5 rounded-md shadow-lg flex items-center gap-1 font-bold">
+                            <TrendingUp className="h-3 w-3" />
+                            Popular
+                          </Badge>
+                        )}
+                        {workshop.badge_text && !workshop.featured && (
+                          <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-montserrat text-xs px-2.5 py-1.5 rounded-md shadow-md font-semibold">
+                            {workshop.badge_text}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </Link>
 
