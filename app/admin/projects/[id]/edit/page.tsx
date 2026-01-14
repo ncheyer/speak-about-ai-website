@@ -268,13 +268,24 @@ export default function ProjectEditPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
+  // Safely extract project ID - handle both string and array cases
+  const projectId = Array.isArray(params.id) ? params.id[0] : params.id
+
   useEffect(() => {
-    loadProject()
-  }, [params.id])
+    if (projectId) {
+      loadProject()
+    }
+  }, [projectId])
 
   const loadProject = async () => {
+    if (!projectId) {
+      setError("No project ID provided")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const response = await authFetch(`/api/projects/${params.id}`)
+      const response = await authFetch(`/api/projects/${projectId}`)
       if (response.ok) {
         const projectData = await response.json()
         setProject(projectData)
@@ -297,7 +308,7 @@ export default function ProjectEditPage() {
     setSuccess("")
 
     try {
-      const response = await authFetch(`/api/projects/${params.id}`, {
+      const response = await authFetch(`/api/projects/${projectId}`, {
         method: "PUT",
         body: JSON.stringify(formData),
       })
