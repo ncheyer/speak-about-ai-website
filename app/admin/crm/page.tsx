@@ -97,6 +97,17 @@ interface Deal {
   // Task counts
   pending_tasks_count?: number
   overdue_tasks_count?: number
+  // Lost deal fields
+  lost_reason?: string
+  lost_details?: string
+  lost_date?: string
+  // Won deal fields
+  won_date?: string
+  // Follow-up fields
+  worth_follow_up?: boolean
+  follow_up_date?: string
+  // Competitor info
+  competitor_name?: string
 }
 
 interface Contract {
@@ -223,8 +234,12 @@ export default function AdminCRMPage() {
   }
 
   // Date formatting helper
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'TBD'
+    const date = new Date(dateString)
+    // Check for invalid date or Unix epoch (1969/1970)
+    if (isNaN(date.getTime()) || date.getFullYear() < 1990) return 'TBD'
+    return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -821,7 +836,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
           lost_reason: lostData.reason,
           lost_details: lostData.specificReason,
           worth_follow_up: lostData.worthFollowUp,
-          follow_up_date: lostData.worthFollowUp && lostData.followUpTimeframe !== 'never'
+          follow_up_date: lostData.worthFollowUp && lostData.followUpTimeframe && lostData.followUpTimeframe !== 'never'
             ? calculateFollowUpDate(lostData.followUpTimeframe)
             : null,
           lost_competitor: lostData.competitorWon,
@@ -1541,7 +1556,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                               </div>
                             </TableCell>
                             <TableCell>
-                              {new Date(deal.event_date).toLocaleDateString()}
+                              {formatDate(deal.event_date)}
                             </TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
                               <div className="flex gap-2 flex-wrap">
@@ -1684,7 +1699,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                                       {deal.next_follow_up && (
                                         <div className="flex items-center gap-2 text-orange-600">
                                           <Clock className="h-3 w-3" />
-                                          <span className="text-xs">Follow-up: {new Date(deal.next_follow_up).toLocaleDateString()}</span>
+                                          <span className="text-xs">Follow-up: {formatDate(deal.next_follow_up)}</span>
                                         </div>
                                       )}
                                     </div>
@@ -1895,15 +1910,24 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                           }
 
                           filteredPastDeals = filteredPastDeals.filter(deal => {
-                            const dealDate = new Date(deal.updated_at)
-                            return dealDate >= cutoffDate
+                            // Use the appropriate close date for filtering
+                            const closeDateStr = deal.status === "won" ? deal.won_date : deal.lost_date
+                            if (!closeDateStr) return false // No close date, exclude from time-filtered results
+                            const closeDate = new Date(closeDateStr)
+                            // Check for invalid date (1969/1970 epoch issue)
+                            if (isNaN(closeDate.getTime()) || closeDate.getFullYear() < 1990) return false
+                            return closeDate >= cutoffDate
                           })
                         }
 
-                        // Sort by most recent
-                        filteredPastDeals.sort((a, b) => 
-                          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-                        )
+                        // Sort by most recent close date
+                        filteredPastDeals.sort((a, b) => {
+                          const aDateStr = a.status === "won" ? a.won_date : a.lost_date
+                          const bDateStr = b.status === "won" ? b.won_date : b.lost_date
+                          const aDate = aDateStr ? new Date(aDateStr).getTime() : 0
+                          const bDate = bDateStr ? new Date(bDateStr).getTime() : 0
+                          return bDate - aDate
+                        })
 
                         return filteredPastDeals.map((deal) => (
                           <React.Fragment key={deal.id}>
@@ -2143,7 +2167,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                       <span className="text-gray-600">Company:</span> {contractDeal.company}
                     </div>
                     <div>
-                      <span className="text-gray-600">Date:</span> {new Date(contractDeal.event_date).toLocaleDateString()}
+                      <span className="text-gray-600">Date:</span> {formatDate(contractDeal.event_date)}
                     </div>
                     <div>
                       <span className="text-gray-600">Location:</span> {contractDeal.event_location}
@@ -2165,7 +2189,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                         <div>
                           <span className="text-gray-600">Hotel:</span> {contractDeal.hotel_required ? "Required" : "Not Required"}
                         </div>
-                        {contractDeal.travel_stipend > 0 && (
+                        {(contractDeal.travel_stipend ?? 0) > 0 && (
                           <div className="col-span-2">
                             <span className="text-gray-600">Travel Stipend:</span> ${contractDeal.travel_stipend}
                           </div>
