@@ -5,7 +5,7 @@ import { sendEmail } from "@/lib/email"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-const ADMIN_EMAIL = 'noah@speakabout.ai'
+const ADMIN_EMAIL = 'human@speakabout.ai'
 
 // Public endpoint for submitting applications
 export async function POST(request: NextRequest) {

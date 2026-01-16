@@ -42,9 +42,6 @@ export default function Header() {
             <Link href="/our-team" className="font-semibold transition-colors hover:opacity-80" style={{ color: '#ffffff' }}>
               About Us
             </Link>
-            <Link href="/blog" className="font-semibold transition-colors hover:opacity-80" style={{ color: '#ffffff' }}>
-              Resources
-            </Link>
           </nav>
 
           {/* CTA Button - Desktop */}
@@ -108,14 +105,6 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 About Us
-              </Link>
-              <Link
-                href="/blog"
-                className="font-semibold hover:opacity-80"
-                style={{ color: '#ffffff' }}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Resources
               </Link>
               <div className="pt-4 border-t border-gray-700 space-y-3">
                 <Button
