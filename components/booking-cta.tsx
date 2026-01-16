@@ -19,8 +19,8 @@ export default async function BookingCTA() {
 
   // Contact info - support both combined key and individual keys
   const contactInfoOverride = getFromContent(content, 'home', 'booking-cta', 'contact_info')
-  const whatsappNumber = getFromContent(content, 'home', 'booking-cta', 'whatsapp_number') || '+1 (510) 435-3947'
-  const whatsappLink = getFromContent(content, 'home', 'booking-cta', 'whatsapp_link') || 'https://wa.me/15104353947'
+  const whatsappNumber = getFromContent(content, 'home', 'booking-cta', 'whatsapp_number') || '+1 (415) 665-2442'
+  const whatsappLink = getFromContent(content, 'home', 'booking-cta', 'whatsapp_link') || 'https://wa.me/14156652442'
   const email = getFromContent(content, 'home', 'booking-cta', 'email') || 'human@speakabout.ai'
 
   return (

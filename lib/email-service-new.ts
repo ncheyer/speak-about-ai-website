@@ -282,7 +282,7 @@ export function generateClientConfirmationHtml(deal: Deal, formData: DealFormDat
             <p>If you have any immediate questions or need to provide additional information, please don't hesitate to reach out:</p>
 
             <p>
-              📞 Call: (510) 435-3947<br>
+              📞 Call: +1 (415) 665-2442<br>
               ✉️ Email: human@speakabout.ai
             </p>
 
@@ -352,7 +352,7 @@ ${summary}
 
 If you have any immediate questions or need to provide additional information, please don't hesitate to reach out:
 
-📞 Call: (510) 435-3947
+📞 Call: +1 (415) 665-2442
 ✉️ Email: human@speakabout.ai
 
 ${closingText}

@@ -98,8 +98,8 @@ export default function ThankYouPage() {
                 </p>
                 <p className="flex items-center">
                   <Phone size={20} className={`mr-3 text-[${brandBlue}]`} />
-                  <a href="tel:510-435-3947" className={`text-[${brandBlue}] hover:underline`}>
-                    510-435-3947
+                  <a href="tel:+1-415-665-2442" className={`text-[${brandBlue}] hover:underline`}>
+                    +1 (415) 665-2442
                   </a>
                 </p>
               </div>

@@ -874,7 +874,7 @@ function HomeBookingCTAPreview({
   const primaryCtaLink = content['home.booking-cta.primary_cta_link'] || '/contact?source=home_page_cta_main'
   const secondaryCtaText = content['home.booking-cta.secondary_cta_text'] || 'Explore All Speakers'
   const secondaryCtaLink = content['home.booking-cta.secondary_cta_link'] || '/speakers'
-  const whatsappNumber = content['home.booking-cta.whatsapp_number'] || '+1 (510) 435-3947'
+  const whatsappNumber = content['home.booking-cta.whatsapp_number'] || '+1 (415) 665-2442'
   const email = content['home.booking-cta.email'] || 'human@speakabout.ai'
 
   return (

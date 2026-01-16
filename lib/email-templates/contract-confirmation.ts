@@ -76,7 +76,7 @@ export function generateContractConfirmationEmail(data: ContractConfirmationEmai
     </div>
     <div class="footer">
       <p>Speak About AI | 651 Homer Avenue, Palo Alto, CA 94301<br>
-      Phone: (510) 435-3947 | Email: info@speakaboutai.com</p>
+      Phone: +1 (415) 665-2442 | Email: info@speakaboutai.com</p>
     </div>
   </div>
 </body>
@@ -118,7 +118,7 @@ The Speak About AI Team
 
 --
 Speak About AI | 651 Homer Avenue, Palo Alto, CA 94301
-Phone: (510) 435-3947 | Email: info@speakaboutai.com
+Phone: +1 (415) 665-2442 | Email: info@speakaboutai.com
   `
   
   return { subject, html, text }

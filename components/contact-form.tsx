@@ -106,7 +106,7 @@ function ContactFormContent() {
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-medium text-gray-900">Call Us</h3>
-                    <p className="mt-1 text-gray-600">(510) 435-3947</p>
+                    <p className="mt-1 text-gray-600">+1 (415) 665-2442</p>
                     <p className="mt-1 text-sm text-gray-500">Monday-Friday, 9am-6pm PT</p>
                   </div>
                 </div>

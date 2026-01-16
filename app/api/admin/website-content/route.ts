@@ -156,7 +156,7 @@ const DEFAULT_CONTENT = [
   { page: 'services', section: 'cta', content_key: 'title', content_value: 'Ready to Elevate Your Event?' },
   { page: 'services', section: 'cta', content_key: 'subtitle', content_value: 'Let us connect you with the perfect AI expert to inspire your audience and drive meaningful conversations about the future of artificial intelligence.' },
   { page: 'services', section: 'cta', content_key: 'button_text', content_value: 'Book Speaker Today' },
-  { page: 'services', section: 'cta', content_key: 'phone_number', content_value: '+1-510-435-3947' },
+  { page: 'services', section: 'cta', content_key: 'phone_number', content_value: '+1-415-665-2442' },
   { page: 'services', section: 'cta', content_key: 'email', content_value: 'human@speakabout.ai' },
   { page: 'services', section: 'cta', content_key: 'stat1_value', content_value: '24 Hours' },
   { page: 'services', section: 'cta', content_key: 'stat1_label', content_value: 'Average Response Time' },
@@ -187,13 +187,13 @@ const DEFAULT_CONTENT = [
   // Home Page - Booking CTA (from components/booking-cta.tsx)
   { page: 'home', section: 'booking-cta', content_key: 'title', content_value: 'Ready to Book Your AI Keynote Speaker?' },
   { page: 'home', section: 'booking-cta', content_key: 'subtitle', content_value: 'Connect with our expert team to find the perfect AI speaker for your event. We make the booking process seamless and efficient.' },
-  { page: 'home', section: 'booking-cta', content_key: 'contact_info', content_value: 'Text or call us at +1 (510) 435-3947 on WhatsApp or reach out to human@speakabout.ai by email' },
+  { page: 'home', section: 'booking-cta', content_key: 'contact_info', content_value: 'Text or call us at +1 (415) 665-2442 on WhatsApp or reach out to human@speakabout.ai by email' },
   { page: 'home', section: 'booking-cta', content_key: 'primary_cta_text', content_value: 'Get Speaker Recommendations' },
   { page: 'home', section: 'booking-cta', content_key: 'primary_cta_link', content_value: '/contact?source=home_page_cta_main' },
   { page: 'home', section: 'booking-cta', content_key: 'secondary_cta_text', content_value: 'Explore All Speakers' },
   { page: 'home', section: 'booking-cta', content_key: 'secondary_cta_link', content_value: '/speakers' },
-  { page: 'home', section: 'booking-cta', content_key: 'whatsapp_number', content_value: '+1 (510) 435-3947' },
-  { page: 'home', section: 'booking-cta', content_key: 'whatsapp_link', content_value: 'https://wa.me/15104353947' },
+  { page: 'home', section: 'booking-cta', content_key: 'whatsapp_number', content_value: '+1 (415) 665-2442' },
+  { page: 'home', section: 'booking-cta', content_key: 'whatsapp_link', content_value: 'https://wa.me/14156652442' },
   { page: 'home', section: 'booking-cta', content_key: 'email', content_value: 'human@speakabout.ai' },
 
   // Images - Home Page

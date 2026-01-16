@@ -75,7 +75,7 @@ const organizationSchema = {
   ],
   contactPoint: {
     "@type": "ContactPoint",
-    telephone: "+1-510-435-3947",
+    telephone: "+1-415-665-2442",
     contactType: "sales",
     email: "hello@speakabout.ai",
     availableLanguage: ["en"],

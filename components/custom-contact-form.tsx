@@ -1055,8 +1055,8 @@ export function CustomContactForm({
               <Phone className="h-5 w-5 text-gray-400 mt-0.5" />
               <div>
                 <p className="font-medium text-gray-900">Call us directly</p>
-                <a href="tel:+1-510-435-3947" className="text-blue-600 hover:underline">
-                  (510) 435-3947
+                <a href="tel:+1-415-665-2442" className="text-blue-600 hover:underline">
+                  +1 (415) 665-2442
                 </a>
               </div>
             </div>

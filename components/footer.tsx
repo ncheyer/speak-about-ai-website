@@ -25,7 +25,7 @@ export default function Footer() {
             <div className="space-y-2">
               <div className="flex items-center">
                 <Phone className="w-4 h-4 mr-3 text-[#1E68C6]" />
-                <span className="text-[#EAEAEE]">(510) 435-3947</span>
+                <span className="text-[#EAEAEE]">+1 (415) 665-2442</span>
               </div>
               <div className="flex items-center">
                 <Mail className="w-4 h-4 mr-3 text-[#1E68C6]" />
@@ -128,7 +128,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-[#EAEAEE] text-sm mb-4 md:mb-0">© 2025 Speak About AI. All rights reserved.</div>
+            <div className="text-[#EAEAEE] text-sm mb-4 md:mb-0">© 2026 Speak About AI. All rights reserved.</div>
             <div className="flex items-center space-x-6">
               <Link href="/privacy" className="text-[#EAEAEE] hover:text-white text-sm">
                 Privacy Policy

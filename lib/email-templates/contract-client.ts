@@ -82,7 +82,7 @@ export function generateClientContractEmail(data: ContractClientEmailData): { su
     </div>
     <div class="footer">
       <p>Speak About AI | 651 Homer Avenue, Palo Alto, CA 94301<br>
-      Phone: (510) 435-3947 | Email: info@speakaboutai.com</p>
+      Phone: +1 (415) 665-2442 | Email: info@speakaboutai.com</p>
       <p style="font-size: 12px;">This signing link will expire in 30 days. ${data.ccEmails && data.ccEmails.length > 0 ? `CC: ${data.ccEmails.join(', ')}` : ''}</p>
     </div>
   </div>
@@ -129,7 +129,7 @@ CEO, Speak About AI
 
 --
 Speak About AI | 651 Homer Avenue, Palo Alto, CA 94301
-Phone: (510) 435-3947 | Email: info@speakaboutai.com
+Phone: +1 (415) 665-2442 | Email: info@speakaboutai.com
 This signing link will expire in 30 days. ${data.ccEmails && data.ccEmails.length > 0 ? `CC: ${data.ccEmails.join(', ')}` : ''}
   `
   

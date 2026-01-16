@@ -264,7 +264,7 @@ export default function PrivacyPolicyPage() {
                   <strong>Speak About AI</strong>
                 </p>
                 <p className="text-gray-700 mb-2">Email: human@speakabout.ai</p>
-                <p className="text-gray-700 mb-2">Phone: (510) 435-3947</p>
+                <p className="text-gray-700 mb-2">Phone: +1 (415) 665-2442</p>
                 <p className="text-gray-700">Address: Palo Alto, CA</p>
               </div>
             </section>

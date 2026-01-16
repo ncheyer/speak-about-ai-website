@@ -230,7 +230,7 @@ export default function LeadershipBusinessStrategyClientPage({ speakers }: Leade
           </div>
           <div className="mt-8 text-lg">
             <p>
-              Call us directly: <span className="font-semibold">(510) 435-3947</span>
+              Call us directly: <span className="font-semibold">+1 (415) 665-2442</span>
             </p>
           </div>
         </div>
