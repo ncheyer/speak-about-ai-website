@@ -1,4 +1,4 @@
-import { Brain, Building2, BookOpen, Rocket, Users } from "lucide-react"
+import { Brain, BookOpen, Rocket } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
@@ -12,25 +12,11 @@ export default function FounderNextGen() {
       status: "Get Access",
     },
     {
-      icon: Building2,
-      title: "Vendor Directory",
-      description: "Curated list of trusted event vendors and service providers",
-      link: "/vendor-directory",
-      status: "Browse Now",
-    },
-    {
       icon: BookOpen,
       title: "Event Planning Resources",
       description: "Guides, templates, and best practices for booking speakers and running successful events",
       link: "/blog",
       status: "Explore",
-    },
-    {
-      icon: Users,
-      title: "AI-Focused Community",
-      description: "Connect with event planners leveraging AI and stay ahead of the latest trends",
-      link: "/event-professionals-whatsapp",
-      status: "Join Now",
     },
   ]
 
@@ -51,7 +37,7 @@ export default function FounderNextGen() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {resources.map((resource, index) => (
             <Link
               key={index}

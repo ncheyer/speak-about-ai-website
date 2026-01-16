@@ -96,23 +96,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Resources */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Resources</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/vendor-directory" className="text-[#EAEAEE] hover:text-white">
-                  Vendor Directory
-                </Link>
-              </li>
-              <li>
-                <Link href="/event-professionals-whatsapp" className="text-[#EAEAEE] hover:text-white">
-                  Event Professionals Group
-                </Link>
-              </li>
-            </ul>
-          </div>
-
           {/* For Speakers */}
           <div>
             <h3 className="text-lg font-semibold mb-4">For Speakers</h3>

@@ -53,9 +53,6 @@ export async function middleware(request: NextRequest) {
     '/api',
     '/clients',
     '/apply',
-    '/vendors',
-    '/vendor-directory',
-    '/event-professionals-whatsapp',
     '/privacy',
     '/terms',
   ]
