@@ -6,7 +6,6 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MapPin, Linkedin, Globe, Mail, ArrowLeft, Play, Quote, Building, Award, Calendar, CheckCircle, BookOpen, Trophy, Download, Mic, Users, Clock, Briefcase, Star, MessageSquare } from "lucide-react"
 import type { Speaker } from "@/lib/speakers-data"
 import { SpeakerRelatedBlogPosts } from "@/components/speaker-related-blog-posts"
@@ -187,28 +186,127 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                   )}
                 </div>
 
-                {/* Tabs for Content Organization */}
-                <Tabs defaultValue="about" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100">
-                    <TabsTrigger
-                      value="about"
-                      className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
-                    >
-                      About
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="speaking"
-                      className="text-sm font-semibold data-[state=active]:bg-[#1E68C6] data-[state=active]:text-white"
-                    >
-                      Speaking & Experience
-                    </TabsTrigger>
-                  </TabsList>
+                {/* Main Content - Single Page Layout */}
+                <div className="space-y-8">
 
-                  {/* About Tab */}
-                  <TabsContent value="about" className="space-y-8">
+                    {/* Videos - At the top */}
+                    {speaker.videos && speaker.videos.length > 0 && (
+                      <section className="p-8 rounded-xl bg-gradient-to-br from-blue-50 via-slate-50 to-blue-50 border border-blue-100">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                          <Play className="w-8 h-8 mr-3 text-[#1E68C6]" />
+                          Speaker Videos & Media
+                        </h2>
+                        <div className="grid md:grid-cols-2 gap-6">
+                          {speaker.videos.map((video, index) => {
+                            // Function to extract YouTube video ID
+                            const getYouTubeId = (url: string) => {
+                              const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+                              const match = url?.match(regExp)
+                              return (match && match[2].length === 11) ? match[2] : null
+                            }
 
+                            const getYouTubeThumbnail = (url: string) => {
+                              const videoId = getYouTubeId(url)
+                              if (videoId) {
+                                return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+                              }
+                              return null
+                            }
 
-                    {/* About Section - Only show if bio exists */}
+                            const thumbnail = video.thumbnail || getYouTubeThumbnail(video.url) || "/placeholder.svg"
+
+                            return (
+                              <a
+                                key={index}
+                                href={video.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group block"
+                              >
+                                <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
+                                  <div className="aspect-video bg-gray-100 relative">
+                                    <img
+                                      src={thumbnail}
+                                      alt={video.title}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement
+                                        if (thumbnail.includes('maxresdefault')) {
+                                          target.src = thumbnail.replace('maxresdefault', 'hqdefault')
+                                        }
+                                      }}
+                                    />
+                                    <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
+                                      <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                        <Play className="w-8 h-8 text-[#1E68C6] ml-1" />
+                                      </div>
+                                    </div>
+                                    {video.duration && (
+                                      <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                                        {video.duration}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="p-4 bg-white">
+                                    <h3 className="font-semibold text-gray-900 group-hover:text-[#1E68C6] transition-colors duration-300">
+                                      {video.title}
+                                    </h3>
+                                    {video.source && (
+                                      <p className="text-sm text-gray-500 mt-1">{video.source}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </a>
+                            )
+                          })}
+                        </div>
+                      </section>
+                    )}
+
+                    {/* Speaking Programs - Second */}
+                    {speaker.programs && Array.isArray(speaker.programs) && speaker.programs.length > 0 && (
+                      <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                          Available Speaking Programs
+                        </h2>
+                        <div className="space-y-6">
+                          {speaker.programs.map((program, index) => {
+                            const isString = typeof program === 'string'
+                            const title = isString ? program : program.title
+                            const description = isString ? null : program.description
+                            const duration = isString ? null : program.duration
+                            const format = isString ? null : program.format
+
+                            return (
+                              <div key={index} className="border-l-4 border-[#1E68C6] pl-6">
+                                <div className="flex items-start">
+                                  <Calendar className="w-5 h-5 mr-3 mt-1 text-[#1E68C6] flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                      {title}
+                                      {format && (
+                                        <Badge className="ml-3 bg-gray-100 text-gray-700">{format}</Badge>
+                                      )}
+                                    </h3>
+                                    {description && (
+                                      <p className="text-gray-600 mb-2">{description}</p>
+                                    )}
+                                    {duration && (
+                                      <p className="text-sm text-gray-500">
+                                        <Clock className="w-4 h-4 inline mr-1" />
+                                        Duration: {duration}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </section>
+                    )}
+
+                    {/* About Section */}
                     {speaker.bio && (
                       <section>
                         <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
@@ -247,127 +345,6 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         <p className="text-lg text-gray-700">
                           Contact Speak About AI to learn more about booking {speaker.name} for your next event.
                         </p>
-                      </section>
-                    )}
-                  </TabsContent>
-
-                  {/* Speaking & Experience Tab - Combines Programs, Experience, and Media */}
-                  <TabsContent value="speaking" className="space-y-8">
-
-                    {/* Videos */}
-                {speaker.videos && speaker.videos.length > 0 && (
-                  <section className="mb-12 p-8 rounded-xl bg-gradient-to-br from-blue-50 via-slate-50 to-blue-50 border border-blue-100">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                      <Play className="w-8 h-8 mr-3 text-[#1E68C6]" />
-                      Speaker Videos & Media
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {speaker.videos.map((video, index) => {
-                        // Function to extract YouTube video ID
-                        const getYouTubeId = (url: string) => {
-                          const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
-                          const match = url?.match(regExp)
-                          return (match && match[2].length === 11) ? match[2] : null
-                        }
-
-                        const getYouTubeThumbnail = (url: string) => {
-                          const videoId = getYouTubeId(url)
-                          if (videoId) {
-                            return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
-                          }
-                          return null
-                        }
-
-                        const thumbnail = video.thumbnail || getYouTubeThumbnail(video.url) || "/placeholder.svg"
-
-                        return (
-                          <a
-                            key={index}
-                            href={video.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group block"
-                          >
-                            <div className="relative rounded-lg overflow-hidden shadow-md transition-all duration-300 group-hover:shadow-xl">
-                              <div className="aspect-video bg-gray-100 relative">
-                                <img
-                                  src={thumbnail}
-                                  alt={video.title}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement
-                                    if (thumbnail.includes('maxresdefault')) {
-                                      target.src = thumbnail.replace('maxresdefault', 'hqdefault')
-                                    }
-                                  }}
-                                />
-                                <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
-                                  <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                    <Play className="w-8 h-8 text-[#1E68C6] ml-1" />
-                                  </div>
-                                </div>
-                                {video.duration && (
-                                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
-                                    {video.duration}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="p-4 bg-white">
-                                <h3 className="font-semibold text-gray-900 group-hover:text-[#1E68C6] transition-colors duration-300">
-                                  {video.title}
-                                </h3>
-                                {video.source && (
-                                  <p className="text-sm text-gray-500 mt-1">{video.source}</p>
-                                )}
-                              </div>
-                            </div>
-                          </a>
-                        )
-                      })}
-                    </div>
-                  </section>
-                    )}
-
-                    {/* Speaking Programs */}
-                    {speaker.programs && Array.isArray(speaker.programs) && speaker.programs.length > 0 && (
-                  <section className="mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                      Available Speaking Programs
-                    </h2>
-                    <div className="space-y-6">
-                      {speaker.programs.map((program, index) => {
-                        const isString = typeof program === 'string'
-                        const title = isString ? program : program.title
-                        const description = isString ? null : program.description
-                        const duration = isString ? null : program.duration
-                        const format = isString ? null : program.format
-                        
-                        return (
-                          <div key={index} className="border-l-4 border-[#1E68C6] pl-6">
-                            <div className="flex items-start">
-                              <Calendar className="w-5 h-5 mr-3 mt-1 text-[#1E68C6] flex-shrink-0" />
-                              <div className="flex-1">
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                  {title}
-                                  {format && (
-                                    <Badge className="ml-3 bg-gray-100 text-gray-700">{format}</Badge>
-                                  )}
-                                </h3>
-                                {description && (
-                                  <p className="text-gray-600 mb-2">{description}</p>
-                                )}
-                                {duration && (
-                                  <p className="text-sm text-gray-500">
-                                    <Clock className="w-4 h-4 inline mr-1" />
-                                    Duration: {duration}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
                       </section>
                     )}
 
@@ -411,25 +388,6 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                                   </p>
                                 )}
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      </section>
-                    )}
-
-                    {/* Keynote Speaking Topics - MOVED BELOW PROGRAMS */}
-                    {speaker.topics && speaker.topics.length > 0 && (
-                      <section>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                          Keynote Speaking Topics
-                        </h2>
-                        <div className="grid md:grid-cols-2 gap-6">
-                          {speaker.topics.map((topic, index) => (
-                            <div key={index} className="border-l-4 border-[#1E68C6] pl-4">
-                              <h3 className="text-xl font-semibold text-gray-900 mb-2">{topic}</h3>
-                              <p className="text-gray-600">
-                                Expert insights on {topic.toLowerCase()} for your audience
-                              </p>
                             </div>
                           ))}
                         </div>
@@ -632,8 +590,7 @@ const OptimizedSpeakerProfile: React.FC<OptimizedSpeakerProfileProps> = ({ speak
                         </div>
                       </section>
                     )}
-                  </TabsContent>
-                </Tabs>
+                </div>
 
                 {/* Related Blog Posts - Show articles featuring this speaker */}
                 <SpeakerRelatedBlogPosts
