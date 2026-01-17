@@ -95,7 +95,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { formatCurrency, formatDate } from "@/lib/utils"
-import type { Proposal } from "@/lib/proposals-db"
 import { authGet, authPost, authPut, authPatch, authDelete, authFetch } from "@/lib/auth-fetch"
 import { StatsSkeleton, TableSkeleton, CardGridSkeleton } from "@/components/admin-loading-skeletons"
 
@@ -115,38 +114,6 @@ interface RealTimeAnalyticsData {
 
 interface AnalyticsData {
   overview?: AnalyticsOverviewData
-}
-
-interface SEOKeywordData {
-  Keyword: string
-  Position: string
-  'Search Volume': string
-  CPC?: string
-  Url?: string
-  'Traffic (%)'?: string
-}
-
-interface SEOAnalysisData {
-  lowHangingFruit: SEOKeywordData[]
-  highValueOpportunities: SEOKeywordData[]
-  positionRanges: {
-    top3: number
-    top10: number
-    top20: number
-    top50: number
-    top100: number
-  }
-}
-
-interface SEOData {
-  overview: {
-    Rank: string
-    'Organic Keywords': string
-    'Organic Traffic': string
-    'Organic Cost': string
-  }
-  analysis: SEOAnalysisData
-  error?: string
 }
 
 // Type definitions
@@ -295,7 +262,6 @@ function MasterAdminPanelContent() {
   const [speakers, setSpeakers] = useState<Speaker[]>([])
   const [deals, setDeals] = useState<Deal[]>([])
   const [projects, setProjects] = useState<Project[]>([])
-  const [proposals, setProposals] = useState<Proposal[]>([])
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [realTimeData, setRealTimeData] = useState<RealTimeAnalyticsData | null>(null)
@@ -305,7 +271,6 @@ function MasterAdminPanelContent() {
   const [speakersLoading, setSpeakersLoading] = useState(true)
   const [dealsLoading, setDealsLoading] = useState(true)
   const [projectsLoading, setProjectsLoading] = useState(true)
-  const [proposalsLoading, setProposalsLoading] = useState(true)
   const [invoicesLoading, setInvoicesLoading] = useState(true)
   const [analyticsLoading, setAnalyticsLoading] = useState(true)
   
@@ -380,23 +345,6 @@ function MasterAdminPanelContent() {
     }
   }
 
-  const loadProposals = async () => {
-    try {
-      setProposalsLoading(true)
-
-      const response = await authGet("/api/proposals")
-      
-      if (response.ok) {
-        const data = await response.json()
-        setProposals(data.proposals || [])
-      }
-    } catch (error) {
-      console.error("Error loading proposals:", error)
-    } finally {
-      setProposalsLoading(false)
-    }
-  }
-
   const loadInvoices = async () => {
     try {
       setInvoicesLoading(true)
@@ -461,7 +409,6 @@ function MasterAdminPanelContent() {
       await Promise.all([
         loadDeals(),
         loadProjects(),
-        loadProposals(),
         loadInvoices(),
         loadSpeakers(),
         loadAnalytics()
@@ -565,7 +512,6 @@ function MasterAdminPanelContent() {
     // Load all data
     loadDeals()
     loadProjects()
-    loadProposals()
     loadInvoices()
     loadSpeakers()
     loadAnalytics()
@@ -659,11 +605,6 @@ function MasterAdminPanelContent() {
   // Get recent deals
   const recentDeals = deals
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 5)
-
-  // Get active proposals
-  const activeProposals = proposals
-    .filter(p => ["sent", "viewed"].includes(p.status))
     .slice(0, 5)
 
   if (!isLoggedIn) {
@@ -874,14 +815,6 @@ function MasterAdminPanelContent() {
                 <span className="sm:hidden">CRM</span>
               </TabsTrigger>
               <TabsTrigger
-                value="firm-offers"
-                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
-              >
-                <FileSignature className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Firm Offers</span>
-                <span className="sm:hidden">Offers</span>
-              </TabsTrigger>
-              <TabsTrigger
                 value="projects"
                 className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
@@ -971,26 +904,10 @@ function MasterAdminPanelContent() {
                       <Button
                         className="w-full justify-start"
                         variant="outline"
-                        onClick={() => router.push("/admin/proposals/new")}
-                      >
-                        <FileText className="h-4 w-4 mr-2" />
-                        Create Proposal
-                      </Button>
-                      <Button
-                        className="w-full justify-start"
-                        variant="outline"
                         onClick={() => router.push("/admin/invoicing")}
                       >
                         <Receipt className="h-4 w-4 mr-2" />
                         Generate Invoice
-                      </Button>
-                      <Button
-                        className="w-full justify-start"
-                        variant="outline"
-                        onClick={() => router.push("/admin/contracts-hub")}
-                      >
-                        <FileSignature className="h-4 w-4 mr-2" />
-                        Create Contract
                       </Button>
                       <Button
                         className="w-full justify-start"
@@ -1046,10 +963,10 @@ function MasterAdminPanelContent() {
                             <li>• Syncs every 15 minutes automatically</li>
                           </ul>
                         </div>
-                        <Link href="/admin/leads">
+                        <Link href="/admin/crm">
                           <Button variant="outline" size="sm" className="w-full">
                             <Eye className="h-4 w-4 mr-2" />
-                            View Email Activity in Leads
+                            View Email Activity in CRM
                           </Button>
                         </Link>
                       </div>
@@ -1127,42 +1044,6 @@ function MasterAdminPanelContent() {
                   </CardContent>
                 </Card>
 
-                {/* Active Proposals */}
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle>Active Proposals</CardTitle>
-                      <Badge variant="secondary">{activeProposals.length}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {activeProposals.length === 0 ? (
-                      <p className="text-sm text-gray-500 text-center py-4">No active proposals</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {activeProposals.map((proposal) => (
-                          <div key={proposal.id} className="p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="text-sm font-medium">{proposal.client_name}</p>
-                                <p className="text-xs text-gray-500">{proposal.title}</p>
-                              </div>
-                              <Badge 
-                                variant={proposal.status === "viewed" ? "secondary" : "outline"}
-                                className="text-xs"
-                              >
-                                {proposal.status}
-                              </Badge>
-                            </div>
-                            <p className="text-xs font-medium text-gray-600 mt-1">
-                              {formatCurrency(proposal.total_investment)}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
               </div>
 
               {/* Recent Activity and Key Insights */}
@@ -1364,124 +1245,6 @@ function MasterAdminPanelContent() {
                   </CardContent>
                 </Card>
               )}
-            </TabsContent>
-
-            {/* Firm Offers Tab */}
-            <TabsContent value="firm-offers" className="space-y-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-bold">Firm Offer Sheets</h2>
-                  <p className="text-gray-600">Create and manage firm offers for deals in negotiation</p>
-                </div>
-                <Button
-                  className="bg-amber-500 hover:bg-amber-600"
-                  onClick={() => router.push('/admin/firm-offers/new')}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Firm Offer
-                </Button>
-              </div>
-
-              {/* Negotiation Deals Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Deals in Negotiation</p>
-                      <p className="text-2xl font-bold">{deals.filter(d => d.status === 'negotiation').length}</p>
-                    </div>
-                    <FileSignature className="h-8 w-8 text-amber-400" />
-                  </div>
-                </Card>
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Total Value</p>
-                      <p className="text-2xl font-bold">
-                        ${deals.filter(d => d.status === 'negotiation').reduce((sum, d) => sum + parseFloat(d.value || '0'), 0).toLocaleString()}
-                      </p>
-                    </div>
-                    <DollarSign className="h-8 w-8 text-green-400" />
-                  </div>
-                </Card>
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Pending Firm Offers</p>
-                      <p className="text-2xl font-bold">{deals.filter(d => d.status === 'negotiation' && !d.project_id).length}</p>
-                    </div>
-                    <Clock className="h-8 w-8 text-orange-400" />
-                  </div>
-                </Card>
-              </div>
-
-              {/* Deals in Negotiation List */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Deals Ready for Firm Offer</CardTitle>
-                  <CardDescription>Click on a deal to create or view its firm offer sheet</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Deal</TableHead>
-                        <TableHead>Speaker</TableHead>
-                        <TableHead>Event Date</TableHead>
-                        <TableHead>Value</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {deals.filter(d => d.status === 'negotiation').map(deal => (
-                        <TableRow key={deal.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{deal.title || deal.company}</p>
-                              <p className="text-sm text-gray-500">{deal.contact_name}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>{deal.speaker_name || '-'}</TableCell>
-                          <TableCell>
-                            {deal.event_date ? new Date(deal.event_date).toLocaleDateString() : '-'}
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            ${parseFloat(deal.value || '0').toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            {deal.project_id ? (
-                              <Badge className="bg-green-100 text-green-800">Firm Offer Created</Badge>
-                            ) : (
-                              <Badge className="bg-amber-100 text-amber-800">Pending</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {deal.project_id ? (
-                              <Button size="sm" variant="outline" onClick={() => router.push(`/admin/projects/${deal.project_id}/edit`)}>
-                                <Eye className="h-4 w-4 mr-1" />
-                                View
-                              </Button>
-                            ) : (
-                              <Button size="sm" className="bg-amber-500 hover:bg-amber-600" onClick={() => router.push(`/admin/projects?createFromDeal=${deal.id}`)}>
-                                <Plus className="h-4 w-4 mr-1" />
-                                Create
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {deals.filter(d => d.status === 'negotiation').length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                            No deals in negotiation. Move deals to negotiation status in the CRM tab.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
             </TabsContent>
 
             {/* Projects Tab */}
@@ -1741,30 +1504,35 @@ function MasterAdminPanelContent() {
 
             {/* Marketing Tab */}
             <TabsContent value="marketing" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-pink-500" />
-                        SEO & Marketing Dashboard
-                      </CardTitle>
-                      <CardDescription>
-                        Comprehensive SEO analysis powered by Semrush
-                      </CardDescription>
-                    </div>
-                    <Link href="/admin/seo-analysis" target="_blank">
-                      <Button size="sm" variant="outline">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Open Full Dashboard
-                      </Button>
-                    </Link>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <SEODashboardEmbed />
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/admin/blog')}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-purple-500" />
+                      Blog Management
+                    </CardTitle>
+                    <CardDescription>Create and manage blog posts</CardDescription>
+                  </CardHeader>
+                </Card>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/admin/newsletter')}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Mail className="h-5 w-5 text-pink-500" />
+                      Newsletter
+                    </CardTitle>
+                    <CardDescription>Manage email subscribers</CardDescription>
+                  </CardHeader>
+                </Card>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/admin/directory')}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Globe className="h-5 w-5 text-blue-500" />
+                      Vendor Directory
+                    </CardTitle>
+                    <CardDescription>Manage vendor listings</CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
@@ -1773,220 +1541,3 @@ function MasterAdminPanelContent() {
   )
 }
 
-// SEO Dashboard Embed Component
-function SEODashboardEmbed() {
-  const [seoData, setSeoData] = useState<SEOData | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/seo/analyze')
-      .then(res => res.json())
-      .then(data => {
-        setSeoData(data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error('Failed to load SEO data:', err)
-        setLoading(false)
-      })
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="text-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto text-pink-500" />
-        <p className="mt-4 text-gray-600">Loading SEO analytics...</p>
-      </div>
-    )
-  }
-
-  if (!seoData || seoData.error) {
-    return (
-      <div className="text-center py-12">
-        <AlertCircle className="h-8 w-8 mx-auto text-red-500" />
-        <p className="mt-4 text-gray-600">Failed to load SEO data</p>
-      </div>
-    )
-  }
-
-  const { overview, analysis } = seoData
-
-  return (
-    <div className="space-y-6">
-      {/* Overview Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        <Card className="border-pink-200 bg-pink-50">
-          <CardHeader className="pb-2 md:pb-3">
-            <CardDescription className="text-pink-800 text-xs md:text-sm truncate">Domain Rank</CardDescription>
-            <CardTitle className="text-lg md:text-2xl text-pink-900">
-              {parseInt(overview.Rank).toLocaleString()}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-
-        <Card className="border-blue-200 bg-blue-50">
-          <CardHeader className="pb-2 md:pb-3">
-            <CardDescription className="text-blue-800 text-xs md:text-sm truncate">Keywords</CardDescription>
-            <CardTitle className="text-lg md:text-2xl text-blue-900">
-              {overview['Organic Keywords']}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-
-        <Card className="border-green-200 bg-green-50">
-          <CardHeader className="pb-2 md:pb-3">
-            <CardDescription className="text-green-800 text-xs md:text-sm truncate">Traffic</CardDescription>
-            <CardTitle className="text-lg md:text-2xl text-green-900">
-              {overview['Organic Traffic']}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-
-        <Card className="border-purple-200 bg-purple-50">
-          <CardHeader className="pb-2 md:pb-3">
-            <CardDescription className="text-purple-800 text-xs md:text-sm truncate">Value</CardDescription>
-            <CardTitle className="text-lg md:text-2xl text-purple-900 truncate">
-              ${overview['Organic Cost']}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
-      {/* Position Distribution */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Keyword Position Distribution
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-5 gap-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">{analysis.positionRanges.top3}</div>
-              <div className="text-sm text-gray-600">Top 3</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">{analysis.positionRanges.top10}</div>
-              <div className="text-sm text-gray-600">Top 10</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-yellow-600">{analysis.positionRanges.top20}</div>
-              <div className="text-sm text-gray-600">Top 20</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600">{analysis.positionRanges.top50}</div>
-              <div className="text-sm text-gray-600">Top 50</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-600">{analysis.positionRanges.top100}</div>
-              <div className="text-sm text-gray-600">Top 100</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Top Opportunities */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Low-Hanging Fruit */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Target className="h-5 w-5 text-orange-500" />
-              Low-Hanging Fruit
-            </CardTitle>
-            <CardDescription>
-              Keywords ranking #4-20 that can be optimized
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {analysis.lowHangingFruit.slice(0, 5).map((kw: SEOKeywordData, i: number) => (
-                <div key={i} className="border-b pb-3 last:border-0">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm">{kw.Keyword}</span>
-                    <Badge variant="outline" className="text-xs">
-                      #{kw.Position}
-                    </Badge>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {parseInt(kw['Search Volume']).toLocaleString()} searches/mo
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Link href="/admin/seo-analysis" target="_blank">
-              <Button size="sm" variant="ghost" className="w-full mt-4">
-                View All {analysis.lowHangingFruit.length} Opportunities
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        {/* High-Value Opportunities */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Award className="h-5 w-5 text-blue-500" />
-              High-Value Keywords
-            </CardTitle>
-            <CardDescription>
-              High-volume keywords on page 2-3
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {analysis.highValueOpportunities.slice(0, 5).map((kw: SEOKeywordData, i: number) => (
-                <div key={i} className="border-b pb-3 last:border-0">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm">{kw.Keyword}</span>
-                    <Badge variant="outline" className="text-xs">
-                      #{kw.Position}
-                    </Badge>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {parseInt(kw['Search Volume']).toLocaleString()} searches/mo
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Link href="/admin/seo-analysis" target="_blank">
-              <Button size="sm" variant="ghost" className="w-full mt-4">
-                View All {analysis.highValueOpportunities.length} Keywords
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card className="bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200">
-        <CardHeader>
-          <CardTitle className="text-lg">Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link href="/admin/seo-analysis?tab=recommendations" target="_blank">
-              <Button variant="outline" className="w-full justify-start">
-                <Target className="h-4 w-4 mr-2" />
-                View Recommendations
-              </Button>
-            </Link>
-            <Link href="/admin/seo-analysis?tab=competitors" target="_blank">
-              <Button variant="outline" className="w-full justify-start">
-                <Users className="h-4 w-4 mr-2" />
-                Competitor Analysis
-              </Button>
-            </Link>
-            <Link href="/admin/seo-analysis?tab=topics" target="_blank">
-              <Button variant="outline" className="w-full justify-start">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Keyword Topics
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
