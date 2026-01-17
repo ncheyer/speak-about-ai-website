@@ -973,25 +973,35 @@ function MasterAdminPanelContent() {
                         </div>
                       </div>
 
-                      {/* Urgent Follow-ups */}
-                      {deals.filter(d => d.next_follow_up && new Date(d.next_follow_up) <= new Date()).length > 0 && (
-                        <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 bg-red-100 rounded-lg">
-                              <AlertCircle className="h-4 w-4 text-red-600" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-red-900">Overdue Follow-ups</p>
-                              <p className="text-xs text-red-700 mt-1">
-                                {deals.filter(d => d.next_follow_up && new Date(d.next_follow_up) <= new Date()).length} deals require immediate attention
-                              </p>
-                              <Button size="sm" variant="outline" className="mt-2 text-xs" onClick={() => router.push("/admin/crm")}>
-                                View Deals
-                              </Button>
+                      {/* Urgent Projects - Event in Final Week */}
+                      {(() => {
+                        const urgentProjects = projects.filter(p => {
+                          if (["completed", "cancelled"].includes(p.status)) return false
+                          if (!p.event_date) return false
+                          const eventDate = new Date(p.event_date)
+                          const now = new Date()
+                          const daysUntil = Math.ceil((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+                          return daysUntil <= 7 && daysUntil >= 0
+                        })
+                        return urgentProjects.length > 0 ? (
+                          <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 bg-red-100 rounded-lg">
+                                <AlertCircle className="h-4 w-4 text-red-600" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-red-900">Urgent Projects</p>
+                                <p className="text-xs text-red-700 mt-1">
+                                  {urgentProjects.length} project{urgentProjects.length > 1 ? 's' : ''} with events in the next 7 days
+                                </p>
+                                <Button size="sm" variant="outline" className="mt-2 text-xs" onClick={() => router.push("/admin/projects")}>
+                                  View Projects
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        ) : null
+                      })()}
 
                       {/* Pending Payments */}
                       {financialStats.pendingPayments > 0 && (
