@@ -33,7 +33,6 @@ import {
   Star,
   MapPin,
   Mail,
-  Globe,
   Loader2,
   TrendingUp,
   TrendingDown,
@@ -167,6 +166,8 @@ interface Deal {
   commission_percentage?: number
   commission_amount?: number
   payment_status?: string
+  won_date?: string
+  lost_date?: string
 }
 
 interface Project {
@@ -255,8 +256,6 @@ function MasterAdminPanelContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [lastSync, setLastSync] = useState<Date | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
-  const [gmailConnected, setGmailConnected] = useState<string | null>(null)
-  const [gmailConnecting, setGmailConnecting] = useState(false)
   
   // Data states
   const [speakers, setSpeakers] = useState<Speaker[]>([])
@@ -431,34 +430,6 @@ function MasterAdminPanelContent() {
     }
   }
   
-  // Handle Gmail OAuth callback
-  const handleGmailConnect = async () => {
-    setGmailConnecting(true)
-    try {
-      const response = await fetch('/api/auth/gmail')
-      const data = await response.json()
-
-      if (data.authUrl) {
-        window.location.href = data.authUrl
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to initiate Gmail connection",
-          variant: "destructive"
-        })
-      }
-    } catch (error) {
-      console.error('Error connecting Gmail:', error)
-      toast({
-        title: "Error",
-        description: "Failed to connect Gmail",
-        variant: "destructive"
-      })
-    } finally {
-      setGmailConnecting(false)
-    }
-  }
-
   // Check authentication and load data on mount
   // Sync activeTab with URL query parameter
   useEffect(() => {
@@ -481,33 +452,6 @@ function MasterAdminPanelContent() {
     }
 
     setIsLoggedIn(true)
-
-    // Check for Gmail connection status in URL params
-    const urlParams = new URLSearchParams(window.location.search)
-    const gmailConnectedEmail = urlParams.get('gmail_connected')
-    const gmailError = urlParams.get('gmail_error')
-
-    if (gmailConnectedEmail) {
-      setGmailConnected(gmailConnectedEmail)
-      toast({
-        title: "Gmail Connected!",
-        description: `Successfully connected ${gmailConnectedEmail}. Email tracking is now active.`,
-      })
-      // Clean up URL (preserve tab param)
-      const tab = urlParams.get('tab')
-      window.history.replaceState({}, '', tab ? `/admin/manage?tab=${tab}` : '/admin/manage')
-    }
-
-    if (gmailError) {
-      toast({
-        title: "Gmail Connection Failed",
-        description: gmailError,
-        variant: "destructive"
-      })
-      // Clean up URL (preserve tab param)
-      const tab = urlParams.get('tab')
-      window.history.replaceState({}, '', tab ? `/admin/manage?tab=${tab}` : '/admin/manage')
-    }
 
     // Load all data
     loadDeals()
@@ -586,8 +530,12 @@ function MasterAdminPanelContent() {
       }, 0),
     averageCommissionRate: 20, // Default or calculated
     monthlyRevenue: deals.filter(d => {
-      if (d.status !== "won" || !d.updated_at) return false
-      const wonDate = new Date(d.updated_at)
+      if (d.status !== "won") return false
+      // Use won_date if available, fallback to updated_at
+      const dateStr = d.won_date || d.updated_at
+      if (!dateStr) return false
+      const wonDate = new Date(dateStr)
+      if (isNaN(wonDate.getTime())) return false
       const now = new Date()
       return wonDate.getMonth() === now.getMonth() && wonDate.getFullYear() === now.getFullYear()
     }).reduce((sum, d) => {
@@ -797,7 +745,7 @@ function MasterAdminPanelContent() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 bg-white border shadow-sm">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 bg-white border shadow-sm">
               <TabsTrigger
                 value="overview"
                 className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
@@ -811,8 +759,7 @@ function MasterAdminPanelContent() {
                 className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
               >
                 <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">CRM & Sales</span>
-                <span className="sm:hidden">CRM</span>
+                <span>CRM</span>
               </TabsTrigger>
               <TabsTrigger
                 value="projects"
@@ -829,14 +776,6 @@ function MasterAdminPanelContent() {
                 <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Finances</span>
                 <span className="sm:hidden">Fin</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="marketing"
-                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
-              >
-                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Marketing</span>
-                <span className="sm:hidden">Mktg</span>
               </TabsTrigger>
             </TabsList>
 
@@ -918,90 +857,6 @@ function MasterAdminPanelContent() {
                         Blog Management
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* Gmail Integration */}
-                <Card className="lg:col-span-2">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <Mail className="h-5 w-5 text-blue-600" />
-                          Gmail Integration
-                        </CardTitle>
-                        <CardDescription className="mt-1">
-                          Track email conversations with leads and deals automatically
-                        </CardDescription>
-                      </div>
-                      {gmailConnected && (
-                        <Badge className="bg-green-100 text-green-800">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Connected
-                        </Badge>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {gmailConnected ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-                          <div>
-                            <p className="text-sm font-medium text-green-900">Email Tracking Active</p>
-                            <p className="text-xs text-green-700 mt-1">
-                              Connected: {gmailConnected}
-                            </p>
-                          </div>
-                          <CheckCircle className="h-6 w-6 text-green-600" />
-                        </div>
-                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <p className="text-xs text-blue-900 font-medium mb-2">What's being tracked:</p>
-                          <ul className="text-xs text-blue-700 space-y-1">
-                            <li>• Emails matched to leads and deals by email address</li>
-                            <li>• Automatic last contact date updates</li>
-                            <li>• Full email thread history visible in CRM</li>
-                            <li>• Syncs every 15 minutes automatically</li>
-                          </ul>
-                        </div>
-                        <Link href="/admin/crm">
-                          <Button variant="outline" size="sm" className="w-full">
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Email Activity in CRM
-                          </Button>
-                        </Link>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <p className="text-sm text-gray-700 mb-3">
-                            Connect your Gmail account to automatically track email conversations with leads and deals.
-                          </p>
-                          <ul className="text-xs text-gray-600 space-y-1 mb-4">
-                            <li>✓ Auto-sync emails every 15 minutes</li>
-                            <li>✓ Match emails to leads and deals</li>
-                            <li>✓ Update last contact dates automatically</li>
-                            <li>✓ View full email history in CRM</li>
-                          </ul>
-                          <Button
-                            onClick={handleGmailConnect}
-                            disabled={gmailConnecting}
-                            className="w-full"
-                          >
-                            {gmailConnecting ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Connecting...
-                              </>
-                            ) : (
-                              <>
-                                <Mail className="h-4 w-4 mr-2" />
-                                Connect Gmail Account
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
 
@@ -1228,7 +1083,7 @@ function MasterAdminPanelContent() {
                 </Card>
               </div>
 
-              {/* Deals Kanban */}
+              {/* Deals List */}
               {dealsLoading ? (
                 <div className="text-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
@@ -1237,11 +1092,64 @@ function MasterAdminPanelContent() {
               ) : (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Deal Pipeline</CardTitle>
-                    <CardDescription>Drag and drop deals to update their status</CardDescription>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle>Active Deals</CardTitle>
+                        <CardDescription>Recent deals in your pipeline</CardDescription>
+                      </div>
+                      <Badge variant="secondary">{activeDeals.length} active</Badge>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <DealsKanban onDealClick={(deal) => router.push(`/admin/deals/${deal.id}`)} />
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Client</TableHead>
+                          <TableHead>Event</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Priority</TableHead>
+                          <TableHead className="text-right">Value</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {activeDeals.slice(0, 8).map((deal) => (
+                          <TableRow
+                            key={deal.id}
+                            className="cursor-pointer hover:bg-gray-50"
+                            onClick={() => router.push(`/admin/crm`)}
+                          >
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">{deal.client_name}</p>
+                                <p className="text-sm text-gray-500">{deal.company}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p className="text-sm">{deal.event_title || 'TBD'}</p>
+                                <p className="text-xs text-gray-500">{formatDate(deal.event_date)}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={`${STATUS_COLORS[deal.status]} text-white text-xs`}>
+                                {DEAL_STATUSES[deal.status].label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={`${PRIORITY_COLORS[deal.priority]} text-xs`}>
+                                {deal.priority}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              {formatCurrency(deal.deal_value)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {activeDeals.length === 0 && (
+                      <p className="text-center text-gray-500 py-4">No active deals</p>
+                    )}
                   </CardContent>
                 </Card>
               )}
@@ -1297,7 +1205,7 @@ function MasterAdminPanelContent() {
                 </Card>
               </div>
 
-              {/* Projects Kanban */}
+              {/* Projects List */}
               {projectsLoading ? (
                 <div className="text-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
@@ -1306,11 +1214,65 @@ function MasterAdminPanelContent() {
               ) : (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Project Timeline</CardTitle>
-                    <CardDescription>Projects organized by timeline</CardDescription>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle>Active Projects</CardTitle>
+                        <CardDescription>Projects in progress</CardDescription>
+                      </div>
+                      <Badge variant="secondary">{projectStats.active} active</Badge>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <ProjectsKanban />
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Project</TableHead>
+                          <TableHead>Client</TableHead>
+                          <TableHead>Event Date</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Budget</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {projects
+                          .filter(p => !["completed", "cancelled"].includes(p.status))
+                          .slice(0, 8)
+                          .map((project) => (
+                            <TableRow
+                              key={project.id}
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => router.push(`/admin/projects`)}
+                            >
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{project.project_name}</p>
+                                  <p className="text-sm text-gray-500">{project.project_type}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p className="text-sm">{project.client_name}</p>
+                                  <p className="text-xs text-gray-500">{project.company}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <p className="text-sm">{formatDate(project.event_date || '')}</p>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className={`${STATUS_COLORS[project.status]} text-white text-xs`}>
+                                  {project.status.replace(/_/g, ' ')}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                {formatCurrency(project.budget)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                    {projects.filter(p => !["completed", "cancelled"].includes(p.status)).length === 0 && (
+                      <p className="text-center text-gray-500 py-4">No active projects</p>
+                    )}
                   </CardContent>
                 </Card>
               )}
@@ -1386,7 +1348,7 @@ function MasterAdminPanelContent() {
                           <p className="text-sm font-medium">Pipeline</p>
                           <p className="text-sm font-bold">{formatCurrency(dealStats.pipelineValue)}</p>
                         </div>
-                        <Progress value={dealStats.pipelineValue / (financialStats.totalRevenue + dealStats.pipelineValue) * 100} className="h-2" />
+                        <Progress value={(financialStats.totalRevenue + dealStats.pipelineValue) > 0 ? (dealStats.pipelineValue / (financialStats.totalRevenue + dealStats.pipelineValue) * 100) : 0} className="h-2" />
                       </div>
                       <div>
                         <div className="flex justify-between items-center mb-2">
@@ -1502,38 +1464,6 @@ function MasterAdminPanelContent() {
               </Card>
             </TabsContent>
 
-            {/* Marketing Tab */}
-            <TabsContent value="marketing" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/admin/blog')}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-purple-500" />
-                      Blog Management
-                    </CardTitle>
-                    <CardDescription>Create and manage blog posts</CardDescription>
-                  </CardHeader>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/admin/newsletter')}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Mail className="h-5 w-5 text-pink-500" />
-                      Newsletter
-                    </CardTitle>
-                    <CardDescription>Manage email subscribers</CardDescription>
-                  </CardHeader>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/admin/directory')}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Globe className="h-5 w-5 text-blue-500" />
-                      Vendor Directory
-                    </CardTitle>
-                    <CardDescription>Manage vendor listings</CardDescription>
-                  </CardHeader>
-                </Card>
-              </div>
-            </TabsContent>
           </Tabs>
         </div>
       </div>

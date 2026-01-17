@@ -59,7 +59,8 @@ import {
   ChevronUp,
   Plane,
   Hotel,
-  User
+  User,
+  ArrowUpDown
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -178,6 +179,11 @@ export default function AdminCRMPage() {
   const [pastDealsSearch, setPastDealsSearch] = useState("")
   const [pastDealsFilter, setPastDealsFilter] = useState<"all" | "won" | "lost">("all")
   const [pastDealsDateRange, setPastDealsDateRange] = useState<"all" | "30days" | "90days" | "1year">("all")
+  const [sortField, setSortField] = useState<"client_name" | "event_title" | "event_date" | "status" | "speaker_requested" | "">("")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
+  // Analytics state
+  const [analyticsYear, setAnalyticsYear] = useState<number>(new Date().getFullYear())
+  const [showAnalyticsDetails, setShowAnalyticsDetails] = useState(false)
   const [contractFormData, setContractFormData] = useState({
     speaker_name: "",
     speaker_email: "",
@@ -992,13 +998,60 @@ d) An immediate family member is stricken by serious injury, illness, or death.
   const filteredDeals = deals.filter((deal) => {
     // Exclude won and lost deals - they go to Past Deals tab
     if (deal.status === "won" || deal.status === "lost") return false
-    
+
     const matchesSearch =
       deal.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       deal.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       deal.event_title.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || deal.status === statusFilter
     return matchesSearch && matchesStatus
+  })
+
+  // Sort deals
+  const handleSort = (field: typeof sortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("asc")
+    }
+  }
+
+  const sortedDeals = [...filteredDeals].sort((a, b) => {
+    if (!sortField) return 0
+
+    let aVal: string | number = ""
+    let bVal: string | number = ""
+
+    switch (sortField) {
+      case "client_name":
+        aVal = a.client_name.toLowerCase()
+        bVal = b.client_name.toLowerCase()
+        break
+      case "event_title":
+        aVal = a.event_title.toLowerCase()
+        bVal = b.event_title.toLowerCase()
+        break
+      case "event_date":
+        aVal = a.event_date ? new Date(a.event_date).getTime() : 0
+        bVal = b.event_date ? new Date(b.event_date).getTime() : 0
+        break
+      case "status":
+        const statusOrder = { lead: 1, qualified: 2, proposal: 3, negotiation: 4, won: 5, lost: 6 }
+        aVal = statusOrder[a.status] || 0
+        bVal = statusOrder[b.status] || 0
+        break
+      case "speaker_requested":
+        aVal = (a.speaker_requested || "").toLowerCase()
+        bVal = (b.speaker_requested || "").toLowerCase()
+        break
+      default:
+        return 0
+    }
+
+    if (aVal < bVal) return sortDirection === "asc" ? -1 : 1
+    if (aVal > bVal) return sortDirection === "asc" ? 1 : -1
+    return 0
   })
 
   const filteredContracts = contracts.filter((contract) => {
@@ -1416,7 +1469,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsList className="grid w-full grid-cols-3 max-w-lg">
               <TabsTrigger value="deals" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                 <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Deals Pipeline</span>
@@ -1426,6 +1479,11 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                 <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Past Deals</span>
                 <span className="sm:hidden">Past</span>
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Analytics</span>
+                <span className="sm:hidden">Stats</span>
               </TabsTrigger>
             </TabsList>
 
@@ -1496,17 +1554,58 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Client</TableHead>
-                          <TableHead>Event</TableHead>
+                          <TableHead
+                            className="cursor-pointer hover:bg-gray-100 select-none"
+                            onClick={() => handleSort("client_name")}
+                          >
+                            <div className="flex items-center gap-1">
+                              Client
+                              <ArrowUpDown className={`h-4 w-4 ${sortField === "client_name" ? "text-blue-600" : "text-gray-400"}`} />
+                            </div>
+                          </TableHead>
+                          <TableHead
+                            className="cursor-pointer hover:bg-gray-100 select-none"
+                            onClick={() => handleSort("event_title")}
+                          >
+                            <div className="flex items-center gap-1">
+                              Event
+                              <ArrowUpDown className={`h-4 w-4 ${sortField === "event_title" ? "text-blue-600" : "text-gray-400"}`} />
+                            </div>
+                          </TableHead>
+                          <TableHead
+                            className="cursor-pointer hover:bg-gray-100 select-none"
+                            onClick={() => handleSort("speaker_requested")}
+                          >
+                            <div className="flex items-center gap-1">
+                              Speaker
+                              <ArrowUpDown className={`h-4 w-4 ${sortField === "speaker_requested" ? "text-blue-600" : "text-gray-400"}`} />
+                            </div>
+                          </TableHead>
                           <TableHead>Value</TableHead>
-                          <TableHead>Status</TableHead>
+                          <TableHead
+                            className="cursor-pointer hover:bg-gray-100 select-none"
+                            onClick={() => handleSort("status")}
+                          >
+                            <div className="flex items-center gap-1">
+                              Status
+                              <ArrowUpDown className={`h-4 w-4 ${sortField === "status" ? "text-blue-600" : "text-gray-400"}`} />
+                            </div>
+                          </TableHead>
                           <TableHead>Priority</TableHead>
-                          <TableHead>Date</TableHead>
+                          <TableHead
+                            className="cursor-pointer hover:bg-gray-100 select-none"
+                            onClick={() => handleSort("event_date")}
+                          >
+                            <div className="flex items-center gap-1">
+                              Date
+                              <ArrowUpDown className={`h-4 w-4 ${sortField === "event_date" ? "text-blue-600" : "text-gray-400"}`} />
+                            </div>
+                          </TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredDeals.map((deal) => (
+                        {sortedDeals.map((deal) => (
                           <React.Fragment key={deal.id}>
                           <TableRow className="cursor-pointer hover:bg-gray-50" onClick={() => toggleDealExpansion(deal.id)}>
                             <TableCell>
@@ -1526,6 +1625,11 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                               <div>
                                 <div className="font-medium">{deal.event_title}</div>
                                 <div className="text-sm text-gray-500">{deal.event_location}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {deal.speaker_requested || <span className="text-gray-400">—</span>}
                               </div>
                             </TableCell>
                             <TableCell>
@@ -2129,10 +2233,217 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Analytics Tab */}
+            <TabsContent value="analytics" className="space-y-4">
+              {(() => {
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+                // Calculate monthly data for selected year
+                const data = months.map((month, idx) => {
+                  const monthNum = idx
+
+                  const inquiries = deals.filter(d => {
+                    const created = new Date(d.created_at)
+                    return created.getMonth() === monthNum && created.getFullYear() === analyticsYear
+                  }).length
+
+                  const revenue = deals.filter(d => {
+                    if (d.status !== "won") return false
+                    const dateStr = d.won_date || d.updated_at
+                    if (!dateStr) return false
+                    const wonDate = new Date(dateStr)
+                    return wonDate.getMonth() === monthNum && wonDate.getFullYear() === analyticsYear
+                  }).reduce((sum, d) => sum + (typeof d.deal_value === 'string' ? parseFloat(d.deal_value) || 0 : d.deal_value || 0), 0)
+
+                  const wonDeals = deals.filter(d => {
+                    if (d.status !== "won") return false
+                    const dateStr = d.won_date || d.updated_at
+                    if (!dateStr) return false
+                    const wonDate = new Date(dateStr)
+                    return wonDate.getMonth() === monthNum && wonDate.getFullYear() === analyticsYear
+                  }).length
+
+                  const lostDeals = deals.filter(d => {
+                    if (d.status !== "lost") return false
+                    const dateStr = d.lost_date || d.updated_at
+                    if (!dateStr) return false
+                    const lostDate = new Date(dateStr)
+                    return lostDate.getMonth() === monthNum && lostDate.getFullYear() === analyticsYear
+                  }).length
+
+                  return { month, inquiries, revenue, wonDeals, lostDeals }
+                })
+
+                const maxInquiries = Math.max(...data.map(d => d.inquiries), 1)
+                const maxRevenue = Math.max(...data.map(d => d.revenue), 1)
+
+                const totalInquiries = data.reduce((sum, d) => sum + d.inquiries, 0)
+                const totalRevenue = data.reduce((sum, d) => sum + d.revenue, 0)
+                const totalWon = data.reduce((sum, d) => sum + d.wonDeals, 0)
+                const totalLost = data.reduce((sum, d) => sum + d.lostDeals, 0)
+                const winRate = totalInquiries > 0 ? ((totalWon / totalInquiries) * 100).toFixed(0) : "0"
+                const avgDealValue = totalWon > 0 ? totalRevenue / totalWon : 0
+
+                return (
+                  <>
+                    {/* Header with inline year selector */}
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-2xl font-bold">Analytics</h2>
+                      <Select value={analyticsYear.toString()} onValueChange={(v) => setAnalyticsYear(parseInt(v))}>
+                        <SelectTrigger className="w-28">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                            <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* 4 Key Metrics */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <Card>
+                        <CardContent className="pt-4 pb-4">
+                          <div className="text-sm text-muted-foreground">Inquiries</div>
+                          <div className="text-2xl font-bold">{totalInquiries}</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="pt-4 pb-4">
+                          <div className="text-sm text-muted-foreground">Revenue</div>
+                          <div className="text-2xl font-bold text-green-600">{formatCurrency(totalRevenue)}</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="pt-4 pb-4">
+                          <div className="text-sm text-muted-foreground">Win Rate</div>
+                          <div className="text-2xl font-bold">
+                            <span className="text-green-600">{totalWon}</span>
+                            <span className="text-muted-foreground mx-1">/</span>
+                            <span className="text-red-600">{totalLost}</span>
+                            <span className="text-muted-foreground text-lg ml-2">({winRate}%)</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="pt-4 pb-4">
+                          <div className="text-sm text-muted-foreground">Avg Deal Size</div>
+                          <div className="text-2xl font-bold">{formatCurrency(avgDealValue)}</div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Combined Chart */}
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="space-y-3">
+                          {data.map((d, idx) => (
+                            <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                              <div className="col-span-1 text-sm text-gray-500 font-medium">{d.month}</div>
+                              <div className="col-span-5">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 h-5 bg-gray-100 rounded overflow-hidden">
+                                    <div
+                                      className="h-full bg-blue-500 rounded transition-all duration-300"
+                                      style={{ width: `${(d.inquiries / maxInquiries) * 100}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs text-gray-600 w-6 text-right">{d.inquiries}</span>
+                                </div>
+                              </div>
+                              <div className="col-span-5">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 h-5 bg-gray-100 rounded overflow-hidden">
+                                    <div
+                                      className="h-full bg-green-500 rounded transition-all duration-300"
+                                      style={{ width: `${(d.revenue / maxRevenue) * 100}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs text-gray-600 w-16 text-right">{d.revenue > 0 ? formatCurrency(d.revenue) : '-'}</span>
+                                </div>
+                              </div>
+                              <div className="col-span-1 text-xs text-center">
+                                {d.wonDeals > 0 && <span className="text-green-600">{d.wonDeals}W</span>}
+                                {d.lostDeals > 0 && <span className="text-red-600 ml-1">{d.lostDeals}L</span>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {/* Legend */}
+                        <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-blue-500 rounded" />
+                            <span className="text-sm text-gray-600">Inquiries</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-500 rounded" />
+                            <span className="text-sm text-gray-600">Revenue</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Expandable Details */}
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between"
+                      onClick={() => setShowAnalyticsDetails(!showAnalyticsDetails)}
+                    >
+                      <span>View Detailed Breakdown</span>
+                      {showAnalyticsDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
+
+                    {showAnalyticsDetails && (
+                      <Card>
+                        <CardContent className="pt-4">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Month</TableHead>
+                                <TableHead className="text-right">Inquiries</TableHead>
+                                <TableHead className="text-right">Won</TableHead>
+                                <TableHead className="text-right">Lost</TableHead>
+                                <TableHead className="text-right">Win %</TableHead>
+                                <TableHead className="text-right">Revenue</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {data.map((d, idx) => {
+                                const monthWinRate = d.inquiries > 0 ? ((d.wonDeals / d.inquiries) * 100).toFixed(0) : "-"
+                                return (
+                                  <TableRow key={idx} className={d.inquiries === 0 ? "text-gray-400" : ""}>
+                                    <TableCell className="font-medium">{d.month}</TableCell>
+                                    <TableCell className="text-right">{d.inquiries || "-"}</TableCell>
+                                    <TableCell className="text-right text-green-600">{d.wonDeals || "-"}</TableCell>
+                                    <TableCell className="text-right text-red-600">{d.lostDeals || "-"}</TableCell>
+                                    <TableCell className="text-right">{monthWinRate === "-" ? "-" : `${monthWinRate}%`}</TableCell>
+                                    <TableCell className="text-right">{d.revenue > 0 ? formatCurrency(d.revenue) : "-"}</TableCell>
+                                  </TableRow>
+                                )
+                              })}
+                              <TableRow className="font-bold bg-gray-50">
+                                <TableCell>Total</TableCell>
+                                <TableCell className="text-right">{totalInquiries}</TableCell>
+                                <TableCell className="text-right text-green-600">{totalWon}</TableCell>
+                                <TableCell className="text-right text-red-600">{totalLost}</TableCell>
+                                <TableCell className="text-right">{winRate}%</TableCell>
+                                <TableCell className="text-right">{formatCurrency(totalRevenue)}</TableCell>
+                              </TableRow>
+                            </TableBody>
+                          </Table>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
+                )
+              })()}
+            </TabsContent>
           </Tabs>
         </div>
       </div>
-      
+
       {/* Contract Creation Dialog */}
       {showContractDialog && contractDeal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

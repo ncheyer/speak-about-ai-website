@@ -60,7 +60,8 @@ import {
   AlertCircle,
   MoreHorizontal,
   LayoutGrid,
-  List
+  List,
+  ArrowUpDown
 } from "lucide-react"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { useToast } from "@/hooks/use-toast"
@@ -368,6 +369,8 @@ export default function EnhancedProjectManagementPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [viewMode, setViewMode] = useState<"table" | "cards" | "stages">("stages")
+  const [sortField, setSortField] = useState<"event_title" | "client_name" | "speaker_name" | "status" | "event_date" | "time_until" | "">("")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [stageSearchTerms, setStageSearchTerms] = useState<Record<string, string>>({})
   const [expandedProjectId, setExpandedProjectId] = useState<number | null>(null)
   const [quickFilter, setQuickFilter] = useState<"all" | "this_week" | "urgent" | "overdue">("all")
@@ -1057,6 +1060,63 @@ export default function EnhancedProjectManagementPage() {
     }
 
     return matchesSearch && matchesStatus && matchesQuickFilter
+  })
+
+  // Sort projects
+  const handleSort = (field: typeof sortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("asc")
+    }
+  }
+
+  const sortedProjects = [...filteredProjects].sort((a, b) => {
+    if (!sortField) return 0
+
+    let aVal: string | number = ""
+    let bVal: string | number = ""
+
+    switch (sortField) {
+      case "event_title":
+        aVal = (a.event_title || "").toLowerCase()
+        bVal = (b.event_title || "").toLowerCase()
+        break
+      case "client_name":
+        aVal = (a.client_name || "").toLowerCase()
+        bVal = (b.client_name || "").toLowerCase()
+        break
+      case "speaker_name":
+        aVal = (a.speaker_name || a.requested_speaker_name || "").toLowerCase()
+        bVal = (b.speaker_name || b.requested_speaker_name || "").toLowerCase()
+        break
+      case "status":
+        const statusOrder: Record<string, number> = {
+          "2plus_months": 1, "1to2_months": 2, "less_than_month": 3, "final_week": 4,
+          contracts_signed: 5, invoicing: 6, logistics_planning: 7, pre_event: 8,
+          event_week: 9, follow_up: 10, completed: 11, cancelled: 12
+        }
+        aVal = statusOrder[a.status] || 0
+        bVal = statusOrder[b.status] || 0
+        break
+      case "event_date":
+        aVal = a.event_date ? new Date(a.event_date).getTime() : 0
+        bVal = b.event_date ? new Date(b.event_date).getTime() : 0
+        break
+      case "time_until":
+        // Sort by time until event (closest first when ascending)
+        const now = Date.now()
+        aVal = a.event_date ? new Date(a.event_date).getTime() - now : Number.MAX_SAFE_INTEGER
+        bVal = b.event_date ? new Date(b.event_date).getTime() - now : Number.MAX_SAFE_INTEGER
+        break
+      default:
+        return 0
+    }
+
+    if (aVal < bVal) return sortDirection === "asc" ? -1 : 1
+    if (aVal > bVal) return sortDirection === "asc" ? 1 : -1
+    return 0
   })
 
   if (!isLoggedIn) {
@@ -2071,12 +2131,60 @@ export default function EnhancedProjectManagementPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Event</TableHead>
-                        <TableHead>Client</TableHead>
-                        <TableHead>Speaker</TableHead>
-                        <TableHead>Stage</TableHead>
-                        <TableHead>Event Date</TableHead>
-                        <TableHead>Time Until</TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleSort("event_title")}
+                        >
+                          <div className="flex items-center gap-1">
+                            Event
+                            <ArrowUpDown className={`h-4 w-4 ${sortField === "event_title" ? "text-blue-600" : "text-gray-400"}`} />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleSort("client_name")}
+                        >
+                          <div className="flex items-center gap-1">
+                            Client
+                            <ArrowUpDown className={`h-4 w-4 ${sortField === "client_name" ? "text-blue-600" : "text-gray-400"}`} />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleSort("speaker_name")}
+                        >
+                          <div className="flex items-center gap-1">
+                            Speaker
+                            <ArrowUpDown className={`h-4 w-4 ${sortField === "speaker_name" ? "text-blue-600" : "text-gray-400"}`} />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleSort("status")}
+                        >
+                          <div className="flex items-center gap-1">
+                            Stage
+                            <ArrowUpDown className={`h-4 w-4 ${sortField === "status" ? "text-blue-600" : "text-gray-400"}`} />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleSort("event_date")}
+                        >
+                          <div className="flex items-center gap-1">
+                            Event Date
+                            <ArrowUpDown className={`h-4 w-4 ${sortField === "event_date" ? "text-blue-600" : "text-gray-400"}`} />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleSort("time_until")}
+                        >
+                          <div className="flex items-center gap-1">
+                            Time Until
+                            <ArrowUpDown className={`h-4 w-4 ${sortField === "time_until" ? "text-blue-600" : "text-gray-400"}`} />
+                          </div>
+                        </TableHead>
                         <TableHead>Invoices</TableHead>
                         <TableHead>Revenue</TableHead>
                         <TableHead>Payment</TableHead>
@@ -2084,7 +2192,7 @@ export default function EnhancedProjectManagementPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredProjects.map((project) => {
+                      {sortedProjects.map((project) => {
                         // Calculate urgency for row color
                         const timeInfo = getTimeUntilEvent(project.event_date)
                         const rowUrgencyClasses: Record<string, string> = {
