@@ -577,7 +577,7 @@ export default function AdminSpeakerEditPage() {
               </Button>
             </Link>
             <div className="flex items-center gap-4">
-              <Avatar className="h-12 w-12">
+              <Avatar className="h-12 w-12" key={`header-${formData.headshot_url || 'no-image'}`}>
                 <AvatarImage src={formData.headshot_url} alt={formData.name} />
                 <AvatarFallback>
                   {formData.name.split(' ').map(n => n[0]).join('')}
@@ -718,7 +718,7 @@ export default function AdminSpeakerEditPage() {
                   <div className="md:col-span-2">
                     <Label htmlFor="headshot_url">Headshot</Label>
                     <div className="mt-2 flex items-start gap-4">
-                      <Avatar className="h-24 w-24">
+                      <Avatar className="h-24 w-24" key={`form-${formData.headshot_url || 'no-image'}`}>
                         <AvatarImage src={formData.headshot_url} alt={formData.name} />
                         <AvatarFallback>
                           {formData.name.split(' ').map(n => n[0]).join('')}

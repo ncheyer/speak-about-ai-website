@@ -424,7 +424,7 @@ export default function AdminAddSpeakerPage() {
                 <CardContent className="space-y-6">
                   {/* Profile Image */}
                   <div className="flex items-center gap-6">
-                    <Avatar className="h-24 w-24">
+                    <Avatar className="h-24 w-24" key={formData.headshot_url || 'no-image'}>
                       <AvatarImage src={formData.headshot_url} alt={formData.name} />
                       <AvatarFallback>
                         {formData.name ? formData.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'SP'}
