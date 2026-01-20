@@ -235,8 +235,8 @@ export default function AdminSpeakerEditPage() {
     } catch (error) {
       console.error("Upload error:", error)
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to upload image",
+        title: "Upload Failed",
+        description: error instanceof Error ? error.message : "Failed to upload image. Please try again.",
         variant: "destructive",
       })
     } finally {

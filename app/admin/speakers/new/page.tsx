@@ -246,6 +246,26 @@ export default function AdminAddSpeakerPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Error",
+        description: "Please select an image file (JPEG, PNG, WebP, or GIF)",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "Image must be less than 5MB",
+        variant: "destructive",
+      })
+      return
+    }
+
     setUploadingImage(true)
     try {
       const blob = await upload(file.name, file, {
@@ -265,12 +285,16 @@ export default function AdminAddSpeakerPage() {
     } catch (error) {
       console.error("Upload error:", error)
       toast({
-        title: "Error",
-        description: "Failed to upload image",
+        title: "Upload Failed",
+        description: error instanceof Error ? error.message : "Failed to upload image. Please try again.",
         variant: "destructive",
       })
     } finally {
       setUploadingImage(false)
+      // Reset file input to allow re-uploading the same file
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 

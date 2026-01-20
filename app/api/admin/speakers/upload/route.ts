@@ -42,12 +42,35 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(jsonResponse)
   } catch (error) {
     console.error("Admin speaker upload error:", error)
+
+    // Provide user-friendly error messages for common issues
+    let errorMessage = "Upload failed"
+    let statusCode = 400
+
+    if (error instanceof Error) {
+      const msg = error.message.toLowerCase()
+
+      if (msg.includes("content type") || msg.includes("not allowed")) {
+        errorMessage = "Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image."
+      } else if (msg.includes("size") || msg.includes("too large")) {
+        errorMessage = "Image is too large. Please upload an image under 5MB."
+      } else if (msg.includes("network") || msg.includes("fetch")) {
+        errorMessage = "Network error. Please check your connection and try again."
+        statusCode = 503
+      } else if (msg.includes("token") || msg.includes("unauthorized")) {
+        errorMessage = "Upload authorization failed. Please refresh the page and try again."
+        statusCode = 401
+      } else {
+        errorMessage = error.message
+      }
+    }
+
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Upload failed",
-        details: error instanceof Error ? error.stack : undefined,
+        error: errorMessage,
+        details: process.env.NODE_ENV === "development" && error instanceof Error ? error.stack : undefined,
       },
-      { status: 400 },
+      { status: statusCode },
     )
   }
 }

@@ -227,6 +227,7 @@ export default function AdminCRMPage() {
     source: "",
     notes: "",
     nextFollowUp: "",
+    closedDate: "",
   })
 
   // Currency formatting helper
@@ -591,6 +592,8 @@ d) An immediate family member is stricken by serious injury, illness, or death.
         notes: formData.notes,
         last_contact: new Date().toISOString().split("T")[0],
         next_follow_up: formData.nextFollowUp || undefined,
+        won_date: formData.status === "won" ? (formData.closedDate || undefined) : undefined,
+        lost_date: formData.status === "lost" ? (formData.closedDate || undefined) : undefined,
       }
 
       let response
@@ -665,6 +668,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
       source: "",
       notes: "",
       nextFollowUp: "",
+      closedDate: "",
     })
   }
 
@@ -699,6 +703,7 @@ d) An immediate family member is stricken by serious injury, illness, or death.
       source: deal.source,
       notes: deal.notes,
       nextFollowUp: formatDateForInput(deal.next_follow_up || ""),
+      closedDate: formatDateForInput(deal.status === "won" ? deal.won_date || "" : deal.lost_date || ""),
     })
     setEditingDeal(deal)
     setShowCreateForm(true)
@@ -1337,6 +1342,17 @@ d) An immediate family member is stricken by serious injury, illness, or death.
                           </SelectContent>
                         </Select>
                       </div>
+                      {(formData.status === "won" || formData.status === "lost") && (
+                        <div>
+                          <Label htmlFor="closedDate">Closed Date</Label>
+                          <Input
+                            id="closedDate"
+                            type="date"
+                            value={formData.closedDate}
+                            onChange={(e) => setFormData({ ...formData, closedDate: e.target.value })}
+                          />
+                        </div>
+                      )}
                       <div>
                         <Label htmlFor="priority">Priority</Label>
                         <Select
