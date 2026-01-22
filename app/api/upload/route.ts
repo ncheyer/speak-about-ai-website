@@ -1,17 +1,22 @@
 import { handleUpload } from "@vercel/blob/client"
 import { type NextRequest, NextResponse } from "next/server"
-import { getAuthenticatedUser } from "@/lib/auth-middleware"
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // Require authentication for file uploads
-    const user = getAuthenticatedUser(request)
-    if (!user) {
+    // For admin uploads, check the referer to ensure it's from an admin page
+    // This matches the pattern used in /api/admin/speakers/upload
+    const referer = request.headers.get('referer')
+
+    // Allow uploads from admin areas (workshops, conferences, etc.)
+    const isAdminUpload = referer && referer.includes('/admin/')
+
+    if (!isAdminUpload) {
       return NextResponse.json(
-        { error: 'Authentication required for file uploads', code: 'NO_AUTH' },
-        { status: 401 }
+        { error: 'Unauthorized upload request', code: 'UNAUTHORIZED' },
+        { status: 403 }
       )
     }
+
     // Check if the Blob token is set
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
       console.error("BLOB_READ_WRITE_TOKEN is not set")
@@ -42,12 +47,35 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(jsonResponse)
   } catch (error) {
     console.error("Upload error:", error)
+
+    // Provide user-friendly error messages for common issues
+    let errorMessage = "Upload failed"
+    let statusCode = 400
+
+    if (error instanceof Error) {
+      const msg = error.message.toLowerCase()
+
+      if (msg.includes("content type") || msg.includes("not allowed")) {
+        errorMessage = "Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image."
+      } else if (msg.includes("size") || msg.includes("too large")) {
+        errorMessage = "Image is too large. Please upload an image under 10MB."
+      } else if (msg.includes("network") || msg.includes("fetch")) {
+        errorMessage = "Network error. Please check your connection and try again."
+        statusCode = 503
+      } else if (msg.includes("token") || msg.includes("unauthorized")) {
+        errorMessage = "Upload authorization failed. Please refresh the page and try again."
+        statusCode = 401
+      } else {
+        errorMessage = error.message
+      }
+    }
+
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Upload failed",
-        details: error instanceof Error ? error.stack : undefined,
+        error: errorMessage,
+        details: process.env.NODE_ENV === "development" && error instanceof Error ? error.stack : undefined,
       },
-      { status: 400 },
+      { status: statusCode },
     )
   }
 }
