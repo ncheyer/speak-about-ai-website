@@ -78,7 +78,14 @@ export default async function ClientLogos() {
   let clients = defaultClients
   if (logosJson) {
     try {
-      clients = JSON.parse(logosJson)
+      const parsed = JSON.parse(logosJson)
+      // Ensure every client has all required properties to prevent hydration mismatch
+      clients = parsed.map((client: { name?: string; src?: string; alt?: string; size?: string }) => ({
+        name: client.name || 'Client',
+        src: client.src || '/placeholder.svg',
+        alt: client.alt || `${client.name || 'Client'} logo`,
+        size: client.size || 'default',
+      }))
     } catch (e) {
       // Use defaults if JSON parsing fails
     }

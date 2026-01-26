@@ -270,11 +270,100 @@ const DEFAULT_CONTENT = [
   { page: 'workshops', section: 'meta', content_key: 'description', content_value: 'Discover hands-on AI workshops led by industry experts. Interactive training programs covering machine learning, generative AI, and practical implementation strategies.' },
   { page: 'workshops', section: 'meta', content_key: 'keywords', content_value: 'AI workshops, AI training, machine learning workshops, generative AI training, corporate AI training' },
 
+  // Contact Page - Header
+  { page: 'contact', section: 'header', content_key: 'keynote_title', content_value: 'Book an AI Keynote Speaker' },
+  { page: 'contact', section: 'header', content_key: 'workshop_title', content_value: 'Book an AI Workshop' },
+  { page: 'contact', section: 'header', content_key: 'keynote_subtitle', content_value: "Tell us about your event and we'll match you with the perfect AI expert" },
+  { page: 'contact', section: 'header', content_key: 'workshop_subtitle', content_value: "Tell us about your training needs and we'll find the perfect AI workshop" },
+
+  // Contact Page - Tabs
+  { page: 'contact', section: 'tabs', content_key: 'keynote_label', content_value: 'Keynote Speaker' },
+  { page: 'contact', section: 'tabs', content_key: 'workshop_label', content_value: 'Workshop' },
+
+  // Contact Page - Form
+  { page: 'contact', section: 'form', content_key: 'title', content_value: 'Event Information' },
+  { page: 'contact', section: 'form', content_key: 'description', content_value: 'Please provide as much detail as possible about your event' },
+  { page: 'contact', section: 'form', content_key: 'contact_section_title', content_value: 'Contact Information' },
+  { page: 'contact', section: 'form', content_key: 'event_section_title', content_value: 'Event Details' },
+  { page: 'contact', section: 'form', content_key: 'additional_section_title', content_value: 'Additional Information' },
+
+  // Contact Page - Need Help
+  { page: 'contact', section: 'help', content_key: 'title', content_value: 'Need Help?' },
+  { page: 'contact', section: 'help', content_key: 'call_label', content_value: 'Call us directly' },
+  { page: 'contact', section: 'help', content_key: 'phone', content_value: '+1 (415) 665-2442' },
+  { page: 'contact', section: 'help', content_key: 'email_label', content_value: 'Email us' },
+  { page: 'contact', section: 'help', content_key: 'email', content_value: 'human@speakabout.ai' },
+
+  // Contact Page - Newsletter
+  { page: 'contact', section: 'newsletter', content_key: 'title', content_value: 'Subscribe to our newsletter' },
+  { page: 'contact', section: 'newsletter', content_key: 'description', content_value: 'Get exclusive AI speaker insights, event trends, and industry updates delivered to your inbox.' },
+
+  // Contact Page - Success
+  { page: 'contact', section: 'success', content_key: 'title', content_value: 'Request Submitted Successfully!' },
+  { page: 'contact', section: 'success', content_key: 'message', content_value: "Thank you for your interest. We'll be in touch within 24 hours with personalized speaker recommendations for your event." },
+
+  // Contact Page - Keynote Specific
+  { page: 'contact', section: 'keynote', content_key: 'speaker_section_title', content_value: 'Speaker Preferences' },
+  { page: 'contact', section: 'keynote', content_key: 'speaker_section_desc', content_value: 'Select one or more speakers you are interested in, or let us help you find the right fit.' },
+  { page: 'contact', section: 'keynote', content_key: 'no_speaker_text', content_value: "I don't have a specific speaker in mind" },
+  { page: 'contact', section: 'keynote', content_key: 'budget_section_title', content_value: 'Speaker Budget Range' },
+
+  // Contact Page - Workshop Specific
+  { page: 'contact', section: 'workshop', content_key: 'workshop_section_title', content_value: 'Workshop Selection' },
+  { page: 'contact', section: 'workshop', content_key: 'workshop_section_desc', content_value: 'Select a workshop or let us help you find the right one.' },
+  { page: 'contact', section: 'workshop', content_key: 'no_workshop_text', content_value: 'Help me find a workshop' },
+  { page: 'contact', section: 'workshop', content_key: 'participants_title', content_value: 'Number of Participants' },
+  { page: 'contact', section: 'workshop', content_key: 'skill_level_title', content_value: 'Participant Skill Level' },
+  { page: 'contact', section: 'workshop', content_key: 'format_title', content_value: 'Preferred Format' },
+
+  // Contact Page - Buttons
+  { page: 'contact', section: 'buttons', content_key: 'submit', content_value: 'Submit Speaker Request' },
+
+  // Contact Page - Meta
+  { page: 'contact', section: 'meta', content_key: 'title', content_value: 'Book an AI Speaker | Contact Speak About AI' },
+  { page: 'contact', section: 'meta', content_key: 'description', content_value: 'Request an AI keynote speaker or workshop for your event. Fill out our booking form and our team will match you with the perfect AI expert within 24 hours.' },
+  { page: 'contact', section: 'meta', content_key: 'keywords', content_value: 'book AI speaker, AI speaker booking, request AI keynote, contact AI speaker bureau' },
+
   // Team Page - CTA
   { page: 'team', section: 'cta', content_key: 'title', content_value: 'Get In Touch' },
   { page: 'team', section: 'cta', content_key: 'subtitle', content_value: "Interested in working with Speak About AI or have questions about our services? We'd love to hear from you." },
   { page: 'team', section: 'cta', content_key: 'button_text', content_value: 'Email Us' },
   { page: 'team', section: 'cta', content_key: 'email', content_value: 'human@speakabout.ai' },
+
+  // Footer - Company Info
+  { page: 'footer', section: 'company', content_key: 'logo', content_value: '/speak-about-ai-light-logo.png' },
+  { page: 'footer', section: 'company', content_key: 'logo_alt', content_value: 'Speak About AI' },
+  { page: 'footer', section: 'company', content_key: 'description', content_value: "The world's only AI-exclusive speaker bureau, connecting organizations around the world with the most sought-after artificial intelligence experts and thought leaders." },
+  { page: 'footer', section: 'company', content_key: 'phone', content_value: '+1 (415) 665-2442' },
+  { page: 'footer', section: 'company', content_key: 'email', content_value: 'human@speakabout.ai' },
+
+  // Footer - Quick Links
+  { page: 'footer', section: 'quick-links', content_key: 'title', content_value: 'Quick Links' },
+  { page: 'footer', section: 'quick-links', content_key: 'links', content_value: JSON.stringify([
+    { text: 'All Speakers', url: '/speakers' },
+    { text: 'Our Services', url: '/our-services' },
+    { text: 'Our Team', url: '/our-team' },
+    { text: 'Contact Us', url: '/contact' },
+    { text: 'Blog', url: '/blog' },
+    { text: 'Sitemap', url: '/sitemap.xml' }
+  ]) },
+
+  // Footer - Industries
+  { page: 'footer', section: 'industries', content_key: 'title', content_value: 'Industries' },
+  { page: 'footer', section: 'industries', content_key: 'links', content_value: JSON.stringify([
+    { text: 'Healthcare AI', url: '/industries/healthcare-keynote-speakers' },
+    { text: 'Technology & Enterprise', url: '/industries/technology-keynote-speakers' }
+  ]) },
+
+  // Footer - For Speakers
+  { page: 'footer', section: 'for-speakers', content_key: 'title', content_value: 'For Speakers' },
+  { page: 'footer', section: 'for-speakers', content_key: 'links', content_value: JSON.stringify([
+    { text: 'Apply to Be a Speaker', url: '/apply' }
+  ]) },
+
+  // Footer - Bottom Bar
+  { page: 'footer', section: 'bottom', content_key: 'copyright', content_value: '© 2026 Speak About AI. All rights reserved.' },
+  { page: 'footer', section: 'bottom', content_key: 'linkedin_url', content_value: 'https://www.linkedin.com/company/speakabout-ai/' },
 ]
 
 export async function GET(request: Request) {
@@ -302,17 +391,14 @@ export async function GET(request: Request) {
       )
     `
 
-    // Check if table is empty and seed if needed
-    const countResult = await sql`SELECT COUNT(*) as count FROM website_content`
-    if (countResult[0].count === '0' || countResult[0].count === 0) {
-      // Seed with default content
-      for (const item of DEFAULT_CONTENT) {
-        await sql`
-          INSERT INTO website_content (page, section, content_key, content_value)
-          VALUES (${item.page}, ${item.section}, ${item.content_key}, ${item.content_value})
-          ON CONFLICT (page, section, content_key) DO NOTHING
-        `
-      }
+    // Ensure footer and contact defaults exist (only these since other pages already seeded)
+    const defaultsToSeed = DEFAULT_CONTENT.filter(item => item.page === 'footer' || item.page === 'contact')
+    for (const item of defaultsToSeed) {
+      await sql`
+        INSERT INTO website_content (page, section, content_key, content_value)
+        VALUES (${item.page}, ${item.section}, ${item.content_key}, ${item.content_value})
+        ON CONFLICT (page, section, content_key) DO NOTHING
+      `
     }
 
     // Fetch content

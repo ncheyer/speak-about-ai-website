@@ -54,16 +54,55 @@ interface Workshop {
   price_range?: string
 }
 
+interface ContactPageContent {
+  keynoteTitle: string
+  workshopTitle: string
+  keynoteSubtitle: string
+  workshopSubtitle: string
+  keynoteTabLabel: string
+  workshopTabLabel: string
+  formTitle: string
+  formDescription: string
+  contactSectionTitle: string
+  eventSectionTitle: string
+  additionalSectionTitle: string
+  // Keynote-specific
+  speakerSectionTitle: string
+  speakerSectionDesc: string
+  noSpeakerText: string
+  budgetSectionTitle: string
+  // Workshop-specific
+  workshopSectionTitle: string
+  workshopSectionDesc: string
+  noWorkshopText: string
+  participantsTitle: string
+  skillLevelTitle: string
+  formatTitle: string
+  // Help
+  needHelpTitle: string
+  callLabel: string
+  phone: string
+  emailLabel: string
+  email: string
+  newsletterTitle: string
+  newsletterDescription: string
+  successTitle: string
+  successMessage: string
+  submitButtonText: string
+}
+
 interface CustomContactFormProps {
   preselectedSpeaker?: string
   preselectedWorkshopId?: string
   initialTab?: 'keynote' | 'workshop'
+  content: ContactPageContent
 }
 
 export function CustomContactForm({
   preselectedSpeaker,
   preselectedWorkshopId,
-  initialTab = 'keynote'
+  initialTab = 'keynote',
+  content
 }: CustomContactFormProps) {
   const { toast } = useToast()
 
@@ -407,9 +446,9 @@ export function CustomContactForm({
         <CardContent className="pt-8">
           <div className="text-center">
             <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-3">Request Submitted Successfully!</h2>
+            <h2 className="text-2xl font-bold mb-3">{content.successTitle}</h2>
             <p className="text-gray-600 mb-6">
-              Thank you for your interest. We'll be in touch within 24 hours with personalized {activeTab === 'keynote' ? 'speaker' : 'workshop'} recommendations for your event.
+              {content.successMessage}
             </p>
             <Button onClick={() => setIsSuccess(false)} variant="outline">
               Submit Another Request
@@ -425,13 +464,10 @@ export function CustomContactForm({
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-gray-900">
-          {activeTab === 'keynote' ? 'Book an AI Keynote Speaker' : 'Book an AI Workshop'}
+          {activeTab === 'keynote' ? content.keynoteTitle : content.workshopTitle}
         </h1>
         <p className="text-lg text-gray-600">
-          {activeTab === 'keynote'
-            ? "Tell us about your event and we'll match you with the perfect AI expert"
-            : "Tell us about your training needs and we'll find the perfect AI workshop"
-          }
+          {activeTab === 'keynote' ? content.keynoteSubtitle : content.workshopSubtitle}
         </p>
       </div>
 
@@ -449,7 +485,7 @@ export function CustomContactForm({
             )}
           >
             <Mic className="h-4 w-4" />
-            Keynote Speaker
+            {content.keynoteTabLabel}
           </button>
           <button
             type="button"
@@ -462,7 +498,7 @@ export function CustomContactForm({
             )}
           >
             <GraduationCap className="h-4 w-4" />
-            Workshop
+            {content.workshopTabLabel}
           </button>
         </div>
       </div>
@@ -470,17 +506,17 @@ export function CustomContactForm({
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl">
-            {activeTab === 'keynote' ? 'Event Information' : 'Workshop Request'}
+            {content.formTitle}
           </CardTitle>
           <CardDescription>
-            Please provide as much detail as possible about your {activeTab === 'keynote' ? 'event' : 'training needs'}
+            {content.formDescription}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-8">
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Contact Section */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+              <h3 className="text-lg font-semibold mb-4">{content.contactSectionTitle}</h3>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -537,7 +573,7 @@ export function CustomContactForm({
             {/* Speaker Selection (Keynote Tab) */}
             {activeTab === 'keynote' && (
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold mb-4">Speaker Preferences</h3>
+                <h3 className="text-lg font-semibold mb-4">{content.speakerSectionTitle}</h3>
 
                 <div className="space-y-2">
                   <Label>Speakers You're Interested In</Label>
@@ -552,7 +588,7 @@ export function CustomContactForm({
                     >
                       {hasNoSpeakerInMind ? (
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-gray-600">No specific speaker in mind</span>
+                          <span className="text-gray-600">{content.noSpeakerText}</span>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -620,8 +656,8 @@ export function CustomContactForm({
                           >
                             <div className="flex items-center justify-between">
                               <div>
-                                <div className="font-medium text-gray-700">No specific speaker in mind</div>
-                                <div className="text-sm text-gray-500">We'll recommend speakers based on your needs</div>
+                                <div className="font-medium text-gray-700">{content.noSpeakerText}</div>
+                                <div className="text-sm text-gray-500">{content.speakerSectionDesc}</div>
                               </div>
                               {hasNoSpeakerInMind && (
                                 <CheckCircle className="h-5 w-5 text-blue-600" />
@@ -678,7 +714,7 @@ export function CustomContactForm({
             {/* Workshop Selection (Workshop Tab) */}
             {activeTab === 'workshop' && (
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold mb-4">Workshop Selection</h3>
+                <h3 className="text-lg font-semibold mb-4">{content.workshopSectionTitle}</h3>
 
                 <div className="space-y-2">
                   <Label>Workshop You're Interested In</Label>
@@ -693,7 +729,7 @@ export function CustomContactForm({
                     >
                       {hasNoWorkshopInMind ? (
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-gray-600">Help me find a workshop</span>
+                          <span className="text-gray-600">{content.noWorkshopText}</span>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -758,8 +794,8 @@ export function CustomContactForm({
                           >
                             <div className="flex items-center justify-between">
                               <div>
-                                <div className="font-medium text-gray-700">Help me find a workshop</div>
-                                <div className="text-sm text-gray-500">We'll recommend workshops based on your team's needs</div>
+                                <div className="font-medium text-gray-700">{content.noWorkshopText}</div>
+                                <div className="text-sm text-gray-500">{content.workshopSectionDesc}</div>
                               </div>
                               {hasNoWorkshopInMind && (
                                 <CheckCircle className="h-5 w-5 text-blue-600" />
@@ -816,7 +852,7 @@ export function CustomContactForm({
                 {/* Workshop-specific fields */}
                 <div className="grid md:grid-cols-2 gap-6 pt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="numberOfParticipants">Number of Participants</Label>
+                    <Label htmlFor="numberOfParticipants">{content.participantsTitle}</Label>
                     <Select
                       value={formData.numberOfParticipants}
                       onValueChange={(value) => handleInputChange('numberOfParticipants', value)}
@@ -835,7 +871,7 @@ export function CustomContactForm({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="participantSkillLevel">Participant Skill Level</Label>
+                    <Label htmlFor="participantSkillLevel">{content.skillLevelTitle}</Label>
                     <Select
                       value={formData.participantSkillLevel}
                       onValueChange={(value) => handleInputChange('participantSkillLevel', value)}
@@ -854,7 +890,7 @@ export function CustomContactForm({
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="preferredFormat">Preferred Format</Label>
+                    <Label htmlFor="preferredFormat">{content.formatTitle}</Label>
                     <Select
                       value={formData.preferredFormat}
                       onValueChange={(value) => handleInputChange('preferredFormat', value)}
@@ -878,7 +914,7 @@ export function CustomContactForm({
             {/* Event Details */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold mb-4">
-                {activeTab === 'keynote' ? 'Event Details' : 'Workshop Details'}
+                {content.eventSectionTitle}
               </h3>
 
               <div className="grid md:grid-cols-2 gap-6">
@@ -948,7 +984,7 @@ export function CustomContactForm({
 
               <div className="space-y-2">
                 <Label htmlFor="eventBudget">
-                  {activeTab === 'keynote' ? 'Speaker Budget Range' : 'Workshop Budget Range'}
+                  {activeTab === 'keynote' ? content.budgetSectionTitle : 'Workshop Budget Range'}
                 </Label>
                 <Select value={formData.eventBudget} onValueChange={(value) => handleInputChange('eventBudget', value)}>
                   <SelectTrigger className="h-12">
@@ -967,7 +1003,7 @@ export function CustomContactForm({
 
             {/* Additional Info */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold mb-4">Additional Information</h3>
+              <h3 className="text-lg font-semibold mb-4">{content.additionalSectionTitle}</h3>
 
               <div className="space-y-2">
                 <Label htmlFor="additionalInfo">
@@ -1002,10 +1038,10 @@ export function CustomContactForm({
                     className="text-base font-medium cursor-pointer flex items-center gap-2"
                   >
                     <Newspaper className="h-4 w-4 text-blue-600" />
-                    Subscribe to our newsletter
+                    {content.newsletterTitle}
                   </Label>
                   <p className="text-sm text-gray-600 mt-1">
-                    Get exclusive AI speaker insights, event trends, and industry updates delivered to your inbox.
+                    {content.newsletterDescription}
                   </p>
                 </div>
               </div>
@@ -1037,7 +1073,7 @@ export function CustomContactForm({
                   Submitting...
                 </>
               ) : (
-                `Submit ${activeTab === 'keynote' ? 'Speaker' : 'Workshop'} Request`
+                content.submitButtonText
               )}
             </Button>
           </form>
@@ -1047,16 +1083,16 @@ export function CustomContactForm({
       {/* Contact Info Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Need Help?</CardTitle>
+          <CardTitle className="text-lg">{content.needHelpTitle}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="flex items-start gap-3">
               <Phone className="h-5 w-5 text-gray-400 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900">Call us directly</p>
-                <a href="tel:+1-415-665-2442" className="text-blue-600 hover:underline">
-                  +1 (415) 665-2442
+                <p className="font-medium text-gray-900">{content.callLabel}</p>
+                <a href={`tel:${content.phone.replace(/[^0-9+]/g, '')}`} className="text-blue-600 hover:underline">
+                  {content.phone}
                 </a>
               </div>
             </div>
@@ -1064,9 +1100,9 @@ export function CustomContactForm({
             <div className="flex items-start gap-3">
               <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900">Email us</p>
-                <a href="mailto:human@speakabout.ai" className="text-blue-600 hover:underline">
-                  human@speakabout.ai
+                <p className="font-medium text-gray-900">{content.emailLabel}</p>
+                <a href={`mailto:${content.email}`} className="text-blue-600 hover:underline">
+                  {content.email}
                 </a>
               </div>
             </div>

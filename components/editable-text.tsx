@@ -1528,3 +1528,183 @@ export function DeliveryOptionsListEditor({
     </div>
   )
 }
+
+// Footer link type for footer links editor
+export interface FooterLink {
+  text: string
+  url: string
+}
+
+interface FooterLinkListEditorProps {
+  links: FooterLink[]
+  onChange: (links: FooterLink[]) => void
+  isModified?: boolean
+  editorMode?: boolean
+  title: string
+}
+
+export function FooterLinkListEditor({
+  links,
+  onChange,
+  isModified = false,
+  editorMode = true,
+  title
+}: FooterLinkListEditorProps) {
+  const [showEditor, setShowEditor] = useState(false)
+  const [localLinks, setLocalLinks] = useState<FooterLink[]>(links)
+
+  useEffect(() => {
+    setLocalLinks(links)
+  }, [links])
+
+  const handleAddLink = () => {
+    setLocalLinks([...localLinks, { text: 'New Link', url: '/' }])
+  }
+
+  const handleRemoveLink = (index: number) => {
+    setLocalLinks(localLinks.filter((_, i) => i !== index))
+  }
+
+  const handleUpdateLink = (index: number, field: 'text' | 'url', value: string) => {
+    const updated = [...localLinks]
+    updated[index] = { ...updated[index], [field]: value }
+    setLocalLinks(updated)
+  }
+
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return
+    const updated = [...localLinks]
+    const temp = updated[index - 1]
+    updated[index - 1] = updated[index]
+    updated[index] = temp
+    setLocalLinks(updated)
+  }
+
+  const handleMoveDown = (index: number) => {
+    if (index === localLinks.length - 1) return
+    const updated = [...localLinks]
+    const temp = updated[index + 1]
+    updated[index + 1] = updated[index]
+    updated[index] = temp
+    setLocalLinks(updated)
+  }
+
+  const handleSave = () => {
+    onChange(localLinks)
+    setShowEditor(false)
+  }
+
+  if (!editorMode) {
+    return null
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setShowEditor(true)}
+        className={cn(
+          "w-full mt-3 border-2 border-dashed rounded-lg p-3 text-sm font-medium transition-all flex items-center justify-center gap-2",
+          "border-blue-400 text-blue-300 bg-blue-900/30 hover:border-blue-300 hover:bg-blue-800/50 hover:text-white",
+          isModified && "ring-2 ring-amber-400 ring-offset-2 ring-offset-gray-900"
+        )}
+      >
+        <span>✏️</span> Edit Links ({links.length})
+      </button>
+
+      {showEditor && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowEditor(false)}>
+          <div
+            className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+              <button
+                onClick={() => setShowEditor(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-3">
+                {localLinks.map((link, index) => (
+                  <div key={index} className="border rounded-lg p-3 bg-gray-50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-medium text-gray-500 w-16">Text:</span>
+                      <input
+                        type="text"
+                        value={link.text}
+                        onChange={(e) => handleUpdateLink(index, 'text', e.target.value)}
+                        className="flex-1 text-sm border rounded px-3 py-1.5 text-gray-900"
+                        placeholder="Link text"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-gray-500 w-16">URL:</span>
+                      <input
+                        type="text"
+                        value={link.url}
+                        onChange={(e) => handleUpdateLink(index, 'url', e.target.value)}
+                        className="flex-1 text-sm border rounded px-3 py-1.5 font-mono text-gray-700"
+                        placeholder="/page-url"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-1 mt-2">
+                      <button
+                        onClick={() => handleMoveUp(index)}
+                        disabled={index === 0}
+                        className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => handleMoveDown(index)}
+                        disabled={index === localLinks.length - 1}
+                        className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        onClick={() => handleRemoveLink(index)}
+                        className="text-xs text-red-600 hover:text-red-800 px-2 py-1 hover:bg-red-50 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={handleAddLink}
+                className="mt-4 w-full border-2 border-dashed border-gray-300 rounded-lg p-3 text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors text-sm"
+              >
+                + Add Link
+              </button>
+            </div>
+
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setLocalLinks(links)
+                  setShowEditor(false)
+                }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

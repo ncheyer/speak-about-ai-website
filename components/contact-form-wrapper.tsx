@@ -4,7 +4,44 @@ import { useSearchParams } from "next/navigation"
 import { CustomContactForm } from "./custom-contact-form"
 import { Suspense } from "react"
 
-function ContactFormContent() {
+export interface ContactPageContent {
+  keynoteTitle: string
+  workshopTitle: string
+  keynoteSubtitle: string
+  workshopSubtitle: string
+  keynoteTabLabel: string
+  workshopTabLabel: string
+  formTitle: string
+  formDescription: string
+  contactSectionTitle: string
+  eventSectionTitle: string
+  additionalSectionTitle: string
+  // Keynote-specific
+  speakerSectionTitle: string
+  speakerSectionDesc: string
+  noSpeakerText: string
+  budgetSectionTitle: string
+  // Workshop-specific
+  workshopSectionTitle: string
+  workshopSectionDesc: string
+  noWorkshopText: string
+  participantsTitle: string
+  skillLevelTitle: string
+  formatTitle: string
+  // Help
+  needHelpTitle: string
+  callLabel: string
+  phone: string
+  emailLabel: string
+  email: string
+  newsletterTitle: string
+  newsletterDescription: string
+  successTitle: string
+  successMessage: string
+  submitButtonText: string
+}
+
+function ContactFormContent({ content }: { content: ContactPageContent }) {
   const searchParams = useSearchParams()
   const speakerName = searchParams.get("speakerName")
   const workshopId = searchParams.get("workshop")
@@ -17,11 +54,12 @@ function ContactFormContent() {
       preselectedSpeaker={speakerName || undefined}
       preselectedWorkshopId={workshopId || undefined}
       initialTab={initialTab}
+      content={content}
     />
   )
 }
 
-export function ContactFormWrapper() {
+export function ContactFormWrapper({ content }: { content: ContactPageContent }) {
   return (
     <Suspense fallback={
       <div className="text-center py-12">
@@ -29,7 +67,7 @@ export function ContactFormWrapper() {
         <p className="mt-4 text-gray-600">Loading contact form...</p>
       </div>
     }>
-      <ContactFormContent />
+      <ContactFormContent content={content} />
     </Suspense>
   )
 }

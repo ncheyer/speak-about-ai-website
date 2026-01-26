@@ -1,11 +1,12 @@
 "use client"
 
-import { Award, MapPin, Globe, Shield, Clock, Users, Headphones, Target, DollarSign, Globe2, Check, Calendar, ArrowRight } from "lucide-react"
-import { EditableText, EditableImage, LogoListEditor, OfferingsListEditor, SimpleListEditor, TeamMembersListEditor, BudgetRangesListEditor, DeliveryOptionsListEditor, type ServiceOffering, type TeamMember, type BudgetRange, type DeliveryOption } from "@/components/editable-text"
+import { useState } from "react"
+import { Award, MapPin, Globe, Shield, Clock, Users, Headphones, Target, DollarSign, Globe2, Check, Calendar, ArrowRight, Mic, GraduationCap } from "lucide-react"
+import { EditableText, EditableImage, LogoListEditor, OfferingsListEditor, SimpleListEditor, TeamMembersListEditor, BudgetRangesListEditor, DeliveryOptionsListEditor, FooterLinkListEditor, type ServiceOffering, type TeamMember, type BudgetRange, type DeliveryOption, type FooterLink } from "@/components/editable-text"
 import { Button } from "@/components/ui/button"
 
 interface PagePreviewProps {
-  page: "home" | "services" | "team" | "speakers" | "workshops"
+  page: "home" | "services" | "team" | "speakers" | "workshops" | "contact" | "footer"
   content: Record<string, string>
   originalContent: Record<string, string>
   onContentChange: (key: string, value: string) => void
@@ -2076,6 +2077,716 @@ function WorkshopsDirectoryPreview({
   )
 }
 
+// Contact/Inquiries Page Preview Component
+function ContactPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  const [activeMode, setActiveMode] = useState<'keynote' | 'workshop'>('keynote')
+
+  // Header content
+  const keynoteTitle = content['contact.header.keynote_title'] || 'Book an AI Keynote Speaker'
+  const workshopTitle = content['contact.header.workshop_title'] || 'Book an AI Workshop'
+  const keynoteSubtitle = content['contact.header.keynote_subtitle'] || "Tell us about your event and we'll match you with the perfect AI expert"
+  const workshopSubtitle = content['contact.header.workshop_subtitle'] || "Tell us about your training needs and we'll find the perfect AI workshop"
+
+  // Tab labels
+  const keynoteTabLabel = content['contact.tabs.keynote_label'] || 'Keynote Speaker'
+  const workshopTabLabel = content['contact.tabs.workshop_label'] || 'Workshop'
+
+  // Form sections - shared
+  const formTitle = content['contact.form.title'] || 'Event Information'
+  const formDescription = content['contact.form.description'] || 'Please provide as much detail as possible about your event'
+  const contactSectionTitle = content['contact.form.contact_section_title'] || 'Contact Information'
+  const eventSectionTitle = content['contact.form.event_section_title'] || 'Event Details'
+  const additionalSectionTitle = content['contact.form.additional_section_title'] || 'Additional Information'
+
+  // Keynote-specific
+  const speakerSectionTitle = content['contact.keynote.speaker_section_title'] || 'Speaker Preferences'
+  const speakerSectionDesc = content['contact.keynote.speaker_section_desc'] || 'Select one or more speakers you are interested in, or let us help you find the right fit.'
+  const noSpeakerText = content['contact.keynote.no_speaker_text'] || "I don't have a specific speaker in mind"
+  const budgetSectionTitle = content['contact.keynote.budget_section_title'] || 'Speaker Budget Range'
+
+  // Workshop-specific
+  const workshopSectionTitle = content['contact.workshop.workshop_section_title'] || 'Workshop Selection'
+  const workshopSectionDesc = content['contact.workshop.workshop_section_desc'] || 'Select a workshop or let us help you find the right one.'
+  const noWorkshopText = content['contact.workshop.no_workshop_text'] || 'Help me find a workshop'
+  const participantsSectionTitle = content['contact.workshop.participants_title'] || 'Number of Participants'
+  const skillLevelTitle = content['contact.workshop.skill_level_title'] || 'Participant Skill Level'
+  const formatTitle = content['contact.workshop.format_title'] || 'Preferred Format'
+
+  // Need Help card
+  const needHelpTitle = content['contact.help.title'] || 'Need Help?'
+  const callLabel = content['contact.help.call_label'] || 'Call us directly'
+  const phone = content['contact.help.phone'] || '+1 (415) 665-2442'
+  const emailLabel = content['contact.help.email_label'] || 'Email us'
+  const email = content['contact.help.email'] || 'human@speakabout.ai'
+
+  // Newsletter opt-in
+  const newsletterTitle = content['contact.newsletter.title'] || 'Subscribe to our newsletter'
+  const newsletterDescription = content['contact.newsletter.description'] || 'Get exclusive AI speaker insights, event trends, and industry updates delivered to your inbox.'
+
+  // Success message
+  const successTitle = content['contact.success.title'] || 'Request Submitted Successfully!'
+  const successMessage = content['contact.success.message'] || "Thank you for your interest. We'll be in touch within 24 hours with personalized speaker recommendations for your event."
+
+  // Button text
+  const submitButtonText = content['contact.buttons.submit'] || 'Submit Speaker Request'
+
+  return (
+    <div className="bg-white py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Mode Toggle - Editor Control */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-blue-900">Edit Form Content</h3>
+              <p className="text-sm text-blue-700">Toggle between Keynote Speaker and Workshop forms to edit their specific content</p>
+            </div>
+            <div className="flex rounded-lg border border-blue-300 bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setActiveMode('keynote')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-all ${
+                  activeMode === 'keynote'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <Mic className="w-4 h-4" />
+                Keynote Speaker
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveMode('workshop')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-all ${
+                  activeMode === 'workshop'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <GraduationCap className="w-4 h-4" />
+                Workshop
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Header Section */}
+        <div className="text-center space-y-4">
+          <EditableText
+            value={activeMode === 'keynote' ? keynoteTitle : workshopTitle}
+            onChange={(v) => onContentChange(activeMode === 'keynote' ? 'contact.header.keynote_title' : 'contact.header.workshop_title', v)}
+            as="h1"
+            className="text-4xl font-bold text-gray-900"
+            isModified={isModified(activeMode === 'keynote' ? 'contact.header.keynote_title' : 'contact.header.workshop_title', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <EditableText
+            value={activeMode === 'keynote' ? keynoteSubtitle : workshopSubtitle}
+            onChange={(v) => onContentChange(activeMode === 'keynote' ? 'contact.header.keynote_subtitle' : 'contact.header.workshop_subtitle', v)}
+            as="p"
+            className="text-lg text-gray-600"
+            isModified={isModified(activeMode === 'keynote' ? 'contact.header.keynote_subtitle' : 'contact.header.workshop_subtitle', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
+
+        {/* Tab Labels */}
+        <div className="flex justify-center">
+          <div className="inline-flex rounded-lg border bg-gray-100 p-1">
+            <div className={`flex items-center gap-2 px-6 py-3 rounded-md ${activeMode === 'keynote' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}>
+              <Mic className="w-4 h-4" />
+              <EditableText
+                value={keynoteTabLabel}
+                onChange={(v) => onContentChange('contact.tabs.keynote_label', v)}
+                className="font-medium"
+                isModified={isModified('contact.tabs.keynote_label', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+            <div className={`flex items-center gap-2 px-6 py-3 rounded-md ${activeMode === 'workshop' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}>
+              <GraduationCap className="w-4 h-4" />
+              <EditableText
+                value={workshopTabLabel}
+                onChange={(v) => onContentChange('contact.tabs.workshop_label', v)}
+                className="font-medium"
+                isModified={isModified('contact.tabs.workshop_label', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Form Card Preview */}
+        <div className="bg-white rounded-xl shadow-lg border p-6 space-y-6">
+          {/* Form Header */}
+          <div className="border-b pb-4">
+            <EditableText
+              value={formTitle}
+              onChange={(v) => onContentChange('contact.form.title', v)}
+              as="h2"
+              className="text-2xl font-semibold text-gray-900 mb-2"
+              isModified={isModified('contact.form.title', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <EditableText
+              value={formDescription}
+              onChange={(v) => onContentChange('contact.form.description', v)}
+              as="p"
+              className="text-gray-600"
+              isModified={isModified('contact.form.description', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+
+          {/* Contact Section */}
+          <div className="space-y-4">
+            <EditableText
+              value={contactSectionTitle}
+              onChange={(v) => onContentChange('contact.form.contact_section_title', v)}
+              as="h3"
+              className="text-lg font-semibold text-gray-900"
+              isModified={isModified('contact.form.contact_section_title', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <div className="grid md:grid-cols-2 gap-4 opacity-50">
+              <div className="h-12 bg-gray-100 rounded border flex items-center px-3 text-gray-400 text-sm">Your Name</div>
+              <div className="h-12 bg-gray-100 rounded border flex items-center px-3 text-gray-400 text-sm">Email Address</div>
+              <div className="h-12 bg-gray-100 rounded border flex items-center px-3 text-gray-400 text-sm">Phone Number</div>
+              <div className="h-12 bg-gray-100 rounded border flex items-center px-3 text-gray-400 text-sm">Organization Name</div>
+            </div>
+          </div>
+
+          {/* Speaker/Workshop Selection - Mode Specific */}
+          {activeMode === 'keynote' ? (
+            <div className="space-y-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-amber-800 text-xs font-medium mb-2">
+                <Mic className="w-4 h-4" />
+                KEYNOTE SPEAKER SPECIFIC
+              </div>
+              <EditableText
+                value={speakerSectionTitle}
+                onChange={(v) => onContentChange('contact.keynote.speaker_section_title', v)}
+                as="h3"
+                className="text-lg font-semibold text-gray-900"
+                isModified={isModified('contact.keynote.speaker_section_title', content, originalContent)}
+                editorMode={editorMode}
+              />
+              <EditableText
+                value={speakerSectionDesc}
+                onChange={(v) => onContentChange('contact.keynote.speaker_section_desc', v)}
+                as="p"
+                className="text-sm text-gray-600"
+                multiline
+                isModified={isModified('contact.keynote.speaker_section_desc', content, originalContent)}
+                editorMode={editorMode}
+              />
+              <div className="h-12 bg-white rounded border opacity-70 flex items-center px-3 text-gray-400 text-sm">
+                Search speakers...
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-4 h-4 border rounded"></div>
+                <EditableText
+                  value={noSpeakerText}
+                  onChange={(v) => onContentChange('contact.keynote.no_speaker_text', v)}
+                  className="text-gray-700"
+                  isModified={isModified('contact.keynote.no_speaker_text', content, originalContent)}
+                  editorMode={editorMode}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-purple-800 text-xs font-medium mb-2">
+                <GraduationCap className="w-4 h-4" />
+                WORKSHOP SPECIFIC
+              </div>
+              <EditableText
+                value={workshopSectionTitle}
+                onChange={(v) => onContentChange('contact.workshop.workshop_section_title', v)}
+                as="h3"
+                className="text-lg font-semibold text-gray-900"
+                isModified={isModified('contact.workshop.workshop_section_title', content, originalContent)}
+                editorMode={editorMode}
+              />
+              <EditableText
+                value={workshopSectionDesc}
+                onChange={(v) => onContentChange('contact.workshop.workshop_section_desc', v)}
+                as="p"
+                className="text-sm text-gray-600"
+                multiline
+                isModified={isModified('contact.workshop.workshop_section_desc', content, originalContent)}
+                editorMode={editorMode}
+              />
+              <div className="h-12 bg-white rounded border opacity-70 flex items-center px-3 text-gray-400 text-sm">
+                Search workshops...
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-4 h-4 border rounded"></div>
+                <EditableText
+                  value={noWorkshopText}
+                  onChange={(v) => onContentChange('contact.workshop.no_workshop_text', v)}
+                  className="text-gray-700"
+                  isModified={isModified('contact.workshop.no_workshop_text', content, originalContent)}
+                  editorMode={editorMode}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Event Details Section */}
+          <div className="space-y-4">
+            <EditableText
+              value={eventSectionTitle}
+              onChange={(v) => onContentChange('contact.form.event_section_title', v)}
+              as="h3"
+              className="text-lg font-semibold text-gray-900"
+              isModified={isModified('contact.form.event_section_title', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <div className="grid md:grid-cols-2 gap-4 opacity-50">
+              <div className="h-12 bg-gray-100 rounded border flex items-center px-3 text-gray-400 text-sm">Event Date(s)</div>
+              <div className="h-12 bg-gray-100 rounded border flex items-center px-3 text-gray-400 text-sm">Event Location</div>
+            </div>
+          </div>
+
+          {/* Budget Section (Keynote) or Workshop Details (Workshop) */}
+          {activeMode === 'keynote' ? (
+            <div className="space-y-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-amber-800 text-xs font-medium mb-2">
+                <DollarSign className="w-4 h-4" />
+                KEYNOTE SPEAKER SPECIFIC
+              </div>
+              <EditableText
+                value={budgetSectionTitle}
+                onChange={(v) => onContentChange('contact.keynote.budget_section_title', v)}
+                as="h3"
+                className="text-lg font-semibold text-gray-900"
+                isModified={isModified('contact.keynote.budget_section_title', content, originalContent)}
+                editorMode={editorMode}
+              />
+              <div className="h-12 bg-white rounded border opacity-70 flex items-center px-3 text-gray-400 text-sm">
+                Select your budget range
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-purple-800 text-xs font-medium mb-2">
+                <Users className="w-4 h-4" />
+                WORKSHOP SPECIFIC
+              </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <EditableText
+                    value={participantsSectionTitle}
+                    onChange={(v) => onContentChange('contact.workshop.participants_title', v)}
+                    as="label"
+                    className="text-sm font-medium text-gray-900"
+                    isModified={isModified('contact.workshop.participants_title', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                  <div className="h-10 bg-white rounded border opacity-70 flex items-center px-3 text-gray-400 text-xs">
+                    Select...
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <EditableText
+                    value={skillLevelTitle}
+                    onChange={(v) => onContentChange('contact.workshop.skill_level_title', v)}
+                    as="label"
+                    className="text-sm font-medium text-gray-900"
+                    isModified={isModified('contact.workshop.skill_level_title', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                  <div className="h-10 bg-white rounded border opacity-70 flex items-center px-3 text-gray-400 text-xs">
+                    Select...
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <EditableText
+                    value={formatTitle}
+                    onChange={(v) => onContentChange('contact.workshop.format_title', v)}
+                    as="label"
+                    className="text-sm font-medium text-gray-900"
+                    isModified={isModified('contact.workshop.format_title', content, originalContent)}
+                    editorMode={editorMode}
+                  />
+                  <div className="h-10 bg-white rounded border opacity-70 flex items-center px-3 text-gray-400 text-xs">
+                    Select...
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Additional Info Section */}
+          <div className="space-y-4">
+            <EditableText
+              value={additionalSectionTitle}
+              onChange={(v) => onContentChange('contact.form.additional_section_title', v)}
+              as="h3"
+              className="text-lg font-semibold text-gray-900"
+              isModified={isModified('contact.form.additional_section_title', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <div className="h-24 bg-gray-100 rounded border opacity-50"></div>
+          </div>
+
+          {/* Newsletter Opt-in Preview */}
+          <div className="bg-gray-50 rounded-lg p-6 space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border rounded bg-white"></div>
+              <EditableText
+                value={newsletterTitle}
+                onChange={(v) => onContentChange('contact.newsletter.title', v)}
+                className="font-medium text-gray-900"
+                isModified={isModified('contact.newsletter.title', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+            <EditableText
+              value={newsletterDescription}
+              onChange={(v) => onContentChange('contact.newsletter.description', v)}
+              as="p"
+              className="text-sm text-gray-600 ml-6"
+              multiline
+              isModified={isModified('contact.newsletter.description', content, originalContent)}
+              editorMode={editorMode}
+            />
+          </div>
+
+          {/* Submit Button */}
+          <div className="pt-4">
+            <div className="bg-blue-600 text-white py-3 px-6 rounded-lg text-center">
+              <EditableText
+                value={submitButtonText}
+                onChange={(v) => onContentChange('contact.buttons.submit', v)}
+                className="font-medium text-white"
+                isModified={isModified('contact.buttons.submit', content, originalContent)}
+                editorMode={editorMode}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Need Help Card */}
+        <div className="bg-white rounded-xl shadow-lg border p-6">
+          <EditableText
+            value={needHelpTitle}
+            onChange={(v) => onContentChange('contact.help.title', v)}
+            as="h3"
+            className="text-lg font-semibold text-gray-900 mb-4"
+            isModified={isModified('contact.help.title', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="flex items-start gap-3">
+              <span className="text-gray-400 text-xl">📞</span>
+              <div>
+                <EditableText
+                  value={callLabel}
+                  onChange={(v) => onContentChange('contact.help.call_label', v)}
+                  as="p"
+                  className="font-medium text-gray-900"
+                  isModified={isModified('contact.help.call_label', content, originalContent)}
+                  editorMode={editorMode}
+                />
+                <EditableText
+                  value={phone}
+                  onChange={(v) => onContentChange('contact.help.phone', v)}
+                  className="text-blue-600"
+                  isModified={isModified('contact.help.phone', content, originalContent)}
+                  editorMode={editorMode}
+                />
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-gray-400 text-xl">✉️</span>
+              <div>
+                <EditableText
+                  value={emailLabel}
+                  onChange={(v) => onContentChange('contact.help.email_label', v)}
+                  as="p"
+                  className="font-medium text-gray-900"
+                  isModified={isModified('contact.help.email_label', content, originalContent)}
+                  editorMode={editorMode}
+                />
+                <EditableText
+                  value={email}
+                  onChange={(v) => onContentChange('contact.help.email', v)}
+                  className="text-blue-600"
+                  isModified={isModified('contact.help.email', content, originalContent)}
+                  editorMode={editorMode}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Success Message Preview */}
+        <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center space-y-4">
+          <div className="text-green-600 text-4xl">✓</div>
+          <EditableText
+            value={successTitle}
+            onChange={(v) => onContentChange('contact.success.title', v)}
+            as="h2"
+            className="text-2xl font-bold text-gray-900"
+            isModified={isModified('contact.success.title', content, originalContent)}
+            editorMode={editorMode}
+          />
+          <EditableText
+            value={successMessage}
+            onChange={(v) => onContentChange('contact.success.message', v)}
+            as="p"
+            className="text-gray-600"
+            multiline
+            isModified={isModified('contact.success.message', content, originalContent)}
+            editorMode={editorMode}
+          />
+        </div>
+
+        <p className="text-center text-xs text-gray-400 italic">Form fields and dropdown options are handled dynamically - text labels and titles shown here are editable</p>
+      </div>
+    </div>
+  )
+}
+
+// Footer Preview Component
+function FooterPreview({
+  content,
+  originalContent,
+  onContentChange,
+  editorMode = true
+}: Omit<PagePreviewProps, 'page'>) {
+  // Company Info
+  const logo = content['footer.company.logo'] || '/speak-about-ai-light-logo.png'
+  const logoAlt = content['footer.company.logo_alt'] || 'Speak About AI'
+  const companyDescription = content['footer.company.description'] || "The world's only AI-exclusive speaker bureau, connecting organizations around the world with the most sought-after artificial intelligence experts and thought leaders."
+  const phone = content['footer.company.phone'] || '+1 (415) 665-2442'
+  const email = content['footer.company.email'] || 'human@speakabout.ai'
+
+  // Quick Links - defaults
+  const defaultQuickLinks: FooterLink[] = [
+    { text: 'All Speakers', url: '/speakers' },
+    { text: 'Our Services', url: '/our-services' },
+    { text: 'Our Team', url: '/our-team' },
+    { text: 'Contact Us', url: '/contact' },
+    { text: 'Blog', url: '/blog' }
+  ]
+  const quickLinksTitle = content['footer.quick-links.title'] || 'Quick Links'
+  const quickLinksJson = content['footer.quick-links.links']
+  let quickLinks: FooterLink[] = defaultQuickLinks
+  if (quickLinksJson) {
+    try {
+      const parsed = JSON.parse(quickLinksJson)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        quickLinks = parsed
+      }
+    } catch {
+      // Keep defaults on parse error
+    }
+  }
+
+  // Industries - defaults
+  const defaultIndustriesLinks: FooterLink[] = [
+    { text: 'Healthcare AI', url: '/industries/healthcare-keynote-speakers' },
+    { text: 'Technology & Enterprise', url: '/industries/technology-keynote-speakers' }
+  ]
+  const industriesTitle = content['footer.industries.title'] || 'Industries'
+  const industriesLinksJson = content['footer.industries.links']
+  let industriesLinks: FooterLink[] = defaultIndustriesLinks
+  if (industriesLinksJson) {
+    try {
+      const parsed = JSON.parse(industriesLinksJson)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        industriesLinks = parsed
+      }
+    } catch {
+      // Keep defaults on parse error
+    }
+  }
+
+  // For Speakers - defaults
+  const defaultForSpeakersLinks: FooterLink[] = [
+    { text: 'Apply to Be a Speaker', url: '/apply' }
+  ]
+  const forSpeakersTitle = content['footer.for-speakers.title'] || 'For Speakers'
+  const forSpeakersLinksJson = content['footer.for-speakers.links']
+  let forSpeakersLinks: FooterLink[] = defaultForSpeakersLinks
+  if (forSpeakersLinksJson) {
+    try {
+      const parsed = JSON.parse(forSpeakersLinksJson)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        forSpeakersLinks = parsed
+      }
+    } catch {
+      // Keep defaults on parse error
+    }
+  }
+
+  // Bottom
+  const copyright = content['footer.bottom.copyright'] || '© 2026 Speak About AI. All rights reserved.'
+
+  return (
+    <div className="bg-gray-900 text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-8">
+          {/* Company Info */}
+          <div className="col-span-1 md:col-span-2">
+            <div className="mb-6">
+              <EditableImage
+                src={logo}
+                alt={logoAlt}
+                onChange={(newSrc) => onContentChange('footer.company.logo', newSrc)}
+                onAltChange={(newAlt) => onContentChange('footer.company.logo_alt', newAlt)}
+                isModified={isModified('footer.company.logo', content, originalContent)}
+                editorMode={editorMode}
+                className="h-12 w-auto"
+                uploadFolder="footer"
+              />
+            </div>
+            <EditableText
+              value={companyDescription}
+              onChange={(v) => onContentChange('footer.company.description', v)}
+              as="p"
+              className="text-gray-300 mb-6 max-w-md"
+              multiline
+              isModified={isModified('footer.company.description', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <div className="space-y-2">
+              <div className="flex items-start">
+                <span className="w-4 h-4 mr-3 text-blue-500 mt-1">📞</span>
+                <EditableText
+                  value={phone}
+                  onChange={(v) => onContentChange('footer.company.phone', v)}
+                  className="text-gray-300 whitespace-pre-line"
+                  isModified={isModified('footer.company.phone', content, originalContent)}
+                  editorMode={editorMode}
+                  multiline={true}
+                />
+              </div>
+              <div className="flex items-center">
+                <span className="w-4 h-4 mr-3 text-blue-500">✉️</span>
+                <EditableText
+                  value={email}
+                  onChange={(v) => onContentChange('footer.company.email', v)}
+                  className="text-gray-300"
+                  isModified={isModified('footer.company.email', content, originalContent)}
+                  editorMode={editorMode}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <EditableText
+              value={quickLinksTitle}
+              onChange={(v) => onContentChange('footer.quick-links.title', v)}
+              as="h3"
+              className="text-lg font-semibold mb-4"
+              isModified={isModified('footer.quick-links.title', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <ul className="space-y-2">
+              {quickLinks.map((link, index) => (
+                <li key={index}>
+                  <span className="text-gray-300">{link.text}</span>
+                  <span className="text-gray-500 text-xs ml-2">→ {link.url}</span>
+                </li>
+              ))}
+            </ul>
+            <FooterLinkListEditor
+              links={quickLinks}
+              onChange={(newLinks) => onContentChange('footer.quick-links.links', JSON.stringify(newLinks))}
+              isModified={isModified('footer.quick-links.links', content, originalContent)}
+              editorMode={editorMode}
+              title="Edit Quick Links"
+            />
+          </div>
+
+          {/* Industries */}
+          <div>
+            <EditableText
+              value={industriesTitle}
+              onChange={(v) => onContentChange('footer.industries.title', v)}
+              as="h3"
+              className="text-lg font-semibold mb-4"
+              isModified={isModified('footer.industries.title', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <ul className="space-y-2">
+              {industriesLinks.map((link, index) => (
+                <li key={index}>
+                  <span className="text-gray-300">{link.text}</span>
+                  <span className="text-gray-500 text-xs ml-2">→ {link.url}</span>
+                </li>
+              ))}
+            </ul>
+            <FooterLinkListEditor
+              links={industriesLinks}
+              onChange={(newLinks) => onContentChange('footer.industries.links', JSON.stringify(newLinks))}
+              isModified={isModified('footer.industries.links', content, originalContent)}
+              editorMode={editorMode}
+              title="Edit Industries Links"
+            />
+          </div>
+
+          {/* For Speakers */}
+          <div>
+            <EditableText
+              value={forSpeakersTitle}
+              onChange={(v) => onContentChange('footer.for-speakers.title', v)}
+              as="h3"
+              className="text-lg font-semibold mb-4"
+              isModified={isModified('footer.for-speakers.title', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <ul className="space-y-2">
+              {forSpeakersLinks.map((link, index) => (
+                <li key={index}>
+                  <span className="text-gray-300">{link.text}</span>
+                  <span className="text-gray-500 text-xs ml-2">→ {link.url}</span>
+                </li>
+              ))}
+            </ul>
+            <FooterLinkListEditor
+              links={forSpeakersLinks}
+              onChange={(newLinks) => onContentChange('footer.for-speakers.links', JSON.stringify(newLinks))}
+              isModified={isModified('footer.for-speakers.links', content, originalContent)}
+              editorMode={editorMode}
+              title="Edit For Speakers Links"
+            />
+          </div>
+        </div>
+
+        <div className="border-t border-gray-800 mt-12 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <EditableText
+              value={copyright}
+              onChange={(v) => onContentChange('footer.bottom.copyright', v)}
+              className="text-gray-300 text-sm mb-4 md:mb-0"
+              isModified={isModified('footer.bottom.copyright', content, originalContent)}
+              editorMode={editorMode}
+            />
+            <div className="flex items-center space-x-6">
+              <span className="text-gray-300 text-sm">Privacy Policy</span>
+              <span className="text-gray-300 text-sm">Terms of Service</span>
+              <div className="flex space-x-4">
+                <span className="text-gray-300">LinkedIn</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Main Page Preview Component
 export function PagePreview({ page, content, originalContent, onContentChange, editorMode = true }: PagePreviewProps) {
   if (page === 'home') {
@@ -2215,6 +2926,28 @@ export function PagePreview({ page, content, originalContent, onContentChange, e
   if (page === 'workshops') {
     return (
       <WorkshopsDirectoryPreview
+        content={content}
+        originalContent={originalContent}
+        onContentChange={onContentChange}
+        editorMode={editorMode}
+      />
+    )
+  }
+
+  if (page === 'contact') {
+    return (
+      <ContactPreview
+        content={content}
+        originalContent={originalContent}
+        onContentChange={onContentChange}
+        editorMode={editorMode}
+      />
+    )
+  }
+
+  if (page === 'footer') {
+    return (
+      <FooterPreview
         content={content}
         originalContent={originalContent}
         onContentChange={onContentChange}

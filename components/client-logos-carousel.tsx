@@ -52,7 +52,7 @@ export default function ClientLogosCarousel({
                 <TooltipTrigger asChild>
                   <div className="flex-shrink-0 flex items-center justify-center py-2 cursor-pointer">
                     <Image
-                      src={client.src || "/placeholder.svg"}
+                      src={client.src}
                       alt={client.alt}
                       width={
                         client.size === "super-large"

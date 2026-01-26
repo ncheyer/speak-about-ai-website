@@ -4,7 +4,6 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
-import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import TrackingScripts from "@/components/tracking-scripts"
 import { ScrollToTopProvider } from "@/components/scroll-to-top-provider"
@@ -97,7 +96,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head>
         {/* Preconnect to external resources for faster loading */}
         <link rel="preconnect" href="https://images.ctfassets.net" />
@@ -113,19 +112,17 @@ export default function RootLayout({
           <script src="http://localhost:8097"></script>
         )}
       </head>
-      <body className={inter.className} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-          <ScrollToTopProvider>
-              <div className="flex min-h-screen flex-col">
-                <Header />
-                <main className="flex-1">{children}</main>
-                <Footer />
-              </div>
-              <Toaster />
-              <CookieConsent />
-              <SpeedInsights />
-            </ScrollToTopProvider>
-        </ThemeProvider>
+      <body className={inter.className}>
+        <ScrollToTopProvider>
+          <div className="flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+          <Toaster />
+          <CookieConsent />
+          <SpeedInsights />
+        </ScrollToTopProvider>
       </body>
     </html>
   )

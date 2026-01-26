@@ -299,6 +299,42 @@ export const CONTENT_DEFAULTS = {
       og_description: 'Meet the team at Speak About AI - the premier AI-exclusive speaker bureau.',
     },
   },
+  footer: {
+    company: {
+      logo: '/speak-about-ai-light-logo.png',
+      logo_alt: 'Speak About AI',
+      description: "The world's only AI-exclusive speaker bureau, connecting organizations around the world with the most sought-after artificial intelligence experts and thought leaders.",
+      phone: '+1 (415) 665-2442',
+      email: 'human@speakabout.ai',
+    },
+    'quick-links': {
+      title: 'Quick Links',
+      links: JSON.stringify([
+        { text: 'All Speakers', url: '/speakers' },
+        { text: 'Our Services', url: '/our-services' },
+        { text: 'Our Team', url: '/our-team' },
+        { text: 'Contact Us', url: '/contact' },
+        { text: 'Blog', url: '/blog' }
+      ]),
+    },
+    industries: {
+      title: 'Industries',
+      links: JSON.stringify([
+        { text: 'Healthcare AI', url: '/industries/healthcare-keynote-speakers' },
+        { text: 'Technology & Enterprise', url: '/industries/technology-keynote-speakers' }
+      ]),
+    },
+    'for-speakers': {
+      title: 'For Speakers',
+      links: JSON.stringify([
+        { text: 'Apply to Be a Speaker', url: '/apply' }
+      ]),
+    },
+    bottom: {
+      copyright: '© 2026 Speak About AI. All rights reserved.',
+      linkedin_url: 'https://www.linkedin.com/company/speakabout-ai/',
+    },
+  },
 } as const
 
 // Type for the structured defaults

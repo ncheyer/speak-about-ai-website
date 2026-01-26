@@ -1,8 +1,76 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Phone, Mail, Linkedin } from "lucide-react"
+import { getPageContent, getFromContent } from "@/lib/website-content"
 
-export default function Footer() {
+export default async function Footer() {
+  // Fetch footer content from database
+  const content = await getPageContent('footer')
+
+  // Company Info
+  const logo = getFromContent(content, 'footer', 'company', 'logo') || '/speak-about-ai-light-logo.png'
+  const logoAlt = getFromContent(content, 'footer', 'company', 'logo_alt') || 'Speak About AI'
+  const description = getFromContent(content, 'footer', 'company', 'description') || "The world's only AI-exclusive speaker bureau, connecting organizations around the world with the most sought-after artificial intelligence experts and thought leaders."
+  const phone = getFromContent(content, 'footer', 'company', 'phone') || '+1 (415) 665-2442'
+  const email = getFromContent(content, 'footer', 'company', 'email') || 'human@speakabout.ai'
+
+  // Quick Links
+  const quickLinksTitle = getFromContent(content, 'footer', 'quick-links', 'title') || 'Quick Links'
+  const quickLinksJson = getFromContent(content, 'footer', 'quick-links', 'links')
+  let quickLinks: { text: string; url: string }[] = []
+  try {
+    quickLinks = quickLinksJson ? JSON.parse(quickLinksJson) : []
+  } catch {
+    quickLinks = []
+  }
+  // Default quick links if empty
+  if (quickLinks.length === 0) {
+    quickLinks = [
+      { text: 'All Speakers', url: '/speakers' },
+      { text: 'Our Services', url: '/our-services' },
+      { text: 'Our Team', url: '/our-team' },
+      { text: 'Contact Us', url: '/contact' },
+      { text: 'Blog', url: '/blog' }
+    ]
+  }
+
+  // Industries
+  const industriesTitle = getFromContent(content, 'footer', 'industries', 'title') || 'Industries'
+  const industriesLinksJson = getFromContent(content, 'footer', 'industries', 'links')
+  let industriesLinks: { text: string; url: string }[] = []
+  try {
+    industriesLinks = industriesLinksJson ? JSON.parse(industriesLinksJson) : []
+  } catch {
+    industriesLinks = []
+  }
+  // Default industries links if empty
+  if (industriesLinks.length === 0) {
+    industriesLinks = [
+      { text: 'Healthcare AI', url: '/industries/healthcare-keynote-speakers' },
+      { text: 'Technology & Enterprise', url: '/industries/technology-keynote-speakers' }
+    ]
+  }
+
+  // For Speakers
+  const forSpeakersTitle = getFromContent(content, 'footer', 'for-speakers', 'title') || 'For Speakers'
+  const forSpeakersLinksJson = getFromContent(content, 'footer', 'for-speakers', 'links')
+  let forSpeakersLinks: { text: string; url: string }[] = []
+  try {
+    forSpeakersLinks = forSpeakersLinksJson ? JSON.parse(forSpeakersLinksJson) : []
+  } catch {
+    forSpeakersLinks = []
+  }
+  // Default for speakers links if empty
+  if (forSpeakersLinks.length === 0) {
+    forSpeakersLinks = [
+      { text: 'Apply to Be a Speaker', url: '/apply' }
+    ]
+  }
+
+  // Bottom
+  const copyright = getFromContent(content, 'footer', 'bottom', 'copyright') || '© 2026 Speak About AI. All rights reserved.'
+  const linkedinUrl = getFromContent(content, 'footer', 'bottom', 'linkedin_url') || 'https://www.linkedin.com/company/speakabout-ai/'
+
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -11,107 +79,78 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-2">
             <div className="mb-6">
               <Image
-                src="/speak-about-ai-light-logo.png"
-                alt="Speak About AI"
+                src={logo}
+                alt={logoAlt}
                 width={200}
                 height={60}
                 className="h-12 w-auto"
               />
             </div>
             <p className="text-[#EAEAEE] mb-6 max-w-md">
-              The world's only AI-exclusive speaker bureau, connecting organizations around the world with the most
-              sought-after artificial intelligence experts and thought leaders.
+              {description}
             </p>
             <div className="space-y-2">
-              <div className="flex items-center">
-                <Phone className="w-4 h-4 mr-3 text-[#1E68C6]" />
-                <span className="text-[#EAEAEE]">+1 (415) 665-2442</span>
+              <div className="flex items-start">
+                <Phone className="w-4 h-4 mr-3 mt-1 text-[#1E68C6]" />
+                <span className="text-[#EAEAEE] whitespace-pre-line">{phone}</span>
               </div>
               <div className="flex items-center">
                 <Mail className="w-4 h-4 mr-3 text-[#1E68C6]" />
-                <span className="text-[#EAEAEE]">human@speakabout.ai</span>
+                <span className="text-[#EAEAEE]">{email}</span>
               </div>
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-lg font-semibold mb-4">{quickLinksTitle}</h3>
             <ul className="space-y-2">
-              <li>
-                <Link href="/speakers" className="text-[#EAEAEE] hover:text-white">
-                  All Speakers
-                </Link>
-              </li>
-              <li>
-                <Link href="/our-services" className="text-[#EAEAEE] hover:text-white">
-                  Our Services
-                </Link>
-              </li>
-              <li>
-                <Link href="/our-team" className="text-[#EAEAEE] hover:text-white">
-                  Our Team
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-[#EAEAEE] hover:text-white">
-                  Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/blog" className="text-[#EAEAEE] hover:text-white">
-                  Blog
-                </Link>
-              </li>
-              <li>
-                <Link href="/sitemap.xml" className="text-[#EAEAEE] hover:text-white">
-                  Sitemap
-                </Link>
-              </li>
+              {quickLinks.map((link, index) => (
+                <li key={index}>
+                  <Link href={link.url} className="text-[#EAEAEE] hover:text-white">
+                    {link.text}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Industries */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Industries</h3>
+            <h3 className="text-lg font-semibold mb-4">{industriesTitle}</h3>
             <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/industries/healthcare-keynote-speakers"
-                  scroll={false}
-                  className="text-[#EAEAEE] hover:text-white"
-                >
-                  Healthcare AI
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/industries/technology-keynote-speakers"
-                  scroll={false}
-                  className="text-[#EAEAEE] hover:text-white"
-                >
-                  Technology & Enterprise
-                </Link>
-              </li>
+              {industriesLinks.map((link, index) => (
+                <li key={index}>
+                  <Link
+                    href={link.url}
+                    scroll={false}
+                    className="text-[#EAEAEE] hover:text-white"
+                  >
+                    {link.text}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* For Speakers */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">For Speakers</h3>
+            <h3 className="text-lg font-semibold mb-4">{forSpeakersTitle}</h3>
             <ul className="space-y-2">
-              <li>
-                <Link href="/apply" className="text-[#EAEAEE] hover:text-white">
-                  Apply to Be a Speaker
-                </Link>
-              </li>
+              {forSpeakersLinks.map((link, index) => (
+                <li key={index}>
+                  <Link href={link.url} className="text-[#EAEAEE] hover:text-white">
+                    {link.text}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-[#EAEAEE] text-sm mb-4 md:mb-0">© 2026 Speak About AI. All rights reserved.</div>
+            <div className="text-[#EAEAEE] text-sm mb-4 md:mb-0">{copyright}</div>
             <div className="flex items-center space-x-6">
               <Link href="/privacy" className="text-[#EAEAEE] hover:text-white text-sm">
                 Privacy Policy
@@ -121,7 +160,7 @@ export default function Footer() {
               </Link>
               <div className="flex space-x-4">
                 <a
-                  href="https://www.linkedin.com/company/speakabout-ai/"
+                  href={linkedinUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[#EAEAEE] hover:text-white"
