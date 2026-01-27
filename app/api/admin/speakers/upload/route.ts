@@ -31,6 +31,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         return {
           allowedContentTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
           maximumSizeInBytes: 5 * 1024 * 1024, // 5MB limit for speaker photos
+          allowOverwrite: true,
         }
       },
       onUploadCompleted: async ({ blob }) => {

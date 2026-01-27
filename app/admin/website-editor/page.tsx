@@ -24,6 +24,7 @@ import {
   Mail
 } from "lucide-react"
 import { EditHistoryPanel } from "@/components/edit-history-panel"
+import { authPut, authPost } from "@/lib/auth-fetch"
 
 interface ContentItem {
   id: number
@@ -112,11 +113,7 @@ export default function WebsiteEditorPage() {
         return
       }
 
-      const response = await fetch('/api/admin/website-content', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-      })
+      const response = await authPut('/api/admin/website-content', updates)
 
       if (response.ok) {
         setSaveStatus({ type: 'success', message: `Saved ${updates.length} change${updates.length > 1 ? 's' : ''} - now live on the site!` })
@@ -138,11 +135,7 @@ export default function WebsiteEditorPage() {
 
     setSaving(true)
     try {
-      const response = await fetch('/api/admin/website-content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'reseed' })
-      })
+      const response = await authPost('/api/admin/website-content', { action: 'reseed' })
 
       if (response.ok) {
         setSaveStatus({ type: 'success', message: 'Content reset to defaults!' })

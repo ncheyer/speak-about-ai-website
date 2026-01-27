@@ -29,17 +29,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create a new token with refreshed expiration (1 hour from now)
+    // Create a new token with refreshed expiration (8 hours from now)
+    // This prevents frequent logouts during active use
     const newToken = createToken({
       email: payload.email,
       role: 'admin'
-    }, 1) // 1 hour expiration
+    }, 8) // 8 hour expiration
 
     // Return the new token
     const response = NextResponse.json({
       success: true,
       sessionToken: newToken,
-      expiresIn: 3600 // seconds
+      expiresIn: 8 * 3600 // 8 hours in seconds
     })
 
     // Update the cookie
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60, // 1 hour
+      maxAge: 8 * 60 * 60, // 8 hours
       path: '/'
     })
 
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60, // 1 hour
+      maxAge: 8 * 60 * 60, // 8 hours
       path: '/'
     })
 

@@ -60,6 +60,10 @@ export function useAdminSession(options: UseAdminSessionOptions = {}) {
     }
   }, [])
 
+  // Track consecutive refresh failures
+  const refreshFailuresRef = useRef<number>(0)
+  const MAX_REFRESH_FAILURES = 3
+
   // Refresh session token
   const refreshSession = async () => {
     try {
@@ -79,13 +83,22 @@ export function useAdminSession(options: UseAdminSessionOptions = {}) {
         if (data.sessionToken) {
           localStorage.setItem('adminSessionToken', data.sessionToken)
         }
+        // Reset failure count on success
+        refreshFailuresRef.current = 0
       } else {
-        // Token is invalid, logout
-        console.warn('Session refresh failed, logging out')
-        await performLogout()
+        // Increment failure count
+        refreshFailuresRef.current++
+        console.warn(`Session refresh failed (attempt ${refreshFailuresRef.current}/${MAX_REFRESH_FAILURES})`)
+
+        // Only logout after multiple consecutive failures
+        if (refreshFailuresRef.current >= MAX_REFRESH_FAILURES) {
+          console.warn('Max refresh failures reached, logging out')
+          await performLogout()
+        }
       }
     } catch (error) {
-      console.error('Failed to refresh session:', error)
+      // Network error - don't count as auth failure, just log it
+      console.error('Failed to refresh session (network error):', error)
     }
   }
 
